@@ -2,6 +2,7 @@
   "compilerOptions": {
     "composite": true,
     "declaration": true,
+    "erasableSyntaxOnly": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["esnext"],
     "module": "NodeNext",
@@ -17,7 +18,6 @@
     "noUncheckedSideEffectImports": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "outDir": "../lib",
     "strict": true,
     "target": "ESNext",
     "useUnknownInCatchVariables": true

@@ -6,6 +6,24 @@
   "author": "Lukas Obermann",
   "type": "module",
   "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./schema": "./lib/Schema.js",
+    "./schema/declaration": "./lib/schema/declarations/Declaration.js",
+    "./schema/declaration/entity": "./lib/schema/declarations/EntityDeclaration.js",
+    "./schema/declaration/typealias": "./lib/schema/declarations/TypeAliasDeclaration.js",
+    "./schema/type": "./lib/schema/types/Type.js",
+    "./schema/type/array": "./lib/schema/types/generic/ArrayType.js",
+    "./schema/type/object": "./lib/schema/types/generic/ObjectType.js",
+    "./schema/type/boolean": "./lib/schema/types/primitives/BooleanType.js",
+    "./schema/type/float": "./lib/schema/types/primitives/FloatType.js",
+    "./schema/type/integer": "./lib/schema/types/primitives/IntegerType.js",
+    "./schema/type/numeric": "./lib/schema/types/primitives/NumericType.js",
+    "./schema/type/primitive": "./lib/schema/types/primitives/PrimitiveType.js",
+    "./schema/type/string": "./lib/schema/types/primitives/StringType.js",
+    "./schema/type/foreignkey": "./lib/schema/types/references/ForeignKeyType.js",
+    "./schema/type/reference": "./lib/schema/types/references/ReferenceType.js"
+  },
   "scripts": {
     "build": "tsc -b",
     "watch": "tsc -b -w",
@@ -13,5 +31,8 @@
   },
   "dependencies": {
     "typescript": "^5.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14"
   }
 }
