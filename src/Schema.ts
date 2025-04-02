@@ -1,22 +1,43 @@
 import { Declaration } from "./schema/declarations/Declaration.js"
 
 export class Schema {
-  entities: Set<Declaration>
+  declarations: Set<Declaration> = new Set()
 
-  constructor() {
-    this.entities = new Set()
+  constructor(declarations: Declaration[]) {
+    for (const decl of declarations) {
+      this.addDeclaration(decl, true)
+    }
+    this.checkParameterNamesShadowing()
   }
 
-  register(entity: Declaration): Schema {
-    if (!this.entities.has(entity)) {
-      this.entities.add(entity)
-      for (const nestedDecl of entity.getNestedDeclarations()) {
-        if (!this.entities.has(nestedDecl)) {
-          this.entities.add(nestedDecl)
+  addDeclaration(decl: Declaration, nested = false): void {
+    if (!this.declarations.has(decl)) {
+      if (
+        this.declarations
+          .values()
+          .some(otherDecl => otherDecl !== decl && otherDecl.name === decl.name)
+      ) {
+        throw new Error(
+          `Duplicate declaration name: "${decl.name}". Make sure declaration names are globally unique.`,
+        )
+      } else {
+        this.declarations.add(decl)
+        if (nested) {
+          for (const nestedDecl of decl.getNestedDeclarations()) {
+            this.addDeclaration(nestedDecl)
+          }
         }
       }
     }
+  }
 
-    return this
+  checkParameterNamesShadowing(): void {
+    for (const decl of this.declarations) {
+      for (const param of decl.getParameterNames()) {
+        if (this.declarations.values().some(decl => decl.name === param)) {
+          throw new Error(`Parameter name "${param}" shadows declaration name.`)
+        }
+      }
+    }
   }
 }

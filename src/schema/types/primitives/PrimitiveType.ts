@@ -1,3 +1,7 @@
 import { Type } from "../Type.js"
 
-export class PrimitiveType extends Type {}
+export abstract class PrimitiveType extends Type {
+  replaceTypeArguments(): this {
+    return this
+  }
+}

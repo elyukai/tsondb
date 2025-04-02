@@ -8,7 +8,6 @@ export class ObjectType<T extends Record<string, ObjectKey<any, boolean>>> exten
   additionalProperties?: boolean
   minProperties?: number
   maxProperties?: number
-  patternProperties?: RegExp
 
   constructor(
     properties: T,
@@ -16,7 +15,6 @@ export class ObjectType<T extends Record<string, ObjectKey<any, boolean>>> exten
       additionalProperties?: boolean
       minProperties?: number
       maxProperties?: number
-      patternProperties?: RegExp
     } = {},
   ) {
     super()
@@ -25,26 +23,78 @@ export class ObjectType<T extends Record<string, ObjectKey<any, boolean>>> exten
     this.minProperties = validateOption(
       options.minProperties,
       "minProperties",
-      (option) => Number.isInteger(option) && option >= 0,
+      option => Number.isInteger(option) && option >= 0,
     )
     this.maxProperties = validateOption(
       options.maxProperties,
       "maxProperties",
-      (option) => Number.isInteger(option) && option >= 0,
+      option => Number.isInteger(option) && option >= 0,
     )
-    this.patternProperties = options.patternProperties
   }
 
   getNestedDeclarations(): Declaration[] {
-    return Object.values(this.properties).flatMap((prop) => {
+    return Object.values(this.properties).flatMap(prop => {
       if (prop.type instanceof ObjectType) {
         return prop.type.getNestedDeclarations()
       } else if (prop.type instanceof ForeignKeyType) {
-        return prop.type.entity.getNestedDeclarations()
+        return [prop.type.entity, ...prop.type.entity.getNestedDeclarations()]
       } else {
         return []
       }
     })
+  }
+
+  validate(value: unknown): void {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+      throw new TypeError(`Expected an object, but got ${JSON.stringify(value)}`)
+    }
+
+    const keys = Object.keys(this.properties)
+    if (this.minProperties !== undefined && keys.length < this.minProperties) {
+      throw new RangeError(
+        `Expected at least ${this.minProperties} propert${
+          this.minProperties === 1 ? "y" : "ies"
+        }, but got ${keys.length} propert${keys.length === 1 ? "y" : "ies"}`,
+      )
+    }
+
+    if (this.maxProperties !== undefined && keys.length > this.maxProperties) {
+      throw new RangeError(
+        `Expected at most ${this.maxProperties} propert${
+          this.maxProperties === 1 ? "y" : "ies"
+        }, but got ${keys.length} propert${keys.length === 1 ? "y" : "ies"}`,
+      )
+    }
+
+    for (const key of keys) {
+      const prop = this.properties[key]!
+      if (!(key in value)) {
+        if (prop.isRequired) {
+          throw new TypeError(`Missing required property: ${key}`)
+        }
+      } else {
+        try {
+          prop.type.validate((value as Record<string, unknown>)[key])
+        } catch (error) {
+          throw new TypeError(`at object key "${key}"`, { cause: error })
+        }
+      }
+    }
+  }
+
+  replaceTypeArguments(
+    args: Record<string, Type>,
+  ): ObjectType<Record<string, ObjectKey<Type, boolean>>> {
+    return new ObjectType(
+      Object.fromEntries(
+        Object.entries(this.properties).map(
+          ([key, config]) => [key, config.type.replaceTypeArguments(args)] as const,
+        ),
+      ),
+      {
+        ...this,
+      },
+    )
   }
 }
 

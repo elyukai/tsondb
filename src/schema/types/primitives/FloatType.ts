@@ -13,6 +13,12 @@ export class FloatType extends NumericType {
     this.maximum = options.maximum
     this.multipleOf = options.multipleOf
   }
+
+  validate(value: unknown): void {
+    if (typeof value !== "number") {
+      throw new TypeError(`Expected a floating-point number, but got ${JSON.stringify(value)}`)
+    }
+  }
 }
 
 export const Float = (...args: ConstructorParameters<typeof FloatType>) => {
