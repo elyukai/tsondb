@@ -8,6 +8,7 @@
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
+    "./renderer/ts": "./lib/renderers/ts/index.js",
     "./modelcontainer": "./lib/ModelContainer.js",
     "./schema": "./lib/Schema.js",
     "./schema/declaration": "./lib/schema/declarations/Declaration.js",
