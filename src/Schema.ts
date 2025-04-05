@@ -1,16 +1,20 @@
-import { Declaration } from "./schema/declarations/Declaration.js"
+import {
+  Decl,
+  getNestedDeclarations,
+  getParameterNames,
+} from "./schema/declarations/Declaration.js"
 
 export class Schema {
-  declarations: Set<Declaration> = new Set()
+  declarations: Set<Decl> = new Set()
 
-  constructor(declarations: Declaration[]) {
+  constructor(declarations: Decl[]) {
     for (const decl of declarations) {
       this.addDeclaration(decl, true)
     }
     this.checkParameterNamesShadowing()
   }
 
-  addDeclaration(decl: Declaration, nested = false): void {
+  addDeclaration(decl: Decl, nested = false): void {
     if (!this.declarations.has(decl)) {
       if (
         this.declarations
@@ -23,7 +27,7 @@ export class Schema {
       } else {
         this.declarations.add(decl)
         if (nested) {
-          for (const nestedDecl of decl.getNestedDeclarations()) {
+          for (const nestedDecl of getNestedDeclarations(decl)) {
             this.addDeclaration(nestedDecl)
           }
         }
@@ -33,7 +37,7 @@ export class Schema {
 
   checkParameterNamesShadowing(): void {
     for (const decl of this.declarations) {
-      for (const param of decl.getParameterNames()) {
+      for (const param of getParameterNames(decl)) {
         if (this.declarations.values().some(decl => decl.name === param)) {
           throw new Error(`Parameter name "${param}" shadows declaration name.`)
         }

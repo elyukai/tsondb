@@ -1,12 +1,12 @@
 import { Output } from "./renderers/Output.js"
 import { Schema } from "./Schema.js"
-import { Declaration } from "./schema/declarations/Declaration.js"
+import { Decl } from "./schema/declarations/Declaration.js"
 
 export class ModelContainer {
   schema: Schema
   outputs: Output[]
 
-  constructor(args: Declaration[] | { schema: Schema; outputs: Output[] }) {
+  constructor(args: Decl[] | { schema: Schema; outputs: Output[] }) {
     if (Array.isArray(args)) {
       this.schema = new Schema(args)
       this.outputs = []

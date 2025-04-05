@@ -1,139 +1,139 @@
-import { Declaration } from "../../declarations/Declaration.js"
+import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { validateOption } from "../../validation/options.js"
-import { ForeignKeyType } from "../references/ForeignKeyType.js"
-import { Type } from "../Type.js"
+import { NodeKind } from "../Node.js"
+import { isReferenceIdentifierType } from "../references/ReferenceIdentifierType.js"
+import { replaceTypeArguments, Type, validate } from "../Type.js"
 
-export class ObjectType<T extends Record<string, ObjectKey<any, boolean>>> extends Type {
+export interface ObjectType<T extends Record<string, MemberDecl<Type, boolean>>> {
+  kind: typeof NodeKind.ObjectType
   properties: T
   additionalProperties?: boolean
   minProperties?: number
   maxProperties?: number
+}
 
-  constructor(
+const _Object = {
+  Object: <T extends Record<string, MemberDecl<Type, boolean>>>(
     properties: T,
     options: {
       additionalProperties?: boolean
       minProperties?: number
       maxProperties?: number
     } = {},
-  ) {
-    super()
-    this.properties = properties
-    this.additionalProperties = options.additionalProperties
-    this.minProperties = validateOption(
+  ): ObjectType<T> => ({
+    kind: NodeKind.ObjectType,
+    ...options,
+    minProperties: validateOption(
       options.minProperties,
       "minProperties",
       option => Number.isInteger(option) && option >= 0,
-    )
-    this.maxProperties = validateOption(
+    ),
+    maxProperties: validateOption(
       options.maxProperties,
       "maxProperties",
       option => Number.isInteger(option) && option >= 0,
-    )
-  }
-
-  getNestedDeclarations(): Declaration[] {
-    return Object.values(this.properties).flatMap(prop => {
-      if (prop.type instanceof ObjectType) {
-        return prop.type.getNestedDeclarations()
-      } else if (prop.type instanceof ForeignKeyType) {
-        return [prop.type.entity, ...prop.type.entity.getNestedDeclarations()]
-      } else {
-        return []
-      }
-    })
-  }
-
-  validate(value: unknown): void {
-    if (typeof value !== "object" || value === null || Array.isArray(value)) {
-      throw new TypeError(`Expected an object, but got ${JSON.stringify(value)}`)
-    }
-
-    const keys = Object.keys(this.properties)
-    if (this.minProperties !== undefined && keys.length < this.minProperties) {
-      throw new RangeError(
-        `Expected at least ${this.minProperties} propert${
-          this.minProperties === 1 ? "y" : "ies"
-        }, but got ${keys.length} propert${keys.length === 1 ? "y" : "ies"}`,
-      )
-    }
-
-    if (this.maxProperties !== undefined && keys.length > this.maxProperties) {
-      throw new RangeError(
-        `Expected at most ${this.maxProperties} propert${
-          this.maxProperties === 1 ? "y" : "ies"
-        }, but got ${keys.length} propert${keys.length === 1 ? "y" : "ies"}`,
-      )
-    }
-
-    for (const key of keys) {
-      const prop = this.properties[key]!
-      if (!(key in value)) {
-        if (prop.isRequired) {
-          throw new TypeError(`Missing required property: ${key}`)
-        }
-      } else {
-        try {
-          prop.type.validate((value as Record<string, unknown>)[key])
-        } catch (error) {
-          throw new TypeError(`at object key "${key}"`, { cause: error })
-        }
-      }
-    }
-  }
-
-  replaceTypeArguments(
-    args: Record<string, Type>,
-  ): ObjectType<Record<string, ObjectKey<Type, boolean>>> {
-    return new ObjectType(
-      Object.fromEntries(
-        Object.entries(this.properties).map(
-          ([key, config]) => [key, config.type.replaceTypeArguments(args)] as const,
-        ),
-      ),
-      {
-        ...this,
-      },
-    )
-  }
-}
-
-export const _Object = <T extends Record<string, ObjectKey<any, boolean>>>(
-  ...args: ConstructorParameters<typeof ObjectType<T>>
-) => {
-  return new ObjectType(...args)
-}
+    ),
+    properties,
+  }),
+}.Object
 
 export { _Object as Object }
 
-export abstract class ObjectKey<T extends Type, R extends boolean> {
-  public isRequired: R
-  public type: T
-  public comment?: string
+export const isObjectType = (
+  type: Type,
+): type is ObjectType<Record<string, MemberDecl<Type, boolean>>> =>
+  type.kind === NodeKind.ObjectType
 
-  constructor(type: T, isRequired: R, comment?: string) {
-    this.comment = comment
-    this.type = type
-    this.isRequired = isRequired
+export const getNestedDeclarationsInObjectType = (
+  type: ObjectType<Record<string, MemberDecl<Type, boolean>>>,
+): Decl[] =>
+  Object.values(type.properties).flatMap(prop => {
+    if (isObjectType(prop.type)) {
+      return getNestedDeclarationsInObjectType(prop.type)
+    } else if (isReferenceIdentifierType(prop.type)) {
+      return [prop.type.entity, ...getNestedDeclarations(prop.type.entity)]
+    } else {
+      return []
+    }
+  })
+
+export const validateObjectType = (
+  type: ObjectType<Record<string, MemberDecl<Type, boolean>>>,
+  value: unknown,
+): void => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError(`Expected an object, but got ${JSON.stringify(value)}`)
+  }
+
+  const keys = Object.keys(type.properties)
+  if (type.minProperties !== undefined && keys.length < type.minProperties) {
+    throw new RangeError(
+      `Expected at least ${type.minProperties} propert${
+        type.minProperties === 1 ? "y" : "ies"
+      }, but got ${keys.length} propert${keys.length === 1 ? "y" : "ies"}`,
+    )
+  }
+
+  if (type.maxProperties !== undefined && keys.length > type.maxProperties) {
+    throw new RangeError(
+      `Expected at most ${type.maxProperties} propert${
+        type.maxProperties === 1 ? "y" : "ies"
+      }, but got ${keys.length} propert${keys.length === 1 ? "y" : "ies"}`,
+    )
+  }
+
+  for (const key of keys) {
+    const prop = type.properties[key]!
+    if (!(key in value)) {
+      if (prop.isRequired) {
+        throw new TypeError(`Missing required property: ${key}`)
+      }
+    } else {
+      try {
+        validate(prop.type, (value as Record<string, unknown>)[key])
+      } catch (error) {
+        throw new TypeError(`at object key "${key}"`, { cause: error })
+      }
+    }
   }
 }
 
-export class RequiredKey<T extends Type> extends ObjectKey<T, true> {
-  constructor(options: { comment?: string; type: T }) {
-    super(options.type, true, options.comment)
-  }
+export const replaceTypeArgumentsInObjectType = (
+  args: Record<string, Type>,
+  type: ObjectType<Record<string, MemberDecl<Type, boolean>>>,
+): ObjectType<Record<string, MemberDecl<Type, boolean>>> =>
+  _Object(
+    Object.fromEntries(
+      Object.entries(type.properties).map(
+        ([key, config]) =>
+          [key, { ...config, type: replaceTypeArguments(args, config.type) }] as const,
+      ),
+    ),
+    {
+      ...type,
+    },
+  )
+
+export interface MemberDecl<T extends Type, R extends boolean> {
+  kind: typeof NodeKind.MemberDecl
+  isRequired: R
+  type: T
+  comment?: string
 }
 
-export const Required = <T extends Type>(...args: ConstructorParameters<typeof RequiredKey<T>>) => {
-  return new RequiredKey(...args)
-}
+const MemberDecl = <T extends Type, R extends boolean>(
+  isRequired: R,
+  type: T,
+  comment?: string,
+): MemberDecl<T, R> => ({
+  kind: NodeKind.MemberDecl,
+  isRequired,
+  type,
+  comment,
+})
 
-export class OptionalKey<T extends Type> extends ObjectKey<T, false> {
-  constructor(options: { comment?: string; type: T }) {
-    super(options.type, false, options.comment)
-  }
-}
+export const Required = <T extends Type>(options: { comment?: string; type: T }) =>
+  MemberDecl(true, options.type, options.comment)
 
-export const Optional = <T extends Type>(...args: ConstructorParameters<typeof OptionalKey<T>>) => {
-  return new OptionalKey(...args)
-}
+export const Optional = <T extends Type>(options: { comment?: string; type: T }) =>
+  MemberDecl(false, options.type, options.comment)

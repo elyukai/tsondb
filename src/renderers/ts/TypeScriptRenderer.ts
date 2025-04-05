@@ -1,206 +1,233 @@
 import { EOL } from "node:os"
-import { Declaration } from "../../schema/declarations/Declaration.js"
-import { EntityDeclaration } from "../../schema/declarations/EntityDeclaration.js"
-import { EnumDeclaration } from "../../schema/declarations/EnumDeclaration.js"
-import { TypeAliasDeclaration } from "../../schema/declarations/TypeAliasDeclaration.js"
+import { Decl } from "../../schema/declarations/Declaration.js"
+import { EntityDecl } from "../../schema/declarations/EntityDeclaration.js"
+import { EnumDecl } from "../../schema/declarations/EnumDeclaration.js"
+import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
 import { ArrayType } from "../../schema/types/generic/ArrayType.js"
-import { ObjectKey, ObjectType } from "../../schema/types/generic/ObjectType.js"
+import { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
+import { NodeKind } from "../../schema/types/Node.js"
 import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
-import { FloatType } from "../../schema/types/primitives/FloatType.js"
-import { IntegerType } from "../../schema/types/primitives/IntegerType.js"
 import { NumericType } from "../../schema/types/primitives/NumericType.js"
 import { StringType } from "../../schema/types/primitives/StringType.js"
-import { ArgumentType } from "../../schema/types/references/ArgumentType.js"
-import { ForeignKeyType } from "../../schema/types/references/ForeignKeyType.js"
-import { ReferenceType } from "../../schema/types/references/ReferenceType.js"
+import { GenericArgumentIdentifierType } from "../../schema/types/references/GenericArgumentIdentifierType.js"
+import { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.js"
+import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
 import { Type } from "../../schema/types/Type.js"
+import { assertExhaustive } from "../../utils/typeSafety.js"
 import { applyIndentation, joinSyntax, prefixLines } from "../utils.js"
 
-export class TypeScriptRenderer {
+export type TypeScriptRendererOptions = {
   indentation: number
+}
 
-  constructor(options: { indentation?: number } = {}) {
-    this.indentation = options.indentation ?? 2
-  }
+const defaultOptions: TypeScriptRendererOptions = {
+  indentation: 2,
+}
 
-  renderDeclarations(declarations: Declaration[]): string {
-    return declarations.map(decl => this.renderDeclaration(decl)).join(EOL + EOL)
-  }
+const renderDocumentation = (comment?: string): string =>
+  comment === undefined
+    ? ""
+    : joinSyntax("/**", EOL, prefixLines(" * ", comment, true), EOL, " */", EOL)
 
-  renderDocumentation = (comment?: string): string =>
-    comment === undefined
-      ? ""
-      : joinSyntax("/**", EOL, prefixLines(" * ", comment, true), EOL, " */", EOL)
+const renderTypeParameters = (
+  options: TypeScriptRendererOptions,
+  params: TypeParameter[],
+): string =>
+  params.length === 0
+    ? ""
+    : `<${params
+        .map(param =>
+          param.constraint === undefined
+            ? param.name
+            : joinSyntax(param.name, " extends ", renderType(options, param.constraint)),
+        )
+        .join(", ")}>`
 
-  renderDeclaration<T extends Declaration>(decl: T): string {
-    if (decl instanceof EntityDeclaration) {
-      return this.renderEntityDeclaration(decl)
-    } else if (decl instanceof EnumDeclaration) {
-      return this.renderEnumDeclaration(decl)
-    } else if (decl instanceof TypeAliasDeclaration) {
-      return this.renderTypeAliasDeclaration(decl)
-    }
+const renderArrayType = (options: TypeScriptRendererOptions, type: ArrayType<Type>): string =>
+  `${renderType(options, type.items)}[]`
 
-    throw new Error(`Unknown declaration: ${decl.constructor.name}`)
-  }
-
-  renderTypeParameters(params: TypeParameter[]): string {
-    return params.length === 0
-      ? ""
-      : `<${params
-          .map(param =>
-            param.constraint === undefined
-              ? param.name
-              : joinSyntax(param.name, " extends ", this.renderType(param.constraint)),
-          )
-          .join(", ")}>`
-  }
-
-  renderEntityDeclaration<
-    Name extends string,
-    T extends ObjectType<any>,
-    PK extends keyof T["properties"],
-  >(decl: EntityDeclaration<Name, T, PK>): string {
-    return joinSyntax(
-      this.renderDocumentation(decl.comment),
-      "export interface ",
-      decl.name,
-      this.renderTypeParameters(decl.parameters),
-      " ",
-      this.renderType(decl.type),
-    )
-  }
-
-  renderEnumDeclaration<Name extends string>(decl: EnumDeclaration<Name>): string {
-    return joinSyntax(
-      this.renderDocumentation(decl.comment),
-      "export type ",
-      decl.name,
-      this.renderTypeParameters(decl.parameters),
-      " = ",
-      "???",
-    )
-  }
-
-  renderTypeAliasDeclaration<Name extends string, T extends ObjectType<any>>(
-    decl: TypeAliasDeclaration<Name, T>,
-  ): string {
-    return joinSyntax(
-      this.renderDocumentation(decl.comment),
-      "export type ",
-      decl.name,
-      this.renderTypeParameters(decl.parameters),
-      " = ",
-      this.renderType(decl.type),
-    )
-  }
-
-  renderArrayType<T extends Type>(type: ArrayType<T>): string {
-    return `${this.renderType(type.items)}[]`
-  }
-
-  renderObjectType<T extends Record<string, ObjectKey<any, boolean>>>(type: ObjectType<T>): string {
-    return joinSyntax(
-      "{",
-      EOL,
-      applyIndentation(
-        1,
-        Object.entries(type.properties)
-          .map(([name, config]) =>
-            joinSyntax(
-              this.renderDocumentation(config.comment),
-              name,
-              config.isRequired ? "" : "?",
-              ": ",
-              this.renderType(config.type),
-            ),
-          )
-          .join(EOL + EOL),
-        this.indentation,
-      ),
-      EOL,
-      "}",
-    )
-  }
-
-  renderBooleanType(_type: BooleanType): string {
-    return "boolean"
-  }
-
-  renderNumericType(_type: NumericType): string {
-    return "number"
-  }
-
-  renderStringType(_type: StringType): string {
-    return "string"
-  }
-
-  renderArgumentType<T extends TypeParameter>(type: ArgumentType<T>): string {
-    return type.argument.name
-  }
-
-  renderForeignKeyType<T extends EntityDeclaration<string, ObjectType<any>, string>>(
-    type: ForeignKeyType<T>,
-  ): string {
-    return joinSyntax(
-      "{",
-      EOL,
-      applyIndentation(
-        1,
-        joinSyntax(
-          'entity: "',
-          type.entity.name,
-          '"',
-          EOL,
-          "entityIdentifier: {",
-          EOL,
-          applyIndentation(
-            1,
-            type.entity.primaryKey
-              .map(key =>
-                joinSyntax(key, ": ", this.renderType(type.entity.type.properties[key].type)),
-              )
-              .join(EOL),
-            this.indentation,
+const renderObjectType = (
+  options: TypeScriptRendererOptions,
+  type: ObjectType<Record<string, MemberDecl<Type, boolean>>>,
+): string => {
+  return joinSyntax(
+    "{",
+    EOL,
+    applyIndentation(
+      1,
+      Object.entries(type.properties)
+        .map(([name, config]) =>
+          joinSyntax(
+            renderDocumentation(config.comment),
+            name,
+            config.isRequired ? "" : "?",
+            ": ",
+            renderType(options, config.type),
           ),
-          EOL,
-          "}",
+        )
+        .join(EOL + EOL),
+      options.indentation,
+    ),
+    EOL,
+    "}",
+  )
+}
+
+const renderBooleanType = (_options: TypeScriptRendererOptions, _type: BooleanType): string =>
+  "boolean"
+
+const renderNumericType = (_options: TypeScriptRendererOptions, _type: NumericType): string =>
+  "number"
+
+const renderStringType = (_options: TypeScriptRendererOptions, _type: StringType): string =>
+  "string"
+
+const renderGenericArgumentIdentifierType = (
+  _options: TypeScriptRendererOptions,
+  type: GenericArgumentIdentifierType<TypeParameter>,
+): string => type.argument.name
+
+const renderReferenceIdentifierType = (
+  options: TypeScriptRendererOptions,
+  type: ReferenceIdentifierType<
+    EntityDecl<
+      string,
+      ObjectType<Record<string, MemberDecl<Type, boolean>>>,
+      string,
+      TypeParameter[]
+    >
+  >,
+): string => {
+  const referencedType = type.entity.type()
+  return joinSyntax(
+    "{",
+    EOL,
+    applyIndentation(
+      1,
+      joinSyntax(
+        'entity: "',
+        type.entity.name,
+        '"',
+        EOL,
+        "entityIdentifier: {",
+        EOL,
+        applyIndentation(
+          1,
+          type.entity.primaryKey
+            .map(key =>
+              joinSyntax(key, ": ", renderType(options, referencedType.properties[key]!.type)),
+            )
+            .join(EOL),
+          options.indentation,
         ),
-        this.indentation,
+        EOL,
+        "}",
       ),
-      EOL,
-      "}",
-    )
-  }
+      options.indentation,
+    ),
+    EOL,
+    "}",
+  )
+}
 
-  renderReferenceType<T extends TypeAliasDeclaration<string, ObjectType<any>>>(
-    type: ReferenceType<T>,
-  ): string {
-    return type.reference.name
-  }
+const renderIncludeIdentifierType = (
+  _options: TypeScriptRendererOptions,
+  type: IncludeIdentifierType<
+    TypeAliasDecl<string, ObjectType<Record<string, MemberDecl<Type, boolean>>>, TypeParameter[]>,
+    TypeParameter[]
+  >,
+): string => type.reference.name
 
-  renderType<T extends Type>(type: T): string {
-    if (type instanceof ArrayType) {
-      return this.renderArrayType(type)
-    } else if (type instanceof ObjectType) {
-      return this.renderObjectType(type)
-    } else if (type instanceof BooleanType) {
-      return this.renderBooleanType(type)
-    } else if (type instanceof FloatType) {
-      return this.renderNumericType(type)
-    } else if (type instanceof IntegerType) {
-      return this.renderNumericType(type)
-    } else if (type instanceof StringType) {
-      return this.renderStringType(type)
-    } else if (type instanceof ArgumentType) {
-      return this.renderArgumentType(type)
-    } else if (type instanceof ForeignKeyType) {
-      return this.renderForeignKeyType(type)
-    } else if (type instanceof ReferenceType) {
-      return this.renderReferenceType(type)
-    }
-
-    throw new Error(`Unknown type: ${type.constructor.name}`)
+const renderType = (options: TypeScriptRendererOptions, type: Type): string => {
+  switch (type.kind) {
+    case NodeKind.ArrayType:
+      return renderArrayType(options, type)
+    case NodeKind.ObjectType:
+      return renderObjectType(options, type)
+    case NodeKind.BooleanType:
+      return renderBooleanType(options, type)
+    case NodeKind.FloatType:
+      return renderNumericType(options, type)
+    case NodeKind.IntegerType:
+      return renderNumericType(options, type)
+    case NodeKind.StringType:
+      return renderStringType(options, type)
+    case NodeKind.GenericArgumentIdentifierType:
+      return renderGenericArgumentIdentifierType(options, type)
+    case NodeKind.ReferenceIdentifierType:
+      return renderReferenceIdentifierType(options, type)
+    case NodeKind.IncludeIdentifierType:
+      return renderIncludeIdentifierType(options, type)
+    default:
+      return assertExhaustive(type, "Unknown type")
   }
+}
+
+const renderEntityDeclaration = (
+  options: TypeScriptRendererOptions,
+  decl: EntityDecl<
+    string,
+    ObjectType<Record<string, MemberDecl<Type, boolean>>>,
+    string,
+    TypeParameter[]
+  >,
+): string =>
+  joinSyntax(
+    renderDocumentation(decl.comment),
+    "export interface ",
+    decl.name,
+    renderTypeParameters(options, decl.parameters),
+    " ",
+    renderType(options, decl.type()),
+  )
+
+const renderEnumDeclaration = (
+  options: TypeScriptRendererOptions,
+  decl: EnumDecl<string, TypeParameter[]>,
+): string =>
+  joinSyntax(
+    renderDocumentation(decl.comment),
+    "export type ",
+    decl.name,
+    renderTypeParameters(options, decl.parameters),
+    " = ",
+    "???",
+  )
+
+const renderTypeAliasDeclaration = (
+  options: TypeScriptRendererOptions,
+  decl: TypeAliasDecl<string, Type, TypeParameter[]>,
+): string =>
+  joinSyntax(
+    renderDocumentation(decl.comment),
+    "export type ",
+    decl.name,
+    renderTypeParameters(options, decl.parameters),
+    " = ",
+    renderType(options, decl.type()),
+  )
+
+const renderDeclaration = (options: TypeScriptRendererOptions, decl: Decl): string => {
+  switch (decl.kind) {
+    case NodeKind.EntityDecl:
+      return renderEntityDeclaration(options, decl)
+    case NodeKind.EnumDecl:
+      return renderEnumDeclaration(options, decl)
+    case NodeKind.TypeAliasDecl:
+      return renderTypeAliasDeclaration(options, decl)
+    default:
+      return assertExhaustive(decl, "Unknown declaration")
+  }
+}
+
+const renderDeclarations = (options: TypeScriptRendererOptions, decls: Decl[]): string =>
+  decls.map(decl => renderDeclaration(options, decl)).join(EOL + EOL)
+
+export const render = (
+  options: Partial<TypeScriptRendererOptions> = defaultOptions,
+  declarations: Decl[],
+): string => {
+  const finalOptions = { ...defaultOptions, ...options }
+  return renderDeclarations(finalOptions, declarations)
 }
