@@ -1,7 +1,7 @@
-import { NodeKind } from "../Node.js"
-import { Type } from "../Type.js"
+import { Node, NodeKind } from "../../Node.js"
+import { BaseType } from "../Type.js"
 
-export interface StringType {
+export interface StringType extends BaseType {
   kind: typeof NodeKind.StringType
   minLength?: number
   maxLength?: number
@@ -21,7 +21,7 @@ export const String = (
   ...options,
 })
 
-export const isStringType = (type: Type): type is StringType => type.kind === NodeKind.StringType
+export const isStringType = (node: Node): node is StringType => node.kind === NodeKind.StringType
 
 export const validateStringType = (type: StringType, value: unknown): void => {
   if (typeof value !== "string") {

@@ -1,4 +1,4 @@
-import { NodeKind } from "../types/Node.js"
+import { NodeKind } from "../Node.js"
 import { Type } from "../types/Type.js"
 
 export interface TypeParameter<N extends string = string, T extends Type = Type> {

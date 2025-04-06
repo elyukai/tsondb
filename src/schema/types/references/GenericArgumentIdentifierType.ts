@@ -1,10 +1,11 @@
+import { Node, NodeKind } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
-import { NodeKind } from "../Node.js"
-import { Type } from "../Type.js"
+import { BaseType, Type } from "../Type.js"
 
 type TConstraint = TypeParameter
 
-export interface GenericArgumentIdentifierType<T extends TConstraint> {
+export interface GenericArgumentIdentifierType<T extends TConstraint = TConstraint>
+  extends BaseType {
   kind: typeof NodeKind.GenericArgumentIdentifierType
   argument: T
 }
@@ -17,12 +18,11 @@ export const GenericArgumentIdentifier = <T extends TConstraint>(
 })
 
 export const isGenericArgumentIdentifierType = (
-  type: Type,
-): type is GenericArgumentIdentifierType<TConstraint> =>
-  type.kind === NodeKind.GenericArgumentIdentifierType
+  node: Node,
+): node is GenericArgumentIdentifierType => node.kind === NodeKind.GenericArgumentIdentifierType
 
 export const validateGenericArgumentIdentifierType = (
-  _type: GenericArgumentIdentifierType<TConstraint>,
+  _type: GenericArgumentIdentifierType,
   _value: unknown,
 ): void => {}
 

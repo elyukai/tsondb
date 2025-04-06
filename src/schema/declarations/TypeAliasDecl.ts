@@ -1,6 +1,7 @@
+import { Lazy } from "../../utils/lazy.js"
+import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
 import { getNestedDeclarationsInObjectType, isObjectType } from "../types/generic/ObjectType.js"
-import { NodeKind } from "../types/Node.js"
 import {
   getNestedDeclarationsInIncludeIdentifierType,
   isIncludeIdentifierType,
@@ -10,19 +11,15 @@ import {
   isReferenceIdentifierType,
 } from "../types/references/ReferenceIdentifierType.js"
 import { replaceTypeArguments, Type, validate } from "../types/Type.js"
-import { Decl, getTypeArgumentsRecord, TypeArguments } from "./Declaration.js"
+import { BaseDecl, Decl, getTypeArgumentsRecord, TypeArguments } from "./Declaration.js"
 
 export interface TypeAliasDecl<
-  Name extends string,
-  T extends Type,
-  Params extends TypeParameter[],
-> {
+  Name extends string = string,
+  T extends Type = Type,
+  Params extends TypeParameter[] = TypeParameter[],
+> extends BaseDecl<Name, Params> {
   kind: typeof NodeKind.TypeAliasDecl
-  sourceUrl: string
-  name: Name
-  comment?: string
-  parameters: Params
-  type: (...args: Params) => T
+  type: Lazy<T>
 }
 
 export const GenTypeAlias = <Name extends string, T extends Type, Params extends TypeParameter[]>(
@@ -33,11 +30,20 @@ export const GenTypeAlias = <Name extends string, T extends Type, Params extends
     parameters: Params
     type: (...args: Params) => T
   },
-): TypeAliasDecl<Name, T, Params> => ({
-  kind: NodeKind.TypeAliasDecl,
-  sourceUrl,
-  ...options,
-})
+): TypeAliasDecl<Name, T, Params> => {
+  const decl: TypeAliasDecl<Name, T, Params> = {
+    kind: NodeKind.TypeAliasDecl,
+    sourceUrl,
+    ...options,
+    type: Lazy.of(() => {
+      const type = options.type(...options.parameters)
+      type.parent = decl
+      return type
+    }),
+  }
+
+  return decl
+}
 
 export const TypeAlias = <Name extends string, T extends Type>(
   sourceUrl: string,
@@ -46,20 +52,29 @@ export const TypeAlias = <Name extends string, T extends Type>(
     comment?: string
     type: () => T
   },
-): TypeAliasDecl<Name, T, []> => ({
-  kind: NodeKind.TypeAliasDecl,
-  sourceUrl,
-  ...options,
-  parameters: [],
-})
+): TypeAliasDecl<Name, T, []> => {
+  const decl: TypeAliasDecl<Name, T, []> = {
+    kind: NodeKind.TypeAliasDecl,
+    sourceUrl,
+    ...options,
+    parameters: [],
+    type: Lazy.of(() => {
+      const type = options.type()
+      type.parent = decl
+      return type
+    }),
+  }
 
-export const isTypeAliasDecl = (decl: Decl): decl is TypeAliasDecl<string, Type, TypeParameter[]> =>
-  decl.kind === NodeKind.TypeAliasDecl
+  return decl
+}
+
+export const isTypeAliasDecl = (node: Node): node is TypeAliasDecl<string, Type, TypeParameter[]> =>
+  node.kind === NodeKind.TypeAliasDecl
 
 export const getNestedDeclarationsInTypeAliasDecl = (
   decl: TypeAliasDecl<string, Type, TypeParameter[]>,
 ): Decl[] => {
-  const type = decl.type(...decl.parameters)
+  const type = decl.type.value
   if (isObjectType(type)) {
     return getNestedDeclarationsInObjectType(type)
   } else if (isIncludeIdentifierType(type)) {
@@ -76,7 +91,4 @@ export const validateTypeAliasDecl = <Params extends TypeParameter[]>(
   args: TypeArguments<Params>,
   value: unknown,
 ): void =>
-  validate(
-    replaceTypeArguments(getTypeArgumentsRecord(decl, args), decl.type(...decl.parameters)),
-    value,
-  )
+  validate(replaceTypeArguments(getTypeArgumentsRecord(decl, args), decl.type.value), value)

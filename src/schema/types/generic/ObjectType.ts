@@ -1,10 +1,11 @@
 import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
+import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
-import { NodeKind } from "../Node.js"
-import { isReferenceIdentifierType } from "../references/ReferenceIdentifierType.js"
-import { replaceTypeArguments, Type, validate } from "../Type.js"
+import { BaseType, replaceTypeArguments, Type, validate } from "../Type.js"
 
-export interface ObjectType<T extends Record<string, MemberDecl<Type, boolean>>> {
+type TConstraint = Record<string, MemberDecl<Type, boolean>>
+
+export interface ObjectType<T extends TConstraint = TConstraint> extends BaseType {
   kind: typeof NodeKind.ObjectType
   properties: T
   additionalProperties?: boolean
@@ -13,54 +14,51 @@ export interface ObjectType<T extends Record<string, MemberDecl<Type, boolean>>>
 }
 
 const _Object = {
-  Object: <T extends Record<string, MemberDecl<Type, boolean>>>(
+  Object: <T extends TConstraint>(
     properties: T,
     options: {
       additionalProperties?: boolean
       minProperties?: number
       maxProperties?: number
     } = {},
-  ): ObjectType<T> => ({
-    kind: NodeKind.ObjectType,
-    ...options,
-    minProperties: validateOption(
-      options.minProperties,
-      "minProperties",
-      option => Number.isInteger(option) && option >= 0,
-    ),
-    maxProperties: validateOption(
-      options.maxProperties,
-      "maxProperties",
-      option => Number.isInteger(option) && option >= 0,
-    ),
-    properties,
-  }),
+  ): ObjectType<T> => {
+    const type: ObjectType<T> = {
+      kind: NodeKind.ObjectType,
+      ...options,
+      minProperties: validateOption(
+        options.minProperties,
+        "minProperties",
+        option => Number.isInteger(option) && option >= 0,
+      ),
+      maxProperties: validateOption(
+        options.maxProperties,
+        "maxProperties",
+        option => Number.isInteger(option) && option >= 0,
+      ),
+      properties,
+    }
+
+    Object.keys(properties).forEach(key => {
+      properties[key]!.type.parent = type
+    })
+
+    return type
+  },
 }.Object
 
 export { _Object as Object }
 
-export const isObjectType = (
-  type: Type,
-): type is ObjectType<Record<string, MemberDecl<Type, boolean>>> =>
-  type.kind === NodeKind.ObjectType
+export const isObjectType = (node: Node): node is ObjectType => node.kind === NodeKind.ObjectType
 
 export const getNestedDeclarationsInObjectType = (
-  type: ObjectType<Record<string, MemberDecl<Type, boolean>>>,
+  type: ObjectType,
+  ignoreKeys: string[] = [],
 ): Decl[] =>
-  Object.values(type.properties).flatMap(prop => {
-    if (isObjectType(prop.type)) {
-      return getNestedDeclarationsInObjectType(prop.type)
-    } else if (isReferenceIdentifierType(prop.type)) {
-      return [prop.type.entity, ...getNestedDeclarations(prop.type.entity)]
-    } else {
-      return []
-    }
-  })
+  Object.entries(type.properties).flatMap(([key, prop]) =>
+    ignoreKeys.includes(key) ? [] : getNestedDeclarations(prop.type),
+  )
 
-export const validateObjectType = (
-  type: ObjectType<Record<string, MemberDecl<Type, boolean>>>,
-  value: unknown,
-): void => {
+export const validateObjectType = (type: ObjectType, value: unknown): void => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new TypeError(`Expected an object, but got ${JSON.stringify(value)}`)
   }
@@ -100,8 +98,8 @@ export const validateObjectType = (
 
 export const replaceTypeArgumentsInObjectType = (
   args: Record<string, Type>,
-  type: ObjectType<Record<string, MemberDecl<Type, boolean>>>,
-): ObjectType<Record<string, MemberDecl<Type, boolean>>> =>
+  type: ObjectType,
+): ObjectType =>
   _Object(
     Object.fromEntries(
       Object.entries(type.properties).map(
@@ -137,3 +135,7 @@ export const Required = <T extends Type>(options: { comment?: string; type: T })
 
 export const Optional = <T extends Type>(options: { comment?: string; type: T }) =>
   MemberDecl(false, options.type, options.comment)
+
+export type RequiredProperties<T> = {
+  [K in keyof T]: T[K] extends false ? never : K
+}[keyof T]

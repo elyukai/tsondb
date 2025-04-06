@@ -1,11 +1,11 @@
 import { OptionError } from "../errors/OptionError.js"
 
-export const validateOption = <T extends {}>(
-  value: T | undefined,
+export const validateOption = <T>(
+  value: T,
   name: string,
-  validator: (option: T) => boolean,
-): T | undefined => {
-  if (value === undefined || validator(value)) {
+  validator: (option: NonNullable<T>) => boolean,
+): T => {
+  if (value == null || validator(value)) {
     return value
   }
 

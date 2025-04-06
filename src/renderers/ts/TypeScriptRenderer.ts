@@ -1,19 +1,28 @@
 import { EOL } from "node:os"
 import { Decl } from "../../schema/declarations/Declaration.js"
-import { EntityDecl } from "../../schema/declarations/EntityDeclaration.js"
-import { EnumDecl } from "../../schema/declarations/EnumDeclaration.js"
-import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
+import { EntityDecl, isEntityDecl } from "../../schema/declarations/EntityDecl.js"
+import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
+import { TypeAlias, TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
+import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
 import { ArrayType } from "../../schema/types/generic/ArrayType.js"
-import { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
-import { NodeKind } from "../../schema/types/Node.js"
+import {
+  Object as _Object,
+  isObjectType,
+  MemberDecl,
+  ObjectType,
+} from "../../schema/types/generic/ObjectType.js"
 import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
 import { NumericType } from "../../schema/types/primitives/NumericType.js"
 import { StringType } from "../../schema/types/primitives/StringType.js"
 import { GenericArgumentIdentifierType } from "../../schema/types/references/GenericArgumentIdentifierType.js"
 import { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.js"
+import {
+  isNestedEntityMapType,
+  NestedEntityMapType,
+} from "../../schema/types/references/NestedEntityMapType.js"
 import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
-import { Type } from "../../schema/types/Type.js"
+import { getParentDecl, Type } from "../../schema/types/Type.js"
 import { assertExhaustive } from "../../utils/typeSafety.js"
 import { applyIndentation, joinSyntax, prefixLines } from "../utils.js"
 
@@ -25,15 +34,14 @@ const defaultOptions: TypeScriptRendererOptions = {
   indentation: 2,
 }
 
+type RenderFn<T> = (options: TypeScriptRendererOptions, node: T) => string
+
 const renderDocumentation = (comment?: string): string =>
   comment === undefined
     ? ""
     : joinSyntax("/**", EOL, prefixLines(" * ", comment, true), EOL, " */", EOL)
 
-const renderTypeParameters = (
-  options: TypeScriptRendererOptions,
-  params: TypeParameter[],
-): string =>
+const renderTypeParameters: RenderFn<TypeParameter[]> = (options, params) =>
   params.length === 0
     ? ""
     : `<${params
@@ -44,13 +52,13 @@ const renderTypeParameters = (
         )
         .join(", ")}>`
 
-const renderArrayType = (options: TypeScriptRendererOptions, type: ArrayType<Type>): string =>
+const renderArrayType: RenderFn<ArrayType> = (options, type) =>
   `${renderType(options, type.items)}[]`
 
-const renderObjectType = (
-  options: TypeScriptRendererOptions,
-  type: ObjectType<Record<string, MemberDecl<Type, boolean>>>,
-): string => {
+const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, boolean>>>> = (
+  options,
+  type,
+) => {
   return joinSyntax(
     "{",
     EOL,
@@ -74,72 +82,53 @@ const renderObjectType = (
   )
 }
 
-const renderBooleanType = (_options: TypeScriptRendererOptions, _type: BooleanType): string =>
-  "boolean"
+const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => "boolean"
 
-const renderNumericType = (_options: TypeScriptRendererOptions, _type: NumericType): string =>
-  "number"
+const renderNumericType: RenderFn<NumericType> = (_options, _type) => "number"
 
-const renderStringType = (_options: TypeScriptRendererOptions, _type: StringType): string =>
-  "string"
+const renderStringType: RenderFn<StringType> = (_options, _type) => "string"
 
-const renderGenericArgumentIdentifierType = (
-  _options: TypeScriptRendererOptions,
-  type: GenericArgumentIdentifierType<TypeParameter>,
-): string => type.argument.name
+const renderGenericArgumentIdentifierType: RenderFn<
+  GenericArgumentIdentifierType<TypeParameter>
+> = (_options, type) => type.argument.name
 
-const renderReferenceIdentifierType = (
-  options: TypeScriptRendererOptions,
-  type: ReferenceIdentifierType<
-    EntityDecl<
-      string,
-      ObjectType<Record<string, MemberDecl<Type, boolean>>>,
-      string,
-      TypeParameter[]
-    >
-  >,
-): string => {
-  const referencedType = type.entity.type()
-  return joinSyntax(
+const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (options, type) =>
+  joinSyntax(
     "{",
     EOL,
     applyIndentation(
       1,
       joinSyntax(
-        'entity: "',
+        'entityName: "',
         type.entity.name,
         '"',
         EOL,
-        "entityIdentifier: {",
-        EOL,
-        applyIndentation(
-          1,
-          type.entity.primaryKey
-            .map(key =>
-              joinSyntax(key, ": ", renderType(options, referencedType.properties[key]!.type)),
-            )
-            .join(EOL),
-          options.indentation,
-        ),
-        EOL,
-        "}",
+        "entityIdentifier: ",
+        type.entity.name + "_ID",
       ),
       options.indentation,
     ),
     EOL,
     "}",
   )
-}
 
-const renderIncludeIdentifierType = (
-  _options: TypeScriptRendererOptions,
-  type: IncludeIdentifierType<
-    TypeAliasDecl<string, ObjectType<Record<string, MemberDecl<Type, boolean>>>, TypeParameter[]>,
-    TypeParameter[]
-  >,
-): string => type.reference.name
+const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (_options, type) =>
+  type.reference.name
 
-const renderType = (options: TypeScriptRendererOptions, type: Type): string => {
+const renderNestedEntityMapType: RenderFn<NestedEntityMapType> = (options, type) =>
+  joinSyntax(
+    "{",
+    EOL,
+    applyIndentation(
+      1,
+      joinSyntax("[", type.secondaryEntityReferenceIdentifierKey, ": string]: ", type.name),
+      options.indentation,
+    ),
+    EOL,
+    "}",
+  )
+
+const renderType: RenderFn<Type> = (options, type) => {
   switch (type.kind) {
     case NodeKind.ArrayType:
       return renderArrayType(options, type)
@@ -159,33 +148,24 @@ const renderType = (options: TypeScriptRendererOptions, type: Type): string => {
       return renderReferenceIdentifierType(options, type)
     case NodeKind.IncludeIdentifierType:
       return renderIncludeIdentifierType(options, type)
+    case NodeKind.NestedEntityMapType:
+      return renderNestedEntityMapType(options, type)
     default:
       return assertExhaustive(type, "Unknown type")
   }
 }
 
-const renderEntityDeclaration = (
-  options: TypeScriptRendererOptions,
-  decl: EntityDecl<
-    string,
-    ObjectType<Record<string, MemberDecl<Type, boolean>>>,
-    string,
-    TypeParameter[]
-  >,
-): string =>
+const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
   joinSyntax(
     renderDocumentation(decl.comment),
     "export interface ",
     decl.name,
     renderTypeParameters(options, decl.parameters),
     " ",
-    renderType(options, decl.type()),
+    renderType(options, decl.type.value),
   )
 
-const renderEnumDeclaration = (
-  options: TypeScriptRendererOptions,
-  decl: EnumDecl<string, TypeParameter[]>,
-): string =>
+const renderEnumDecl: RenderFn<EnumDecl<string, TypeParameter[]>> = (options, decl) =>
   joinSyntax(
     renderDocumentation(decl.comment),
     "export type ",
@@ -195,39 +175,73 @@ const renderEnumDeclaration = (
     "???",
   )
 
-const renderTypeAliasDeclaration = (
-  options: TypeScriptRendererOptions,
-  decl: TypeAliasDecl<string, Type, TypeParameter[]>,
-): string =>
-  joinSyntax(
-    renderDocumentation(decl.comment),
-    "export type ",
-    decl.name,
-    renderTypeParameters(options, decl.parameters),
-    " = ",
-    renderType(options, decl.type()),
-  )
+const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>> = (
+  options,
+  decl,
+) => {
+  const type = decl.type.value
+  return isObjectType(type)
+    ? joinSyntax(
+        renderDocumentation(decl.comment),
+        "export interface ",
+        decl.name,
+        renderTypeParameters(options, decl.parameters),
+        " ",
+        renderType(options, type),
+      )
+    : joinSyntax(
+        renderDocumentation(decl.comment),
+        "export type ",
+        decl.name,
+        renderTypeParameters(options, decl.parameters),
+        " = ",
+        renderType(options, type),
+      )
+}
 
-const renderDeclaration = (options: TypeScriptRendererOptions, decl: Decl): string => {
+const renderDecl: RenderFn<Decl> = (options, decl) => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
-      return renderEntityDeclaration(options, decl)
+      return renderEntityDecl(options, decl)
     case NodeKind.EnumDecl:
-      return renderEnumDeclaration(options, decl)
+      return renderEnumDecl(options, decl)
     case NodeKind.TypeAliasDecl:
-      return renderTypeAliasDeclaration(options, decl)
+      return renderTypeAliasDecl(options, decl)
     default:
       return assertExhaustive(decl, "Unknown declaration")
   }
 }
 
-const renderDeclarations = (options: TypeScriptRendererOptions, decls: Decl[]): string =>
-  decls.map(decl => renderDeclaration(options, decl)).join(EOL + EOL)
+const renderDeclarations: RenderFn<Decl[]> = (options, declarations) =>
+  declarations.map(decl => renderDecl(options, decl)).join(EOL + EOL)
 
 export const render = (
   options: Partial<TypeScriptRendererOptions> = defaultOptions,
   declarations: Decl[],
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
-  return renderDeclarations(finalOptions, declarations)
+  return renderDeclarations(
+    finalOptions,
+    flatMapAuxiliaryDecls(node => {
+      if (isNestedEntityMapType(node)) {
+        return TypeAlias(getParentDecl(node)?.sourceUrl ?? "", {
+          name: node.name,
+          comment: node.comment,
+          type: () => node.type.value,
+        })
+      } else if (isEntityDecl(node)) {
+        return TypeAlias(node.sourceUrl, {
+          name: node.name + "_ID",
+          type: () =>
+            _Object(
+              Object.fromEntries(
+                node.primaryKey.map(key => [key, node.type.value.properties[key]!] as const),
+              ),
+            ),
+        })
+      }
+
+      return undefined
+    }, declarations),
+  )
 }

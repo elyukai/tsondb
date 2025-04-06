@@ -1,9 +1,10 @@
-import { NodeKind } from "../Node.js"
-import { Type } from "../Type.js"
+import { Node, NodeKind } from "../../Node.js"
+import { BaseType, Type } from "../Type.js"
 import { RangeBound } from "./NumericType.js"
 
-export interface FloatType {
+export interface FloatType extends BaseType {
   kind: typeof NodeKind.FloatType
+  parent?: Type
   minimum?: RangeBound
   maximum?: RangeBound
   multipleOf?: number
@@ -20,7 +21,7 @@ export const Float = (
   ...options,
 })
 
-export const isFloatType = (type: Type): type is FloatType => type.kind === NodeKind.FloatType
+export const isFloatType = (node: Node): node is FloatType => node.kind === NodeKind.FloatType
 
 export const validateFloatType = (typeDefinition: FloatType, value: unknown): void => {
   if (typeof value !== "number") {

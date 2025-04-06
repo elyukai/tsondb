@@ -1,14 +1,13 @@
+import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
-import { NodeKind } from "../types/Node.js"
 import { Type } from "../types/Type.js"
-import { Decl } from "./Declaration.js"
+import { BaseDecl, Decl } from "./Declaration.js"
 
-export interface EnumDecl<Name extends string, Params extends TypeParameter[]> {
+export interface EnumDecl<
+  Name extends string = string,
+  Params extends TypeParameter[] = TypeParameter[],
+> extends BaseDecl<Name, Params> {
   kind: typeof NodeKind.EnumDecl
-  sourceUrl: string
-  name: Name
-  comment?: string
-  parameters: Params
   values: (...args: Params) => string[]
 }
 
@@ -26,8 +25,8 @@ export const Enum = <Name extends string, Params extends TypeParameter[]>(
   ...options,
 })
 
-export const isEnumDecl = (decl: Decl): decl is EnumDecl<string, TypeParameter[]> =>
-  decl.kind === NodeKind.EnumDecl
+export const isEnumDecl = (node: Node): node is EnumDecl<string, TypeParameter[]> =>
+  node.kind === NodeKind.EnumDecl
 
 export const getNestedDeclarationsInEnumDecl = (
   _decl: EnumDecl<string, TypeParameter[]>,

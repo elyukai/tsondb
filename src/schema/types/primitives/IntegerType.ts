@@ -1,9 +1,9 @@
+import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
-import { NodeKind } from "../Node.js"
-import { Type } from "../Type.js"
+import { BaseType } from "../Type.js"
 import { RangeBound } from "./NumericType.js"
 
-export interface IntegerType {
+export interface IntegerType extends BaseType {
   kind: typeof NodeKind.IntegerType
   minimum?: RangeBound
   maximum?: RangeBound
@@ -26,7 +26,7 @@ export const Integer = (
   multipleOf: options.multipleOf,
 })
 
-export const isIntegerType = (type: Type): type is IntegerType => type.kind === NodeKind.IntegerType
+export const isIntegerType = (node: Node): node is IntegerType => node.kind === NodeKind.IntegerType
 
 export const validateIntegerType = (typeDefinition: IntegerType, value: unknown): void => {
   if (typeof value !== "number" || !Number.isInteger(value)) {

@@ -1,10 +1,11 @@
+import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
+import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
-import { NodeKind } from "../Node.js"
-import { replaceTypeArguments, Type, validate } from "../Type.js"
+import { BaseType, replaceTypeArguments, Type, validate } from "../Type.js"
 
 type TConstraint = Type
 
-export interface ArrayType<T extends TConstraint> {
+export interface ArrayType<T extends TConstraint = TConstraint> extends BaseType {
   kind: typeof NodeKind.ArrayType
   minItems?: number
   maxItems?: number
@@ -20,29 +21,37 @@ const _Array = {
       maxItems?: number
       uniqueItems?: boolean
     } = {},
-  ): ArrayType<T> => ({
-    kind: NodeKind.ArrayType,
-    ...options,
-    minItems: validateOption(
-      options.minItems,
-      "minItems",
-      option => Number.isInteger(option) && option >= 0,
-    ),
-    maxItems: validateOption(
-      options.maxItems,
-      "maxItems",
-      option => Number.isInteger(option) && option >= 0,
-    ),
-    items,
-  }),
+  ): ArrayType<T> => {
+    const type: ArrayType<T> = {
+      kind: NodeKind.ArrayType,
+      ...options,
+      minItems: validateOption(
+        options.minItems,
+        "minItems",
+        option => Number.isInteger(option) && option >= 0,
+      ),
+      maxItems: validateOption(
+        options.maxItems,
+        "maxItems",
+        option => Number.isInteger(option) && option >= 0,
+      ),
+      items,
+    }
+
+    items.parent = type
+
+    return type
+  },
 }.Array
 
 export { _Array as Array }
 
-export const isArrayType = (type: Type): type is ArrayType<TConstraint> =>
-  type.kind === NodeKind.ArrayType
+export const isArrayType = (node: Node): node is ArrayType => node.kind === NodeKind.ArrayType
 
-export const validateArrayType = (type: ArrayType<TConstraint>, value: unknown): void => {
+export const getNestedDeclarationsInArrayType = (type: ArrayType): Decl[] =>
+  getNestedDeclarations(type.items)
+
+export const validateArrayType = (type: ArrayType, value: unknown): void => {
   if (!Array.isArray(value)) {
     throw new TypeError(`Expected an array, but got ${JSON.stringify(value)}`)
   }
@@ -96,8 +105,8 @@ export const validateArrayType = (type: ArrayType<TConstraint>, value: unknown):
 
 export const replaceTypeArgumentsInArrayType = (
   args: Record<string, Type>,
-  type: ArrayType<TConstraint>,
-): ArrayType<Type> =>
+  type: ArrayType,
+): ArrayType =>
   _Array(replaceTypeArguments(args, type.items), {
     ...type,
   })
