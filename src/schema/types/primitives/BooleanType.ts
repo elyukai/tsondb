@@ -1,4 +1,5 @@
 import { Node, NodeKind } from "../../Node.js"
+import { Validator } from "../../validation/type.js"
 import { BaseType } from "../Type.js"
 
 export interface BooleanType extends BaseType {
@@ -11,8 +12,10 @@ export const Boolean = (): BooleanType => ({
 
 export const isBooleanType = (node: Node): node is BooleanType => node.kind === NodeKind.BooleanType
 
-export const validateBooleanType = (_typeDefinition: BooleanType, value: unknown): void => {
+export const validateBooleanType: Validator<BooleanType> = (_helpers, _type, value) => {
   if (typeof value !== "boolean") {
-    throw new TypeError(`Expected a boolean value, but got ${JSON.stringify(value)}`)
+    return [TypeError(`Expected a boolean value, but got ${JSON.stringify(value)}`)]
   }
+
+  return []
 }

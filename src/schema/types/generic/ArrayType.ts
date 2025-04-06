@@ -1,6 +1,7 @@
 import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { Node, NodeKind, Validators } from "../../Node.js"
+import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
+import { parallelizeErrors, validateLengthRangeBound, Validator } from "../../validation/type.js"
 import { BaseType, replaceTypeArguments, Type, validate } from "../Type.js"
 
 type TConstraint = Type
@@ -51,60 +52,45 @@ export const isArrayType = (node: Node): node is ArrayType => node.kind === Node
 export const getNestedDeclarationsInArrayType = (type: ArrayType): Decl[] =>
   getNestedDeclarations(type.items)
 
-export const validateArrayType = (
-  validators: Validators,
-  type: ArrayType,
-  value: unknown,
-): void => {
+export const validateArrayType: Validator<ArrayType> = (helpers, type, value) => {
   if (!Array.isArray(value)) {
-    throw new TypeError(`Expected an array, but got ${JSON.stringify(value)}`)
+    return [TypeError(`Expected an array, but got ${JSON.stringify(value)}`)]
   }
 
-  if (type.minItems !== undefined && value.length < type.minItems) {
-    throw new RangeError(
-      `Expected at least ${type.minItems} item${type.minItems === 1 ? "" : "s"}, but got ${
-        value.length
-      } item${value.length === 1 ? "" : "s"}`,
-    )
-  }
-
-  if (type.maxItems !== undefined && value.length > type.maxItems) {
-    throw new RangeError(
-      `Expected at most ${type.maxItems} item${type.maxItems === 1 ? "" : "s"}, but got ${
-        value.length
-      } item${value.length === 1 ? "" : "s"}`,
-    )
-  }
-
-  if (type.uniqueItems) {
-    // if (typeof this.uniqueItems === "function") {
-    //   const seen = new Set<any>()
-    //   for (const item of value) {
-    //     for (const other of seen) {
-    //       if (this.uniqueItems(item, other)) {
-    //         throw new TypeError(`Duplicate item found: ${JSON.stringify(item)}`)
-    //       }
-    //     }
-    //     seen.add(item)
-    //   }
-    // } else {
-    const seen = new Set()
-    for (const item of value) {
-      if (seen.has(item)) {
-        throw new TypeError(`Duplicate item found: ${JSON.stringify(item)}`)
-      }
-      seen.add(item)
-    }
-    // }
-  }
-
-  value.forEach((item, index) => {
-    try {
-      validate(validators, type.items, item)
-    } catch (error) {
-      throw new Error(`at index ${index}`, { cause: error })
-    }
-  })
+  return parallelizeErrors([
+    validateLengthRangeBound("lower", "item", type.minItems, value),
+    validateLengthRangeBound("upper", "item", type.maxItems, value),
+    type.uniqueItems
+      ? (() => {
+          // if (typeof this.uniqueItems === "function") {
+          //   const seen = new Set<any>()
+          //   for (const item of value) {
+          //     for (const other of seen) {
+          //       if (this.uniqueItems(item, other)) {
+          //         return TypeError(`Duplicate item found: ${JSON.stringify(item)}`)
+          //       }
+          //     }
+          //     seen.add(item)
+          //   }
+          // } else {
+          const seen = new Set()
+          for (const item of value) {
+            if (seen.has(item)) {
+              return TypeError(`Duplicate item found: ${JSON.stringify(item)}`)
+            }
+            seen.add(item)
+          }
+          return undefined
+          // }
+        })()
+      : undefined,
+  ]).concat(
+    value.flatMap((item, index) =>
+      validate(helpers, type.items, item).map(err =>
+        TypeError(`at index ${index}`, { cause: err }),
+      ),
+    ),
+  )
 }
 
 export const replaceTypeArgumentsInArrayType = (

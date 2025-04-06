@@ -1,5 +1,6 @@
 import { Node, NodeKind } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
+import { Validator } from "../../validation/type.js"
 import { BaseType, Type } from "../Type.js"
 
 type TConstraint = TypeParameter
@@ -21,10 +22,11 @@ export const isGenericArgumentIdentifierType = (
   node: Node,
 ): node is GenericArgumentIdentifierType => node.kind === NodeKind.GenericArgumentIdentifierType
 
-export const validateGenericArgumentIdentifierType = (
-  type: GenericArgumentIdentifierType,
-  _value: unknown,
-): void => {
+export const validateGenericArgumentIdentifierType: Validator<GenericArgumentIdentifierType> = (
+  _helpers,
+  type,
+  _value,
+) => {
   throw new TypeError(
     `generic argument "${type.argument.name}" has not been replaced with a concrete type`,
   )

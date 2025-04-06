@@ -1,6 +1,7 @@
 import { assertExhaustive } from "../../utils/typeSafety.js"
 import { Decl, isDecl } from "../declarations/Declaration.js"
-import { BaseNode, NodeKind, Validators } from "../Node.js"
+import { BaseNode, NodeKind } from "../Node.js"
+import { Validator } from "../validation/type.js"
 import {
   ArrayType,
   replaceTypeArgumentsInArrayType,
@@ -54,40 +55,30 @@ export type Type =
   | IncludeIdentifierType
   | NestedEntityMapType
 
-export const validate = (validators: Validators, type: Type, value: unknown): void => {
+export const validate: Validator<Type> = (helpers, type, value) => {
   switch (type.kind) {
     case NodeKind.ArrayType:
-      validateArrayType(validators, type, value)
-      break
+      return validateArrayType(helpers, type, value)
     case NodeKind.ObjectType:
-      validateObjectType(validators, type, value)
-      break
+      return validateObjectType(helpers, type, value)
     case NodeKind.BooleanType:
-      validateBooleanType(type, value)
-      break
+      return validateBooleanType(helpers, type, value)
     case NodeKind.FloatType:
-      validateFloatType(type, value)
-      break
+      return validateFloatType(helpers, type, value)
     case NodeKind.IntegerType:
-      validateIntegerType(type, value)
-      break
+      return validateIntegerType(helpers, type, value)
     case NodeKind.StringType:
-      validateStringType(type, value)
-      break
+      return validateStringType(helpers, type, value)
     case NodeKind.GenericArgumentIdentifierType:
-      validateGenericArgumentIdentifierType(type, value)
-      break
+      return validateGenericArgumentIdentifierType(helpers, type, value)
     case NodeKind.ReferenceIdentifierType:
-      validateReferenceIdentifierType(validators, type, value)
-      break
+      return validateReferenceIdentifierType(helpers, type, value)
     case NodeKind.IncludeIdentifierType:
-      validateIncludeIdentifierType(validators, type, value)
-      break
+      return validateIncludeIdentifierType(helpers, type, value)
     case NodeKind.NestedEntityMapType:
-      validateNestedEntityMapType(validators, type, value)
-      break
+      return validateNestedEntityMapType(helpers, type, value)
     default:
-      assertExhaustive(type)
+      return assertExhaustive(type)
   }
 }
 

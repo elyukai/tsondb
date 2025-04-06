@@ -1,5 +1,5 @@
 import { Lazy } from "../../utils/lazy.js"
-import { Node, NodeKind, Validators } from "../Node.js"
+import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
 import { getNestedDeclarationsInObjectType, isObjectType } from "../types/generic/ObjectType.js"
 import {
@@ -11,6 +11,7 @@ import {
   isReferenceIdentifierType,
 } from "../types/references/ReferenceIdentifierType.js"
 import { replaceTypeArguments, Type, validate } from "../types/Type.js"
+import { ValidatorHelpers } from "../validation/type.js"
 import { BaseDecl, Decl, getTypeArgumentsRecord, TypeArguments } from "./Declaration.js"
 
 export interface TypeAliasDecl<
@@ -87,13 +88,13 @@ export const getNestedDeclarationsInTypeAliasDecl = (
 }
 
 export const validateTypeAliasDecl = <Params extends TypeParameter[]>(
-  validators: Validators,
+  helpers: ValidatorHelpers,
   decl: TypeAliasDecl<string, Type, Params>,
   args: TypeArguments<Params>,
   value: unknown,
-): void =>
+): Error[] =>
   validate(
-    validators,
+    helpers,
     replaceTypeArguments(getTypeArgumentsRecord(decl, args), decl.type.value),
     value,
   )

@@ -1,6 +1,12 @@
 import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { Node, NodeKind, Validators } from "../../Node.js"
+import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
+import {
+  NumerusLabel,
+  parallelizeErrors,
+  validateLengthRangeBound,
+  Validator,
+} from "../../validation/type.js"
 import { BaseType, replaceTypeArguments, Type, validate } from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
@@ -58,44 +64,32 @@ export const getNestedDeclarationsInObjectType = (
     ignoreKeys.includes(key) ? [] : getNestedDeclarations(prop.type),
   )
 
-export const validateObjectType = (
-  validators: Validators,
-  type: ObjectType,
-  value: unknown,
-): void => {
+export const validateObjectType: Validator<ObjectType> = (helpers, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new TypeError(`Expected an object, but got ${JSON.stringify(value)}`)
+    return [TypeError(`Expected an object, but got ${JSON.stringify(value)}`)]
   }
 
   const keys = Object.keys(type.properties)
-  if (type.minProperties !== undefined && keys.length < type.minProperties) {
-    throw new RangeError(
-      `Expected at least ${type.minProperties} propert${
-        type.minProperties === 1 ? "y" : "ies"
-      }, but got ${keys.length} propert${keys.length === 1 ? "y" : "ies"}`,
-    )
-  }
+  const label = ["property", "properties"] as NumerusLabel
 
-  if (type.maxProperties !== undefined && keys.length > type.maxProperties) {
-    throw new RangeError(
-      `Expected at most ${type.maxProperties} propert${
-        type.maxProperties === 1 ? "y" : "ies"
-      }, but got ${keys.length} propert${keys.length === 1 ? "y" : "ies"}`,
-    )
-  }
+  return parallelizeErrors([
+    validateLengthRangeBound("lower", label, type.minProperties, keys),
+    validateLengthRangeBound("upper", label, type.maxProperties, keys),
+  ]).concat(
+    keys.flatMap(key => {
+      const prop = type.properties[key]!
 
-  for (const key of keys) {
-    const prop = type.properties[key]!
-    if (prop.isRequired && !(key in value)) {
-      throw new TypeError(`Missing required property: ${key}`)
-    } else if (prop.isRequired || (value as Record<string, unknown>)[key] !== undefined) {
-      try {
-        validate(validators, prop.type, (value as Record<string, unknown>)[key])
-      } catch (error) {
-        throw new TypeError(`at object key "${key}"`, { cause: error })
+      if (prop.isRequired && !(key in value)) {
+        return TypeError(`Missing required property: ${key}`)
+      } else if (prop.isRequired || (value as Record<string, unknown>)[key] !== undefined) {
+        return validate(helpers, prop.type, (value as Record<string, unknown>)[key]).map(err =>
+          TypeError(`at object key "${key}"`, { cause: err }),
+        )
       }
-    }
-  }
+
+      return []
+    }),
+  )
 }
 
 export const replaceTypeArgumentsInObjectType = (

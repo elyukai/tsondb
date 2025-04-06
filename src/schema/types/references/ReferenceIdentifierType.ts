@@ -1,7 +1,8 @@
 import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl } from "../../declarations/EntityDecl.js"
-import { Node, NodeKind, Validators } from "../../Node.js"
+import { Node, NodeKind } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
+import { Validator } from "../../validation/type.js"
 import {
   Object as _Object,
   MemberDecl,
@@ -44,13 +45,13 @@ export const identifierObjectTypeForEntity = (entity: EntityDecl): ObjectType =>
     ),
   )
 
-export const validateReferenceIdentifierType = (
-  validators: Validators,
-  type: ReferenceIdentifierType,
-  value: unknown,
-): void => {
+export const validateReferenceIdentifierType: Validator<ReferenceIdentifierType> = (
+  helpers,
+  type,
+  value,
+) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new TypeError(`Expected an object, but got ${JSON.stringify(value)}`)
+    return [TypeError(`Expected an object, but got ${JSON.stringify(value)}`)]
   }
 
   if (
@@ -58,33 +59,40 @@ export const validateReferenceIdentifierType = (
     !(ENTITY_NAME_KEY in value) ||
     !(ENTITY_IDENTIFIER_KEY in value)
   ) {
-    throw new TypeError(
-      `An identifier object must and must only have the keys "${ENTITY_NAME_KEY}" and "${ENTITY_IDENTIFIER_KEY}".`,
-    )
+    return [
+      TypeError(
+        `An identifier object must and must only have the keys "${ENTITY_NAME_KEY}" and "${ENTITY_IDENTIFIER_KEY}".`,
+      ),
+    ]
   }
 
-  try {
-    validateStringType(String(), value[ENTITY_NAME_KEY])
-  } catch (error) {
-    throw new TypeError(`at object key "${ENTITY_IDENTIFIER_KEY}"`, { cause: error })
+  const entityNameErrors = validateStringType(helpers, String(), value[ENTITY_NAME_KEY])
+
+  if (entityNameErrors.length > 0) {
+    return entityNameErrors.map(error =>
+      TypeError(`at object key "${ENTITY_NAME_KEY}"`, { cause: error }),
+    )
   }
 
   const identifierObjectType = identifierObjectTypeForEntity(type.entity)
   const identifierObject = value[ENTITY_IDENTIFIER_KEY]
+  const identifierObjectErrors = validateObjectType(helpers, identifierObjectType, identifierObject)
 
-  try {
-    validateObjectType(validators, identifierObjectType, identifierObject)
-  } catch (error) {
-    throw new TypeError(`at object key "${ENTITY_IDENTIFIER_KEY}"`, { cause: error })
+  if (identifierObjectErrors.length > 0) {
+    return identifierObjectErrors.map(error =>
+      TypeError(`at object key "${ENTITY_IDENTIFIER_KEY}"`, { cause: error }),
+    )
   }
 
-  validators.checkReferentialIntegrity({
-    name: value[ENTITY_NAME_KEY] as string,
-    values: type.entity.primaryKey.map(primaryKey => [
-      primaryKey,
-      (identifierObject as Record<string, unknown>)[primaryKey],
-    ]),
-  })
+  return helpers
+    .checkReferentialIntegrity({
+      name: value[ENTITY_NAME_KEY] as string,
+      values: type.entity.primaryKey.map(primaryKey => [
+        primaryKey,
+        (identifierObject as Record<string, unknown>)[primaryKey],
+      ]),
+    })
+    .map(error => TypeError(`at object key "${ENTITY_IDENTIFIER_KEY}"`, { cause: error }))
 }
 
 export const replaceTypeArgumentsInReferenceIdentifierType = <

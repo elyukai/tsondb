@@ -108,5 +108,5 @@ export const identifierForSinglePrimaryKeyEntity = (entity: EntityDecl, idValue:
 })
 
 export interface Validators {
-  checkReferentialIntegrity: (identifier: IdentifierToCheck) => void
+  checkReferentialIntegrity: (identifier: IdentifierToCheck) => Error[]
 }

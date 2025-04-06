@@ -1,4 +1,5 @@
 import { Node, NodeKind } from "../../Node.js"
+import { parallelizeErrors, Validator } from "../../validation/type.js"
 import { BaseType } from "../Type.js"
 
 export interface StringType extends BaseType {
@@ -23,28 +24,28 @@ export const String = (
 
 export const isStringType = (node: Node): node is StringType => node.kind === NodeKind.StringType
 
-export const validateStringType = (type: StringType, value: unknown): void => {
+export const validateStringType: Validator<StringType> = (_helpers, type, value) => {
   if (typeof value !== "string") {
-    throw new TypeError(`Expected a string, but got ${JSON.stringify(value)}`)
+    return [TypeError(`Expected a string, but got ${JSON.stringify(value)}`)]
   }
 
-  if (type.minLength !== undefined && value.length < type.minLength) {
-    throw new RangeError(
-      `Expected a string with at least ${type.minLength} character${
-        type.minLength === 1 ? "" : "s"
-      }, but got ${value.length} character${value.length === 1 ? "" : "s"}`,
-    )
-  }
-
-  if (type.maxLength !== undefined && value.length > type.maxLength) {
-    throw new RangeError(
-      `Expected a string with at most ${type.maxLength} character${
-        type.maxLength === 1 ? "" : "s"
-      }, but got ${value.length} character${value.length === 1 ? "" : "s"}`,
-    )
-  }
-
-  if (type.pattern !== undefined && !type.pattern.test(value)) {
-    throw new TypeError(`String does not match the pattern /${type.pattern}/`)
-  }
+  return parallelizeErrors([
+    type.minLength !== undefined && value.length < type.minLength
+      ? RangeError(
+          `Expected a string with at least ${type.minLength} character${
+            type.minLength === 1 ? "" : "s"
+          }, but got ${value.length} character${value.length === 1 ? "" : "s"}`,
+        )
+      : undefined,
+    type.maxLength !== undefined && value.length > type.maxLength
+      ? RangeError(
+          `Expected a string with at most ${type.maxLength} character${
+            type.maxLength === 1 ? "" : "s"
+          }, but got ${value.length} character${value.length === 1 ? "" : "s"}`,
+        )
+      : undefined,
+    type.pattern !== undefined && !type.pattern.test(value)
+      ? TypeError(`String does not match the pattern /${type.pattern}/`)
+      : undefined,
+  ])
 }

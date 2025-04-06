@@ -1,8 +1,9 @@
 import { Lazy } from "../../../utils/lazy.js"
 import { Decl } from "../../declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../../declarations/EntityDecl.js"
-import { identifierForSinglePrimaryKeyEntity, Node, NodeKind, Validators } from "../../Node.js"
+import { identifierForSinglePrimaryKeyEntity, Node, NodeKind } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
+import { Validator } from "../../validation/type.js"
 import {
   getNestedDeclarationsInObjectType,
   MemberDecl,
@@ -113,25 +114,24 @@ export const getNestedDeclarationsInNestedEntityMapType = (type: NestedEntityMap
   ]),
 ]
 
-export const validateNestedEntityMapType = (
-  validators: Validators,
-  type: NestedEntityMapType,
-  value: unknown,
-): void => {
+export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
+  helpers,
+  type,
+  value,
+) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new TypeError(`Expected an object, but got ${JSON.stringify(value)}`)
+    return [TypeError(`Expected an object, but got ${JSON.stringify(value)}`)]
   }
 
-  Object.keys(value).forEach(key => {
-    try {
-      validateObjectType(validators, type.type.value, value[key as keyof typeof value])
-      validators.checkReferentialIntegrity(
-        identifierForSinglePrimaryKeyEntity(type.secondaryEntity, key),
+  return Object.keys(value).flatMap(key =>
+    validateObjectType(helpers, type.type.value, value[key as keyof typeof value])
+      .concat(
+        helpers.checkReferentialIntegrity(
+          identifierForSinglePrimaryKeyEntity(type.secondaryEntity, key),
+        ),
       )
-    } catch (error) {
-      throw new TypeError(`at nested entity map "${type.name}" at key "${key}"`, { cause: error })
-    }
-  })
+      .map(err => TypeError(`at nested entity map "${type.name}" at key "${key}"`, { cause: err })),
+  )
 }
 
 export const replaceTypeArgumentsInNestedEntityMapType = (

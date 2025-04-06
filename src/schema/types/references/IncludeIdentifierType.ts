@@ -1,7 +1,8 @@
 import { Decl, getNestedDeclarations, TypeArguments } from "../../declarations/Declaration.js"
 import { TypeAliasDecl, validateTypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
-import { Node, NodeKind, Validators } from "../../Node.js"
+import { Node, NodeKind } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
+import { Validator } from "../../validation/type.js"
 import { ObjectType } from "../generic/ObjectType.js"
 import { BaseType, replaceTypeArguments, Type } from "../Type.js"
 
@@ -35,11 +36,11 @@ export const getNestedDeclarationsInIncludeIdentifierType = (
   type: IncludeIdentifierType,
 ): Decl[] => [type.reference, ...getNestedDeclarations(type.reference)]
 
-export const validateIncludeIdentifierType = (
-  validators: Validators,
-  type: IncludeIdentifierType,
-  value: unknown,
-): void => validateTypeAliasDecl(validators, type.reference, type.args, value)
+export const validateIncludeIdentifierType: Validator<IncludeIdentifierType> = (
+  helpers,
+  type,
+  value,
+) => validateTypeAliasDecl(helpers, type.reference, type.args, value)
 
 export const replaceTypeArgumentsInIncludeIdentifierType = (
   args: Record<string, Type>,
