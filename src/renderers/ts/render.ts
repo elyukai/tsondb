@@ -74,7 +74,9 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, bool
             renderType(options, config.type),
           ),
         )
-        .join(EOL + EOL),
+        .join(
+          Object.values(type.properties).some(prop => prop.comment !== undefined) ? EOL + EOL : EOL,
+        ),
       options.indentation,
     ),
     EOL,

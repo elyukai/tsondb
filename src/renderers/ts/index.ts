@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "fs/promises"
 import { dirname } from "path"
 import { Schema } from "../../Schema.js"
 import { Output } from "../Output.js"
-import { render, TypeScriptRendererOptions } from "./TypeScriptRenderer.js"
+import { render, TypeScriptRendererOptions } from "./render.js"
 
 export const TypeScriptOutput = (options: {
   targetPath: string
