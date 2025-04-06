@@ -16,12 +16,12 @@
   "scripts": {
     "build": "tsc -b",
     "watch": "tsc -b -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "typescript": "^5.8.2"
+    "test": "glob -c \"node --import tsx --test\" \"./test/**/*.ts\""
   },
   "devDependencies": {
-    "@types/node": "^22.13.14"
+    "@types/node": "^22.13.14",
+    "glob": "^11.0.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
   }
 }
