@@ -22,9 +22,13 @@ export const isGenericArgumentIdentifierType = (
 ): node is GenericArgumentIdentifierType => node.kind === NodeKind.GenericArgumentIdentifierType
 
 export const validateGenericArgumentIdentifierType = (
-  _type: GenericArgumentIdentifierType,
+  type: GenericArgumentIdentifierType,
   _value: unknown,
-): void => {}
+): void => {
+  throw new TypeError(
+    `generic argument "${type.argument.name}" has not been replaced with a concrete type`,
+  )
+}
 
 export const replaceTypeArgumentsInGenericArgumentIdentifierType = <
   T extends TConstraint,

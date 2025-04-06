@@ -1,7 +1,7 @@
 import { Lazy } from "../../../utils/lazy.js"
 import { Decl } from "../../declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../../declarations/EntityDecl.js"
-import { Node, NodeKind } from "../../Node.js"
+import { identifierForSinglePrimaryKeyEntity, Node, NodeKind, Validators } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
 import {
   getNestedDeclarationsInObjectType,
@@ -113,13 +113,24 @@ export const getNestedDeclarationsInNestedEntityMapType = (type: NestedEntityMap
   ]),
 ]
 
-export const validateNestedEntityMapType = (type: NestedEntityMapType, value: unknown): void => {
+export const validateNestedEntityMapType = (
+  validators: Validators,
+  type: NestedEntityMapType,
+  value: unknown,
+): void => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new TypeError(`Expected an object, but got ${JSON.stringify(value)}`)
   }
 
   Object.keys(value).forEach(key => {
-    validateObjectType(type.type.value, value[key as keyof typeof value])
+    try {
+      validateObjectType(validators, type.type.value, value[key as keyof typeof value])
+      validators.checkReferentialIntegrity(
+        identifierForSinglePrimaryKeyEntity(type.secondaryEntity, key),
+      )
+    } catch (error) {
+      throw new TypeError(`at nested entity map "${type.name}" at key "${key}"`, { cause: error })
+    }
   })
 }
 

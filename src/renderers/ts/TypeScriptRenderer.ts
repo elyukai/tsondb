@@ -6,12 +6,7 @@ import { TypeAlias, TypeAliasDecl } from "../../schema/declarations/TypeAliasDec
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
 import { ArrayType } from "../../schema/types/generic/ArrayType.js"
-import {
-  Object as _Object,
-  isObjectType,
-  MemberDecl,
-  ObjectType,
-} from "../../schema/types/generic/ObjectType.js"
+import { isObjectType, MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
 import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
 import { NumericType } from "../../schema/types/primitives/NumericType.js"
 import { StringType } from "../../schema/types/primitives/StringType.js"
@@ -21,7 +16,12 @@ import {
   isNestedEntityMapType,
   NestedEntityMapType,
 } from "../../schema/types/references/NestedEntityMapType.js"
-import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
+import {
+  ENTITY_IDENTIFIER_KEY,
+  ENTITY_NAME_KEY,
+  identifierObjectTypeForEntity,
+  ReferenceIdentifierType,
+} from "../../schema/types/references/ReferenceIdentifierType.js"
 import { getParentDecl, Type } from "../../schema/types/Type.js"
 import { assertExhaustive } from "../../utils/typeSafety.js"
 import { applyIndentation, joinSyntax, prefixLines } from "../utils.js"
@@ -99,11 +99,13 @@ const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (option
     applyIndentation(
       1,
       joinSyntax(
-        'entityName: "',
+        ENTITY_NAME_KEY,
+        ': "',
         type.entity.name,
         '"',
         EOL,
-        "entityIdentifier: ",
+        ENTITY_IDENTIFIER_KEY,
+        ": ",
         type.entity.name + "_ID",
       ),
       options.indentation,
@@ -232,12 +234,7 @@ export const render = (
       } else if (isEntityDecl(node)) {
         return TypeAlias(node.sourceUrl, {
           name: node.name + "_ID",
-          type: () =>
-            _Object(
-              Object.fromEntries(
-                node.primaryKey.map(key => [key, node.type.value.properties[key]!] as const),
-              ),
-            ),
+          type: () => identifierObjectTypeForEntity(node),
         })
       }
 

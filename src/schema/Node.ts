@@ -1,6 +1,7 @@
 import { enumOfObject } from "../utils/enum.js"
 import { assertExhaustive } from "../utils/typeSafety.js"
 import { Decl } from "./declarations/Declaration.js"
+import { EntityDecl } from "./declarations/EntityDecl.js"
 import { Type } from "./types/Type.js"
 
 export const NodeKind = enumOfObject({
@@ -97,4 +98,15 @@ export const flatMapAuxiliaryDecls = (
     (decls: Decl[], node) => mapNodeTree(reducer, node, [...decls, node]),
     [],
   )
+}
+
+export type IdentifierToCheck = { name: string; values: [key: string, value: unknown][] }
+
+export const identifierForSinglePrimaryKeyEntity = (entity: EntityDecl, idValue: unknown) => ({
+  name: entity.name,
+  values: entity.primaryKey.map((primaryKey): [string, unknown] => [primaryKey, idValue]),
+})
+
+export interface Validators {
+  checkReferentialIntegrity: (identifier: IdentifierToCheck) => void
 }

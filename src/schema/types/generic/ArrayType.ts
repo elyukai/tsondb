@@ -1,5 +1,5 @@
 import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Validators } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import { BaseType, replaceTypeArguments, Type, validate } from "../Type.js"
 
@@ -51,7 +51,11 @@ export const isArrayType = (node: Node): node is ArrayType => node.kind === Node
 export const getNestedDeclarationsInArrayType = (type: ArrayType): Decl[] =>
   getNestedDeclarations(type.items)
 
-export const validateArrayType = (type: ArrayType, value: unknown): void => {
+export const validateArrayType = (
+  validators: Validators,
+  type: ArrayType,
+  value: unknown,
+): void => {
   if (!Array.isArray(value)) {
     throw new TypeError(`Expected an array, but got ${JSON.stringify(value)}`)
   }
@@ -96,7 +100,7 @@ export const validateArrayType = (type: ArrayType, value: unknown): void => {
 
   value.forEach((item, index) => {
     try {
-      validate(type.items, item)
+      validate(validators, type.items, item)
     } catch (error) {
       throw new Error(`at index ${index}`, { cause: error })
     }

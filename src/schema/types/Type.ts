@@ -1,6 +1,6 @@
 import { assertExhaustive } from "../../utils/typeSafety.js"
 import { Decl, isDecl } from "../declarations/Declaration.js"
-import { BaseNode, NodeKind } from "../Node.js"
+import { BaseNode, NodeKind, Validators } from "../Node.js"
 import {
   ArrayType,
   replaceTypeArgumentsInArrayType,
@@ -54,13 +54,13 @@ export type Type =
   | IncludeIdentifierType
   | NestedEntityMapType
 
-export const validate = (type: Type, value: unknown): void => {
+export const validate = (validators: Validators, type: Type, value: unknown): void => {
   switch (type.kind) {
     case NodeKind.ArrayType:
-      validateArrayType(type, value)
+      validateArrayType(validators, type, value)
       break
     case NodeKind.ObjectType:
-      validateObjectType(type, value)
+      validateObjectType(validators, type, value)
       break
     case NodeKind.BooleanType:
       validateBooleanType(type, value)
@@ -78,13 +78,13 @@ export const validate = (type: Type, value: unknown): void => {
       validateGenericArgumentIdentifierType(type, value)
       break
     case NodeKind.ReferenceIdentifierType:
-      validateReferenceIdentifierType(type, value)
+      validateReferenceIdentifierType(validators, type, value)
       break
     case NodeKind.IncludeIdentifierType:
-      validateIncludeIdentifierType(type, value)
+      validateIncludeIdentifierType(validators, type, value)
       break
     case NodeKind.NestedEntityMapType:
-      validateNestedEntityMapType(type, value)
+      validateNestedEntityMapType(validators, type, value)
       break
     default:
       assertExhaustive(type)

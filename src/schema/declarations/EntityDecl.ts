@@ -1,5 +1,5 @@
 import { Lazy } from "../../utils/lazy.js"
-import { Node, NodeKind } from "../Node.js"
+import { Node, NodeKind, Validators } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
 import {
   getNestedDeclarationsInObjectType,
@@ -96,8 +96,13 @@ export const getNestedDeclarationsInEntityDecl = (
 ): Decl[] => getNestedDeclarationsInObjectType(decl.type.value)
 
 export const validateEntityDecl = <Params extends TypeParameter[]>(
+  validators: Validators,
   decl: EntityDecl<string, ObjectType<any>, string, Params>,
   args: TypeArguments<Params>,
   value: unknown,
 ): void =>
-  validate(replaceTypeArguments(getTypeArgumentsRecord(decl, args), decl.type.value), value)
+  validate(
+    validators,
+    replaceTypeArguments(getTypeArgumentsRecord(decl, args), decl.type.value),
+    value,
+  )

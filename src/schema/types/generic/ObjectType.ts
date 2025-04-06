@@ -1,5 +1,5 @@
 import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Validators } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import { BaseType, replaceTypeArguments, Type, validate } from "../Type.js"
 
@@ -58,7 +58,11 @@ export const getNestedDeclarationsInObjectType = (
     ignoreKeys.includes(key) ? [] : getNestedDeclarations(prop.type),
   )
 
-export const validateObjectType = (type: ObjectType, value: unknown): void => {
+export const validateObjectType = (
+  validators: Validators,
+  type: ObjectType,
+  value: unknown,
+): void => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new TypeError(`Expected an object, but got ${JSON.stringify(value)}`)
   }
@@ -82,13 +86,11 @@ export const validateObjectType = (type: ObjectType, value: unknown): void => {
 
   for (const key of keys) {
     const prop = type.properties[key]!
-    if (!(key in value)) {
-      if (prop.isRequired) {
-        throw new TypeError(`Missing required property: ${key}`)
-      }
-    } else {
+    if (prop.isRequired && !(key in value)) {
+      throw new TypeError(`Missing required property: ${key}`)
+    } else if (prop.isRequired || (value as Record<string, unknown>)[key] !== undefined) {
       try {
-        validate(prop.type, (value as Record<string, unknown>)[key])
+        validate(validators, prop.type, (value as Record<string, unknown>)[key])
       } catch (error) {
         throw new TypeError(`at object key "${key}"`, { cause: error })
       }
