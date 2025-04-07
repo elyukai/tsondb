@@ -14,7 +14,7 @@ import { IntegerType } from "../primitives/IntegerType.js"
 import { String, StringType, validateStringType } from "../primitives/StringType.js"
 import { BaseType, Type } from "../Type.js"
 
-type TConstraint = Record<string, MemberDecl<Type, true>>
+type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
 export interface ReferenceIdentifierType<T extends TConstraint = TConstraint> extends BaseType {
   kind: typeof NodeKind.ReferenceIdentifierType

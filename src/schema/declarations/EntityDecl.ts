@@ -3,20 +3,17 @@ import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
 import {
   getNestedDeclarationsInObjectType,
-  MemberDecl,
   ObjectType,
   RequiredProperties,
 } from "../types/generic/ObjectType.js"
-import { replaceTypeArguments, Type, validate } from "../types/Type.js"
+import { replaceTypeArguments, validate } from "../types/Type.js"
 import { validateOption } from "../validation/options.js"
 import { ValidatorHelpers } from "../validation/type.js"
 import { BaseDecl, Decl, getTypeArgumentsRecord, TypeArguments } from "./Declaration.js"
 
 export interface EntityDecl<
   Name extends string = string,
-  T extends ObjectType<Record<string, MemberDecl<Type, true>>> = ObjectType<
-    Record<string, MemberDecl<Type, true>>
-  >,
+  T extends ObjectType = ObjectType,
   PK extends RequiredProperties<T["properties"]> & string = RequiredProperties<T["properties"]> &
     string,
   Params extends TypeParameter[] = TypeParameter[],
@@ -28,7 +25,7 @@ export interface EntityDecl<
 
 export const GenEntity = <
   Name extends string,
-  T extends ObjectType<Record<string, MemberDecl<Type, true>>>,
+  T extends ObjectType,
   PK extends RequiredProperties<T["properties"]> & string,
   Params extends TypeParameter[],
 >(
@@ -58,7 +55,7 @@ export const GenEntity = <
 
 export const Entity = <
   Name extends string,
-  T extends ObjectType<Record<string, MemberDecl<Type, true>>>,
+  T extends ObjectType,
   PK extends RequiredProperties<T["properties"]> & string,
 >(
   sourceUrl: string,
