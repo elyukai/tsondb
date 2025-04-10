@@ -11,7 +11,7 @@ import {
   validateObjectType,
 } from "../generic/ObjectType.js"
 import { IntegerType } from "../primitives/IntegerType.js"
-import { String, StringType, validateStringType } from "../primitives/StringType.js"
+import { String, StringType } from "../primitives/StringType.js"
 import { BaseType, Type } from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
@@ -35,8 +35,8 @@ export const getNestedDeclarationsInReferenceIdentifierType = (
   type: ReferenceIdentifierType,
 ): Decl[] => [type.entity, ...getNestedDeclarations(type.entity)]
 
-export const ENTITY_NAME_KEY = "entityName"
-export const ENTITY_IDENTIFIER_KEY = "entityIdentifier"
+// export const ENTITY_NAME_KEY = "entityName"
+// export const ENTITY_IDENTIFIER_KEY = "entityIdentifier"
 
 export const identifierObjectTypeForEntity = (entity: EntityDecl): ObjectType =>
   _Object(
@@ -50,49 +50,41 @@ export const validateReferenceIdentifierType: Validator<ReferenceIdentifierType>
   type,
   value,
 ) => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`Expected an object, but got ${JSON.stringify(value)}`)]
-  }
+  // if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  //   return [TypeError(`Expected an object, but got ${JSON.stringify(value)}`)]
+  // }
 
-  if (
-    Object.keys(value).length !== 2 ||
-    !(ENTITY_NAME_KEY in value) ||
-    !(ENTITY_IDENTIFIER_KEY in value)
-  ) {
-    return [
-      TypeError(
-        `An identifier object must and must only have the keys "${ENTITY_NAME_KEY}" and "${ENTITY_IDENTIFIER_KEY}".`,
-      ),
-    ]
-  }
+  // if (
+  //   Object.keys(value).length !== 2 ||
+  //   !(ENTITY_NAME_KEY in value) ||
+  //   !(ENTITY_IDENTIFIER_KEY in value)
+  // ) {
+  //   return [
+  //     TypeError(
+  //       `An identifier object must and must only have the keys "${ENTITY_NAME_KEY}" and "${ENTITY_IDENTIFIER_KEY}".`,
+  //     ),
+  //   ]
+  // }
 
-  const entityNameErrors = validateStringType(helpers, String(), value[ENTITY_NAME_KEY])
+  // const entityNameErrors = validateStringType(helpers, String(), value[ENTITY_NAME_KEY])
 
-  if (entityNameErrors.length > 0) {
-    return entityNameErrors.map(error =>
-      TypeError(`at object key "${ENTITY_NAME_KEY}"`, { cause: error }),
-    )
-  }
+  // if (entityNameErrors.length > 0) {
+  //   return entityNameErrors.map(error =>
+  //     TypeError(`at object key "${ENTITY_NAME_KEY}"`, { cause: error }),
+  //   )
+  // }
 
   const identifierObjectType = identifierObjectTypeForEntity(type.entity)
-  const identifierObject = value[ENTITY_IDENTIFIER_KEY]
-  const identifierObjectErrors = validateObjectType(helpers, identifierObjectType, identifierObject)
 
-  if (identifierObjectErrors.length > 0) {
-    return identifierObjectErrors.map(error =>
-      TypeError(`at object key "${ENTITY_IDENTIFIER_KEY}"`, { cause: error }),
-    )
-  }
-
-  return helpers
-    .checkReferentialIntegrity({
-      name: value[ENTITY_NAME_KEY] as string,
+  return validateObjectType(helpers, identifierObjectType, value).concat(
+    helpers.checkReferentialIntegrity({
+      name: type.entity.name,
       values: type.entity.primaryKey.map(primaryKey => [
         primaryKey,
-        (identifierObject as Record<string, unknown>)[primaryKey],
+        (value as Record<string, unknown>)[primaryKey],
       ]),
-    })
-    .map(error => TypeError(`at object key "${ENTITY_IDENTIFIER_KEY}"`, { cause: error }))
+    }),
+  )
 }
 
 export const replaceTypeArgumentsInReferenceIdentifierType = <

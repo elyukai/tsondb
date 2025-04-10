@@ -18,8 +18,6 @@ import {
   NestedEntityMapType,
 } from "../../schema/types/references/NestedEntityMapType.js"
 import {
-  ENTITY_IDENTIFIER_KEY,
-  ENTITY_NAME_KEY,
   identifierObjectTypeForEntity,
   ReferenceIdentifierType,
 } from "../../schema/types/references/ReferenceIdentifierType.js"
@@ -97,27 +95,8 @@ const renderGenericArgumentIdentifierType: RenderFn<
   GenericArgumentIdentifierType<TypeParameter>
 > = (_options, type) => type.argument.name
 
-const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (options, type) =>
-  joinSyntax(
-    "{",
-    EOL,
-    applyIndentation(
-      1,
-      joinSyntax(
-        ENTITY_NAME_KEY,
-        ': "',
-        type.entity.name,
-        '"',
-        EOL,
-        ENTITY_IDENTIFIER_KEY,
-        ": ",
-        type.entity.name + "_ID",
-      ),
-      options.indentation,
-    ),
-    EOL,
-    "}",
-  )
+const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_options, type) =>
+  type.entity.name + "_ID"
 
 const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (_options, type) =>
   type.reference.name
@@ -180,8 +159,31 @@ const renderEnumDecl: RenderFn<EnumDecl<string, TypeParameter[]>> = (options, de
     "export type ",
     decl.name,
     renderTypeParameters(options, decl.parameters),
-    " = ",
-    "???",
+    " =",
+    EOL,
+    ...Object.entries(decl.values()).map(([caseName, caseDef]) =>
+      applyIndentation(
+        1,
+        joinSyntax(
+          "| {",
+          EOL,
+          applyIndentation(
+            1,
+            joinSyntax(
+              `kind: "${caseName}"`,
+              caseDef === null
+                ? ""
+                : joinSyntax(EOL, caseName + ": ", renderType(options, caseDef)),
+            ),
+            options.indentation,
+          ),
+          EOL,
+          "}",
+          EOL,
+        ),
+        options.indentation,
+      ),
+    ),
   )
 
 const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>> = (
