@@ -58,7 +58,7 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
       }
 
       if (!isEntityDecl(parentDecl)) {
-        throw new Error("Parent declaration is not an entity declaration")
+        throw new Error(`Parent declaration "${parentDecl.name}" is not an entity declaration`)
       }
 
       if (
