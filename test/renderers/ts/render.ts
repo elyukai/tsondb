@@ -11,14 +11,14 @@ import {
   Optional,
   Required,
   Type,
-  TypeAlias,
+  TypeAliasDecl,
 } from "../../../src/schema/index.js"
 import { String } from "../../../src/schema/types/primitives/StringType.js"
 
 describe("render types", () => {
   const testType = (type: Type, expected: string) =>
     equal(
-      render(undefined, [TypeAlias("", { name: "Test", type: () => type })]),
+      render(undefined, [TypeAliasDecl("", { name: "Test", type: () => type })]),
       `export ${isObjectType(type) ? "interface" : "type"} Test${
         isObjectType(type) ? "" : " ="
       } ${expected}`,

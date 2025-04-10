@@ -10,7 +10,7 @@ export interface StringType extends BaseType {
   isMarkdown?: boolean
 }
 
-export const String = (
+export const StringType = (
   options: {
     minLength?: number
     maxLength?: number
@@ -21,6 +21,8 @@ export const String = (
   kind: NodeKind.StringType,
   ...options,
 })
+
+export { StringType as String }
 
 export const isStringType = (node: Node): node is StringType => node.kind === NodeKind.StringType
 

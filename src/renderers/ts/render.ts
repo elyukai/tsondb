@@ -2,7 +2,7 @@ import { EOL } from "node:os"
 import { Decl } from "../../schema/declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../../schema/declarations/EntityDecl.js"
 import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
-import { TypeAlias, TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
+import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
 import { ArrayType } from "../../schema/types/generic/ArrayType.js"
@@ -235,13 +235,13 @@ export const render = (
     finalOptions,
     flatMapAuxiliaryDecls(node => {
       if (isNestedEntityMapType(node)) {
-        return TypeAlias(getParentDecl(node)?.sourceUrl ?? "", {
+        return TypeAliasDecl(getParentDecl(node)?.sourceUrl ?? "", {
           name: node.name,
           comment: node.comment,
           type: () => node.type.value,
         })
       } else if (isEntityDecl(node)) {
-        return TypeAlias(node.sourceUrl, {
+        return TypeAliasDecl(node.sourceUrl, {
           name: node.name + "_ID",
           type: () => identifierObjectTypeForEntity(node),
         })

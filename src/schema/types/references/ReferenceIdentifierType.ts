@@ -11,7 +11,7 @@ import {
   validateObjectType,
 } from "../generic/ObjectType.js"
 import { IntegerType } from "../primitives/IntegerType.js"
-import { String, StringType } from "../primitives/StringType.js"
+import { StringType } from "../primitives/StringType.js"
 import { BaseType, Type } from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
@@ -21,12 +21,14 @@ export interface ReferenceIdentifierType<T extends TConstraint = TConstraint> ex
   entity: EntityDecl<string, ObjectType<T>, RequiredProperties<T> & string, TypeParameter[]>
 }
 
-export const ReferenceIdentifier = <T extends TConstraint>(
+export const ReferenceIdentifierType = <T extends TConstraint>(
   entity: EntityDecl<string, ObjectType<T>, RequiredProperties<T> & string, TypeParameter[]>,
 ): ReferenceIdentifierType<T> => ({
   kind: NodeKind.ReferenceIdentifierType,
   entity,
 })
+
+export { ReferenceIdentifierType as ReferenceIdentifier }
 
 export const isReferenceIdentifierType = (node: Node): node is ReferenceIdentifierType =>
   node.kind === NodeKind.ReferenceIdentifierType

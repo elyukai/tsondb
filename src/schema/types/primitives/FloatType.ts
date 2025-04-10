@@ -11,7 +11,7 @@ export interface FloatType extends BaseType {
   multipleOf?: number
 }
 
-export const Float = (
+export const FloatType = (
   options: {
     minimum?: RangeBound
     maximum?: RangeBound
@@ -21,6 +21,8 @@ export const Float = (
   kind: NodeKind.FloatType,
   ...options,
 })
+
+export { FloatType as Float }
 
 export const isFloatType = (node: Node): node is FloatType => node.kind === NodeKind.FloatType
 

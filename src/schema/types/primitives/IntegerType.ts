@@ -14,7 +14,7 @@ export interface IntegerType extends BaseType {
 const isIntegerRangeBoundOption = (option: RangeBound) =>
   Number.isInteger(typeof option === "number" ? option : option.value)
 
-export const Integer = (
+export const IntegerType = (
   options: {
     minimum?: RangeBound
     maximum?: RangeBound
@@ -26,6 +26,8 @@ export const Integer = (
   maximum: validateOption(options.maximum, "maximum", isIntegerRangeBoundOption),
   multipleOf: options.multipleOf,
 })
+
+export { IntegerType as Integer }
 
 export const isIntegerType = (node: Node): node is IntegerType => node.kind === NodeKind.IntegerType
 

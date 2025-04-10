@@ -23,7 +23,11 @@ export interface TypeAliasDecl<
   type: Lazy<T>
 }
 
-export const GenTypeAlias = <Name extends string, T extends Type, Params extends TypeParameter[]>(
+export const GenTypeAliasDecl = <
+  Name extends string,
+  T extends Type,
+  Params extends TypeParameter[],
+>(
   sourceUrl: string,
   options: {
     name: Name
@@ -46,7 +50,9 @@ export const GenTypeAlias = <Name extends string, T extends Type, Params extends
   return decl
 }
 
-export const TypeAlias = <Name extends string, T extends Type>(
+export { GenTypeAliasDecl as GenTypeAlias }
+
+export const TypeAliasDecl = <Name extends string, T extends Type>(
   sourceUrl: string,
   options: {
     name: Name
@@ -68,6 +74,8 @@ export const TypeAlias = <Name extends string, T extends Type>(
 
   return decl
 }
+
+export { TypeAliasDecl as TypeAlias }
 
 export const isTypeAliasDecl = (node: Node): node is TypeAliasDecl<string, Type, TypeParameter[]> =>
   node.kind === NodeKind.TypeAliasDecl

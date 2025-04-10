@@ -23,7 +23,7 @@ export interface EntityDecl<
   primaryKey: PK[]
 }
 
-export const GenEntity = <
+export const GenEntityDecl = <
   Name extends string,
   T extends ObjectType,
   PK extends RequiredProperties<T["properties"]> & string,
@@ -53,7 +53,9 @@ export const GenEntity = <
   return decl
 }
 
-export const Entity = <
+export { GenEntityDecl as GenEntity }
+
+export const EntityDecl = <
   Name extends string,
   T extends ObjectType,
   PK extends RequiredProperties<T["properties"]> & string,
@@ -83,6 +85,8 @@ export const Entity = <
 
   return decl
 }
+
+export { EntityDecl as Entity }
 
 export const isEntityDecl = (
   node: Node,

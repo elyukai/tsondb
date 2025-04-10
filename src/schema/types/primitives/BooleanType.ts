@@ -6,9 +6,11 @@ export interface BooleanType extends BaseType {
   kind: typeof NodeKind.BooleanType
 }
 
-export const Boolean = (): BooleanType => ({
+export const BooleanType = (): BooleanType => ({
   kind: NodeKind.BooleanType,
 })
+
+export { BooleanType as Boolean }
 
 export const isBooleanType = (node: Node): node is BooleanType => node.kind === NodeKind.BooleanType
 

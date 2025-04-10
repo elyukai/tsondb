@@ -14,38 +14,36 @@ export interface ArrayType<T extends TConstraint = TConstraint> extends BaseType
   items: T
 }
 
-const _Array = {
-  Array: <T extends TConstraint>(
-    items: T,
-    options: {
-      minItems?: number
-      maxItems?: number
-      uniqueItems?: boolean
-    } = {},
-  ): ArrayType<T> => {
-    const type: ArrayType<T> = {
-      kind: NodeKind.ArrayType,
-      ...options,
-      minItems: validateOption(
-        options.minItems,
-        "minItems",
-        option => Number.isInteger(option) && option >= 0,
-      ),
-      maxItems: validateOption(
-        options.maxItems,
-        "maxItems",
-        option => Number.isInteger(option) && option >= 0,
-      ),
-      items,
-    }
+export const ArrayType = <T extends TConstraint>(
+  items: T,
+  options: {
+    minItems?: number
+    maxItems?: number
+    uniqueItems?: boolean
+  } = {},
+): ArrayType<T> => {
+  const type: ArrayType<T> = {
+    kind: NodeKind.ArrayType,
+    ...options,
+    minItems: validateOption(
+      options.minItems,
+      "minItems",
+      option => Number.isInteger(option) && option >= 0,
+    ),
+    maxItems: validateOption(
+      options.maxItems,
+      "maxItems",
+      option => Number.isInteger(option) && option >= 0,
+    ),
+    items,
+  }
 
-    items.parent = type
+  items.parent = type
 
-    return type
-  },
-}.Array
+  return type
+}
 
-export { _Array as Array }
+export { ArrayType as Array }
 
 export const isArrayType = (node: Node): node is ArrayType => node.kind === NodeKind.ArrayType
 
@@ -97,6 +95,6 @@ export const replaceTypeArgumentsInArrayType = (
   args: Record<string, Type>,
   type: ArrayType,
 ): ArrayType =>
-  _Array(replaceTypeArguments(args, type.items), {
+  ArrayType(replaceTypeArguments(args, type.items), {
     ...type,
   })

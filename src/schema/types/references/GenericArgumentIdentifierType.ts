@@ -11,12 +11,14 @@ export interface GenericArgumentIdentifierType<T extends TConstraint = TConstrai
   argument: T
 }
 
-export const GenericArgumentIdentifier = <T extends TConstraint>(
+export const GenericArgumentIdentifierType = <T extends TConstraint>(
   argument: T,
 ): GenericArgumentIdentifierType<T> => ({
   kind: NodeKind.GenericArgumentIdentifierType,
   argument,
 })
+
+export { GenericArgumentIdentifierType as GenericArgumentIdentifier }
 
 export const isGenericArgumentIdentifierType = (
   node: Node,

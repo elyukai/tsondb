@@ -19,40 +19,38 @@ export interface ObjectType<T extends TConstraint = TConstraint> extends BaseTyp
   maxProperties?: number
 }
 
-const _Object = {
-  Object: <T extends TConstraint>(
-    properties: T,
-    options: {
-      additionalProperties?: boolean
-      minProperties?: number
-      maxProperties?: number
-    } = {},
-  ): ObjectType<T> => {
-    const type: ObjectType<T> = {
-      kind: NodeKind.ObjectType,
-      ...options,
-      minProperties: validateOption(
-        options.minProperties,
-        "minProperties",
-        option => Number.isInteger(option) && option >= 0,
-      ),
-      maxProperties: validateOption(
-        options.maxProperties,
-        "maxProperties",
-        option => Number.isInteger(option) && option >= 0,
-      ),
-      properties,
-    }
+export const ObjectType = <T extends TConstraint>(
+  properties: T,
+  options: {
+    additionalProperties?: boolean
+    minProperties?: number
+    maxProperties?: number
+  } = {},
+): ObjectType<T> => {
+  const type: ObjectType<T> = {
+    kind: NodeKind.ObjectType,
+    ...options,
+    minProperties: validateOption(
+      options.minProperties,
+      "minProperties",
+      option => Number.isInteger(option) && option >= 0,
+    ),
+    maxProperties: validateOption(
+      options.maxProperties,
+      "maxProperties",
+      option => Number.isInteger(option) && option >= 0,
+    ),
+    properties,
+  }
 
-    Object.keys(properties).forEach(key => {
-      properties[key]!.type.parent = type
-    })
+  Object.keys(properties).forEach(key => {
+    properties[key]!.type.parent = type
+  })
 
-    return type
-  },
-}.Object
+  return type
+}
 
-export { _Object as Object }
+export { ObjectType as Object }
 
 export const isObjectType = (node: Node): node is ObjectType => node.kind === NodeKind.ObjectType
 
@@ -96,7 +94,7 @@ export const replaceTypeArgumentsInObjectType = (
   args: Record<string, Type>,
   type: ObjectType,
 ): ObjectType =>
-  _Object(
+  ObjectType(
     Object.fromEntries(
       Object.entries(type.properties).map(
         ([key, config]) =>

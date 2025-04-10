@@ -14,7 +14,7 @@ import {
 } from "../generic/ObjectType.js"
 import { isStringType, StringType } from "../primitives/StringType.js"
 import { BaseType, getParentDecl, Type } from "../Type.js"
-import { ReferenceIdentifier, ReferenceIdentifierType } from "./ReferenceIdentifierType.js"
+import { ReferenceIdentifierType } from "./ReferenceIdentifierType.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
@@ -38,7 +38,7 @@ export interface NestedEntityMapType<
   secondaryEntityReferenceIdentifierKey?: keyof T & string
 }
 
-export const NestedEntityMap = <Name extends string, T extends TConstraint>(options: {
+export const NestedEntityMapType = <Name extends string, T extends TConstraint>(options: {
   name: Name
   comment?: string
   secondaryEntity: KeyingEntity
@@ -71,9 +71,9 @@ export const NestedEntityMap = <Name extends string, T extends TConstraint>(opti
         throw new Error("Secondary entity must have a single primary key of type string")
       }
 
-      const primaryReferenceMember = Required({ type: ReferenceIdentifier(parentDecl) })
+      const primaryReferenceMember = Required({ type: ReferenceIdentifierType(parentDecl) })
       const secondaryReferenceMember = Required({
-        type: ReferenceIdentifier(options.secondaryEntity),
+        type: ReferenceIdentifierType(options.secondaryEntity),
       })
 
       const referenceMembers = [primaryReferenceMember, secondaryReferenceMember] as const
@@ -102,6 +102,8 @@ export const NestedEntityMap = <Name extends string, T extends TConstraint>(opti
 
   return nestedEntityMapType
 }
+
+export { NestedEntityMapType as NestedEntityMap }
 
 export const isNestedEntityMapType = (node: Node): node is NestedEntityMapType =>
   node.kind === NodeKind.NestedEntityMapType
@@ -138,7 +140,7 @@ export const replaceTypeArgumentsInNestedEntityMapType = (
   args: Record<string, Type>,
   type: NestedEntityMapType,
 ): NestedEntityMapType =>
-  NestedEntityMap({
+  NestedEntityMapType({
     ...type,
     type: () => replaceTypeArgumentsInObjectType(args, type.type.value),
   })

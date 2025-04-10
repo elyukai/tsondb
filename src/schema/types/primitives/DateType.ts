@@ -6,7 +6,7 @@ export interface DateType extends BaseType {
   kind: typeof NodeKind.DateType
 }
 
-const DateType = (): DateType => ({
+export const DateType = (): DateType => ({
   kind: NodeKind.DateType,
 })
 

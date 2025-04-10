@@ -17,7 +17,7 @@ export interface IncludeIdentifierType<
   args: TypeArguments<Params>
 }
 
-export const IncludeIdentifier = <
+export const GenIncludeIdentifierType = <
   T extends TConstraint<Params>,
   Params extends TypeParameter[] = [],
 >(
@@ -28,6 +28,8 @@ export const IncludeIdentifier = <
   reference,
   args,
 })
+
+export { GenIncludeIdentifierType as GenIncludeIdentifier }
 
 export const isIncludeIdentifierType = (node: Node): node is IncludeIdentifierType =>
   node.kind === NodeKind.IncludeIdentifierType
@@ -46,7 +48,7 @@ export const replaceTypeArgumentsInIncludeIdentifierType = (
   args: Record<string, Type>,
   type: IncludeIdentifierType,
 ): IncludeIdentifierType =>
-  IncludeIdentifier(
+  GenIncludeIdentifierType(
     type.reference as unknown as TypeAliasDecl<string, ObjectType<any>, TypeParameter[]>,
     type.args.map(arg => replaceTypeArguments(args, arg)),
   )
