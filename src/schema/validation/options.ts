@@ -1,4 +1,9 @@
-import { OptionError } from "../errors/OptionError.js"
+export class OptionError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "OptionError"
+  }
+}
 
 export const validateOption = <T>(
   value: T,

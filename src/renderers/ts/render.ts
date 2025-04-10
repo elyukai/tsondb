@@ -228,7 +228,7 @@ const renderDeclarations: RenderFn<Decl[]> = (options, declarations) =>
 
 export const render = (
   options: Partial<TypeScriptRendererOptions> = defaultOptions,
-  declarations: Decl[],
+  declarations: readonly Decl[],
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
   return renderDeclarations(

@@ -10,7 +10,7 @@ export const TypeScriptOutput = (options: {
 }): Output => ({
   run: async (schema: Schema): Promise<void> => {
     await mkdir(dirname(options.targetPath), { recursive: true })
-    await writeFile(options.targetPath, render(options.rendererOptions, [...schema.declarations]), {
+    await writeFile(options.targetPath, render(options.rendererOptions, schema.declarations), {
       encoding: "utf-8",
     })
   },

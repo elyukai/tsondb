@@ -31,7 +31,7 @@ export type Node = Decl | Type
 
 export const flatMapAuxiliaryDecls = (
   callbackFn: (node: Node) => (Decl | undefined)[] | Decl | undefined,
-  declarations: Decl[],
+  declarations: readonly Decl[],
 ): Decl[] => {
   const mapNodeTree = (
     callbackFn: (node: Node, decls: Decl[]) => Decl[],
