@@ -15,6 +15,7 @@ export const NodeKind = enumOfObject({
   FloatType: null,
   IntegerType: null,
   StringType: null,
+  DateType: null,
   GenericArgumentIdentifierType: null,
   GenericParameter: null,
   ReferenceIdentifierType: null,
@@ -65,6 +66,7 @@ export const flatMapAuxiliaryDecls = (
         )
       }
       case NodeKind.BooleanType:
+      case NodeKind.DateType:
       case NodeKind.FloatType:
       case NodeKind.IntegerType:
       case NodeKind.StringType:

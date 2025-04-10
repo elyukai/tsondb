@@ -8,6 +8,7 @@ import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
 import { ArrayType } from "../../schema/types/generic/ArrayType.js"
 import { isObjectType, MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
 import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
+import { DateType } from "../../schema/types/primitives/DateType.js"
 import { NumericType } from "../../schema/types/primitives/NumericType.js"
 import { StringType } from "../../schema/types/primitives/StringType.js"
 import { GenericArgumentIdentifierType } from "../../schema/types/references/GenericArgumentIdentifierType.js"
@@ -86,6 +87,8 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, bool
 
 const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => "boolean"
 
+const renderDateType: RenderFn<DateType> = (_options, _type) => "Date"
+
 const renderNumericType: RenderFn<NumericType> = (_options, _type) => "number"
 
 const renderStringType: RenderFn<StringType> = (_options, _type) => "string"
@@ -140,6 +143,8 @@ const renderType: RenderFn<Type> = (options, type) => {
       return renderObjectType(options, type)
     case NodeKind.BooleanType:
       return renderBooleanType(options, type)
+    case NodeKind.DateType:
+      return renderDateType(options, type)
     case NodeKind.FloatType:
       return renderNumericType(options, type)
     case NodeKind.IntegerType:

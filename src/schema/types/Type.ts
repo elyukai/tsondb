@@ -14,6 +14,7 @@ import {
   validateObjectType,
 } from "./generic/ObjectType.js"
 import { BooleanType, validateBooleanType } from "./primitives/BooleanType.js"
+import { validateDateType } from "./primitives/DateType.js"
 import { FloatType, validateFloatType } from "./primitives/FloatType.js"
 import { validateIntegerType } from "./primitives/IntegerType.js"
 import { PrimitiveType } from "./primitives/PrimitiveType.js"
@@ -63,6 +64,8 @@ export const validate: Validator<Type> = (helpers, type, value) => {
       return validateObjectType(helpers, type, value)
     case NodeKind.BooleanType:
       return validateBooleanType(helpers, type, value)
+    case NodeKind.DateType:
+      return validateDateType(helpers, type, value)
     case NodeKind.FloatType:
       return validateFloatType(helpers, type, value)
     case NodeKind.IntegerType:
@@ -92,6 +95,7 @@ export const replaceTypeArguments = <Args extends Record<string, Type>>(
     case NodeKind.ObjectType:
       return replaceTypeArgumentsInObjectType(args, type)
     case NodeKind.BooleanType:
+    case NodeKind.DateType:
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
     case NodeKind.StringType:
@@ -121,6 +125,7 @@ export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): 
       callbackFn(type)
       return walkTypeNodeTree(callbackFn, type.type.value)
     case NodeKind.BooleanType:
+    case NodeKind.DateType:
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
     case NodeKind.StringType:

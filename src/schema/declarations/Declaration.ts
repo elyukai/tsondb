@@ -51,6 +51,7 @@ export const getNestedDeclarations = (node: Node): Decl[] => {
     case NodeKind.ObjectType:
       return getNestedDeclarationsInObjectType(node)
     case NodeKind.BooleanType:
+    case NodeKind.DateType:
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
     case NodeKind.StringType:
