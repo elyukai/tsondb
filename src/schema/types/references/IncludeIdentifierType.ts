@@ -1,12 +1,20 @@
-import { Decl, getNestedDeclarations, TypeArguments } from "../../declarations/Declaration.js"
-import { TypeAliasDecl, validateTypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
+import {
+  Decl,
+  getNestedDeclarations,
+  SecondaryDecl,
+  TypeArguments,
+  validateDecl,
+} from "../../declarations/Declaration.js"
+import { EnumDecl } from "../../declarations/EnumDecl.js"
+import { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
 import { Node, NodeKind } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
 import { Validator } from "../../validation/type.js"
-import { ObjectType } from "../generic/ObjectType.js"
 import { BaseType, replaceTypeArguments, Type } from "../Type.js"
 
-type TConstraint<Params extends TypeParameter[]> = TypeAliasDecl<string, Type, Params>
+type TConstraint<Params extends TypeParameter[]> =
+  | TypeAliasDecl<string, Type, Params>
+  | EnumDecl<string, Record<string, Type | null>, Params>
 
 export interface IncludeIdentifierType<
   Params extends TypeParameter[] = TypeParameter[],
@@ -42,13 +50,13 @@ export const validateIncludeIdentifierType: Validator<IncludeIdentifierType> = (
   helpers,
   type,
   value,
-) => validateTypeAliasDecl(helpers, type.reference, type.args, value)
+) => validateDecl(helpers, type.reference, type.args, value)
 
 export const replaceTypeArgumentsInIncludeIdentifierType = (
   args: Record<string, Type>,
   type: IncludeIdentifierType,
 ): IncludeIdentifierType =>
   GenIncludeIdentifierType(
-    type.reference as unknown as TypeAliasDecl<string, ObjectType<any>, TypeParameter[]>,
+    type.reference as unknown as SecondaryDecl,
     type.args.map(arg => replaceTypeArguments(args, arg)),
   )

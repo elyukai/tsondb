@@ -153,7 +153,7 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
     renderType(options, decl.type.value),
   )
 
-const renderEnumDecl: RenderFn<EnumDecl<string, TypeParameter[]>> = (options, decl) =>
+const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
   joinSyntax(
     renderDocumentation(decl.comment),
     "export type ",

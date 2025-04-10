@@ -1,43 +1,69 @@
 import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
 import { Type } from "../types/Type.js"
-import { BaseDecl, Decl } from "./Declaration.js"
+import { ValidatorHelpers } from "../validation/type.js"
+import { BaseDecl, Decl, getNestedDeclarations } from "./Declaration.js"
 
 export interface EnumDecl<
   Name extends string = string,
+  T extends Record<string, Type | null> = Record<string, Type | null>,
   Params extends TypeParameter[] = TypeParameter[],
 > extends BaseDecl<Name, Params> {
   kind: typeof NodeKind.EnumDecl
-  values: (...args: Params) => string[]
+  values: (...args: Params) => T
 }
 
-export const Enum = <Name extends string, Params extends TypeParameter[]>(
+export const GenEnumDecl = <
+  Name extends string,
+  T extends Record<string, Type | null>,
+  Params extends TypeParameter[],
+>(
   sourceUrl: string,
   options: {
     name: Name
     comment?: string
     parameters: Params
-    values: (...args: Params) => string[]
+    values: (...args: Params) => T
   },
-): EnumDecl<Name, Params> => ({
+): EnumDecl<Name, T, Params> => ({
   kind: NodeKind.EnumDecl,
   sourceUrl,
   ...options,
 })
 
-export const isEnumDecl = (node: Node): node is EnumDecl<string, TypeParameter[]> =>
-  node.kind === NodeKind.EnumDecl
+export { GenEnumDecl as GenEnum }
 
-export const getNestedDeclarationsInEnumDecl = (
-  _decl: EnumDecl<string, TypeParameter[]>,
-): Decl[] => []
+export const EnumDecl = <Name extends string, T extends Record<string, Type | null>>(
+  sourceUrl: string,
+  options: {
+    name: Name
+    comment?: string
+    values: () => T
+  },
+): EnumDecl<Name, T, []> => ({
+  kind: NodeKind.EnumDecl,
+  sourceUrl,
+  ...options,
+  parameters: [],
+})
+
+export { EnumDecl as Enum }
+
+export const isEnumDecl = (node: Node): node is EnumDecl => node.kind === NodeKind.EnumDecl
+
+export const getNestedDeclarationsInEnumDecl = (decl: EnumDecl): Decl[] =>
+  Object.values(decl.values()).flatMap(caseDef =>
+    caseDef === null ? [] : getNestedDeclarations(caseDef),
+  )
 
 export const validateEnumDecl = (
-  _decl: EnumDecl<string, TypeParameter[]>,
+  _helpers: ValidatorHelpers,
+  _decl: EnumDecl,
+  _args: Type[],
   _value: unknown,
-): void => {}
+): Error[] => []
 
 export const replaceTypeArgumentsInEnumDecl = <Args extends Record<string, Type>>(
   _args: Args,
-  decl: EnumDecl<string, TypeParameter[]>,
-): EnumDecl<string, TypeParameter[]> => decl
+  decl: EnumDecl,
+): EnumDecl => decl

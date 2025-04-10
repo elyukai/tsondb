@@ -11,12 +11,24 @@ import { getNestedDeclarationsInIncludeIdentifierType } from "../types/reference
 import { getNestedDeclarationsInNestedEntityMapType } from "../types/references/NestedEntityMapType.js"
 import { getNestedDeclarationsInReferenceIdentifierType } from "../types/references/ReferenceIdentifierType.js"
 import { Type } from "../types/Type.js"
-import { EntityDecl, getNestedDeclarationsInEntityDecl, isEntityDecl } from "./EntityDecl.js"
-import { EnumDecl, getNestedDeclarationsInEnumDecl, isEnumDecl } from "./EnumDecl.js"
+import { ValidatorHelpers } from "../validation/type.js"
+import {
+  EntityDecl,
+  getNestedDeclarationsInEntityDecl,
+  isEntityDecl,
+  validateEntityDecl,
+} from "./EntityDecl.js"
+import {
+  EnumDecl,
+  getNestedDeclarationsInEnumDecl,
+  isEnumDecl,
+  validateEnumDecl,
+} from "./EnumDecl.js"
 import {
   getNestedDeclarationsInTypeAliasDecl,
   isTypeAliasDecl,
   TypeAliasDecl,
+  validateTypeAliasDecl,
 } from "./TypeAliasDecl.js"
 
 export type TypeArguments<Params extends TypeParameter[]> = {
@@ -35,8 +47,10 @@ export type Decl = EntityDecl | EnumDecl | TypeAliasDecl
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
   | EntityDecl<string, ObjectType<Record<string, MemberDecl<Type, true>>>, string, Params>
-  | EnumDecl<string, Params>
+  | EnumDecl<string, Record<string, Type | null>, Params>
   | TypeAliasDecl<string, Type, Params>
+
+export type SecondaryDecl = EnumDecl | TypeAliasDecl
 
 export const getNestedDeclarations = (node: Node): Decl[] => {
   switch (node.kind) {
@@ -79,4 +93,22 @@ export interface BaseDecl<
   name: Name
   comment?: string
   parameters: Params
+}
+
+export const validateDecl = (
+  helpers: ValidatorHelpers,
+  decl: Decl,
+  args: Type[],
+  value: unknown,
+) => {
+  switch (decl.kind) {
+    case NodeKind.EntityDecl:
+      return validateEntityDecl(helpers, decl, args, value)
+    case NodeKind.EnumDecl:
+      return validateEnumDecl(helpers, decl, args, value)
+    case NodeKind.TypeAliasDecl:
+      return validateTypeAliasDecl(helpers, decl, args, value)
+    default:
+      return assertExhaustive(decl)
+  }
 }
