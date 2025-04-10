@@ -1,18 +1,15 @@
 import { Lazy } from "../../utils/lazy.js"
 import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
-import { getNestedDeclarationsInObjectType, isObjectType } from "../types/generic/ObjectType.js"
-import {
-  getNestedDeclarationsInIncludeIdentifierType,
-  isIncludeIdentifierType,
-} from "../types/references/IncludeIdentifierType.js"
-import {
-  getNestedDeclarationsInReferenceIdentifierType,
-  isReferenceIdentifierType,
-} from "../types/references/ReferenceIdentifierType.js"
 import { replaceTypeArguments, Type, validate } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
-import { BaseDecl, Decl, getTypeArgumentsRecord, TypeArguments } from "./Declaration.js"
+import {
+  BaseDecl,
+  GetNestedDeclarations,
+  getNestedDeclarations,
+  getTypeArgumentsRecord,
+  TypeArguments,
+} from "./Declaration.js"
 
 export interface TypeAliasDecl<
   Name extends string = string,
@@ -80,20 +77,10 @@ export { TypeAliasDecl as TypeAlias }
 export const isTypeAliasDecl = (node: Node): node is TypeAliasDecl<string, Type, TypeParameter[]> =>
   node.kind === NodeKind.TypeAliasDecl
 
-export const getNestedDeclarationsInTypeAliasDecl = (
-  decl: TypeAliasDecl<string, Type, TypeParameter[]>,
-): Decl[] => {
-  const type = decl.type.value
-  if (isObjectType(type)) {
-    return getNestedDeclarationsInObjectType(type)
-  } else if (isIncludeIdentifierType(type)) {
-    return getNestedDeclarationsInIncludeIdentifierType(type)
-  } else if (isReferenceIdentifierType(type)) {
-    return getNestedDeclarationsInReferenceIdentifierType(type)
-  } else {
-    return []
-  }
-}
+export const getNestedDeclarationsInTypeAliasDecl: GetNestedDeclarations<TypeAliasDecl> = (
+  isDeclAdded,
+  decl,
+) => getNestedDeclarations(isDeclAdded, decl.type.value)
 
 export const validateTypeAliasDecl = <Params extends TypeParameter[]>(
   helpers: ValidatorHelpers,

@@ -2,7 +2,7 @@ import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
 import { Type } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
-import { BaseDecl, Decl, getNestedDeclarations } from "./Declaration.js"
+import { BaseDecl, GetNestedDeclarations, getNestedDeclarations } from "./Declaration.js"
 
 export interface EnumDecl<
   Name extends string = string,
@@ -51,9 +51,12 @@ export { EnumDecl as Enum }
 
 export const isEnumDecl = (node: Node): node is EnumDecl => node.kind === NodeKind.EnumDecl
 
-export const getNestedDeclarationsInEnumDecl = (decl: EnumDecl): Decl[] =>
+export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = (
+  isDeclAdded,
+  decl,
+) =>
   Object.values(decl.values()).flatMap(caseDef =>
-    caseDef === null ? [] : getNestedDeclarations(caseDef),
+    caseDef === null ? [] : getNestedDeclarations(isDeclAdded, caseDef),
   )
 
 export const validateEnumDecl = (

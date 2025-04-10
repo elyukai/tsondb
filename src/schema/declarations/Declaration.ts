@@ -52,18 +52,18 @@ export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
 
 export type SecondaryDecl = EnumDecl | TypeAliasDecl
 
-export const getNestedDeclarations = (node: Node): Decl[] => {
+export const getNestedDeclarations: GetNestedDeclarations = (isDeclAdded, node) => {
   switch (node.kind) {
     case NodeKind.EntityDecl:
-      return getNestedDeclarationsInEntityDecl(node)
+      return isDeclAdded(node) ? [] : getNestedDeclarationsInEntityDecl(isDeclAdded, node)
     case NodeKind.EnumDecl:
-      return getNestedDeclarationsInEnumDecl(node)
+      return isDeclAdded(node) ? [] : getNestedDeclarationsInEnumDecl(isDeclAdded, node)
     case NodeKind.TypeAliasDecl:
-      return getNestedDeclarationsInTypeAliasDecl(node)
+      return isDeclAdded(node) ? [] : getNestedDeclarationsInTypeAliasDecl(isDeclAdded, node)
     case NodeKind.ArrayType:
-      return getNestedDeclarationsInArrayType(node)
+      return getNestedDeclarationsInArrayType(isDeclAdded, node)
     case NodeKind.ObjectType:
-      return getNestedDeclarationsInObjectType(node)
+      return getNestedDeclarationsInObjectType(isDeclAdded, node)
     case NodeKind.BooleanType:
     case NodeKind.DateType:
     case NodeKind.FloatType:
@@ -72,15 +72,21 @@ export const getNestedDeclarations = (node: Node): Decl[] => {
     case NodeKind.GenericArgumentIdentifierType:
       return []
     case NodeKind.ReferenceIdentifierType:
-      return getNestedDeclarationsInReferenceIdentifierType(node)
+      return getNestedDeclarationsInReferenceIdentifierType(isDeclAdded, node)
     case NodeKind.IncludeIdentifierType:
-      return getNestedDeclarationsInIncludeIdentifierType(node)
+      return getNestedDeclarationsInIncludeIdentifierType(isDeclAdded, node)
     case NodeKind.NestedEntityMapType:
-      return getNestedDeclarationsInNestedEntityMapType(node)
+      return getNestedDeclarationsInNestedEntityMapType(isDeclAdded, node)
     default:
       return assertExhaustive(node)
   }
 }
+
+export type GetNestedDeclarations<T extends Node = Node, Args extends any[] = []> = (
+  isDeclarationAdded: (decl: Decl) => boolean,
+  node: T,
+  ...args: Args
+) => Decl[]
 
 export const isDecl = (node: Node): node is Decl =>
   isEntityDecl(node) || isEnumDecl(node) || isTypeAliasDecl(node)

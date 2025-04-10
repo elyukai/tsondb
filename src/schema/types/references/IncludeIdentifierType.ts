@@ -1,5 +1,5 @@
 import {
-  Decl,
+  GetNestedDeclarations,
   getNestedDeclarations,
   SecondaryDecl,
   TypeArguments,
@@ -52,9 +52,9 @@ export { IncludeIdentifierType as IncludeIdentifier }
 export const isIncludeIdentifierType = (node: Node): node is IncludeIdentifierType =>
   node.kind === NodeKind.IncludeIdentifierType
 
-export const getNestedDeclarationsInIncludeIdentifierType = (
-  type: IncludeIdentifierType,
-): Decl[] => [type.reference, ...getNestedDeclarations(type.reference)]
+export const getNestedDeclarationsInIncludeIdentifierType: GetNestedDeclarations<
+  IncludeIdentifierType
+> = (isDeclAdded, type) => [type.reference, ...getNestedDeclarations(isDeclAdded, type.reference)]
 
 export const validateIncludeIdentifierType: Validator<IncludeIdentifierType> = (
   helpers,

@@ -1,4 +1,4 @@
-import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
+import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl } from "../../declarations/EntityDecl.js"
 import { Node, NodeKind } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
@@ -33,9 +33,9 @@ export { ReferenceIdentifierType as ReferenceIdentifier }
 export const isReferenceIdentifierType = (node: Node): node is ReferenceIdentifierType =>
   node.kind === NodeKind.ReferenceIdentifierType
 
-export const getNestedDeclarationsInReferenceIdentifierType = (
-  type: ReferenceIdentifierType,
-): Decl[] => [type.entity, ...getNestedDeclarations(type.entity)]
+export const getNestedDeclarationsInReferenceIdentifierType: GetNestedDeclarations<
+  ReferenceIdentifierType
+> = (isDeclAdded, type) => [type.entity, ...getNestedDeclarations(isDeclAdded, type.entity)]
 
 // export const ENTITY_NAME_KEY = "entityName"
 // export const ENTITY_IDENTIFIER_KEY = "entityIdentifier"

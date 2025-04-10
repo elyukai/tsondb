@@ -14,6 +14,10 @@ export class Schema {
     this.checkParameterNamesShadowing()
   }
 
+  isDeclarationAdded(decl: Decl): boolean {
+    return this.declarations.has(decl)
+  }
+
   addDeclaration(decl: Decl, nested = false): void {
     if (!this.declarations.has(decl)) {
       if (
@@ -25,11 +29,14 @@ export class Schema {
           `Duplicate declaration name: "${decl.name}". Make sure declaration names are globally unique.`,
         )
       } else {
-        this.declarations.add(decl)
         if (nested) {
-          for (const nestedDecl of getNestedDeclarations(decl)) {
+          const nestedDecls = getNestedDeclarations(this.isDeclarationAdded.bind(this), decl)
+          this.declarations.add(decl)
+          for (const nestedDecl of nestedDecls) {
             this.addDeclaration(nestedDecl)
           }
+        } else {
+          this.declarations.add(decl)
         }
       }
     }

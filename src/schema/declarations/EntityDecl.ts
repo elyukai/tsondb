@@ -9,7 +9,13 @@ import {
 import { replaceTypeArguments, validate } from "../types/Type.js"
 import { validateOption } from "../validation/options.js"
 import { ValidatorHelpers } from "../validation/type.js"
-import { BaseDecl, Decl, getTypeArgumentsRecord, TypeArguments } from "./Declaration.js"
+import {
+  BaseDecl,
+  Decl,
+  GetNestedDeclarations,
+  getTypeArgumentsRecord,
+  TypeArguments,
+} from "./Declaration.js"
 
 export interface EntityDecl<
   Name extends string = string,
@@ -93,9 +99,10 @@ export const isEntityDecl = (
 ): node is EntityDecl<string, ObjectType<any>, string, TypeParameter[]> =>
   node.kind === NodeKind.EntityDecl
 
-export const getNestedDeclarationsInEntityDecl = (
-  decl: EntityDecl<string, ObjectType<any>, string, TypeParameter[]>,
-): Decl[] => getNestedDeclarationsInObjectType(decl.type.value)
+export const getNestedDeclarationsInEntityDecl: GetNestedDeclarations<EntityDecl> = (
+  isDeclAdded,
+  decl,
+) => getNestedDeclarationsInObjectType(isDeclAdded, decl.type.value)
 
 export const validateEntityDecl = <Params extends TypeParameter[]>(
   helpers: ValidatorHelpers,

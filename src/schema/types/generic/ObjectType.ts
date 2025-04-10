@@ -1,4 +1,4 @@
-import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
+import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import {
@@ -54,12 +54,12 @@ export { ObjectType as Object }
 
 export const isObjectType = (node: Node): node is ObjectType => node.kind === NodeKind.ObjectType
 
-export const getNestedDeclarationsInObjectType = (
-  type: ObjectType,
-  ignoreKeys: string[] = [],
-): Decl[] =>
+export const getNestedDeclarationsInObjectType: GetNestedDeclarations<
+  ObjectType,
+  [ignoreKeys?: string[]]
+> = (isDeclAdded, type, ignoreKeys = []) =>
   Object.entries(type.properties).flatMap(([key, prop]) =>
-    ignoreKeys.includes(key) ? [] : getNestedDeclarations(prop.type),
+    ignoreKeys.includes(key) ? [] : getNestedDeclarations(isDeclAdded, prop.type),
   )
 
 export const validateObjectType: Validator<ObjectType> = (helpers, type, value) => {

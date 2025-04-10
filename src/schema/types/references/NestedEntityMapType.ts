@@ -1,5 +1,5 @@
 import { Lazy } from "../../../utils/lazy.js"
-import { Decl } from "../../declarations/Declaration.js"
+import { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../../declarations/EntityDecl.js"
 import { identifierForSinglePrimaryKeyEntity, Node, NodeKind } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
@@ -108,9 +108,11 @@ export { NestedEntityMapType as NestedEntityMap }
 export const isNestedEntityMapType = (node: Node): node is NestedEntityMapType =>
   node.kind === NodeKind.NestedEntityMapType
 
-export const getNestedDeclarationsInNestedEntityMapType = (type: NestedEntityMapType): Decl[] => [
+export const getNestedDeclarationsInNestedEntityMapType: GetNestedDeclarations<
+  NestedEntityMapType
+> = (isDeclAdded, type) => [
   type.secondaryEntity,
-  ...getNestedDeclarationsInObjectType(type.type.value, [
+  ...getNestedDeclarationsInObjectType(isDeclAdded, type.type.value, [
     type.primaryEntityReferenceIdentifierKey!,
     type.secondaryEntityReferenceIdentifierKey!,
   ]),

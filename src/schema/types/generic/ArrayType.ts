@@ -1,4 +1,4 @@
-import { Decl, getNestedDeclarations } from "../../declarations/Declaration.js"
+import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import { parallelizeErrors, validateLengthRangeBound, Validator } from "../../validation/type.js"
@@ -47,8 +47,10 @@ export { ArrayType as Array }
 
 export const isArrayType = (node: Node): node is ArrayType => node.kind === NodeKind.ArrayType
 
-export const getNestedDeclarationsInArrayType = (type: ArrayType): Decl[] =>
-  getNestedDeclarations(type.items)
+export const getNestedDeclarationsInArrayType: GetNestedDeclarations<ArrayType> = (
+  isDeclAdded,
+  type,
+) => getNestedDeclarations(isDeclAdded, type.items)
 
 export const validateArrayType: Validator<ArrayType> = (helpers, type, value) => {
   if (!Array.isArray(value)) {
