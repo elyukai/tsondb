@@ -34,12 +34,12 @@ const checkParameterNamesShadowing = (decls: Decl[]) => {
 
 const addDeclarations = (existingDecls: Decl[], declsToAdd: Decl[], nested: boolean): Decl[] =>
   declsToAdd.reduce((accDecls, decl) => {
-    if (!existingDecls.includes(decl)) {
-      checkDuplicateIdentifier(existingDecls, decl)
+    if (!accDecls.includes(decl)) {
+      checkDuplicateIdentifier(accDecls, decl)
       const nestedDecls = nested
-        ? getNestedDeclarations(declToAdd => existingDecls.includes(declToAdd), decl)
+        ? getNestedDeclarations(declToAdd => accDecls.includes(declToAdd), decl)
         : []
-      return addDeclarations([...existingDecls, decl], nestedDecls, false)
+      return addDeclarations([...accDecls, decl], nestedDecls, false)
     }
 
     return accDecls
