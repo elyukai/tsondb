@@ -39,6 +39,16 @@ export const GenIncludeIdentifierType = <
 
 export { GenIncludeIdentifierType as GenIncludeIdentifier }
 
+export const IncludeIdentifierType = <T extends TConstraint<[]>>(
+  reference: T,
+): IncludeIdentifierType<[], T> => ({
+  kind: NodeKind.IncludeIdentifierType,
+  reference,
+  args: [],
+})
+
+export { IncludeIdentifierType as IncludeIdentifier }
+
 export const isIncludeIdentifierType = (node: Node): node is IncludeIdentifierType =>
   node.kind === NodeKind.IncludeIdentifierType
 
