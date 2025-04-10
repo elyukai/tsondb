@@ -9,6 +9,7 @@ import {
   getNestedDeclarations,
   getTypeArgumentsRecord,
   TypeArguments,
+  validateDeclName,
 } from "./Declaration.js"
 
 export interface TypeAliasDecl<
@@ -33,6 +34,8 @@ export const GenTypeAliasDecl = <
     type: (...args: Params) => T
   },
 ): TypeAliasDecl<Name, T, Params> => {
+  validateDeclName(options.name)
+
   const decl: TypeAliasDecl<Name, T, Params> = {
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,
@@ -57,6 +60,8 @@ export const TypeAliasDecl = <Name extends string, T extends Type>(
     type: () => T
   },
 ): TypeAliasDecl<Name, T, []> => {
+  validateDeclName(options.name)
+
   const decl: TypeAliasDecl<Name, T, []> = {
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,

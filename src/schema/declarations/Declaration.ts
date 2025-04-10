@@ -118,3 +118,13 @@ export const validateDecl = (
       return assertExhaustive(decl)
   }
 }
+
+const declNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+
+export const validateDeclName = (name: string) => {
+  if (!declNamePattern.test(name)) {
+    throw new Error(
+      `Invalid declaration name "${name}". Declaration names must match the pattern ${declNamePattern.toString()}.`,
+    )
+  }
+}

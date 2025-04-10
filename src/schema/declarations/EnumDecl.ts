@@ -2,7 +2,12 @@ import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
 import { Type } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
-import { BaseDecl, GetNestedDeclarations, getNestedDeclarations } from "./Declaration.js"
+import {
+  BaseDecl,
+  GetNestedDeclarations,
+  getNestedDeclarations,
+  validateDeclName,
+} from "./Declaration.js"
 
 export interface EnumDecl<
   Name extends string = string,
@@ -25,11 +30,15 @@ export const GenEnumDecl = <
     parameters: Params
     values: (...args: Params) => T
   },
-): EnumDecl<Name, T, Params> => ({
-  kind: NodeKind.EnumDecl,
-  sourceUrl,
-  ...options,
-})
+): EnumDecl<Name, T, Params> => {
+  validateDeclName(options.name)
+
+  return {
+    kind: NodeKind.EnumDecl,
+    sourceUrl,
+    ...options,
+  }
+}
 
 export { GenEnumDecl as GenEnum }
 
@@ -40,12 +49,16 @@ export const EnumDecl = <Name extends string, T extends Record<string, Type | nu
     comment?: string
     values: () => T
   },
-): EnumDecl<Name, T, []> => ({
-  kind: NodeKind.EnumDecl,
-  sourceUrl,
-  ...options,
-  parameters: [],
-})
+): EnumDecl<Name, T, []> => {
+  validateDeclName(options.name)
+
+  return {
+    kind: NodeKind.EnumDecl,
+    sourceUrl,
+    ...options,
+    parameters: [],
+  }
+}
 
 export { EnumDecl as Enum }
 

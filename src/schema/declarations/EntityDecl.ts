@@ -15,6 +15,7 @@ import {
   GetNestedDeclarations,
   getTypeArgumentsRecord,
   TypeArguments,
+  validateDeclName,
 } from "./Declaration.js"
 
 export interface EntityDecl<
@@ -44,6 +45,8 @@ export const GenEntityDecl = <
     primaryKey: PK | PK[]
   },
 ): EntityDecl<Name, T, PK, Params> => {
+  validateDeclName(options.name)
+
   const decl: EntityDecl<Name, T, PK, Params> = {
     kind: NodeKind.EntityDecl,
     sourceUrl,
@@ -74,6 +77,8 @@ export const EntityDecl = <
     primaryKey: PK | PK[]
   },
 ): EntityDecl<Name, T, PK, []> => {
+  validateDeclName(options.name)
+
   const decl: EntityDecl<Name, T, PK, []> = {
     kind: NodeKind.EntityDecl,
     sourceUrl,
