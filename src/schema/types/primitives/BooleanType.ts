@@ -16,7 +16,7 @@ export const isBooleanType = (node: Node): node is BooleanType => node.kind === 
 
 export const validateBooleanType: Validator<BooleanType> = (_helpers, _type, value) => {
   if (typeof value !== "boolean") {
-    return [TypeError(`Expected a boolean value, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected a boolean value, but got ${JSON.stringify(value)}`)]
   }
 
   return []

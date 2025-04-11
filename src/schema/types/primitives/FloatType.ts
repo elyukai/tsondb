@@ -28,7 +28,7 @@ export const isFloatType = (node: Node): node is FloatType => node.kind === Node
 
 export const validateFloatType: Validator<FloatType> = (_helpers, type, value) => {
   if (typeof value !== "number") {
-    return [TypeError(`Expected a floating-point number, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected a floating-point number, but got ${JSON.stringify(value)}`)]
   }
 
   return parallelizeErrors([

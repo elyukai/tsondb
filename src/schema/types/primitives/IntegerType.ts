@@ -33,7 +33,7 @@ export const isIntegerType = (node: Node): node is IntegerType => node.kind === 
 
 export const validateIntegerType: Validator<IntegerType> = (_helpers, type, value) => {
   if (typeof value !== "number" || !Number.isInteger(value)) {
-    return [TypeError(`Expected an integer, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected an integer, but got ${JSON.stringify(value)}`)]
   }
 
   return parallelizeErrors([

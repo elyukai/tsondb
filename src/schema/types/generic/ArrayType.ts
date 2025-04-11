@@ -55,7 +55,7 @@ export const getNestedDeclarationsInArrayType: GetNestedDeclarations<ArrayType> 
 
 export const validateArrayType: Validator<ArrayType> = (helpers, type, value) => {
   if (!Array.isArray(value)) {
-    return [TypeError(`Expected an array, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected an array, but got ${JSON.stringify(value)}`)]
   }
 
   return parallelizeErrors([
@@ -77,7 +77,7 @@ export const validateArrayType: Validator<ArrayType> = (helpers, type, value) =>
           const seen = new Set()
           for (const item of value) {
             if (seen.has(item)) {
-              return TypeError(`Duplicate item found: ${JSON.stringify(item)}`)
+              return TypeError(`duplicate item found: ${JSON.stringify(item)}`)
             }
             seen.add(item)
           }

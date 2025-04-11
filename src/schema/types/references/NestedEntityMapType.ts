@@ -125,7 +125,7 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
   value,
 ) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`Expected an object, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected an object, but got ${JSON.stringify(value)}`)]
   }
 
   return parallelizeErrors(

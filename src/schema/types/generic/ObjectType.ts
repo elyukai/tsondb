@@ -65,7 +65,7 @@ export const getNestedDeclarationsInObjectType: GetNestedDeclarations<
 
 export const validateObjectType: Validator<ObjectType> = (helpers, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`Expected an object, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected an object, but got ${JSON.stringify(value)}`)]
   }
 
   const keys = Object.keys(type.properties)
@@ -78,7 +78,7 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
       const prop = type.properties[key]!
 
       if (prop.isRequired && !(key in value)) {
-        return TypeError(`Missing required property: ${key}`)
+        return TypeError(`missing required property "${key}"`)
       } else if (prop.isRequired || (value as Record<string, unknown>)[key] !== undefined) {
         return wrapErrorsIfAny(
           `at object key "${key}"`,

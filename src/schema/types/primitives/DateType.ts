@@ -16,12 +16,12 @@ export const isDateType = (node: Node): node is DateType => node.kind === NodeKi
 
 export const validateDateType: Validator<DateType> = (_helpers, _type, value) => {
   if (typeof value !== "string") {
-    return [TypeError(`Expected a string, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected a string, but got ${JSON.stringify(value)}`)]
   }
 
   return parallelizeErrors([
     isNaN(new Date(value).getTime())
-      ? TypeError(`Invalid ISO 8601 date string: ${value}`)
+      ? TypeError(`invalid ISO 8601 date string: ${value}`)
       : undefined,
   ])
 }
