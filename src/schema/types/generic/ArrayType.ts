@@ -1,3 +1,4 @@
+import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
@@ -84,13 +85,10 @@ export const validateArrayType: Validator<ArrayType> = (helpers, type, value) =>
           // }
         })()
       : undefined,
-  ]).concat(
-    value.flatMap((item, index) =>
-      validate(helpers, type.items, item).map(err =>
-        TypeError(`at index ${index}`, { cause: err }),
-      ),
+    ...value.map((item, index) =>
+      wrapErrorsIfAny(`at index ${index}`, validate(helpers, type.items, item)),
     ),
-  )
+  ])
 }
 
 export const replaceTypeArgumentsInArrayType = (

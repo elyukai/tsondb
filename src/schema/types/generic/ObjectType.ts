@@ -1,3 +1,4 @@
+import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
@@ -73,21 +74,21 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
   return parallelizeErrors([
     validateLengthRangeBound("lower", label, type.minProperties, keys),
     validateLengthRangeBound("upper", label, type.maxProperties, keys),
-  ]).concat(
-    keys.flatMap(key => {
+    ...keys.map(key => {
       const prop = type.properties[key]!
 
       if (prop.isRequired && !(key in value)) {
         return TypeError(`Missing required property: ${key}`)
       } else if (prop.isRequired || (value as Record<string, unknown>)[key] !== undefined) {
-        return validate(helpers, prop.type, (value as Record<string, unknown>)[key]).map(err =>
-          TypeError(`at object key "${key}"`, { cause: err }),
+        return wrapErrorsIfAny(
+          `at object key "${key}"`,
+          validate(helpers, prop.type, (value as Record<string, unknown>)[key]),
         )
       }
 
-      return []
+      return undefined
     }),
-  )
+  ])
 }
 
 export const replaceTypeArgumentsInObjectType = (
