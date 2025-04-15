@@ -12,17 +12,20 @@ import {
   EntityDecl,
   getNestedDeclarationsInEntityDecl,
   isEntityDecl,
+  resolveTypeArgumentsInEntityDecl,
   validateEntityDecl,
 } from "./EntityDecl.js"
 import {
   EnumDecl,
   getNestedDeclarationsInEnumDecl,
   isEnumDecl,
+  resolveTypeArgumentsInEnumDecl,
   validateEnumDecl,
 } from "./EnumDecl.js"
 import {
   getNestedDeclarationsInTypeAliasDecl,
   isTypeAliasDecl,
+  resolveTypeArgumentsInTypeAliasDecl,
   TypeAliasDecl,
   validateTypeAliasDecl,
 } from "./TypeAliasDecl.js"
@@ -124,3 +127,25 @@ export const validateDeclName = (name: string) => {
     )
   }
 }
+
+export const resolveTypeArgumentsInDecl = <Params extends TypeParameter[]>(
+  decl: DeclP<Params>,
+  args: TypeArguments<Params>,
+): DeclP<[]> => {
+  switch (decl.kind) {
+    case NodeKind.EntityDecl:
+      return resolveTypeArgumentsInEntityDecl(decl)
+    case NodeKind.EnumDecl:
+      return resolveTypeArgumentsInEnumDecl(decl, args)
+    case NodeKind.TypeAliasDecl:
+      return resolveTypeArgumentsInTypeAliasDecl(decl, args)
+    default:
+      return assertExhaustive(decl)
+  }
+}
+
+export const isDeclWithoutTypeParameters = (decl: Decl): decl is DeclP<[]> =>
+  decl.parameters.length === 0
+
+export const resolveTypeArgumentsInDecls = (decls: readonly Decl[]) =>
+  decls.filter(isDeclWithoutTypeParameters).map(decl => resolveTypeArgumentsInDecl(decl, []))

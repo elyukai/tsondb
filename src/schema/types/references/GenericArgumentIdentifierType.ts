@@ -34,7 +34,7 @@ export const validateGenericArgumentIdentifierType: Validator<GenericArgumentIde
   )
 }
 
-export const replaceTypeArgumentsInGenericArgumentIdentifierType = <
+export const resolveTypeArgumentsInGenericArgumentIdentifierType = <
   T extends TConstraint,
   Args extends Record<string, Type>,
 >(

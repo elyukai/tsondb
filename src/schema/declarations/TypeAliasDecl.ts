@@ -1,7 +1,7 @@
 import { Lazy } from "../../utils/lazy.js"
 import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
-import { replaceTypeArguments, Type, validate } from "../types/Type.js"
+import { resolveTypeArgumentsInType, Type, validate } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
 import {
   BaseDecl,
@@ -95,6 +95,15 @@ export const validateTypeAliasDecl = <Params extends TypeParameter[]>(
 ): Error[] =>
   validate(
     helpers,
-    replaceTypeArguments(getTypeArgumentsRecord(decl, args), decl.type.value),
+    resolveTypeArgumentsInType(getTypeArgumentsRecord(decl, args), decl.type.value),
     value,
   )
+
+export const resolveTypeArgumentsInTypeAliasDecl = <Params extends TypeParameter[]>(
+  decl: TypeAliasDecl<string, Type, Params>,
+  args: TypeArguments<Params>,
+): TypeAliasDecl<string, Type, []> =>
+  TypeAliasDecl(decl.sourceUrl, {
+    ...decl,
+    type: () => resolveTypeArgumentsInType(getTypeArgumentsRecord(decl, args), decl.type.value),
+  })

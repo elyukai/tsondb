@@ -69,3 +69,9 @@ export const validateEntityDecl = (
   decl: EntityDecl,
   value: unknown,
 ): Error[] => validate(helpers, decl.type.value, value)
+
+export const resolveTypeArgumentsInEntityDecl = (decl: EntityDecl): EntityDecl =>
+  EntityDecl(decl.sourceUrl, {
+    ...decl,
+    type: () => resolveTypeArgumentsInObjectType({}, decl.type.value),
+  })

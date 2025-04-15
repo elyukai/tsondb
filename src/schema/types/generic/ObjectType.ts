@@ -8,7 +8,7 @@ import {
   validateLengthRangeBound,
   Validator,
 } from "../../validation/type.js"
-import { BaseType, replaceTypeArguments, Type, validate } from "../Type.js"
+import { BaseType, resolveTypeArgumentsInType, Type, validate } from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
@@ -91,7 +91,7 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
   ])
 }
 
-export const replaceTypeArgumentsInObjectType = (
+export const resolveTypeArgumentsInObjectType = (
   args: Record<string, Type>,
   type: ObjectType,
 ): ObjectType =>
@@ -99,7 +99,7 @@ export const replaceTypeArgumentsInObjectType = (
     Object.fromEntries(
       Object.entries(type.properties).map(
         ([key, config]) =>
-          [key, { ...config, type: replaceTypeArguments(args, config.type) }] as const,
+          [key, { ...config, type: resolveTypeArgumentsInType(args, config.type) }] as const,
       ),
     ),
     {
@@ -107,7 +107,7 @@ export const replaceTypeArgumentsInObjectType = (
     },
   )
 
-export interface MemberDecl<T extends Type, R extends boolean> {
+export interface MemberDecl<T extends Type = Type, R extends boolean = boolean> {
   kind: typeof NodeKind.MemberDecl
   isRequired: R
   type: T

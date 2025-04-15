@@ -3,7 +3,7 @@ import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations
 import { Node, NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import { parallelizeErrors, validateLengthRangeBound, Validator } from "../../validation/type.js"
-import { BaseType, replaceTypeArguments, Type, validate } from "../Type.js"
+import { BaseType, resolveTypeArgumentsInType, Type, validate } from "../Type.js"
 
 type TConstraint = Type
 
@@ -91,10 +91,10 @@ export const validateArrayType: Validator<ArrayType> = (helpers, type, value) =>
   ])
 }
 
-export const replaceTypeArgumentsInArrayType = (
+export const resolveTypeArgumentsInArrayType = (
   args: Record<string, Type>,
   type: ArrayType,
 ): ArrayType =>
-  ArrayType(replaceTypeArguments(args, type.items), {
+  ArrayType(resolveTypeArgumentsInType(args, type.items), {
     ...type,
   })

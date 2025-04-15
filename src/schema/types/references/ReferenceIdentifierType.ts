@@ -88,7 +88,7 @@ export const validateReferenceIdentifierType: Validator<ReferenceIdentifierType>
   )
 }
 
-export const replaceTypeArgumentsInReferenceIdentifierType = <
+export const resolveTypeArgumentsInReferenceIdentifierType = <
   T extends TConstraint,
   Args extends Record<string, Type>,
 >(

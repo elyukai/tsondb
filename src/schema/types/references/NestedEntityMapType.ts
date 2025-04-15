@@ -8,8 +8,8 @@ import {
   getNestedDeclarationsInObjectType,
   MemberDecl,
   ObjectType,
-  replaceTypeArgumentsInObjectType,
   Required,
+  resolveTypeArgumentsInObjectType,
   validateObjectType,
 } from "../generic/ObjectType.js"
 import { isStringType, StringType } from "../primitives/StringType.js"
@@ -75,9 +75,11 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
 
       const type = options.type(...referenceMembers)
 
+      const propertiesAsEntries = Object.entries(type.properties)
+
       const referenceMembersKeys = referenceMembers.map(
         member =>
-          Object.entries(type.properties).find(([, value]) => value === member)?.[0] as
+          propertiesAsEntries.find(([, value]) => value === member)?.[0] as
             | (keyof T & string)
             | undefined,
       )
@@ -99,6 +101,25 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
 }
 
 export { NestedEntityMapType as NestedEntityMap }
+
+const _NestedEntityMapType = <Name extends string, T extends TConstraint>(options: {
+  name: Name
+  comment?: string
+  secondaryEntity: KeyingEntity
+  type: () => ObjectType<T>
+}): NestedEntityMapType<Name, T> => {
+  const nestedEntityMapType: NestedEntityMapType<Name, T> = {
+    ...options,
+    kind: NodeKind.NestedEntityMapType,
+    type: Lazy.of(() => {
+      const type = options.type()
+      type.parent = nestedEntityMapType
+      return type
+    }),
+  }
+
+  return nestedEntityMapType
+}
 
 export const isNestedEntityMapType = (node: Node): node is NestedEntityMapType =>
   node.kind === NodeKind.NestedEntityMapType
@@ -136,11 +157,11 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
   )
 }
 
-export const replaceTypeArgumentsInNestedEntityMapType = (
+export const resolveTypeArgumentsInNestedEntityMapType = (
   args: Record<string, Type>,
   type: NestedEntityMapType,
 ): NestedEntityMapType =>
-  NestedEntityMapType({
+  _NestedEntityMapType({
     ...type,
-    type: () => replaceTypeArgumentsInObjectType(args, type.type.value),
+    type: () => resolveTypeArgumentsInObjectType(args, type.type.value),
   })

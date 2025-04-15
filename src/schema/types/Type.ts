@@ -4,13 +4,13 @@ import { BaseNode, NodeKind } from "../Node.js"
 import { Validator } from "../validation/type.js"
 import {
   ArrayType,
-  replaceTypeArgumentsInArrayType,
+  resolveTypeArgumentsInArrayType,
   validateArrayType,
 } from "./generic/ArrayType.js"
 import {
   MemberDecl,
   ObjectType,
-  replaceTypeArgumentsInObjectType,
+  resolveTypeArgumentsInObjectType,
   validateObjectType,
 } from "./generic/ObjectType.js"
 import { BooleanType, validateBooleanType } from "./primitives/BooleanType.js"
@@ -21,22 +21,22 @@ import { PrimitiveType } from "./primitives/PrimitiveType.js"
 import { StringType, validateStringType } from "./primitives/StringType.js"
 import {
   GenericArgumentIdentifierType,
-  replaceTypeArgumentsInGenericArgumentIdentifierType,
+  resolveTypeArgumentsInGenericArgumentIdentifierType,
   validateGenericArgumentIdentifierType,
 } from "./references/GenericArgumentIdentifierType.js"
 import {
   IncludeIdentifierType,
-  replaceTypeArgumentsInIncludeIdentifierType,
+  resolveTypeArgumentsInIncludeIdentifierType,
   validateIncludeIdentifierType,
 } from "./references/IncludeIdentifierType.js"
 import {
   NestedEntityMapType,
-  replaceTypeArgumentsInNestedEntityMapType,
+  resolveTypeArgumentsInNestedEntityMapType,
   validateNestedEntityMapType,
 } from "./references/NestedEntityMapType.js"
 import {
   ReferenceIdentifierType,
-  replaceTypeArgumentsInReferenceIdentifierType,
+  resolveTypeArgumentsInReferenceIdentifierType,
   validateReferenceIdentifierType,
 } from "./references/ReferenceIdentifierType.js"
 
@@ -85,15 +85,15 @@ export const validate: Validator<Type> = (helpers, type, value) => {
   }
 }
 
-export const replaceTypeArguments = <Args extends Record<string, Type>>(
+export const resolveTypeArgumentsInType = <Args extends Record<string, Type>>(
   args: Args,
   type: Type,
 ): Type => {
   switch (type.kind) {
     case NodeKind.ArrayType:
-      return replaceTypeArgumentsInArrayType(args, type)
+      return resolveTypeArgumentsInArrayType(args, type)
     case NodeKind.ObjectType:
-      return replaceTypeArgumentsInObjectType(args, type)
+      return resolveTypeArgumentsInObjectType(args, type)
     case NodeKind.BooleanType:
     case NodeKind.DateType:
     case NodeKind.FloatType:
@@ -101,13 +101,13 @@ export const replaceTypeArguments = <Args extends Record<string, Type>>(
     case NodeKind.StringType:
       return type
     case NodeKind.GenericArgumentIdentifierType:
-      return replaceTypeArgumentsInGenericArgumentIdentifierType(args, type)
+      return resolveTypeArgumentsInGenericArgumentIdentifierType(args, type)
     case NodeKind.ReferenceIdentifierType:
-      return replaceTypeArgumentsInReferenceIdentifierType(args, type)
+      return resolveTypeArgumentsInReferenceIdentifierType(args, type)
     case NodeKind.IncludeIdentifierType:
-      return replaceTypeArgumentsInIncludeIdentifierType(args, type)
+      return resolveTypeArgumentsInIncludeIdentifierType(args, type)
     case NodeKind.NestedEntityMapType:
-      return replaceTypeArgumentsInNestedEntityMapType(args, type)
+      return resolveTypeArgumentsInNestedEntityMapType(args, type)
     default:
       return assertExhaustive(type)
   }

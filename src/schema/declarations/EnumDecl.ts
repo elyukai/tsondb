@@ -1,12 +1,14 @@
 import { Lazy } from "../../utils/lazy.js"
 import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
-import { Type } from "../types/Type.js"
+import { resolveTypeArgumentsInType, Type } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
 import {
   BaseDecl,
   GetNestedDeclarations,
   getNestedDeclarations,
+  getTypeArgumentsRecord,
+  TypeArguments,
   validateDeclName,
 } from "./Declaration.js"
 
@@ -102,7 +104,19 @@ export const validateEnumDecl = (
   _value: unknown,
 ): Error[] => []
 
-export const replaceTypeArgumentsInEnumDecl = <Args extends Record<string, Type>>(
-  _args: Args,
-  decl: EnumDecl,
-): EnumDecl => decl
+export const resolveTypeArgumentsInEnumDecl = <Params extends TypeParameter[]>(
+  decl: EnumDecl<string, Record<string, Type | null>, Params>,
+  args: TypeArguments<Params>,
+): EnumDecl<string, Record<string, Type | null>, []> => {
+  const resolvedArgs = getTypeArgumentsRecord(decl, args)
+  return EnumDecl(decl.sourceUrl, {
+    ...decl,
+    values: () =>
+      Object.fromEntries(
+        Object.entries(decl.values.value).map(([key, value]) => [
+          key,
+          value === null ? null : resolveTypeArgumentsInType(resolvedArgs, value),
+        ]),
+      ),
+  })
+}

@@ -10,7 +10,7 @@ import { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
 import { Node, NodeKind } from "../../Node.js"
 import { TypeParameter } from "../../parameters/TypeParameter.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, replaceTypeArguments, Type } from "../Type.js"
+import { BaseType, resolveTypeArgumentsInType, Type } from "../Type.js"
 
 type TConstraint<Params extends TypeParameter[]> =
   | TypeAliasDecl<string, Type, Params>
@@ -62,11 +62,11 @@ export const validateIncludeIdentifierType: Validator<IncludeIdentifierType> = (
   value,
 ) => validateDecl(helpers, type.reference, type.args, value)
 
-export const replaceTypeArgumentsInIncludeIdentifierType = (
+export const resolveTypeArgumentsInIncludeIdentifierType = (
   args: Record<string, Type>,
   type: IncludeIdentifierType,
 ): IncludeIdentifierType =>
   GenIncludeIdentifierType(
     type.reference as unknown as SecondaryDecl,
-    type.args.map(arg => replaceTypeArguments(args, arg)),
+    type.args.map(arg => resolveTypeArgumentsInType(args, arg)),
   )
