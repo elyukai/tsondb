@@ -3,7 +3,6 @@ import { Lazy } from "../../../utils/lazy.js"
 import { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../../declarations/EntityDecl.js"
 import { identifierForSinglePrimaryKeyEntity, Node, NodeKind } from "../../Node.js"
-import { TypeParameter } from "../../parameters/TypeParameter.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
 import {
   getNestedDeclarationsInObjectType,
@@ -19,12 +18,7 @@ import { ReferenceIdentifierType } from "./ReferenceIdentifierType.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
-type KeyingEntity = EntityDecl<
-  string,
-  ObjectType<{ id: MemberDecl<StringType, true> }>,
-  "id",
-  TypeParameter[]
->
+type KeyingEntity = EntityDecl<string, ObjectType<{ id: MemberDecl<StringType, true> }>, "id">
 
 export interface NestedEntityMapType<
   Name extends string = string,

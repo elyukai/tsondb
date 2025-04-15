@@ -148,7 +148,6 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
     renderDocumentation(decl.comment),
     "export interface ",
     decl.name,
-    renderTypeParameters(options, decl.parameters),
     " ",
     renderType(options, decl.type.value),
   )

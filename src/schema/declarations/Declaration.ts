@@ -2,11 +2,7 @@ import { assertExhaustive } from "../../utils/typeSafety.js"
 import { BaseNode, Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
 import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.js"
-import {
-  getNestedDeclarationsInObjectType,
-  MemberDecl,
-  ObjectType,
-} from "../types/generic/ObjectType.js"
+import { getNestedDeclarationsInObjectType, ObjectType } from "../types/generic/ObjectType.js"
 import { getNestedDeclarationsInIncludeIdentifierType } from "../types/references/IncludeIdentifierType.js"
 import { getNestedDeclarationsInNestedEntityMapType } from "../types/references/NestedEntityMapType.js"
 import { getNestedDeclarationsInReferenceIdentifierType } from "../types/references/ReferenceIdentifierType.js"
@@ -46,7 +42,7 @@ export const getTypeArgumentsRecord = <Params extends TypeParameter[]>(
 export type Decl = EntityDecl | EnumDecl | TypeAliasDecl
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
-  | EntityDecl<string, ObjectType<Record<string, MemberDecl<Type, true>>>, string, Params>
+  | EntityDecl<string, ObjectType, string>
   | EnumDecl<string, Record<string, Type | null>, Params>
   | TypeAliasDecl<string, Type, Params>
 
@@ -109,7 +105,7 @@ export const validateDecl = (
 ) => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
-      return validateEntityDecl(helpers, decl, args, value)
+      return validateEntityDecl(helpers, decl, value)
     case NodeKind.EnumDecl:
       return validateEnumDecl(helpers, decl, args, value)
     case NodeKind.TypeAliasDecl:

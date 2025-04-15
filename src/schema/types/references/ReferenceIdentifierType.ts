@@ -1,7 +1,6 @@
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl } from "../../declarations/EntityDecl.js"
 import { Node, NodeKind } from "../../Node.js"
-import { TypeParameter } from "../../parameters/TypeParameter.js"
 import { Validator } from "../../validation/type.js"
 import {
   Object as _Object,
@@ -18,11 +17,11 @@ type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
 export interface ReferenceIdentifierType<T extends TConstraint = TConstraint> extends BaseType {
   kind: typeof NodeKind.ReferenceIdentifierType
-  entity: EntityDecl<string, ObjectType<T>, RequiredProperties<T> & string, TypeParameter[]>
+  entity: EntityDecl<string, ObjectType<T>, RequiredProperties<T> & string>
 }
 
 export const ReferenceIdentifierType = <T extends TConstraint>(
-  entity: EntityDecl<string, ObjectType<T>, RequiredProperties<T> & string, TypeParameter[]>,
+  entity: EntityDecl<string, ObjectType<T>, RequiredProperties<T> & string>,
 ): ReferenceIdentifierType<T> => ({
   kind: NodeKind.ReferenceIdentifierType,
   entity,
