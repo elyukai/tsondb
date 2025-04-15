@@ -18,8 +18,8 @@ export const FloatType = (
     multipleOf?: number
   } = {},
 ): FloatType => ({
-  kind: NodeKind.FloatType,
   ...options,
+  kind: NodeKind.FloatType,
 })
 
 export { FloatType as Float }

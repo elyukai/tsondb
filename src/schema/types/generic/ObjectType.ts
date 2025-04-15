@@ -29,8 +29,8 @@ export const ObjectType = <T extends TConstraint>(
   } = {},
 ): ObjectType<T> => {
   const type: ObjectType<T> = {
-    kind: NodeKind.ObjectType,
     ...options,
+    kind: NodeKind.ObjectType,
     minProperties: validateOption(
       options.minProperties,
       "minProperties",

@@ -38,9 +38,9 @@ export const EntityDecl = <
   validateDeclName(options.name)
 
   const decl: EntityDecl<Name, T, PK> = {
+    ...options,
     kind: NodeKind.EntityDecl,
     sourceUrl,
-    ...options,
     parameters: [],
     type: Lazy.of(() => {
       const type = options.type()

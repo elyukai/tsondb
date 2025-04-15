@@ -24,8 +24,8 @@ export const ArrayType = <T extends TConstraint>(
   } = {},
 ): ArrayType<T> => {
   const type: ArrayType<T> = {
-    kind: NodeKind.ArrayType,
     ...options,
+    kind: NodeKind.ArrayType,
     minItems: validateOption(
       options.minItems,
       "minItems",

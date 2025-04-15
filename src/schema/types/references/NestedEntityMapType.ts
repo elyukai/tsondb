@@ -43,8 +43,8 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
   ) => ObjectType<T>
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
-    kind: NodeKind.NestedEntityMapType,
     ...options,
+    kind: NodeKind.NestedEntityMapType,
     type: Lazy.of(() => {
       const parentDecl = getParentDecl(nestedEntityMapType)
 

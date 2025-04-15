@@ -18,8 +18,8 @@ export const StringType = (
     isMarkdown?: boolean
   } = {},
 ): StringType => ({
-  kind: NodeKind.StringType,
   ...options,
+  kind: NodeKind.StringType,
 })
 
 export { StringType as String }

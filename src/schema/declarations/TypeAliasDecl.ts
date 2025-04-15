@@ -37,9 +37,9 @@ export const GenTypeAliasDecl = <
   validateDeclName(options.name)
 
   const decl: TypeAliasDecl<Name, T, Params> = {
+    ...options,
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,
-    ...options,
     type: Lazy.of(() => {
       const type = options.type(...options.parameters)
       type.parent = decl
@@ -63,9 +63,9 @@ export const TypeAliasDecl = <Name extends string, T extends Type>(
   validateDeclName(options.name)
 
   const decl: TypeAliasDecl<Name, T, []> = {
+    ...options,
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,
-    ...options,
     parameters: [],
     type: Lazy.of(() => {
       const type = options.type()

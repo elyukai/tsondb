@@ -35,9 +35,9 @@ export const GenEnumDecl = <
   validateDeclName(options.name)
 
   const decl: EnumDecl<Name, T, Params> = {
+    ...options,
     kind: NodeKind.EnumDecl,
     sourceUrl,
-    ...options,
     values: Lazy.of(() => {
       const type = options.values(...options.parameters)
       Object.values(type).forEach(type => {
@@ -65,9 +65,9 @@ export const EnumDecl = <Name extends string, T extends Record<string, Type | nu
   validateDeclName(options.name)
 
   const decl: EnumDecl<Name, T, []> = {
+    ...options,
     kind: NodeKind.EnumDecl,
     sourceUrl,
-    ...options,
     parameters: [],
     values: Lazy.of(() => {
       const type = options.values()
