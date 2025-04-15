@@ -160,7 +160,7 @@ const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
     renderTypeParameters(options, decl.parameters),
     " =",
     EOL,
-    ...Object.entries(decl.values()).map(([caseName, caseDef]) =>
+    ...Object.entries(decl.values.value).map(([caseName, caseDef]) =>
       applyIndentation(
         1,
         joinSyntax(

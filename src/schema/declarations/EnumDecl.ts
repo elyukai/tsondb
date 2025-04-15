@@ -1,3 +1,4 @@
+import { Lazy } from "../../utils/lazy.js"
 import { Node, NodeKind } from "../Node.js"
 import { TypeParameter } from "../parameters/TypeParameter.js"
 import { Type } from "../types/Type.js"
@@ -15,7 +16,7 @@ export interface EnumDecl<
   Params extends TypeParameter[] = TypeParameter[],
 > extends BaseDecl<Name, Params> {
   kind: typeof NodeKind.EnumDecl
-  values: (...args: Params) => T
+  values: Lazy<T>
 }
 
 export const GenEnumDecl = <
@@ -33,11 +34,22 @@ export const GenEnumDecl = <
 ): EnumDecl<Name, T, Params> => {
   validateDeclName(options.name)
 
-  return {
+  const decl: EnumDecl<Name, T, Params> = {
     kind: NodeKind.EnumDecl,
     sourceUrl,
     ...options,
+    values: Lazy.of(() => {
+      const type = options.values(...options.parameters)
+      Object.values(type).forEach(type => {
+        if (type) {
+          type.parent = decl
+        }
+      })
+      return type
+    }),
   }
+
+  return decl
 }
 
 export { GenEnumDecl as GenEnum }
@@ -52,12 +64,23 @@ export const EnumDecl = <Name extends string, T extends Record<string, Type | nu
 ): EnumDecl<Name, T, []> => {
   validateDeclName(options.name)
 
-  return {
+  const decl: EnumDecl<Name, T, []> = {
     kind: NodeKind.EnumDecl,
     sourceUrl,
     ...options,
     parameters: [],
+    values: Lazy.of(() => {
+      const type = options.values()
+      Object.values(type).forEach(type => {
+        if (type) {
+          type.parent = decl
+        }
+      })
+      return type
+    }),
   }
+
+  return decl
 }
 
 export { EnumDecl as Enum }
@@ -68,7 +91,7 @@ export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = 
   isDeclAdded,
   decl,
 ) =>
-  Object.values(decl.values()).flatMap(caseDef =>
+  Object.values(decl.values.value).flatMap(caseDef =>
     caseDef === null ? [] : getNestedDeclarations(isDeclAdded, caseDef),
   )
 

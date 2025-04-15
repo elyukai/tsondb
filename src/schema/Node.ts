@@ -46,7 +46,7 @@ export const flatMapAuxiliaryDecls = (
 
       case NodeKind.EnumDecl: {
         const newDecls = callbackFn(node, decls)
-        return Object.values(node.values()).reduce(
+        return Object.values(node.values.value).reduce(
           (newDeclsAcc, caseDef) =>
             caseDef === null ? newDecls : mapNodeTree(callbackFn, caseDef, newDeclsAcc),
           newDecls,

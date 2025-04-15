@@ -161,7 +161,7 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) => ({
 
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) => ({
   description: decl.comment,
-  oneOf: Object.entries(decl.values()).map(([caseName, caseDef]) => ({
+  oneOf: Object.entries(decl.values.value).map(([caseName, caseDef]) => ({
     type: "object",
     properties: {
       kind: {
