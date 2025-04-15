@@ -3,6 +3,7 @@ import {
   getNestedDeclarations,
   getParameterNames,
 } from "./schema/declarations/Declaration.js"
+import { EntityDecl, isEntityDecl } from "./schema/declarations/EntityDecl.js"
 
 export interface Schema {
   declarations: readonly Decl[]
@@ -53,3 +54,6 @@ export const Schema = (declarations: Decl[]): Schema => {
     declarations: allDecls,
   }
 }
+
+export const getEntities = (schema: Schema): EntityDecl[] =>
+  schema.declarations.filter(isEntityDecl)

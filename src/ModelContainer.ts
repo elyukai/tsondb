@@ -1,8 +1,8 @@
 import { mkdir, readdir, readFile } from "fs/promises"
 import { join } from "path"
 import { Output } from "./renderers/Output.js"
-import { Schema } from "./Schema.js"
-import { isEntityDecl, validateEntityDecl } from "./schema/index.js"
+import { getEntities, Schema } from "./Schema.js"
+import { EntityDecl, validateEntityDecl } from "./schema/index.js"
 import { parallelizeErrors } from "./schema/validation/type.js"
 import { getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.js"
 
@@ -20,40 +20,49 @@ export const ModelContainer = (options: {
   ...options,
 })
 
-export const run = async (modelContainer: ModelContainer): Promise<void> => {
-  for (const output of modelContainer.outputs) {
-    await output.run(modelContainer.schema)
-  }
-
-  const entities = modelContainer.schema.declarations.values().toArray().filter(isEntityDecl)
-
+const prepareFolders = async (modelContainer: ModelContainer, entities: EntityDecl[]) => {
   await mkdir(modelContainer.dataRootPath, { recursive: true })
 
   for (const entity of entities) {
     const entityDir = join(modelContainer.dataRootPath, entity.name)
     await mkdir(entityDir, { recursive: true })
   }
+}
 
-  const readInstancesOfEntity = async (entityName: string) => {
-    const entityDir = join(modelContainer.dataRootPath, entityName)
-    const instanceFileNames = await readdir(entityDir)
-    return Promise.all(
-      instanceFileNames.map(async instanceFileName => ({
-        fileName: instanceFileName,
-        content: JSON.parse(await readFile(join(entityDir, instanceFileName), "utf-8")) as unknown,
-      })),
-    )
+export const generateOutputs = async (modelContainer: ModelContainer): Promise<void> => {
+  for (const output of modelContainer.outputs) {
+    await output.run(modelContainer.schema)
   }
+}
 
-  const instancesByEntityName = Object.fromEntries(
+type InstancesByEntityName = Record<string, { fileName: string; content: unknown }[]>
+
+const getInstancesByEntityName = async (
+  modelContainer: ModelContainer,
+  entities: EntityDecl[],
+): Promise<InstancesByEntityName> =>
+  Object.fromEntries(
     await Promise.all(
       entities.map(async entity => {
-        const instances = await readInstancesOfEntity(entity.name)
+        const entityDir = join(modelContainer.dataRootPath, entity.name)
+        const instanceFileNames = await readdir(entityDir)
+        const instances = await Promise.all(
+          instanceFileNames.map(async instanceFileName => ({
+            fileName: instanceFileName,
+            content: JSON.parse(
+              await readFile(join(entityDir, instanceFileName), "utf-8"),
+            ) as unknown,
+          })),
+        )
         return [entity.name, instances] as [string, { fileName: string; content: unknown }[]]
       }),
     ),
   )
 
+const _validate = async (
+  entities: EntityDecl[],
+  instancesByEntityName: InstancesByEntityName,
+): Promise<void> => {
   const errors = entities.flatMap(entity =>
     parallelizeErrors(
       instancesByEntityName[entity.name]!.map(instance =>
@@ -82,7 +91,6 @@ export const run = async (modelContainer: ModelContainer): Promise<void> => {
                     ],
             },
             entity,
-            [],
             instance.content,
           ),
         ),
@@ -99,4 +107,19 @@ export const run = async (modelContainer: ModelContainer): Promise<void> => {
     }
     throw new Error("Validation failed")
   }
+}
+
+export const validate = async (modelContainer: ModelContainer) => {
+  const entities = getEntities(modelContainer.schema)
+  await prepareFolders(modelContainer, entities)
+  const instancesByEntityName = await getInstancesByEntityName(modelContainer, entities)
+  return _validate(entities, instancesByEntityName)
+}
+
+export const generateAndValidate = async (modelContainer: ModelContainer) => {
+  await generateOutputs(modelContainer)
+  const entities = getEntities(modelContainer.schema)
+  await prepareFolders(modelContainer, entities)
+  const instancesByEntityName = await getInstancesByEntityName(modelContainer, entities)
+  await _validate(entities, instancesByEntityName)
 }
