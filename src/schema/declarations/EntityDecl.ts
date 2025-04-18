@@ -1,4 +1,5 @@
 import { Lazy } from "../../utils/lazy.js"
+import { Leaves } from "../../utils/object.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
 import {
   getNestedDeclarationsInObjectType,
@@ -11,7 +12,7 @@ import {
   serializeObjectType,
 } from "../types/generic/ObjectType.js"
 import { StringType } from "../types/primitives/StringType.js"
-import { Type, validate } from "../types/Type.js"
+import { AsType, SerializedAsType, Type, validate } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
 import {
   BaseDecl,
@@ -25,6 +26,21 @@ export interface EntityDecl<Name extends string = string, T extends ObjectType =
   extends BaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
   type: Lazy<T>
+  /**
+   * @default "name"
+   */
+  displayName?:
+    | Leaves<AsType<T>>
+    | {
+        /**
+         * @default "translations"
+         */
+        pathToLocaleMap?: Leaves<AsType<T>>
+        /**
+         * @default "name"
+         */
+        pathInLocaleMap?: string
+      }
 }
 
 export interface SerializedEntityDecl<
@@ -33,6 +49,21 @@ export interface SerializedEntityDecl<
 > extends SerializedBaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
   type: T
+  /**
+   * @default "name"
+   */
+  displayName?:
+    | Leaves<SerializedAsType<T>>
+    | {
+        /**
+         * @default "translations"
+         */
+        pathToLocaleMap?: Leaves<SerializedAsType<T>>
+        /**
+         * @default "name"
+         */
+        pathInLocaleMap?: string
+      }
 }
 
 export const EntityDecl = <Name extends string, T extends ObjectType>(
@@ -41,6 +72,21 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
     name: Name
     comment?: string
     type: () => T
+    /**
+     * @default "name"
+     */
+    displayName?:
+      | Leaves<AsType<T>>
+      | {
+          /**
+           * @default "translations"
+           */
+          pathToLocaleMap?: Leaves<AsType<T>>
+          /**
+           * @default "name"
+           */
+          pathInLocaleMap?: string
+        }
   },
 ): EntityDecl<Name, T> => {
   validateDeclName(options.name)

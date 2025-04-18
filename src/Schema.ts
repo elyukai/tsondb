@@ -4,9 +4,13 @@ import {
   getParameterNames,
 } from "./schema/declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "./schema/declarations/EntityDecl.js"
+import { isStringType } from "./schema/types/primitives/StringType.js"
+import { isNestedEntityMapType } from "./schema/types/references/NestedEntityMapType.js"
+import { findTypeAtPath } from "./schema/types/Type.js"
 
 export interface Schema {
   declarations: readonly Decl[]
+  localeEntity?: EntityDecl
 }
 
 const checkDuplicateIdentifier = (existingDecls: Decl[], decl: Decl) => {
@@ -33,6 +37,56 @@ const checkParameterNamesShadowing = (decls: Decl[]) => {
   }
 }
 
+const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) => {
+  for (const decl of decls) {
+    if (isEntityDecl(decl)) {
+      const displayName = decl.displayName ?? "name"
+
+      if (typeof displayName === "object") {
+        const pathToLocaleMap = displayName.pathToLocaleMap ?? "translations"
+        const pathInLocaleMap = displayName.pathInLocaleMap ?? "name"
+
+        if (localeEntity === undefined) {
+          throw new Error(
+            `Display name path "${pathToLocaleMap}" for entity "${decl.name}" requires a defined locale entity.`,
+          )
+        }
+
+        const localeMapAtPath = findTypeAtPath(decl.type.value, pathToLocaleMap.split("."))
+
+        if (
+          !localeMapAtPath ||
+          !isNestedEntityMapType(localeMapAtPath) ||
+          localeMapAtPath.secondaryEntity.name !== localeEntity.name
+        ) {
+          throw new Error(
+            `Display name path "${pathToLocaleMap}" for entity "${decl.name}" does not lead to a nested entity map for the defined locale entity.`,
+          )
+        }
+
+        const typeAtLocaleMapPath = findTypeAtPath(
+          localeMapAtPath.type.value,
+          pathInLocaleMap.split("."),
+        )
+
+        if (!typeAtLocaleMapPath || !isStringType(typeAtLocaleMapPath)) {
+          throw new Error(
+            `Display name path "${pathInLocaleMap}" for entity "${decl.name}" does not lead to a value of type string in nested locale map.`,
+          )
+        }
+      } else {
+        const path = displayName.split(".")
+        const typeAtPath = findTypeAtPath(decl.type.value, path)
+        if (!typeAtPath || !isStringType(typeAtPath)) {
+          throw new Error(
+            `Display name path "${displayName}" for entity "${decl.name}" does not lead to a value of type string.`,
+          )
+        }
+      }
+    }
+  }
+}
+
 const addDeclarations = (existingDecls: Decl[], declsToAdd: Decl[], nested: boolean): Decl[] =>
   declsToAdd.reduce((accDecls, decl) => {
     if (!accDecls.includes(decl)) {
@@ -46,12 +100,19 @@ const addDeclarations = (existingDecls: Decl[], declsToAdd: Decl[], nested: bool
     return accDecls
   }, existingDecls)
 
-export const Schema = (declarations: Decl[]): Schema => {
-  const allDecls = addDeclarations([], declarations, true)
+export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema => {
+  const allDecls = addDeclarations(
+    [],
+    localeEntity ? declarations.concat(localeEntity) : declarations,
+    true,
+  )
+
   checkParameterNamesShadowing(allDecls)
+  checkEntityDisplayNamePaths(allDecls, localeEntity)
 
   return {
     declarations: allDecls,
+    localeEntity,
   }
 }
 
