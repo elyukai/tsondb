@@ -41,6 +41,8 @@ export interface SerializedObjectType<T extends TSerializedConstraint = TSeriali
   maxProperties?: number
 }
 
+const keyPattern = /^[a-zA-Z0-9][a-zA-Z0-9_]*$/
+
 export const ObjectType = <T extends TConstraint>(
   properties: T,
   options: {
@@ -66,6 +68,12 @@ export const ObjectType = <T extends TConstraint>(
   }
 
   Object.keys(properties).forEach(key => {
+    if (!keyPattern.test(key)) {
+      throw new TypeError(
+        `Invalid object key "${key}". Object keys must not start with an underscore and may only contain letters, digits and underscores. (Pattern: ${keyPattern.source})`,
+      )
+    }
+
     properties[key]!.type.parent = type
   })
 
