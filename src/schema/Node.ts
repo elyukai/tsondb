@@ -1,4 +1,5 @@
 import { enumOfObject } from "../utils/enum.js"
+import { InstancesByEntityName } from "../utils/instances.js"
 import { assertExhaustive } from "../utils/typeSafety.js"
 import { Decl } from "./declarations/Declaration.js"
 import { Type } from "./types/Type.js"
@@ -130,6 +131,25 @@ export type IdentifierToCheck = { name: string; value: unknown }
 export interface Validators {
   checkReferentialIntegrity: (identifier: IdentifierToCheck) => Error[]
 }
+
+export const createValidators = (instancesByEntityName: InstancesByEntityName): Validators => ({
+  checkReferentialIntegrity: ({ name, value }) =>
+    instancesByEntityName[name]!.some(
+      instance =>
+        typeof instance.content === "object" &&
+        instance.content !== null &&
+        !Array.isArray(instance.content) &&
+        instance.id === value,
+    )
+      ? []
+      : [
+          ReferenceError(
+            `Invalid reference to instance of entity "${name}" with identifier ${JSON.stringify(
+              value,
+            )}`,
+          ),
+        ],
+})
 
 export type Serializer<T, U> = (node: T) => U
 

@@ -1,10 +1,11 @@
-import { mkdir, readdir, readFile } from "fs/promises"
+import { mkdir } from "fs/promises"
 import { join } from "path"
 import { Output } from "./renderers/Output.js"
 import { getEntities, Schema } from "./Schema.js"
-import { EntityDecl, validateEntityDecl } from "./schema/index.js"
+import { createValidators, EntityDecl, validateEntityDecl } from "./schema/index.js"
 import { parallelizeErrors } from "./schema/validation/type.js"
 import { getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.js"
+import { getInstancesByEntityName, InstancesByEntityName } from "./utils/instances.js"
 
 export interface ModelContainer {
   schema: Schema
@@ -35,30 +36,6 @@ export const generateOutputs = async (modelContainer: ModelContainer): Promise<v
   }
 }
 
-type InstancesByEntityName = Record<string, { fileName: string; content: unknown }[]>
-
-const getInstancesByEntityName = async (
-  modelContainer: ModelContainer,
-  entities: EntityDecl[],
-): Promise<InstancesByEntityName> =>
-  Object.fromEntries(
-    await Promise.all(
-      entities.map(async entity => {
-        const entityDir = join(modelContainer.dataRootPath, entity.name)
-        const instanceFileNames = await readdir(entityDir)
-        const instances = await Promise.all(
-          instanceFileNames.map(async instanceFileName => ({
-            fileName: instanceFileName,
-            content: JSON.parse(
-              await readFile(join(entityDir, instanceFileName), "utf-8"),
-            ) as unknown,
-          })),
-        )
-        return [entity.name, instances] as [string, { fileName: string; content: unknown }[]]
-      }),
-    ),
-  )
-
 const _validate = async (
   entities: EntityDecl[],
   instancesByEntityName: InstancesByEntityName,
@@ -68,31 +45,7 @@ const _validate = async (
       instancesByEntityName[entity.name]!.map(instance =>
         wrapErrorsIfAny(
           `in file "${entity.name}/${instance.fileName}"`,
-          validateEntityDecl(
-            {
-              checkReferentialIntegrity: ({ name, values }) =>
-                instancesByEntityName[name]!.some(
-                  instance =>
-                    typeof instance.content === "object" &&
-                    instance.content !== null &&
-                    !Array.isArray(instance.content) &&
-                    values.every(
-                      ([key, value]) =>
-                        (instance.content as Record<typeof key, unknown>)[key] === value,
-                    ),
-                )
-                  ? []
-                  : [
-                      ReferenceError(
-                        `Invalid reference to instance of entity "${name}" with identifier ${JSON.stringify(
-                          Object.fromEntries(values),
-                        )}`,
-                      ),
-                    ],
-            },
-            entity,
-            instance.content,
-          ),
+          validateEntityDecl(createValidators(instancesByEntityName), entity, instance.content),
         ),
       ),
     ),
