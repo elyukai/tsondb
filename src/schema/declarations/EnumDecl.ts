@@ -11,6 +11,7 @@ import {
   SerializedType,
   serializeType,
   Type,
+  validate,
 } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
 import {
@@ -117,12 +118,58 @@ export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = 
     caseDef === null ? [] : getNestedDeclarations(isDeclAdded, caseDef),
   )
 
+const discriminatorKey = "kind"
+
 export const validateEnumDecl = (
-  _helpers: ValidatorHelpers,
-  _decl: EnumDecl,
-  _args: Type[],
-  _value: unknown,
-): Error[] => []
+  helpers: ValidatorHelpers,
+  decl: EnumDecl,
+  args: Type[],
+  value: unknown,
+): Error[] => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return [TypeError(`expected an object, but got ${JSON.stringify(value)}`)]
+  }
+
+  const actualKeys = Object.keys(value)
+
+  if (!(discriminatorKey in value) || typeof value[discriminatorKey] !== "string") {
+    return [
+      TypeError(`missing required discriminator value at key "${discriminatorKey}" of type string`),
+    ]
+  }
+
+  const caseName = value[discriminatorKey]
+
+  if (!(caseName in decl.values.value)) {
+    return [TypeError(`discriminator "${caseName}" is not a valid enum case`)]
+  }
+
+  const unknownKeyErrors = actualKeys.flatMap(actualKey =>
+    actualKey === discriminatorKey || actualKey in decl.values.value
+      ? []
+      : [TypeError(`key "${actualKey}" is not the discriminator key or a valid enum case`)],
+  )
+
+  if (unknownKeyErrors.length > 0) {
+    return unknownKeyErrors
+  }
+
+  const associatedType = decl.values.value[caseName]
+
+  if (associatedType != null) {
+    if (!(caseName in value)) {
+      return [TypeError(`missing required associated value for case "${caseName}"`)]
+    }
+
+    return validate(
+      helpers,
+      resolveTypeArgumentsInType(getTypeArgumentsRecord(decl, args), associatedType),
+      (value as Record<typeof caseName, unknown>)[caseName],
+    )
+  }
+
+  return []
+}
 
 export const resolveTypeArgumentsInEnumDecl = <Params extends TypeParameter[]>(
   decl: EnumDecl<string, Record<string, Type | null>, Params>,
