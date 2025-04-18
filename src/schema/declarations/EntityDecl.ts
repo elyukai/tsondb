@@ -2,54 +2,50 @@ import { Lazy } from "../../utils/lazy.js"
 import { Node, NodeKind } from "../Node.js"
 import {
   getNestedDeclarationsInObjectType,
+  MemberDecl,
   ObjectType,
-  RequiredProperties,
+  Required,
   resolveTypeArgumentsInObjectType,
 } from "../types/generic/ObjectType.js"
-import { validate } from "../types/Type.js"
-import { validateOption } from "../validation/options.js"
+import { StringType } from "../types/primitives/StringType.js"
+import { Type, validate } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
 import { BaseDecl, GetNestedDeclarations, validateDeclName } from "./Declaration.js"
+import { TypeAliasDecl } from "./TypeAliasDecl.js"
 
-export interface EntityDecl<
-  Name extends string = string,
-  T extends ObjectType = ObjectType,
-  PK extends RequiredProperties<T["properties"]> & string = RequiredProperties<T["properties"]> &
-    string,
-> extends BaseDecl<Name, []> {
+export interface EntityDecl<Name extends string = string, T extends ObjectType = ObjectType>
+  extends BaseDecl<Name, []> {
   kind: typeof NodeKind.EntityDecl
   type: Lazy<T>
-  primaryKey: PK[]
 }
 
-export const EntityDecl = <
-  Name extends string,
-  T extends ObjectType,
-  PK extends RequiredProperties<T["properties"]> & string,
->(
+export const EntityDecl = <Name extends string, T extends ObjectType>(
   sourceUrl: string,
   options: {
     name: Name
     comment?: string
     type: () => T
-    primaryKey: PK | PK[]
   },
-): EntityDecl<Name, T, PK> => {
+): EntityDecl<Name, T> => {
   validateDeclName(options.name)
 
-  const decl: EntityDecl<Name, T, PK> = {
+  const decl: EntityDecl<Name, T> = {
     ...options,
     kind: NodeKind.EntityDecl,
     sourceUrl,
     parameters: [],
     type: Lazy.of(() => {
       const type = options.type()
+      Object.keys(type.properties).forEach(key => {
+        if (key === "id") {
+          throw new TypeError(
+            `Invalid object key "${key}" for entity "${options.name}". The key "id" is reserved for the entity identifier.`,
+          )
+        }
+      })
       type.parent = decl
       return type
     }),
-    primaryKey: Array.isArray(options.primaryKey)
-      ? validateOption(options.primaryKey, "primaryKey", arr => arr.length > 0)
-      : [options.primaryKey],
   }
 
   return decl
@@ -74,4 +70,33 @@ export const resolveTypeArgumentsInEntityDecl = (decl: EntityDecl): EntityDecl =
   EntityDecl(decl.sourceUrl, {
     ...decl,
     type: () => resolveTypeArgumentsInObjectType({}, decl.type.value),
+  })
+
+const createEntityIdentifierComment = () =>
+  "The entity’s identifier. A UUID or a locale code if it is registered as the locale entity."
+
+export const addEphemeralUUIDToType = <T extends Record<string, MemberDecl<Type, boolean>>>(
+  decl: EntityDecl<string, ObjectType<T>>,
+): ObjectType<Omit<T, "id"> & { id: MemberDecl<StringType, true> }> => ({
+  ...decl.type.value,
+  properties: {
+    id: Required({
+      comment: createEntityIdentifierComment(),
+      type: createEntityIdentifierType(),
+    }),
+    ...(Object.fromEntries(
+      Object.entries(decl.type.value.properties).filter(([key]) => key !== "id"),
+    ) as Omit<T, "id">),
+  },
+})
+
+export const createEntityIdentifierType = () => StringType()
+
+export const createEntityIdentifierTypeAsDecl = <Name extends string>(
+  decl: EntityDecl<Name, ObjectType>,
+) =>
+  TypeAliasDecl(decl.sourceUrl, {
+    comment: createEntityIdentifierComment(),
+    name: (decl.name + "_ID") as `${Name}_ID`,
+    type: createEntityIdentifierType,
   })

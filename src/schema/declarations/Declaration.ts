@@ -45,7 +45,7 @@ export const getTypeArgumentsRecord = <Params extends TypeParameter[]>(
 export type Decl = EntityDecl | EnumDecl | TypeAliasDecl
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
-  | EntityDecl<string, ObjectType, string>
+  | EntityDecl<string, ObjectType>
   | EnumDecl<string, Record<string, Type | null>, Params>
   | TypeAliasDecl<string, Type, Params>
 
@@ -81,10 +81,9 @@ export const getNestedDeclarations: GetNestedDeclarations = (isDeclAdded, node) 
   }
 }
 
-export type GetNestedDeclarations<T extends Node = Node, Args extends any[] = []> = (
+export type GetNestedDeclarations<T extends Node = Node> = (
   isDeclarationAdded: (decl: Decl) => boolean,
   node: T,
-  ...args: Args
 ) => Decl[]
 
 export const isDecl = (node: Node): node is Decl =>

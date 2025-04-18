@@ -55,13 +55,10 @@ export { ObjectType as Object }
 
 export const isObjectType = (node: Node): node is ObjectType => node.kind === NodeKind.ObjectType
 
-export const getNestedDeclarationsInObjectType: GetNestedDeclarations<
-  ObjectType,
-  [ignoreKeys?: string[]]
-> = (isDeclAdded, type, ignoreKeys = []) =>
-  Object.entries(type.properties).flatMap(([key, prop]) =>
-    ignoreKeys.includes(key) ? [] : getNestedDeclarations(isDeclAdded, prop.type),
-  )
+export const getNestedDeclarationsInObjectType: GetNestedDeclarations<ObjectType> = (
+  isDeclAdded,
+  type,
+) => Object.values(type.properties).flatMap(prop => getNestedDeclarations(isDeclAdded, prop.type))
 
 export const validateObjectType: Validator<ObjectType> = (helpers, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -130,7 +127,3 @@ export const Required = <T extends Type>(options: { comment?: string; type: T })
 
 export const Optional = <T extends Type>(options: { comment?: string; type: T }) =>
   MemberDecl(false, options.type, options.comment)
-
-export type RequiredProperties<T> = {
-  [K in keyof T]: T[K] extends false ? never : K
-}[keyof T]

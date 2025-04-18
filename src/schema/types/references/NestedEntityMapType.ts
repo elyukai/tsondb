@@ -2,23 +2,18 @@ import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { Lazy } from "../../../utils/lazy.js"
 import { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../../declarations/EntityDecl.js"
-import { identifierForSinglePrimaryKeyEntity, Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind } from "../../Node.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
 import {
   getNestedDeclarationsInObjectType,
   MemberDecl,
   ObjectType,
-  Required,
   resolveTypeArgumentsInObjectType,
   validateObjectType,
 } from "../generic/ObjectType.js"
-import { isStringType, StringType } from "../primitives/StringType.js"
 import { BaseType, getParentDecl, Type } from "../Type.js"
-import { ReferenceIdentifierType } from "./ReferenceIdentifierType.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
-
-type KeyingEntity = EntityDecl<string, ObjectType<{ id: MemberDecl<StringType, true> }>, "id">
 
 export interface NestedEntityMapType<
   Name extends string = string,
@@ -27,20 +22,15 @@ export interface NestedEntityMapType<
   kind: typeof NodeKind.NestedEntityMapType
   name: Name
   comment?: string
-  secondaryEntity: KeyingEntity
+  secondaryEntity: EntityDecl
   type: Lazy<ObjectType<T>>
-  primaryEntityReferenceIdentifierKey?: keyof T & string
-  secondaryEntityReferenceIdentifierKey?: keyof T & string
 }
 
 export const NestedEntityMapType = <Name extends string, T extends TConstraint>(options: {
   name: Name
   comment?: string
-  secondaryEntity: KeyingEntity
-  type: (
-    primaryId: MemberDecl<ReferenceIdentifierType, true>,
-    secondaryId: MemberDecl<ReferenceIdentifierType<{ id: MemberDecl<StringType, true> }>, true>,
-  ) => ObjectType<T>
+  secondaryEntity: EntityDecl
+  type: ObjectType<T>
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
@@ -56,42 +46,7 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
         throw new Error(`Parent declaration "${parentDecl.name}" is not an entity declaration`)
       }
 
-      if (
-        options.secondaryEntity.primaryKey.length !== 1 ||
-        !isStringType(
-          options.secondaryEntity.type.value.properties[options.secondaryEntity.primaryKey[0]!]
-            .type,
-        )
-      ) {
-        throw new Error("Secondary entity must have a single primary key of type string")
-      }
-
-      const primaryReferenceMember = Required({ type: ReferenceIdentifierType(parentDecl) })
-      const secondaryReferenceMember = Required({
-        type: ReferenceIdentifierType(options.secondaryEntity),
-      })
-
-      const referenceMembers = [primaryReferenceMember, secondaryReferenceMember] as const
-
-      const type = options.type(...referenceMembers)
-
-      const propertiesAsEntries = Object.entries(type.properties)
-
-      const referenceMembersKeys = referenceMembers.map(
-        member =>
-          propertiesAsEntries.find(([, value]) => value === member)?.[0] as
-            | (keyof T & string)
-            | undefined,
-      )
-
-      if (!referenceMembersKeys.every(key => key !== undefined)) {
-        throw new Error(
-          "Type must include reference identifier types to both entities as direct properties",
-        )
-      }
-
-      nestedEntityMapType.primaryEntityReferenceIdentifierKey = referenceMembersKeys[0]
-      nestedEntityMapType.secondaryEntityReferenceIdentifierKey = referenceMembersKeys[1]
+      const type = options.type
       type.parent = nestedEntityMapType
       return type
     }),
@@ -105,7 +60,7 @@ export { NestedEntityMapType as NestedEntityMap }
 const _NestedEntityMapType = <Name extends string, T extends TConstraint>(options: {
   name: Name
   comment?: string
-  secondaryEntity: KeyingEntity
+  secondaryEntity: EntityDecl
   type: () => ObjectType<T>
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
@@ -128,10 +83,7 @@ export const getNestedDeclarationsInNestedEntityMapType: GetNestedDeclarations<
   NestedEntityMapType
 > = (isDeclAdded, type) => [
   type.secondaryEntity,
-  ...getNestedDeclarationsInObjectType(isDeclAdded, type.type.value, [
-    type.primaryEntityReferenceIdentifierKey!,
-    type.secondaryEntityReferenceIdentifierKey!,
-  ]),
+  ...getNestedDeclarationsInObjectType(isDeclAdded, type.type.value),
 ]
 
 export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
@@ -148,9 +100,10 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
       wrapErrorsIfAny(
         `at nested entity map "${type.name}" at key "${key}"`,
         validateObjectType(helpers, type.type.value, value[key as keyof typeof value]).concat(
-          helpers.checkReferentialIntegrity(
-            identifierForSinglePrimaryKeyEntity(type.secondaryEntity, key),
-          ),
+          helpers.checkReferentialIntegrity({
+            name: type.secondaryEntity.name,
+            value: value[key as keyof typeof value],
+          }),
         ),
       ),
     ),

@@ -1,5 +1,10 @@
 import { Decl } from "../../schema/declarations/Declaration.js"
-import { EntityDecl, isEntityDecl } from "../../schema/declarations/EntityDecl.js"
+import {
+  addEphemeralUUIDToType,
+  createEntityIdentifierTypeAsDecl,
+  EntityDecl,
+  isEntityDecl,
+} from "../../schema/declarations/EntityDecl.js"
 import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
@@ -16,10 +21,7 @@ import {
   isNestedEntityMapType,
   NestedEntityMapType,
 } from "../../schema/types/references/NestedEntityMapType.js"
-import {
-  identifierObjectTypeForEntity,
-  ReferenceIdentifierType,
-} from "../../schema/types/references/ReferenceIdentifierType.js"
+import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
 import { getParentDecl, Type } from "../../schema/types/Type.js"
 import { assertExhaustive } from "../../utils/typeSafety.js"
 
@@ -156,7 +158,7 @@ const renderType: RenderFn<Type> = (options, type) => {
 
 const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) => ({
   description: decl.comment,
-  ...renderType(options, decl.type.value),
+  ...renderType(options, addEphemeralUUIDToType(decl)),
 })
 
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) => ({
@@ -214,10 +216,7 @@ export const render = (
               type: () => node.type.value,
             })
           } else if (isEntityDecl(node)) {
-            return TypeAliasDecl(node.sourceUrl, {
-              name: node.name + "_ID",
-              type: () => identifierObjectTypeForEntity(node),
-            })
+            return createEntityIdentifierTypeAsDecl(node)
           }
 
           return undefined

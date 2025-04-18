@@ -1,6 +1,11 @@
 import { EOL } from "node:os"
 import { Decl } from "../../schema/declarations/Declaration.js"
-import { EntityDecl, isEntityDecl } from "../../schema/declarations/EntityDecl.js"
+import {
+  addEphemeralUUIDToType,
+  createEntityIdentifierTypeAsDecl,
+  EntityDecl,
+  isEntityDecl,
+} from "../../schema/declarations/EntityDecl.js"
 import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
@@ -17,13 +22,11 @@ import {
   isNestedEntityMapType,
   NestedEntityMapType,
 } from "../../schema/types/references/NestedEntityMapType.js"
-import {
-  identifierObjectTypeForEntity,
-  ReferenceIdentifierType,
-} from "../../schema/types/references/ReferenceIdentifierType.js"
+import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
 import { getParentDecl, Type } from "../../schema/types/Type.js"
+import { applyIndentation, joinSyntax, prefixLines, syntax } from "../../utils/render.js"
+import { toCamelCase } from "../../utils/string.js"
 import { assertExhaustive } from "../../utils/typeSafety.js"
-import { applyIndentation, joinSyntax, prefixLines } from "../utils.js"
 
 export type TypeScriptRendererOptions = {
   indentation: number
@@ -38,7 +41,10 @@ type RenderFn<T> = (options: TypeScriptRendererOptions, node: T) => string
 const renderDocumentation = (comment?: string): string =>
   comment === undefined
     ? ""
-    : joinSyntax("/**", EOL, prefixLines(" * ", comment, true), EOL, " */", EOL)
+    : syntax`/**
+${prefixLines(" * ", comment, true)}
+ */
+`
 
 const renderTypeParameters: RenderFn<TypeParameter[]> = (options, params) =>
   params.length === 0
@@ -54,32 +60,28 @@ const renderTypeParameters: RenderFn<TypeParameter[]> = (options, params) =>
 const renderArrayType: RenderFn<ArrayType> = (options, type) =>
   `${renderType(options, type.items)}[]`
 
+const wrapAsObject: RenderFn<string> = (options, syntax) =>
+  joinSyntax("{", EOL, applyIndentation(1, syntax, options.indentation), EOL, "}")
+
 const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, boolean>>>> = (
   options,
   type,
 ) => {
-  return joinSyntax(
-    "{",
-    EOL,
-    applyIndentation(
-      1,
-      Object.entries(type.properties)
-        .map(([name, config]) =>
-          joinSyntax(
-            renderDocumentation(config.comment),
-            name,
-            config.isRequired ? "" : "?",
-            ": ",
-            renderType(options, config.type),
-          ),
-        )
-        .join(
-          Object.values(type.properties).some(prop => prop.comment !== undefined) ? EOL + EOL : EOL,
+  return wrapAsObject(
+    options,
+    Object.entries(type.properties)
+      .map(([name, config]) =>
+        joinSyntax(
+          renderDocumentation(config.comment),
+          name,
+          config.isRequired ? "" : "?",
+          ": ",
+          renderType(options, config.type),
         ),
-      options.indentation,
-    ),
-    EOL,
-    "}",
+      )
+      .join(
+        Object.values(type.properties).some(prop => prop.comment !== undefined) ? EOL + EOL : EOL,
+      ),
   )
 }
 
@@ -102,17 +104,7 @@ const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (_options, 
   type.reference.name
 
 const renderNestedEntityMapType: RenderFn<NestedEntityMapType> = (options, type) =>
-  joinSyntax(
-    "{",
-    EOL,
-    applyIndentation(
-      1,
-      joinSyntax("[", type.secondaryEntityReferenceIdentifierKey, ": string]: ", type.name),
-      options.indentation,
-    ),
-    EOL,
-    "}",
-  )
+  wrapAsObject(options, syntax`[${toCamelCase(type.secondaryEntity.name)}Id: string]: ${type.name}`)
 
 const renderType: RenderFn<Type> = (options, type) => {
   switch (type.kind) {
@@ -149,7 +141,7 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
     "export interface ",
     decl.name,
     " ",
-    renderType(options, decl.type.value),
+    renderType(options, addEphemeralUUIDToType(decl)),
   )
 
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
@@ -240,10 +232,7 @@ export const render = (
           type: () => node.type.value,
         })
       } else if (isEntityDecl(node)) {
-        return TypeAliasDecl(node.sourceUrl, {
-          name: node.name + "_ID",
-          type: () => identifierObjectTypeForEntity(node),
-        })
+        return createEntityIdentifierTypeAsDecl(node)
       }
 
       return undefined

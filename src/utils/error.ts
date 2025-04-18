@@ -1,4 +1,4 @@
-import { applyIndentation } from "../renderers/utils.js"
+import { applyIndentation } from "./render.js"
 
 export const getErrorMessageForDisplay = (error: Error): string => {
   if (error instanceof AggregateError) {
