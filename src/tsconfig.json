@@ -4,6 +4,8 @@
     "declaration": true,
     "erasableSyntaxOnly": true,
     "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "lib": ["esnext"],
     "module": "NodeNext",
     "noErrorTruncation": true,

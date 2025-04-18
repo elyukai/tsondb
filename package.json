@@ -20,9 +20,16 @@
     "test": "glob -c \"node --import tsx --test\" \"./test/**/*.ts\""
   },
   "devDependencies": {
+    "@types/express": "^5.0.1",
     "@types/node": "^22.13.14",
     "glob": "^11.0.1",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "preact": "^10.26.5",
+    "preact-iso": "^2.9.1",
+    "uuid": "^11.1.0"
   }
 }
