@@ -1,15 +1,17 @@
 import { assertExhaustive } from "../../utils/typeSafety.js"
 import { Decl, isDecl } from "../declarations/Declaration.js"
-import { BaseNode, NodeKind, Serializer } from "../Node.js"
+import { BaseNode, GetReferences, NodeKind, Serializer } from "../Node.js"
 import { Validator } from "../validation/type.js"
 import {
   ArrayType,
+  getReferencesForArrayType,
   resolveTypeArgumentsInArrayType,
   serializeArrayType,
   SerializedArrayType,
   validateArrayType,
 } from "./generic/ArrayType.js"
 import {
+  getReferencesForObjectType,
   MemberDecl,
   ObjectType,
   resolveTypeArgumentsInObjectType,
@@ -17,20 +19,45 @@ import {
   serializeObjectType,
   validateObjectType,
 } from "./generic/ObjectType.js"
-import { BooleanType, serializeBooleanType, validateBooleanType } from "./primitives/BooleanType.js"
-import { serializeDateType, validateDateType } from "./primitives/DateType.js"
-import { FloatType, serializeFloatType, validateFloatType } from "./primitives/FloatType.js"
-import { serializeIntegerType, validateIntegerType } from "./primitives/IntegerType.js"
+import {
+  BooleanType,
+  getReferencesForBooleanType,
+  serializeBooleanType,
+  validateBooleanType,
+} from "./primitives/BooleanType.js"
+import {
+  getReferencesForDateType,
+  serializeDateType,
+  validateDateType,
+} from "./primitives/DateType.js"
+import {
+  FloatType,
+  getReferencesForFloatType,
+  serializeFloatType,
+  validateFloatType,
+} from "./primitives/FloatType.js"
+import {
+  getReferencesForIntegerType,
+  serializeIntegerType,
+  validateIntegerType,
+} from "./primitives/IntegerType.js"
 import { PrimitiveType, SerializedPrimitiveType } from "./primitives/PrimitiveType.js"
-import { serializeStringType, StringType, validateStringType } from "./primitives/StringType.js"
+import {
+  getReferencesForStringType,
+  serializeStringType,
+  StringType,
+  validateStringType,
+} from "./primitives/StringType.js"
 import {
   GenericArgumentIdentifierType,
+  getReferencesForGenericArgumentIdentifierType,
   resolveTypeArgumentsInGenericArgumentIdentifierType,
   SerializedGenericArgumentIdentifierType,
   serializeGenericArgumentIdentifierType,
   validateGenericArgumentIdentifierType,
 } from "./references/GenericArgumentIdentifierType.js"
 import {
+  getReferencesForIncludeIdentifierType,
   IncludeIdentifierType,
   resolveTypeArgumentsInIncludeIdentifierType,
   SerializedIncludeIdentifierType,
@@ -38,6 +65,7 @@ import {
   validateIncludeIdentifierType,
 } from "./references/IncludeIdentifierType.js"
 import {
+  getReferencesForNestedEntityMapType,
   NestedEntityMapType,
   resolveTypeArgumentsInNestedEntityMapType,
   SerializedNestedEntityMapType,
@@ -45,6 +73,7 @@ import {
   validateNestedEntityMapType,
 } from "./references/NestedEntityMapType.js"
 import {
+  getReferencesForReferenceIdentifierType,
   ReferenceIdentifierType,
   resolveTypeArgumentsInReferenceIdentifierType,
   SerializedReferenceIdentifierType,
@@ -221,4 +250,33 @@ export const serializeType: Serializer<Type, SerializedType> = type => {
 export const removeParentKey = <T extends BaseType>(type: T): Omit<T, "parent"> => {
   const { parent: _parent, ...rest } = type
   return rest
+}
+
+export const getReferencesForType: GetReferences<Type> = (type, value) => {
+  switch (type.kind) {
+    case NodeKind.ArrayType:
+      return getReferencesForArrayType(type, value)
+    case NodeKind.ObjectType:
+      return getReferencesForObjectType(type, value)
+    case NodeKind.BooleanType:
+      return getReferencesForBooleanType(type, value)
+    case NodeKind.DateType:
+      return getReferencesForDateType(type, value)
+    case NodeKind.FloatType:
+      return getReferencesForFloatType(type, value)
+    case NodeKind.IntegerType:
+      return getReferencesForIntegerType(type, value)
+    case NodeKind.StringType:
+      return getReferencesForStringType(type, value)
+    case NodeKind.GenericArgumentIdentifierType:
+      return getReferencesForGenericArgumentIdentifierType(type, value)
+    case NodeKind.ReferenceIdentifierType:
+      return getReferencesForReferenceIdentifierType(type, value)
+    case NodeKind.IncludeIdentifierType:
+      return getReferencesForIncludeIdentifierType(type, value)
+    case NodeKind.NestedEntityMapType:
+      return getReferencesForNestedEntityMapType(type, value)
+    default:
+      return assertExhaustive(type)
+  }
 }

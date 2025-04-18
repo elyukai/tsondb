@@ -2,10 +2,11 @@ import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { Lazy } from "../../../utils/lazy.js"
 import { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../../declarations/EntityDecl.js"
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
 import {
   getNestedDeclarationsInObjectType,
+  getReferencesForObjectType,
   MemberDecl,
   ObjectType,
   resolveTypeArgumentsInObjectType,
@@ -150,3 +151,13 @@ export const serializeNestedEntityMapType: Serializer<
   secondaryEntity: type.secondaryEntity.name,
   type: serializeObjectType(type.type.value),
 })
+
+export const getReferencesForNestedEntityMapType: GetReferences<NestedEntityMapType> = (
+  type,
+  value,
+) =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+    ? Object.values(value)
+        .flatMap(item => getReferencesForObjectType(type.type.value, item))
+        .concat(Object.keys(value))
+    : []

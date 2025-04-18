@@ -1,10 +1,11 @@
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import { parallelizeErrors, validateLengthRangeBound, Validator } from "../../validation/type.js"
 import {
   BaseType,
+  getReferencesForType,
   removeParentKey,
   resolveTypeArgumentsInType,
   SerializedBaseType,
@@ -119,3 +120,6 @@ export const serializeArrayType: Serializer<ArrayType, SerializedArrayType> = ty
   ...removeParentKey(type),
   items: serializeType(type.items),
 })
+
+export const getReferencesForArrayType: GetReferences<ArrayType> = (type, value) =>
+  Array.isArray(value) ? value.flatMap(item => getReferencesForType(type.items, item)) : []

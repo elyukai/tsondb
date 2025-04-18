@@ -1,4 +1,4 @@
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
 import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
 
@@ -28,3 +28,5 @@ export const validateBooleanType: Validator<BooleanType> = (_helpers, _type, val
 
 export const serializeBooleanType: Serializer<BooleanType, SerializedBooleanType> = type =>
   removeParentKey(type)
+
+export const getReferencesForBooleanType: GetReferences<BooleanType> = (_type, _value) => []

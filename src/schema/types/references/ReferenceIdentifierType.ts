@@ -1,6 +1,6 @@
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { createEntityIdentifierType, EntityDecl } from "../../declarations/EntityDecl.js"
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
 import { MemberDecl, ObjectType } from "../generic/ObjectType.js"
 import { BaseType, removeParentKey, SerializedBaseType, Type, validate } from "../Type.js"
@@ -64,3 +64,8 @@ export const serializeReferenceIdentifierType: Serializer<
   ...removeParentKey(type),
   entity: type.entity.name,
 })
+
+export const getReferencesForReferenceIdentifierType: GetReferences<ReferenceIdentifierType> = (
+  _type,
+  value,
+) => (typeof value === "string" ? [value] : [])

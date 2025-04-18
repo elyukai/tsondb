@@ -1,4 +1,4 @@
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
 import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
@@ -52,3 +52,5 @@ export const validateIntegerType: Validator<IntegerType> = (_helpers, type, valu
 
 export const serializeIntegerType: Serializer<IntegerType, SerializedIntegerType> = type =>
   removeParentKey(type)
+
+export const getReferencesForIntegerType: GetReferences<IntegerType> = (_type, _value) => []

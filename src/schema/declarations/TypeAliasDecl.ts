@@ -1,11 +1,12 @@
 import { Lazy } from "../../utils/lazy.js"
-import { Node, NodeKind, Serializer } from "../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
 import {
   SerializedTypeParameter,
   serializeTypeParameter,
   TypeParameter,
 } from "../parameters/TypeParameter.js"
 import {
+  getReferencesForType,
   resolveTypeArgumentsInType,
   SerializedType,
   serializeType,
@@ -133,3 +134,6 @@ export const serializeTypeAliasDecl: Serializer<TypeAliasDecl, SerializedTypeAli
   type: serializeType(type.type.value),
   parameters: type.parameters.map(param => serializeTypeParameter(param)),
 })
+
+export const getReferencesForTypeAliasDecl: GetReferences<TypeAliasDecl> = (decl, value) =>
+  getReferencesForType(decl.type.value, value)

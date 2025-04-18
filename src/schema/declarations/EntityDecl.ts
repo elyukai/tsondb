@@ -1,7 +1,8 @@
 import { Lazy } from "../../utils/lazy.js"
-import { Node, NodeKind, Serializer } from "../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
 import {
   getNestedDeclarationsInObjectType,
+  getReferencesForObjectType,
   MemberDecl,
   ObjectType,
   Required,
@@ -120,3 +121,6 @@ export const serializeEntityDecl: Serializer<EntityDecl, SerializedEntityDecl> =
   ...type,
   type: serializeObjectType(type.type.value),
 })
+
+export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value) =>
+  getReferencesForObjectType(decl.type.value, value)

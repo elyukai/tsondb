@@ -1,11 +1,17 @@
 import { Lazy } from "../../utils/lazy.js"
-import { Node, NodeKind, Serializer } from "../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
 import {
   SerializedTypeParameter,
   serializeTypeParameter,
   TypeParameter,
 } from "../parameters/TypeParameter.js"
-import { resolveTypeArgumentsInType, SerializedType, serializeType, Type } from "../types/Type.js"
+import {
+  getReferencesForType,
+  resolveTypeArgumentsInType,
+  SerializedType,
+  serializeType,
+  Type,
+} from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
 import {
   BaseDecl,
@@ -145,3 +151,18 @@ export const serializeEnumDecl: Serializer<EnumDecl, SerializedEnumDecl> = type 
   ),
   parameters: type.parameters.map(param => serializeTypeParameter(param)),
 })
+
+export const getReferencesForEnumDecl: GetReferences<EnumDecl> = (decl, value) =>
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  discriminatorKey in value &&
+  typeof value[discriminatorKey] === "string" &&
+  value[discriminatorKey] in decl.values.value &&
+  decl.values.value[value[discriminatorKey]] !== null &&
+  value[discriminatorKey] in value
+    ? getReferencesForType(
+        decl.values.value[value[discriminatorKey]]!,
+        (value as Record<string, unknown>)[value[discriminatorKey]],
+      )
+    : []

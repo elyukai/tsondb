@@ -1,6 +1,8 @@
 import {
   GetNestedDeclarations,
   getNestedDeclarations,
+  getReferencesForDecl,
+  resolveTypeArgumentsInDecl,
   SecondaryDecl,
   SerializedTypeArguments,
   TypeArguments,
@@ -8,7 +10,7 @@ import {
 } from "../../declarations/Declaration.js"
 import { EnumDecl } from "../../declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { SerializedTypeParameter, TypeParameter } from "../../parameters/TypeParameter.js"
 import { Validator } from "../../validation/type.js"
 import {
@@ -95,3 +97,8 @@ export const serializeIncludeIdentifierType: Serializer<
   reference: type.reference.name,
   args: type.args.map(arg => serializeType(arg)),
 })
+
+export const getReferencesForIncludeIdentifierType: GetReferences<IncludeIdentifierType> = (
+  type,
+  value,
+) => getReferencesForDecl(resolveTypeArgumentsInDecl(type.reference, type.args), value)

@@ -1,4 +1,4 @@
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
 import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
 
@@ -65,3 +65,5 @@ export const serializeStringType: Serializer<StringType, SerializedStringType> =
     ...type,
     pattern: type.pattern?.source,
   })
+
+export const getReferencesForStringType: GetReferences<StringType> = (_type, _value) => []

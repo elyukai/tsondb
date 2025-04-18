@@ -132,3 +132,5 @@ export interface Validators {
 }
 
 export type Serializer<T, U> = (node: T) => U
+
+export type GetReferences<T extends Node> = (node: T, value: unknown) => string[]

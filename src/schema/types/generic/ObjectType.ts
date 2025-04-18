@@ -1,6 +1,6 @@
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import {
   NumerusLabel,
@@ -10,6 +10,7 @@ import {
 } from "../../validation/type.js"
 import {
   BaseType,
+  getReferencesForType,
   removeParentKey,
   resolveTypeArgumentsInType,
   SerializedBaseType,
@@ -170,3 +171,10 @@ export const serializeObjectType: Serializer<ObjectType, SerializedObjectType> =
     ]),
   ),
 })
+
+export const getReferencesForObjectType: GetReferences<ObjectType> = (type, value) =>
+  typeof value === "object" && value !== null
+    ? Object.entries(value).flatMap(([key, propValue]) =>
+        key in type.properties ? getReferencesForType(type.properties[key]!.type, propValue) : [],
+      )
+    : []

@@ -1,5 +1,5 @@
 import { assertExhaustive } from "../../utils/typeSafety.js"
-import { BaseNode, Node, NodeKind, Serializer } from "../Node.js"
+import { BaseNode, GetReferences, Node, NodeKind, Serializer } from "../Node.js"
 import { SerializedTypeParameter, TypeParameter } from "../parameters/TypeParameter.js"
 import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.js"
 import {
@@ -15,6 +15,7 @@ import { ValidatorHelpers } from "../validation/type.js"
 import {
   EntityDecl,
   getNestedDeclarationsInEntityDecl,
+  getReferencesForEntityDecl,
   isEntityDecl,
   resolveTypeArgumentsInEntityDecl,
   SerializedEntityDecl,
@@ -24,6 +25,7 @@ import {
 import {
   EnumDecl,
   getNestedDeclarationsInEnumDecl,
+  getReferencesForEnumDecl,
   isEnumDecl,
   resolveTypeArgumentsInEnumDecl,
   SerializedEnumDecl,
@@ -32,6 +34,7 @@ import {
 } from "./EnumDecl.js"
 import {
   getNestedDeclarationsInTypeAliasDecl,
+  getReferencesForTypeAliasDecl,
   isTypeAliasDecl,
   resolveTypeArgumentsInTypeAliasDecl,
   SerializedTypeAliasDecl,
@@ -190,6 +193,19 @@ export const serializeDecl: Serializer<Decl, SerializedDecl> = decl => {
       return serializeEnumDecl(decl)
     case NodeKind.TypeAliasDecl:
       return serializeTypeAliasDecl(decl)
+    default:
+      return assertExhaustive(decl)
+  }
+}
+
+export const getReferencesForDecl: GetReferences<Decl> = (decl, value) => {
+  switch (decl.kind) {
+    case NodeKind.EntityDecl:
+      return getReferencesForEntityDecl(decl, value)
+    case NodeKind.EnumDecl:
+      return getReferencesForEnumDecl(decl, value)
+    case NodeKind.TypeAliasDecl:
+      return getReferencesForTypeAliasDecl(decl, value)
     default:
       return assertExhaustive(decl)
   }

@@ -1,4 +1,4 @@
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import {
   SerializedTypeParameter,
   serializeTypeParameter,
@@ -62,3 +62,7 @@ export const serializeGenericArgumentIdentifierType: Serializer<
   ...removeParentKey(type),
   argument: serializeTypeParameter(type.argument),
 })
+
+export const getReferencesForGenericArgumentIdentifierType: GetReferences<
+  GenericArgumentIdentifierType
+> = (_type, _value) => []

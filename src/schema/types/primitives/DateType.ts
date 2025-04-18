@@ -1,4 +1,4 @@
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
 import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
 
@@ -32,3 +32,5 @@ export const validateDateType: Validator<DateType> = (_helpers, _type, value) =>
 
 export const serializeDateType: Serializer<DateType, SerializedDateType> = type =>
   removeParentKey(type)
+
+export const getReferencesForDateType: GetReferences<DateType> = (_type, _value) => []

@@ -1,4 +1,4 @@
-import { Node, NodeKind, Serializer } from "../../Node.js"
+import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
 import { BaseType, removeParentKey, SerializedBaseType, Type } from "../Type.js"
 import { RangeBound, validateMultipleOf, validateRangeBound } from "./NumericType.js"
@@ -48,3 +48,5 @@ export const validateFloatType: Validator<FloatType> = (_helpers, type, value) =
 
 export const serializeFloatType: Serializer<FloatType, SerializedFloatType> = type =>
   removeParentKey(type)
+
+export const getReferencesForFloatType: GetReferences<FloatType> = (_type, _value) => []
