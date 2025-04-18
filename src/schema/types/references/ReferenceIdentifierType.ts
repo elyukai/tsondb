@@ -1,9 +1,9 @@
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { createEntityIdentifierType, EntityDecl } from "../../declarations/EntityDecl.js"
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
 import { MemberDecl, ObjectType } from "../generic/ObjectType.js"
-import { BaseType, Type, validate } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, Type, validate } from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
@@ -11,8 +11,13 @@ export interface ReferenceIdentifierType<
   Name extends string = string,
   T extends TConstraint = TConstraint,
 > extends BaseType {
-  kind: typeof NodeKind.ReferenceIdentifierType
+  kind: NodeKind["ReferenceIdentifierType"]
   entity: EntityDecl<Name, ObjectType<T>>
+}
+
+export interface SerializedReferenceIdentifierType extends SerializedBaseType {
+  kind: NodeKind["ReferenceIdentifierType"]
+  entity: string
 }
 
 export const ReferenceIdentifierType = <Name extends string, T extends TConstraint>(
@@ -51,3 +56,11 @@ export const resolveTypeArgumentsInReferenceIdentifierType = <
   _args: Args,
   type: ReferenceIdentifierType<Name, T>,
 ): ReferenceIdentifierType<Name, T> => type
+
+export const serializeReferenceIdentifierType: Serializer<
+  ReferenceIdentifierType,
+  SerializedReferenceIdentifierType
+> = type => ({
+  ...removeParentKey(type),
+  entity: type.entity.name,
+})

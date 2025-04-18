@@ -3,7 +3,26 @@ import { assertExhaustive } from "../utils/typeSafety.js"
 import { Decl } from "./declarations/Declaration.js"
 import { Type } from "./types/Type.js"
 
-export const NodeKind = enumOfObject({
+export interface NodeKind {
+  EntityDecl: "EntityDecl"
+  EnumDecl: "EnumDecl"
+  TypeAliasDecl: "TypeAliasDecl"
+  MemberDecl: "MemberDecl"
+  ArrayType: "ArrayType"
+  ObjectType: "ObjectType"
+  BooleanType: "BooleanType"
+  FloatType: "FloatType"
+  IntegerType: "IntegerType"
+  StringType: "StringType"
+  DateType: "DateType"
+  GenericArgumentIdentifierType: "GenericArgumentIdentifierType"
+  GenericParameter: "GenericParameter"
+  ReferenceIdentifierType: "ReferenceIdentifierType"
+  IncludeIdentifierType: "IncludeIdentifierType"
+  NestedEntityMapType: "NestedEntityMapType"
+}
+
+export const NodeKind: NodeKind = enumOfObject({
   EntityDecl: null,
   EnumDecl: null,
   TypeAliasDecl: null,
@@ -111,3 +130,5 @@ export type IdentifierToCheck = { name: string; value: unknown }
 export interface Validators {
   checkReferentialIntegrity: (identifier: IdentifierToCheck) => Error[]
 }
+
+export type Serializer<T, U> = (node: T) => U

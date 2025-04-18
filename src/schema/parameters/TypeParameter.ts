@@ -1,8 +1,23 @@
-import { NodeKind } from "../Node.js"
-import { Type } from "../types/Type.js"
+import { NodeKind, Serializer } from "../Node.js"
+import {
+  removeParentKey,
+  SerializedBaseType,
+  SerializedType,
+  serializeType,
+  Type,
+} from "../types/Type.js"
 
 export interface TypeParameter<N extends string = string, T extends Type = Type> {
-  kind: typeof NodeKind.GenericParameter
+  kind: NodeKind["GenericParameter"]
+  name: N
+  constraint?: T
+}
+
+export interface SerializedTypeParameter<
+  N extends string = string,
+  T extends SerializedType = SerializedType,
+> extends SerializedBaseType {
+  kind: NodeKind["GenericParameter"]
   name: N
   constraint?: T
 }
@@ -14,4 +29,9 @@ export const Param = <N extends string = string, T extends Type = Type>(
   kind: NodeKind.GenericParameter,
   name,
   constraint,
+})
+
+export const serializeTypeParameter: Serializer<TypeParameter, SerializedTypeParameter> = type => ({
+  ...removeParentKey(type),
+  constraint: type.constraint ? serializeType(type.constraint) : undefined,
 })

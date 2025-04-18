@@ -1,11 +1,18 @@
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
-import { BaseType } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
 import { RangeBound, validateMultipleOf, validateRangeBound } from "./NumericType.js"
 
 export interface IntegerType extends BaseType {
-  kind: typeof NodeKind.IntegerType
+  kind: NodeKind["IntegerType"]
+  minimum?: RangeBound
+  maximum?: RangeBound
+  multipleOf?: number
+}
+
+export interface SerializedIntegerType extends SerializedBaseType {
+  kind: NodeKind["IntegerType"]
   minimum?: RangeBound
   maximum?: RangeBound
   multipleOf?: number
@@ -42,3 +49,6 @@ export const validateIntegerType: Validator<IntegerType> = (_helpers, type, valu
     validateMultipleOf(type.multipleOf, value),
   ])
 }
+
+export const serializeIntegerType: Serializer<IntegerType, SerializedIntegerType> = type =>
+  removeParentKey(type)

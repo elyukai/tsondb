@@ -1,22 +1,37 @@
 import { Lazy } from "../../utils/lazy.js"
-import { Node, NodeKind } from "../Node.js"
+import { Node, NodeKind, Serializer } from "../Node.js"
 import {
   getNestedDeclarationsInObjectType,
   MemberDecl,
   ObjectType,
   Required,
   resolveTypeArgumentsInObjectType,
+  SerializedObjectType,
+  serializeObjectType,
 } from "../types/generic/ObjectType.js"
 import { StringType } from "../types/primitives/StringType.js"
 import { Type, validate } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
-import { BaseDecl, GetNestedDeclarations, validateDeclName } from "./Declaration.js"
+import {
+  BaseDecl,
+  GetNestedDeclarations,
+  SerializedBaseDecl,
+  validateDeclName,
+} from "./Declaration.js"
 import { TypeAliasDecl } from "./TypeAliasDecl.js"
 
 export interface EntityDecl<Name extends string = string, T extends ObjectType = ObjectType>
   extends BaseDecl<Name, []> {
-  kind: typeof NodeKind.EntityDecl
+  kind: NodeKind["EntityDecl"]
   type: Lazy<T>
+}
+
+export interface SerializedEntityDecl<
+  Name extends string = string,
+  T extends SerializedObjectType = SerializedObjectType,
+> extends SerializedBaseDecl<Name, []> {
+  kind: NodeKind["EntityDecl"]
+  type: T
 }
 
 export const EntityDecl = <Name extends string, T extends ObjectType>(
@@ -100,3 +115,8 @@ export const createEntityIdentifierTypeAsDecl = <Name extends string>(
     name: (decl.name + "_ID") as `${Name}_ID`,
     type: createEntityIdentifierType,
   })
+
+export const serializeEntityDecl: Serializer<EntityDecl, SerializedEntityDecl> = type => ({
+  ...type,
+  type: serializeObjectType(type.type.value),
+})

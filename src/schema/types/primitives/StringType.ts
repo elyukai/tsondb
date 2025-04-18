@@ -1,12 +1,20 @@
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
-import { BaseType } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
 
 export interface StringType extends BaseType {
-  kind: typeof NodeKind.StringType
+  kind: NodeKind["StringType"]
   minLength?: number
   maxLength?: number
   pattern?: RegExp
+  isMarkdown?: boolean
+}
+
+export interface SerializedStringType extends SerializedBaseType {
+  kind: NodeKind["StringType"]
+  minLength?: number
+  maxLength?: number
+  pattern?: string
   isMarkdown?: boolean
 }
 
@@ -51,3 +59,9 @@ export const validateStringType: Validator<StringType> = (_helpers, type, value)
       : undefined,
   ])
 }
+
+export const serializeStringType: Serializer<StringType, SerializedStringType> = type =>
+  removeParentKey({
+    ...type,
+    pattern: type.pattern?.source,
+  })

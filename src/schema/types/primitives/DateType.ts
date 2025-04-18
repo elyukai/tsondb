@@ -1,9 +1,13 @@
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
-import { BaseType } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
 
 export interface DateType extends BaseType {
-  kind: typeof NodeKind.DateType
+  kind: NodeKind["DateType"]
+}
+
+export interface SerializedDateType extends SerializedBaseType {
+  kind: NodeKind["DateType"]
 }
 
 export const DateType = (): DateType => ({
@@ -25,3 +29,6 @@ export const validateDateType: Validator<DateType> = (_helpers, _type, value) =>
       : undefined,
   ])
 }
+
+export const serializeDateType: Serializer<DateType, SerializedDateType> = type =>
+  removeParentKey(type)

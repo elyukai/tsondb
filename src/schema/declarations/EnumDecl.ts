@@ -1,13 +1,18 @@
 import { Lazy } from "../../utils/lazy.js"
-import { Node, NodeKind } from "../Node.js"
-import { TypeParameter } from "../parameters/TypeParameter.js"
-import { resolveTypeArgumentsInType, Type } from "../types/Type.js"
+import { Node, NodeKind, Serializer } from "../Node.js"
+import {
+  SerializedTypeParameter,
+  serializeTypeParameter,
+  TypeParameter,
+} from "../parameters/TypeParameter.js"
+import { resolveTypeArgumentsInType, SerializedType, serializeType, Type } from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
 import {
   BaseDecl,
   GetNestedDeclarations,
   getNestedDeclarations,
   getTypeArgumentsRecord,
+  SerializedBaseDecl,
   TypeArguments,
   validateDeclName,
 } from "./Declaration.js"
@@ -17,8 +22,17 @@ export interface EnumDecl<
   T extends Record<string, Type | null> = Record<string, Type | null>,
   Params extends TypeParameter[] = TypeParameter[],
 > extends BaseDecl<Name, Params> {
-  kind: typeof NodeKind.EnumDecl
+  kind: NodeKind["EnumDecl"]
   values: Lazy<T>
+}
+
+export interface SerializedEnumDecl<
+  Name extends string = string,
+  T extends Record<string, SerializedType | null> = Record<string, SerializedType | null>,
+  Params extends SerializedTypeParameter[] = SerializedTypeParameter[],
+> extends SerializedBaseDecl<Name, Params> {
+  kind: NodeKind["EnumDecl"]
+  values: T
 }
 
 export const GenEnumDecl = <
@@ -120,3 +134,14 @@ export const resolveTypeArgumentsInEnumDecl = <Params extends TypeParameter[]>(
       ),
   })
 }
+
+export const serializeEnumDecl: Serializer<EnumDecl, SerializedEnumDecl> = type => ({
+  ...type,
+  values: Object.fromEntries(
+    Object.entries(type.values.value).map(([key, value]) => [
+      key,
+      value === null ? null : serializeType(value),
+    ]),
+  ),
+  parameters: type.parameters.map(param => serializeTypeParameter(param)),
+})

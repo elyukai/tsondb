@@ -1,13 +1,26 @@
-import { Node, NodeKind } from "../../Node.js"
-import { TypeParameter } from "../../parameters/TypeParameter.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
+import {
+  SerializedTypeParameter,
+  serializeTypeParameter,
+  TypeParameter,
+} from "../../parameters/TypeParameter.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, Type } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, Type } from "../Type.js"
 
 type TConstraint = TypeParameter
 
 export interface GenericArgumentIdentifierType<T extends TConstraint = TConstraint>
   extends BaseType {
-  kind: typeof NodeKind.GenericArgumentIdentifierType
+  kind: NodeKind["GenericArgumentIdentifierType"]
+  argument: T
+}
+
+type TSerializedConstraint = SerializedTypeParameter
+
+export interface SerializedGenericArgumentIdentifierType<
+  T extends TSerializedConstraint = TSerializedConstraint,
+> extends SerializedBaseType {
+  kind: NodeKind["GenericArgumentIdentifierType"]
   argument: T
 }
 
@@ -41,3 +54,11 @@ export const resolveTypeArgumentsInGenericArgumentIdentifierType = <
   args: Args,
   type: GenericArgumentIdentifierType<T>,
 ): Args[T["name"]] => args[type.argument.name] as Args[T["name"]]
+
+export const serializeGenericArgumentIdentifierType: Serializer<
+  GenericArgumentIdentifierType,
+  SerializedGenericArgumentIdentifierType
+> = type => ({
+  ...removeParentKey(type),
+  argument: serializeTypeParameter(type.argument),
+})

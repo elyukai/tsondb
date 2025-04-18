@@ -1,21 +1,37 @@
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import { parallelizeErrors, validateLengthRangeBound, Validator } from "../../validation/type.js"
-import { BaseType, resolveTypeArgumentsInType, Type, validate } from "../Type.js"
+import {
+  BaseType,
+  removeParentKey,
+  resolveTypeArgumentsInType,
+  SerializedBaseType,
+  SerializedType,
+  serializeType,
+  Type,
+  validate,
+} from "../Type.js"
 
-type TConstraint = Type
-
-export interface ArrayType<T extends TConstraint = TConstraint> extends BaseType {
-  kind: typeof NodeKind.ArrayType
+export interface ArrayType<T extends Type = Type> extends BaseType {
+  kind: NodeKind["ArrayType"]
   minItems?: number
   maxItems?: number
   uniqueItems?: boolean
   items: T
 }
 
-export const ArrayType = <T extends TConstraint>(
+export interface SerializedArrayType<T extends SerializedType = SerializedType>
+  extends SerializedBaseType {
+  kind: NodeKind["ArrayType"]
+  minItems?: number
+  maxItems?: number
+  uniqueItems?: boolean
+  items: T
+}
+
+export const ArrayType = <T extends Type>(
   items: T,
   options: {
     minItems?: number
@@ -98,3 +114,8 @@ export const resolveTypeArgumentsInArrayType = (
   ArrayType(resolveTypeArgumentsInType(args, type.items), {
     ...type,
   })
+
+export const serializeArrayType: Serializer<ArrayType, SerializedArrayType> = type => ({
+  ...removeParentKey(type),
+  items: serializeType(type.items),
+})

@@ -1,13 +1,24 @@
 import { Lazy } from "../../utils/lazy.js"
-import { Node, NodeKind } from "../Node.js"
-import { TypeParameter } from "../parameters/TypeParameter.js"
-import { resolveTypeArgumentsInType, Type, validate } from "../types/Type.js"
+import { Node, NodeKind, Serializer } from "../Node.js"
+import {
+  SerializedTypeParameter,
+  serializeTypeParameter,
+  TypeParameter,
+} from "../parameters/TypeParameter.js"
+import {
+  resolveTypeArgumentsInType,
+  SerializedType,
+  serializeType,
+  Type,
+  validate,
+} from "../types/Type.js"
 import { ValidatorHelpers } from "../validation/type.js"
 import {
   BaseDecl,
   GetNestedDeclarations,
   getNestedDeclarations,
   getTypeArgumentsRecord,
+  SerializedBaseDecl,
   TypeArguments,
   validateDeclName,
 } from "./Declaration.js"
@@ -17,8 +28,17 @@ export interface TypeAliasDecl<
   T extends Type = Type,
   Params extends TypeParameter[] = TypeParameter[],
 > extends BaseDecl<Name, Params> {
-  kind: typeof NodeKind.TypeAliasDecl
+  kind: NodeKind["TypeAliasDecl"]
   type: Lazy<T>
+}
+
+export interface SerializedTypeAliasDecl<
+  Name extends string = string,
+  T extends SerializedType = SerializedType,
+  Params extends SerializedTypeParameter[] = SerializedTypeParameter[],
+> extends SerializedBaseDecl<Name, Params> {
+  kind: NodeKind["TypeAliasDecl"]
+  type: T
 }
 
 export const GenTypeAliasDecl = <
@@ -107,3 +127,9 @@ export const resolveTypeArgumentsInTypeAliasDecl = <Params extends TypeParameter
     ...decl,
     type: () => resolveTypeArgumentsInType(getTypeArgumentsRecord(decl, args), decl.type.value),
   })
+
+export const serializeTypeAliasDecl: Serializer<TypeAliasDecl, SerializedTypeAliasDecl> = type => ({
+  ...type,
+  type: serializeType(type.type.value),
+  parameters: type.parameters.map(param => serializeTypeParameter(param)),
+})

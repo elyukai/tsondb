@@ -1,42 +1,54 @@
 import { assertExhaustive } from "../../utils/typeSafety.js"
 import { Decl, isDecl } from "../declarations/Declaration.js"
-import { BaseNode, NodeKind } from "../Node.js"
+import { BaseNode, NodeKind, Serializer } from "../Node.js"
 import { Validator } from "../validation/type.js"
 import {
   ArrayType,
   resolveTypeArgumentsInArrayType,
+  serializeArrayType,
+  SerializedArrayType,
   validateArrayType,
 } from "./generic/ArrayType.js"
 import {
   MemberDecl,
   ObjectType,
   resolveTypeArgumentsInObjectType,
+  SerializedObjectType,
+  serializeObjectType,
   validateObjectType,
 } from "./generic/ObjectType.js"
-import { BooleanType, validateBooleanType } from "./primitives/BooleanType.js"
-import { validateDateType } from "./primitives/DateType.js"
-import { FloatType, validateFloatType } from "./primitives/FloatType.js"
-import { validateIntegerType } from "./primitives/IntegerType.js"
-import { PrimitiveType } from "./primitives/PrimitiveType.js"
-import { StringType, validateStringType } from "./primitives/StringType.js"
+import { BooleanType, serializeBooleanType, validateBooleanType } from "./primitives/BooleanType.js"
+import { serializeDateType, validateDateType } from "./primitives/DateType.js"
+import { FloatType, serializeFloatType, validateFloatType } from "./primitives/FloatType.js"
+import { serializeIntegerType, validateIntegerType } from "./primitives/IntegerType.js"
+import { PrimitiveType, SerializedPrimitiveType } from "./primitives/PrimitiveType.js"
+import { serializeStringType, StringType, validateStringType } from "./primitives/StringType.js"
 import {
   GenericArgumentIdentifierType,
   resolveTypeArgumentsInGenericArgumentIdentifierType,
+  SerializedGenericArgumentIdentifierType,
+  serializeGenericArgumentIdentifierType,
   validateGenericArgumentIdentifierType,
 } from "./references/GenericArgumentIdentifierType.js"
 import {
   IncludeIdentifierType,
   resolveTypeArgumentsInIncludeIdentifierType,
+  SerializedIncludeIdentifierType,
+  serializeIncludeIdentifierType,
   validateIncludeIdentifierType,
 } from "./references/IncludeIdentifierType.js"
 import {
   NestedEntityMapType,
   resolveTypeArgumentsInNestedEntityMapType,
+  SerializedNestedEntityMapType,
+  serializeNestedEntityMapType,
   validateNestedEntityMapType,
 } from "./references/NestedEntityMapType.js"
 import {
   ReferenceIdentifierType,
   resolveTypeArgumentsInReferenceIdentifierType,
+  SerializedReferenceIdentifierType,
+  serializeReferenceIdentifierType,
   validateReferenceIdentifierType,
 } from "./references/ReferenceIdentifierType.js"
 
@@ -47,6 +59,8 @@ export interface BaseType extends BaseNode {
   parent?: Type | Decl
 }
 
+export interface SerializedBaseType extends BaseNode {}
+
 export type Type =
   | PrimitiveType
   | ArrayType
@@ -55,6 +69,15 @@ export type Type =
   | ReferenceIdentifierType
   | IncludeIdentifierType
   | NestedEntityMapType
+
+export type SerializedType =
+  | SerializedPrimitiveType
+  | SerializedArrayType
+  | SerializedObjectType
+  | SerializedGenericArgumentIdentifierType
+  | SerializedReferenceIdentifierType
+  | SerializedIncludeIdentifierType
+  | SerializedNestedEntityMapType
 
 export const validate: Validator<Type> = (helpers, type, value) => {
   switch (type.kind) {
@@ -164,4 +187,38 @@ export const getParentDecl = (type: Type): Decl | undefined => {
   } else {
     return getParentDecl(type.parent)
   }
+}
+
+export const serializeType: Serializer<Type, SerializedType> = type => {
+  switch (type.kind) {
+    case NodeKind.ArrayType:
+      return serializeArrayType(type)
+    case NodeKind.ObjectType:
+      return serializeObjectType(type)
+    case NodeKind.BooleanType:
+      return serializeBooleanType(type)
+    case NodeKind.DateType:
+      return serializeDateType(type)
+    case NodeKind.FloatType:
+      return serializeFloatType(type)
+    case NodeKind.IntegerType:
+      return serializeIntegerType(type)
+    case NodeKind.StringType:
+      return serializeStringType(type)
+    case NodeKind.GenericArgumentIdentifierType:
+      return serializeGenericArgumentIdentifierType(type)
+    case NodeKind.ReferenceIdentifierType:
+      return serializeReferenceIdentifierType(type)
+    case NodeKind.IncludeIdentifierType:
+      return serializeIncludeIdentifierType(type)
+    case NodeKind.NestedEntityMapType:
+      return serializeNestedEntityMapType(type)
+    default:
+      return assertExhaustive(type)
+  }
+}
+
+export const removeParentKey = <T extends BaseType>(type: T): Omit<T, "parent"> => {
+  const { parent: _parent, ...rest } = type
+  return rest
 }

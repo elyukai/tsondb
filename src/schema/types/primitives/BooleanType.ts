@@ -1,9 +1,13 @@
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
 
 export interface BooleanType extends BaseType {
-  kind: typeof NodeKind.BooleanType
+  kind: NodeKind["BooleanType"]
+}
+
+export interface SerializedBooleanType extends SerializedBaseType {
+  kind: NodeKind["BooleanType"]
 }
 
 export const BooleanType = (): BooleanType => ({
@@ -21,3 +25,6 @@ export const validateBooleanType: Validator<BooleanType> = (_helpers, _type, val
 
   return []
 }
+
+export const serializeBooleanType: Serializer<BooleanType, SerializedBooleanType> = type =>
+  removeParentKey(type)

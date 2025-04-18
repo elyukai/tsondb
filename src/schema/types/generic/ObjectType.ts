@@ -1,6 +1,6 @@
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import {
   NumerusLabel,
@@ -8,12 +8,32 @@ import {
   validateLengthRangeBound,
   Validator,
 } from "../../validation/type.js"
-import { BaseType, resolveTypeArgumentsInType, Type, validate } from "../Type.js"
+import {
+  BaseType,
+  removeParentKey,
+  resolveTypeArgumentsInType,
+  SerializedBaseType,
+  SerializedType,
+  serializeType,
+  Type,
+  validate,
+} from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
 export interface ObjectType<T extends TConstraint = TConstraint> extends BaseType {
-  kind: typeof NodeKind.ObjectType
+  kind: NodeKind["ObjectType"]
+  properties: T
+  additionalProperties?: boolean
+  minProperties?: number
+  maxProperties?: number
+}
+
+type TSerializedConstraint = Record<string, SerializedMemberDecl<SerializedType, boolean>>
+
+export interface SerializedObjectType<T extends TSerializedConstraint = TSerializedConstraint>
+  extends SerializedBaseType {
+  kind: NodeKind["ObjectType"]
   properties: T
   additionalProperties?: boolean
   minProperties?: number
@@ -105,7 +125,17 @@ export const resolveTypeArgumentsInObjectType = (
   )
 
 export interface MemberDecl<T extends Type = Type, R extends boolean = boolean> {
-  kind: typeof NodeKind.MemberDecl
+  kind: NodeKind["MemberDecl"]
+  isRequired: R
+  type: T
+  comment?: string
+}
+
+export interface SerializedMemberDecl<
+  T extends SerializedType = SerializedType,
+  R extends boolean = boolean,
+> {
+  kind: NodeKind["MemberDecl"]
   isRequired: R
   type: T
   comment?: string
@@ -127,3 +157,16 @@ export const Required = <T extends Type>(options: { comment?: string; type: T })
 
 export const Optional = <T extends Type>(options: { comment?: string; type: T }) =>
   MemberDecl(false, options.type, options.comment)
+
+export const serializeObjectType: Serializer<ObjectType, SerializedObjectType> = type => ({
+  ...removeParentKey(type),
+  properties: Object.fromEntries(
+    Object.entries(type.properties).map(([key, prop]) => [
+      key,
+      {
+        ...prop,
+        type: serializeType(prop.type),
+      },
+    ]),
+  ),
+})

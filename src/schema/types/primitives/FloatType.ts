@@ -1,10 +1,18 @@
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
-import { BaseType, Type } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, Type } from "../Type.js"
 import { RangeBound, validateMultipleOf, validateRangeBound } from "./NumericType.js"
 
 export interface FloatType extends BaseType {
-  kind: typeof NodeKind.FloatType
+  kind: NodeKind["FloatType"]
+  parent?: Type
+  minimum?: RangeBound
+  maximum?: RangeBound
+  multipleOf?: number
+}
+
+export interface SerializedFloatType extends SerializedBaseType {
+  kind: NodeKind["FloatType"]
   parent?: Type
   minimum?: RangeBound
   maximum?: RangeBound
@@ -37,3 +45,6 @@ export const validateFloatType: Validator<FloatType> = (_helpers, type, value) =
     validateMultipleOf(type.multipleOf, value),
   ])
 }
+
+export const serializeFloatType: Serializer<FloatType, SerializedFloatType> = type =>
+  removeParentKey(type)

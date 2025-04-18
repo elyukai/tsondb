@@ -2,16 +2,26 @@ import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { Lazy } from "../../../utils/lazy.js"
 import { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../../declarations/EntityDecl.js"
-import { Node, NodeKind } from "../../Node.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
 import { parallelizeErrors, Validator } from "../../validation/type.js"
 import {
   getNestedDeclarationsInObjectType,
   MemberDecl,
   ObjectType,
   resolveTypeArgumentsInObjectType,
+  SerializedMemberDecl,
+  SerializedObjectType,
+  serializeObjectType,
   validateObjectType,
 } from "../generic/ObjectType.js"
-import { BaseType, getParentDecl, Type } from "../Type.js"
+import {
+  BaseType,
+  getParentDecl,
+  removeParentKey,
+  SerializedBaseType,
+  SerializedType,
+  Type,
+} from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
@@ -19,11 +29,24 @@ export interface NestedEntityMapType<
   Name extends string = string,
   T extends TConstraint = TConstraint,
 > extends BaseType {
-  kind: typeof NodeKind.NestedEntityMapType
+  kind: NodeKind["NestedEntityMapType"]
   name: Name
   comment?: string
   secondaryEntity: EntityDecl
   type: Lazy<ObjectType<T>>
+}
+
+type TSerializedConstraint = Record<string, SerializedMemberDecl<SerializedType, boolean>>
+
+export interface SerializedNestedEntityMapType<
+  Name extends string = string,
+  T extends TSerializedConstraint = TSerializedConstraint,
+> extends SerializedBaseType {
+  kind: NodeKind["NestedEntityMapType"]
+  name: Name
+  comment?: string
+  secondaryEntity: string
+  type: SerializedObjectType<T>
 }
 
 export const NestedEntityMapType = <Name extends string, T extends TConstraint>(options: {
@@ -118,3 +141,12 @@ export const resolveTypeArgumentsInNestedEntityMapType = (
     ...type,
     type: () => resolveTypeArgumentsInObjectType(args, type.type.value),
   })
+
+export const serializeNestedEntityMapType: Serializer<
+  NestedEntityMapType,
+  SerializedNestedEntityMapType
+> = type => ({
+  ...removeParentKey(type),
+  secondaryEntity: type.secondaryEntity.name,
+  type: serializeObjectType(type.type.value),
+})

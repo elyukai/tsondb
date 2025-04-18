@@ -2,15 +2,23 @@ import {
   GetNestedDeclarations,
   getNestedDeclarations,
   SecondaryDecl,
+  SerializedTypeArguments,
   TypeArguments,
   validateDecl,
 } from "../../declarations/Declaration.js"
 import { EnumDecl } from "../../declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
-import { Node, NodeKind } from "../../Node.js"
-import { TypeParameter } from "../../parameters/TypeParameter.js"
+import { Node, NodeKind, Serializer } from "../../Node.js"
+import { SerializedTypeParameter, TypeParameter } from "../../parameters/TypeParameter.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, resolveTypeArgumentsInType, Type } from "../Type.js"
+import {
+  BaseType,
+  removeParentKey,
+  resolveTypeArgumentsInType,
+  SerializedBaseType,
+  serializeType,
+  Type,
+} from "../Type.js"
 
 type TConstraint<Params extends TypeParameter[]> =
   | TypeAliasDecl<string, Type, Params>
@@ -20,9 +28,17 @@ export interface IncludeIdentifierType<
   Params extends TypeParameter[] = TypeParameter[],
   T extends TConstraint<Params> = TConstraint<Params>,
 > extends BaseType {
-  kind: typeof NodeKind.IncludeIdentifierType
+  kind: NodeKind["IncludeIdentifierType"]
   reference: T
   args: TypeArguments<Params>
+}
+
+export interface SerializedIncludeIdentifierType<
+  Params extends SerializedTypeParameter[] = SerializedTypeParameter[],
+> extends SerializedBaseType {
+  kind: NodeKind["IncludeIdentifierType"]
+  reference: string
+  args: SerializedTypeArguments<Params>
 }
 
 export const GenIncludeIdentifierType = <
@@ -70,3 +86,12 @@ export const resolveTypeArgumentsInIncludeIdentifierType = (
     type.reference as unknown as SecondaryDecl,
     type.args.map(arg => resolveTypeArgumentsInType(args, arg)),
   )
+
+export const serializeIncludeIdentifierType: Serializer<
+  IncludeIdentifierType,
+  SerializedIncludeIdentifierType
+> = type => ({
+  ...removeParentKey(type),
+  reference: type.reference.name,
+  args: type.args.map(arg => serializeType(arg)),
+})
