@@ -92,6 +92,13 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
   return parallelizeErrors([
     validateLengthRangeBound("lower", label, type.minProperties, keys),
     validateLengthRangeBound("upper", label, type.maxProperties, keys),
+    ...(type.additionalProperties !== true
+      ? Object.keys(value).flatMap(valueKey =>
+          keys.includes(valueKey)
+            ? []
+            : [TypeError(`object does not allow unknown keys and key "${valueKey}" is not known`)],
+        )
+      : []),
     ...keys.map(key => {
       const prop = type.properties[key]!
 
