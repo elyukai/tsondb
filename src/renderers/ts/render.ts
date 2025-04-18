@@ -6,7 +6,7 @@ import {
   EntityDecl,
   isEntityDecl,
 } from "../../schema/declarations/EntityDecl.js"
-import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
+import { discriminatorKey, EnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
@@ -161,7 +161,7 @@ const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
           applyIndentation(
             1,
             joinSyntax(
-              `kind: "${caseName}"`,
+              `${discriminatorKey}: "${caseName}"`,
               caseDef === null
                 ? ""
                 : joinSyntax(EOL, caseName + ": ", renderType(options, caseDef)),

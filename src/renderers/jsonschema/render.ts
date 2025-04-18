@@ -5,7 +5,7 @@ import {
   EntityDecl,
   isEntityDecl,
 } from "../../schema/declarations/EntityDecl.js"
-import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
+import { discriminatorKey, EnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
@@ -166,12 +166,12 @@ const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) => ({
   oneOf: Object.entries(decl.values.value).map(([caseName, caseDef]) => ({
     type: "object",
     properties: {
-      kind: {
+      [discriminatorKey]: {
         const: caseName,
       },
       ...(caseDef === null ? {} : { [caseName]: renderType(options, caseDef) }),
     },
-    required: ["kind", ...(caseDef === null ? [] : [caseName])],
+    required: [discriminatorKey, ...(caseDef === null ? [] : [caseName])],
   })),
 })
 

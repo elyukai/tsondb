@@ -118,7 +118,7 @@ export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = 
     caseDef === null ? [] : getNestedDeclarations(isDeclAdded, caseDef),
   )
 
-const discriminatorKey = "kind"
+export const discriminatorKey = "kind"
 
 export const validateEnumDecl = (
   helpers: ValidatorHelpers,
