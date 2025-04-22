@@ -13,7 +13,6 @@
   "exports": {
     ".": "./lib/index.js",
     "./renderer/jsonschema": "./lib/renderers/jsonschema/index.js",
-    "./renderer/md": "./lib/renderers/md/index.js",
     "./renderer/ts": "./lib/renderers/ts/index.js",
     "./modelcontainer": "./lib/ModelContainer.js",
     "./schema": "./lib/Schema.js",
