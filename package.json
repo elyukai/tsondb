@@ -1,6 +1,6 @@
 {
   "name": "tsondb",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "",
   "license": "ISC",
   "author": "Lukas Obermann",
@@ -21,11 +21,13 @@
   "scripts": {
     "build": "tsc -b",
     "watch": "tsc -b -w",
-    "test": "glob -c \"node --import tsx --test\" \"./test/**/*.ts\""
+    "test": "glob -c \"node --import tsx --test\" \"./test/**/*.ts\"",
+    "release": "commit-and-tag-version"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
     "@types/node": "^22.13.14",
+    "commit-and-tag-version": "^12.5.1",
     "glob": "^11.0.1",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
