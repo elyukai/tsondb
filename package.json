@@ -38,5 +38,9 @@
     "preact": "^10.26.5",
     "preact-iso": "^2.9.1",
     "uuid": "^11.1.0"
+  },
+  "repository": "github:elyukai/tsondb",
+  "bugs": {
+    "url": "https://github.com/elyukai/tsondb/issues"
   }
 }
