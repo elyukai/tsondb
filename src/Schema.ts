@@ -91,9 +91,7 @@ const addDeclarations = (existingDecls: Decl[], declsToAdd: Decl[], nested: bool
   declsToAdd.reduce((accDecls, decl) => {
     if (!accDecls.includes(decl)) {
       checkDuplicateIdentifier(accDecls, decl)
-      const nestedDecls = nested
-        ? getNestedDeclarations(declToAdd => accDecls.includes(declToAdd), decl)
-        : []
+      const nestedDecls = nested ? getNestedDeclarations(accDecls, decl) : []
       return addDeclarations([...accDecls, decl], nestedDecls, false)
     }
 

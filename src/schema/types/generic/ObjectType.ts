@@ -79,9 +79,13 @@ export { ObjectType as Object }
 export const isObjectType = (node: Node): node is ObjectType => node.kind === NodeKind.ObjectType
 
 export const getNestedDeclarationsInObjectType: GetNestedDeclarations<ObjectType> = (
-  isDeclAdded,
+  addedDecls,
   type,
-) => Object.values(type.properties).flatMap(prop => getNestedDeclarations(isDeclAdded, prop.type))
+) =>
+  Object.values(type.properties).reduce(
+    (acc, prop) => getNestedDeclarations(acc, prop.type),
+    addedDecls,
+  )
 
 export const validateObjectType: Validator<ObjectType> = (helpers, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {

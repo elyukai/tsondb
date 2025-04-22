@@ -26,7 +26,10 @@ export const isReferenceIdentifierType = (node: Node): node is ReferenceIdentifi
 
 export const getNestedDeclarationsInReferenceIdentifierType: GetNestedDeclarations<
   ReferenceIdentifierType
-> = (isDeclAdded, type) => [type.entity, ...getNestedDeclarations(isDeclAdded, type.entity)]
+> = (addedDecls, type) =>
+  addedDecls.includes(type.entity)
+    ? addedDecls
+    : getNestedDeclarations([...addedDecls, type.entity], type.entity)
 
 export const validateReferenceIdentifierType: Validator<ReferenceIdentifierType> = (
   helpers,

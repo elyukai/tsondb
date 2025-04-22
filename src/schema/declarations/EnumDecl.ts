@@ -114,11 +114,13 @@ export { EnumDecl as Enum }
 export const isEnumDecl = (node: Node): node is EnumDecl => node.kind === NodeKind.EnumDecl
 
 export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = (
-  isDeclAdded,
+  addedDecls,
   decl,
 ) =>
-  Object.values(decl.values.value).flatMap(caseMember =>
-    caseMember.type === null ? [] : getNestedDeclarations(isDeclAdded, caseMember.type),
+  Object.values(decl.values.value).reduce(
+    (acc, caseMember) =>
+      caseMember.type === null ? acc : getNestedDeclarations(acc, caseMember.type),
+    addedDecls,
   )
 
 export const validateEnumDecl = (

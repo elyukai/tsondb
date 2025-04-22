@@ -108,9 +108,9 @@ export const isTypeAliasDecl = (node: Node): node is TypeAliasDecl<string, Type,
   node.kind === NodeKind.TypeAliasDecl
 
 export const getNestedDeclarationsInTypeAliasDecl: GetNestedDeclarations<TypeAliasDecl> = (
-  isDeclAdded,
+  addedDecls,
   decl,
-) => getNestedDeclarations(isDeclAdded, decl.type.value)
+) => getNestedDeclarations(addedDecls, decl.type.value)
 
 export const validateTypeAliasDecl = <Params extends TypeParameter[]>(
   helpers: ValidatorHelpers,

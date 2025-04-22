@@ -68,9 +68,9 @@ export { ArrayType as Array }
 export const isArrayType = (node: Node): node is ArrayType => node.kind === NodeKind.ArrayType
 
 export const getNestedDeclarationsInArrayType: GetNestedDeclarations<ArrayType> = (
-  isDeclAdded,
+  addedDecls,
   type,
-) => getNestedDeclarations(isDeclAdded, type.items)
+) => getNestedDeclarations(addedDecls, type.items)
 
 export const validateArrayType: Validator<ArrayType> = (helpers, type, value) => {
   if (!Array.isArray(value)) {

@@ -89,10 +89,11 @@ export const isNestedEntityMapType = (node: Node): node is NestedEntityMapType =
 
 export const getNestedDeclarationsInNestedEntityMapType: GetNestedDeclarations<
   NestedEntityMapType
-> = (isDeclAdded, type) => [
-  type.secondaryEntity,
-  ...getNestedDeclarationsInObjectType(isDeclAdded, type.type.value),
-]
+> = (addedDecls, type) =>
+  getNestedDeclarationsInObjectType(
+    addedDecls.includes(type.secondaryEntity) ? addedDecls : [type.secondaryEntity, ...addedDecls],
+    type.type.value,
+  )
 
 export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
   helpers,

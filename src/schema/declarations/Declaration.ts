@@ -79,40 +79,37 @@ export type SecondaryDecl = EnumDecl | TypeAliasDecl
 
 export type SerializedSecondaryDecl = SerializedEnumDecl | SerializedTypeAliasDecl
 
-export const getNestedDeclarations: GetNestedDeclarations = (isDeclAdded, node) => {
+export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node) => {
   switch (node.kind) {
     case NodeKind.EntityDecl:
-      return isDeclAdded(node) ? [] : getNestedDeclarationsInEntityDecl(isDeclAdded, node)
+      return getNestedDeclarationsInEntityDecl(addedDecls, node)
     case NodeKind.EnumDecl:
-      return isDeclAdded(node) ? [] : getNestedDeclarationsInEnumDecl(isDeclAdded, node)
+      return getNestedDeclarationsInEnumDecl(addedDecls, node)
     case NodeKind.TypeAliasDecl:
-      return isDeclAdded(node) ? [] : getNestedDeclarationsInTypeAliasDecl(isDeclAdded, node)
+      return getNestedDeclarationsInTypeAliasDecl(addedDecls, node)
     case NodeKind.ArrayType:
-      return getNestedDeclarationsInArrayType(isDeclAdded, node)
+      return getNestedDeclarationsInArrayType(addedDecls, node)
     case NodeKind.ObjectType:
-      return getNestedDeclarationsInObjectType(isDeclAdded, node)
+      return getNestedDeclarationsInObjectType(addedDecls, node)
     case NodeKind.BooleanType:
     case NodeKind.DateType:
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
     case NodeKind.StringType:
     case NodeKind.GenericArgumentIdentifierType:
-      return []
+      return addedDecls
     case NodeKind.ReferenceIdentifierType:
-      return getNestedDeclarationsInReferenceIdentifierType(isDeclAdded, node)
+      return getNestedDeclarationsInReferenceIdentifierType(addedDecls, node)
     case NodeKind.IncludeIdentifierType:
-      return getNestedDeclarationsInIncludeIdentifierType(isDeclAdded, node)
+      return getNestedDeclarationsInIncludeIdentifierType(addedDecls, node)
     case NodeKind.NestedEntityMapType:
-      return getNestedDeclarationsInNestedEntityMapType(isDeclAdded, node)
+      return getNestedDeclarationsInNestedEntityMapType(addedDecls, node)
     default:
       return assertExhaustive(node)
   }
 }
 
-export type GetNestedDeclarations<T extends Node = Node> = (
-  isDeclarationAdded: (decl: Decl) => boolean,
-  node: T,
-) => Decl[]
+export type GetNestedDeclarations<T extends Node = Node> = (addedDecls: Decl[], node: T) => Decl[]
 
 export const isDecl = (node: Node): node is Decl =>
   isEntityDecl(node) || isEnumDecl(node) || isTypeAliasDecl(node)
