@@ -2,17 +2,11 @@ import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations
 import { createEntityIdentifierType, EntityDecl } from "../../declarations/EntityDecl.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
-import { MemberDecl, ObjectType } from "../generic/ObjectType.js"
 import { BaseType, removeParentKey, SerializedBaseType, Type, validate } from "../Type.js"
 
-type TConstraint = Record<string, MemberDecl<Type, boolean>>
-
-export interface ReferenceIdentifierType<
-  Name extends string = string,
-  T extends TConstraint = TConstraint,
-> extends BaseType {
+export interface ReferenceIdentifierType extends BaseType {
   kind: NodeKind["ReferenceIdentifierType"]
-  entity: EntityDecl<Name, ObjectType<T>>
+  entity: EntityDecl
 }
 
 export interface SerializedReferenceIdentifierType extends SerializedBaseType {
@@ -20,9 +14,7 @@ export interface SerializedReferenceIdentifierType extends SerializedBaseType {
   entity: string
 }
 
-export const ReferenceIdentifierType = <Name extends string, T extends TConstraint>(
-  entity: EntityDecl<Name, ObjectType<T>>,
-): ReferenceIdentifierType<Name, T> => ({
+export const ReferenceIdentifierType = (entity: EntityDecl): ReferenceIdentifierType => ({
   kind: NodeKind.ReferenceIdentifierType,
   entity,
 })
@@ -48,14 +40,10 @@ export const validateReferenceIdentifierType: Validator<ReferenceIdentifierType>
     }),
   )
 
-export const resolveTypeArgumentsInReferenceIdentifierType = <
-  Name extends string,
-  T extends TConstraint,
-  Args extends Record<string, Type>,
->(
+export const resolveTypeArgumentsInReferenceIdentifierType = <Args extends Record<string, Type>>(
   _args: Args,
-  type: ReferenceIdentifierType<Name, T>,
-): ReferenceIdentifierType<Name, T> => type
+  type: ReferenceIdentifierType,
+): ReferenceIdentifierType => type
 
 export const serializeReferenceIdentifierType: Serializer<
   ReferenceIdentifierType,
