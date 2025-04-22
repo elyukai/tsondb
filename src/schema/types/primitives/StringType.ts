@@ -1,7 +1,7 @@
 import { StringConstraints, validateStringConstraints } from "../../../shared/validation/string.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, StructureFormatter } from "../Type.js"
 
 export interface StringType extends BaseType, StringConstraints {
   kind: NodeKind["StringType"]
@@ -46,3 +46,5 @@ export const serializeStringType: Serializer<StringType, SerializedStringType> =
   })
 
 export const getReferencesForStringType: GetReferences<StringType> = (_type, _value) => []
+
+export const formatStringValue: StructureFormatter<StringType> = (_type, value) => value

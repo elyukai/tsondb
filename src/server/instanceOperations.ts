@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { v4 as uuidv4 } from "uuid"
 import { ModelContainer } from "../ModelContainer.js"
 import { EntityDecl, validateEntityDecl } from "../schema/declarations/EntityDecl.js"
+import { formatValue } from "../schema/index.js"
 import { createValidators } from "../schema/Node.js"
 import { InstanceContainer, InstancesByEntityName } from "../shared/utils/instances.js"
 import { getErrorMessageForDisplay } from "../utils/error.js"
@@ -45,7 +46,7 @@ export const createInstance = async (
 
   await writeFile(
     join(modelContainer.dataRootPath, entity.name, fileName),
-    JSON.stringify(instance, undefined, 2),
+    JSON.stringify(formatValue(entity.type.value, instance), undefined, 2),
     { encoding: "utf-8" },
   )
 
@@ -91,7 +92,7 @@ export const updateInstance = async (
 
   await writeFile(
     join(modelContainer.dataRootPath, entity.name, instanceContainer.fileName),
-    JSON.stringify(instance, undefined, 2),
+    JSON.stringify(formatValue(entity.type.value, instance), undefined, 2),
     { encoding: "utf-8" },
   )
 

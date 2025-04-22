@@ -1,3 +1,4 @@
+import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.js"
 import { parallelizeErrors } from "../../../shared/utils/validation.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { Lazy } from "../../../utils/lazy.js"
@@ -16,7 +17,14 @@ import {
   serializeObjectType,
   validateObjectType,
 } from "../generic/ObjectType.js"
-import { BaseType, removeParentKey, SerializedBaseType, SerializedType, Type } from "../Type.js"
+import {
+  BaseType,
+  removeParentKey,
+  SerializedBaseType,
+  SerializedType,
+  StructureFormatter,
+  Type,
+} from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
@@ -146,3 +154,8 @@ export const getReferencesForNestedEntityMapType: GetReferences<NestedEntityMapT
         .flatMap(item => getReferencesForObjectType(type.type.value, item))
         .concat(Object.keys(value))
     : []
+
+export const formatNestedEntityMapValue: StructureFormatter<NestedEntityMapType> = (_type, value) =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+    ? sortObjectKeysAlphabetically(value as Record<string, unknown>)
+    : value

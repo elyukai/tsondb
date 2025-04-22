@@ -2,7 +2,7 @@ import { RangeBound, validateNumberConstraints } from "../../../shared/validatio
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, StructureFormatter } from "../Type.js"
 
 export interface IntegerType extends BaseType {
   kind: NodeKind["IntegerType"]
@@ -50,3 +50,5 @@ export const serializeIntegerType: Serializer<IntegerType, SerializedIntegerType
   removeParentKey(type)
 
 export const getReferencesForIntegerType: GetReferences<IntegerType> = (_type, _value) => []
+
+export const formatIntegerValue: StructureFormatter<IntegerType> = (_type, value) => value

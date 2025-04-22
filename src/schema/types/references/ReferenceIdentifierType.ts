@@ -2,7 +2,14 @@ import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations
 import { createEntityIdentifierType, EntityDecl } from "../../declarations/EntityDecl.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, removeParentKey, SerializedBaseType, Type, validate } from "../Type.js"
+import {
+  BaseType,
+  removeParentKey,
+  SerializedBaseType,
+  StructureFormatter,
+  Type,
+  validate,
+} from "../Type.js"
 
 export interface ReferenceIdentifierType extends BaseType {
   kind: NodeKind["ReferenceIdentifierType"]
@@ -60,3 +67,8 @@ export const getReferencesForReferenceIdentifierType: GetReferences<ReferenceIde
   _type,
   value,
 ) => (typeof value === "string" ? [value] : [])
+
+export const formatReferenceIdentifierValue: StructureFormatter<ReferenceIdentifierType> = (
+  _type,
+  value,
+) => value

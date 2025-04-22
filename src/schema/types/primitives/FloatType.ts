@@ -1,7 +1,7 @@
 import { RangeBound, validateNumberConstraints } from "../../../shared/validation/number.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, StructureFormatter } from "../Type.js"
 
 export interface FloatType extends BaseType {
   kind: NodeKind["FloatType"]
@@ -44,3 +44,5 @@ export const serializeFloatType: Serializer<FloatType, SerializedFloatType> = ty
   removeParentKey(type)
 
 export const getReferencesForFloatType: GetReferences<FloatType> = (_type, _value) => []
+
+export const formatFloatValue: StructureFormatter<FloatType> = (_type, value) => value

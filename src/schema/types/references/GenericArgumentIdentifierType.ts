@@ -5,7 +5,7 @@ import {
   TypeParameter,
 } from "../../parameters/TypeParameter.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, removeParentKey, SerializedBaseType, Type } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
 
 type TConstraint = TypeParameter
 
@@ -66,3 +66,7 @@ export const serializeGenericArgumentIdentifierType: Serializer<
 export const getReferencesForGenericArgumentIdentifierType: GetReferences<
   GenericArgumentIdentifierType
 > = (_type, _value) => []
+
+export const formatGenericArgumentIdentifierValue: StructureFormatter<
+  GenericArgumentIdentifierType
+> = (_type, value) => value

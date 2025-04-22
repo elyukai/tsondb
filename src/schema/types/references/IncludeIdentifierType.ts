@@ -19,6 +19,7 @@ import {
   resolveTypeArgumentsInType,
   SerializedBaseType,
   serializeType,
+  StructureFormatter,
   Type,
 } from "../Type.js"
 
@@ -105,3 +106,8 @@ export const getReferencesForIncludeIdentifierType: GetReferences<IncludeIdentif
   type,
   value,
 ) => getReferencesForDecl(resolveTypeArgumentsInDecl(type.reference, type.args), value)
+
+export const formatIncludeIdentifierValue: StructureFormatter<IncludeIdentifierType> = (
+  _type,
+  value,
+) => value

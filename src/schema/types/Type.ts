@@ -4,6 +4,7 @@ import { BaseNode, GetReferences, NodeKind, Serializer } from "../Node.js"
 import { Validator } from "../validation/type.js"
 import {
   ArrayType,
+  formatArrayValue,
   getReferencesForArrayType,
   resolveTypeArgumentsInArrayType,
   serializeArrayType,
@@ -11,6 +12,7 @@ import {
   validateArrayType,
 } from "./generic/ArrayType.js"
 import {
+  formatObjectValue,
   getReferencesForObjectType,
   MemberDecl,
   ObjectType,
@@ -22,6 +24,7 @@ import {
 } from "./generic/ObjectType.js"
 import {
   BooleanType,
+  formatBooleanValue,
   getReferencesForBooleanType,
   serializeBooleanType,
   SerializedBooleanType,
@@ -29,6 +32,7 @@ import {
 } from "./primitives/BooleanType.js"
 import {
   DateType,
+  formatDateValue,
   getReferencesForDateType,
   serializeDateType,
   SerializedDateType,
@@ -36,12 +40,14 @@ import {
 } from "./primitives/DateType.js"
 import {
   FloatType,
+  formatFloatValue,
   getReferencesForFloatType,
   SerializedFloatType,
   serializeFloatType,
   validateFloatType,
 } from "./primitives/FloatType.js"
 import {
+  formatIntegerValue,
   getReferencesForIntegerType,
   IntegerType,
   SerializedIntegerType,
@@ -50,6 +56,7 @@ import {
 } from "./primitives/IntegerType.js"
 import { PrimitiveType, SerializedPrimitiveType } from "./primitives/PrimitiveType.js"
 import {
+  formatStringValue,
   getReferencesForStringType,
   SerializedStringType,
   serializeStringType,
@@ -57,6 +64,7 @@ import {
   validateStringType,
 } from "./primitives/StringType.js"
 import {
+  formatGenericArgumentIdentifierValue,
   GenericArgumentIdentifierType,
   getReferencesForGenericArgumentIdentifierType,
   resolveTypeArgumentsInGenericArgumentIdentifierType,
@@ -65,6 +73,7 @@ import {
   validateGenericArgumentIdentifierType,
 } from "./references/GenericArgumentIdentifierType.js"
 import {
+  formatIncludeIdentifierValue,
   getReferencesForIncludeIdentifierType,
   IncludeIdentifierType,
   resolveTypeArgumentsInIncludeIdentifierType,
@@ -73,6 +82,7 @@ import {
   validateIncludeIdentifierType,
 } from "./references/IncludeIdentifierType.js"
 import {
+  formatNestedEntityMapValue,
   getReferencesForNestedEntityMapType,
   NestedEntityMapType,
   resolveTypeArgumentsInNestedEntityMapType,
@@ -81,6 +91,7 @@ import {
   validateNestedEntityMapType,
 } from "./references/NestedEntityMapType.js"
 import {
+  formatReferenceIdentifierValue,
   getReferencesForReferenceIdentifierType,
   ReferenceIdentifierType,
   resolveTypeArgumentsInReferenceIdentifierType,
@@ -359,6 +370,40 @@ export const getReferencesForType: GetReferences<Type> = (type, value) => {
       return getReferencesForIncludeIdentifierType(type, value)
     case NodeKind.NestedEntityMapType:
       return getReferencesForNestedEntityMapType(type, value)
+    default:
+      return assertExhaustive(type)
+  }
+}
+
+/**
+ * Format the structure of a value to always look the same when serialized as JSON.
+ */
+export type StructureFormatter<T extends Type> = (type: T, value: unknown) => unknown
+
+export const formatValue: StructureFormatter<Type> = (type, value) => {
+  switch (type.kind) {
+    case NodeKind.ArrayType:
+      return formatArrayValue(type, value)
+    case NodeKind.ObjectType:
+      return formatObjectValue(type, value)
+    case NodeKind.BooleanType:
+      return formatBooleanValue(type, value)
+    case NodeKind.DateType:
+      return formatDateValue(type, value)
+    case NodeKind.FloatType:
+      return formatFloatValue(type, value)
+    case NodeKind.IntegerType:
+      return formatIntegerValue(type, value)
+    case NodeKind.StringType:
+      return formatStringValue(type, value)
+    case NodeKind.GenericArgumentIdentifierType:
+      return formatGenericArgumentIdentifierValue(type, value)
+    case NodeKind.IncludeIdentifierType:
+      return formatIncludeIdentifierValue(type, value)
+    case NodeKind.NestedEntityMapType:
+      return formatNestedEntityMapValue(type, value)
+    case NodeKind.ReferenceIdentifierType:
+      return formatReferenceIdentifierValue(type, value)
     default:
       return assertExhaustive(type)
   }

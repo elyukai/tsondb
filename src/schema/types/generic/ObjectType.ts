@@ -1,3 +1,4 @@
+import { sortObjectKeys } from "../../../shared/utils/object.js"
 import { parallelizeErrors } from "../../../shared/utils/validation.js"
 import { ObjectConstraints, validateObjectConstraints } from "../../../shared/validation/object.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
@@ -13,6 +14,7 @@ import {
   SerializedBaseType,
   SerializedType,
   serializeType,
+  StructureFormatter,
   Type,
   validate,
 } from "../Type.js"
@@ -192,3 +194,8 @@ export const getReferencesForObjectType: GetReferences<ObjectType> = (type, valu
         key in type.properties ? getReferencesForType(type.properties[key]!.type, propValue) : [],
       )
     : []
+
+export const formatObjectValue: StructureFormatter<ObjectType> = (type, value) =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+    ? sortObjectKeys(value as Record<string, unknown>, Object.keys(type.properties))
+    : value

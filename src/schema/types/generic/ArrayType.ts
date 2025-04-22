@@ -7,12 +7,14 @@ import { validateOption } from "../../validation/options.js"
 import { Validator } from "../../validation/type.js"
 import {
   BaseType,
+  formatValue,
   getReferencesForType,
   removeParentKey,
   resolveTypeArgumentsInType,
   SerializedBaseType,
   SerializedType,
   serializeType,
+  StructureFormatter,
   Type,
   validate,
 } from "../Type.js"
@@ -100,3 +102,6 @@ export const serializeArrayType: Serializer<ArrayType, SerializedArrayType> = ty
 
 export const getReferencesForArrayType: GetReferences<ArrayType> = (type, value) =>
   Array.isArray(value) ? value.flatMap(item => getReferencesForType(type.items, item)) : []
+
+export const formatArrayValue: StructureFormatter<ArrayType> = (type, value) =>
+  Array.isArray(value) ? value.map(item => formatValue(type.items, item)) : value

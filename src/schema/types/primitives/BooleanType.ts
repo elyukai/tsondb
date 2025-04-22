@@ -1,6 +1,6 @@
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, StructureFormatter } from "../Type.js"
 
 export interface BooleanType extends BaseType {
   kind: NodeKind["BooleanType"]
@@ -30,3 +30,5 @@ export const serializeBooleanType: Serializer<BooleanType, SerializedBooleanType
   removeParentKey(type)
 
 export const getReferencesForBooleanType: GetReferences<BooleanType> = (_type, _value) => []
+
+export const formatBooleanValue: StructureFormatter<BooleanType> = (_type, value) => value

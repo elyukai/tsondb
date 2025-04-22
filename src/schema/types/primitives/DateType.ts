@@ -1,7 +1,7 @@
 import { DateConstraints, validateDateConstraints } from "../../../shared/validation/date.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
-import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, StructureFormatter } from "../Type.js"
 
 export interface DateType extends BaseType, DateConstraints {
   kind: NodeKind["DateType"]
@@ -32,3 +32,5 @@ export const serializeDateType: Serializer<DateType, SerializedDateType> = type 
   removeParentKey(type)
 
 export const getReferencesForDateType: GetReferences<DateType> = (_type, _value) => []
+
+export const formatDateValue: StructureFormatter<DateType> = (_type, value) => value
