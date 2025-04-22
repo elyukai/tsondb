@@ -1,13 +1,10 @@
+import { parallelizeErrors } from "../../../shared/utils/validation.js"
+import { ObjectConstraints, validateObjectConstraints } from "../../../shared/validation/object.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
-import {
-  NumerusLabel,
-  parallelizeErrors,
-  validateLengthRangeBound,
-  Validator,
-} from "../../validation/type.js"
+import { Validator } from "../../validation/type.js"
 import {
   BaseType,
   getReferencesForType,
@@ -22,23 +19,20 @@ import {
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
-export interface ObjectType<T extends TConstraint = TConstraint> extends BaseType {
+export interface ObjectType<T extends TConstraint = TConstraint>
+  extends BaseType,
+    ObjectConstraints {
   kind: NodeKind["ObjectType"]
   properties: T
-  additionalProperties?: boolean
-  minProperties?: number
-  maxProperties?: number
 }
 
 type TSerializedConstraint = Record<string, SerializedMemberDecl<SerializedType, boolean>>
 
 export interface SerializedObjectType<T extends TSerializedConstraint = TSerializedConstraint>
-  extends SerializedBaseType {
+  extends SerializedBaseType,
+    ObjectConstraints {
   kind: NodeKind["ObjectType"]
   properties: T
-  additionalProperties?: boolean
-  minProperties?: number
-  maxProperties?: number
 }
 
 const keyPattern = /^[a-zA-Z0-9][a-zA-Z0-9_]*$/
@@ -94,20 +88,11 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
     return [TypeError(`expected an object, but got ${JSON.stringify(value)}`)]
   }
 
-  const keys = Object.keys(type.properties)
-  const label = ["property", "properties"] as NumerusLabel
+  const expectedKeys = Object.keys(type.properties)
 
   return parallelizeErrors([
-    validateLengthRangeBound("lower", label, type.minProperties, keys),
-    validateLengthRangeBound("upper", label, type.maxProperties, keys),
-    ...(type.additionalProperties !== true
-      ? Object.keys(value).flatMap(valueKey =>
-          keys.includes(valueKey)
-            ? []
-            : [TypeError(`object does not allow unknown keys and key "${valueKey}" is not known`)],
-        )
-      : []),
-    ...keys.map(key => {
+    ...validateObjectConstraints(type, expectedKeys, value),
+    ...expectedKeys.map(key => {
       const prop = type.properties[key]!
 
       if (prop.isRequired && !(key in value)) {

@@ -5,7 +5,7 @@ import {
   EntityDecl,
   isEntityDecl,
 } from "../../schema/declarations/EntityDecl.js"
-import { discriminatorKey, EnumDecl } from "../../schema/declarations/EnumDecl.js"
+import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
@@ -13,7 +13,7 @@ import { ArrayType } from "../../schema/types/generic/ArrayType.js"
 import { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
 import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
 import { DateType } from "../../schema/types/primitives/DateType.js"
-import { FloatType, IntegerType, RangeBound } from "../../schema/types/primitives/NumericType.js"
+import { FloatType, IntegerType } from "../../schema/types/primitives/NumericType.js"
 import { StringType } from "../../schema/types/primitives/StringType.js"
 import { GenericArgumentIdentifierType } from "../../schema/types/references/GenericArgumentIdentifierType.js"
 import { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.js"
@@ -23,7 +23,9 @@ import {
 } from "../../schema/types/references/NestedEntityMapType.js"
 import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
 import { getParentDecl, Type } from "../../schema/types/Type.js"
-import { assertExhaustive } from "../../utils/typeSafety.js"
+import { discriminatorKey } from "../../shared/enum.js"
+import { assertExhaustive } from "../../shared/utils/typeSafety.js"
+import { RangeBound } from "../../shared/validation/number.js"
 
 export type JsonSchemaRendererOptions = {
   indentation: number

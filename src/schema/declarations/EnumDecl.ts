@@ -1,3 +1,4 @@
+import { discriminatorKey } from "../../shared/enum.js"
 import { Lazy } from "../../utils/lazy.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
 import {
@@ -117,8 +118,6 @@ export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = 
   Object.values(decl.values.value).flatMap(caseDef =>
     caseDef === null ? [] : getNestedDeclarations(isDeclAdded, caseDef),
   )
-
-export const discriminatorKey = "kind"
 
 export const validateEnumDecl = (
   helpers: ValidatorHelpers,

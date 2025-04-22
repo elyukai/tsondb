@@ -6,7 +6,7 @@ import {
   toKebabCase,
   toPascalCase,
   toSnakeCase,
-} from "../../src/utils/string.js"
+} from "../../src/shared/utils/string.js"
 
 describe("splitStringParts", () => {
   it("should split strings of various cases into its parts", () => {

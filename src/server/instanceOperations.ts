@@ -1,11 +1,11 @@
-import { writeFile } from "node:fs/promises"
+import { rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { v4 as uuidv4 } from "uuid"
 import { ModelContainer } from "../ModelContainer.js"
 import { EntityDecl, validateEntityDecl } from "../schema/declarations/EntityDecl.js"
 import { createValidators } from "../schema/Node.js"
+import { InstanceContainer, InstancesByEntityName } from "../shared/utils/instances.js"
 import { getErrorMessageForDisplay } from "../utils/error.js"
-import { InstanceContainer, InstancesByEntityName } from "../utils/instances.js"
 import { error, ok, Result } from "../utils/result.js"
 
 export const createInstance = async (
@@ -33,6 +33,13 @@ export const createInstance = async (
   }
 
   const id = modelContainer.schema.localeEntity === entity ? (idQueryParam as string) : uuidv4()
+
+  if (
+    modelContainer.schema.localeEntity === entity &&
+    instancesByEntityName[entity.name]!.some(instance => instance.id === id)
+  ) {
+    return error([400, `Duplicate id "${id}" for locale entity`])
+  }
 
   const fileName = `${id}.json`
 
@@ -91,4 +98,30 @@ export const updateInstance = async (
   instanceContainer.content = instance
 
   return ok(instanceContainer)
+}
+
+export const deleteInstance = async (
+  modelContainer: ModelContainer,
+  instancesByEntityName: InstancesByEntityName,
+  entityName: string,
+  id: string,
+): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
+  const instances = instancesByEntityName[entityName] ?? []
+  const instanceContainerIndex = instances.findIndex(instance => instance.id === id)
+  const instanceContainer = instances[instanceContainerIndex]
+
+  if (instanceContainer === undefined) {
+    return error([404, "Instance not found"])
+  }
+
+  try {
+    await rm(join(modelContainer.dataRootPath, entityName, instanceContainer.fileName))
+    instancesByEntityName[entityName] = [
+      ...instances.slice(0, instanceContainerIndex),
+      ...instances.slice(instanceContainerIndex + 1),
+    ]
+    return ok(instanceContainer)
+  } catch (err) {
+    return error([500, `Failed to delete instance: ${err}`])
+  }
 }

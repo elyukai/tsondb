@@ -3,10 +3,11 @@ import { join } from "path"
 import { Output } from "./renderers/Output.js"
 import { getEntities, Schema } from "./Schema.js"
 import { createValidators, EntityDecl, validateEntityDecl } from "./schema/index.js"
-import { parallelizeErrors } from "./schema/validation/type.js"
 import { createServer } from "./server/index.js"
+import { InstancesByEntityName } from "./shared/utils/instances.js"
+import { parallelizeErrors } from "./shared/utils/validation.js"
 import { getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.js"
-import { getInstancesByEntityName, InstancesByEntityName } from "./utils/instances.js"
+import { getInstancesByEntityName } from "./utils/instances.js"
 
 export interface ModelContainer {
   schema: Schema
@@ -82,7 +83,7 @@ export const serve = async (modelContainer: ModelContainer) => {
   const entities = getEntities(modelContainer.schema)
   await prepareFolders(modelContainer, entities)
   const instancesByEntityName = await getInstancesByEntityName(modelContainer, entities)
-  createServer(modelContainer, entities, instancesByEntityName)
+  createServer(modelContainer, instancesByEntityName)
 }
 
 export const generateValidateAndServe = async (modelContainer: ModelContainer) => {
@@ -91,5 +92,5 @@ export const generateValidateAndServe = async (modelContainer: ModelContainer) =
   await prepareFolders(modelContainer, entities)
   const instancesByEntityName = await getInstancesByEntityName(modelContainer, entities)
   await _validate(entities, instancesByEntityName)
-  createServer(modelContainer, entities, instancesByEntityName)
+  createServer(modelContainer, instancesByEntityName)
 }

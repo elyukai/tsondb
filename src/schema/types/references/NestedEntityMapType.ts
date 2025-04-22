@@ -1,9 +1,10 @@
+import { parallelizeErrors } from "../../../shared/utils/validation.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { Lazy } from "../../../utils/lazy.js"
 import { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../../declarations/EntityDecl.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
-import { parallelizeErrors, Validator } from "../../validation/type.js"
+import { Validator } from "../../validation/type.js"
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
@@ -126,7 +127,7 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
         validateObjectType(helpers, type.type.value, value[key as keyof typeof value]).concat(
           helpers.checkReferentialIntegrity({
             name: type.secondaryEntity.name,
-            value: value[key as keyof typeof value],
+            value: key,
           }),
         ),
       ),

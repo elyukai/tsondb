@@ -1,12 +1,10 @@
-import { assertExhaustive } from "./typeSafety.js"
+import { assertExhaustive } from "../shared/utils/typeSafety.js"
 
 /**
  * A lazy value that is only evaluated when it is needed.
  */
 export class Lazy<T> {
-  private state:
-    | { kind: "unevaluated"; f: () => T }
-    | { kind: "evaluated"; value: T }
+  private state: { kind: "unevaluated"; f: () => T } | { kind: "evaluated"; value: T }
 
   private constructor(f: () => T) {
     this.state = { kind: "unevaluated", f }

@@ -1,11 +1,10 @@
+import { RangeBound, validateNumberConstraints } from "../../../shared/validation/number.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
-import { parallelizeErrors, Validator } from "../../validation/type.js"
-import { BaseType, removeParentKey, SerializedBaseType, Type } from "../Type.js"
-import { RangeBound, validateMultipleOf, validateRangeBound } from "./NumericType.js"
+import { Validator } from "../../validation/type.js"
+import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
 
 export interface FloatType extends BaseType {
   kind: NodeKind["FloatType"]
-  parent?: Type
   minimum?: RangeBound
   maximum?: RangeBound
   multipleOf?: number
@@ -13,7 +12,6 @@ export interface FloatType extends BaseType {
 
 export interface SerializedFloatType extends SerializedBaseType {
   kind: NodeKind["FloatType"]
-  parent?: Type
   minimum?: RangeBound
   maximum?: RangeBound
   multipleOf?: number
@@ -39,11 +37,7 @@ export const validateFloatType: Validator<FloatType> = (_helpers, type, value) =
     return [TypeError(`expected a floating-point number, but got ${JSON.stringify(value)}`)]
   }
 
-  return parallelizeErrors([
-    validateRangeBound("lower", type.minimum, value),
-    validateRangeBound("upper", type.maximum, value),
-    validateMultipleOf(type.multipleOf, value),
-  ])
+  return validateNumberConstraints(type, value)
 }
 
 export const serializeFloatType: Serializer<FloatType, SerializedFloatType> = type =>

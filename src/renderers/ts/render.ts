@@ -6,7 +6,7 @@ import {
   EntityDecl,
   isEntityDecl,
 } from "../../schema/declarations/EntityDecl.js"
-import { discriminatorKey, EnumDecl } from "../../schema/declarations/EnumDecl.js"
+import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
@@ -24,9 +24,10 @@ import {
 } from "../../schema/types/references/NestedEntityMapType.js"
 import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
 import { getParentDecl, Type } from "../../schema/types/Type.js"
+import { discriminatorKey } from "../../shared/enum.js"
+import { toCamelCase } from "../../shared/utils/string.js"
+import { assertExhaustive } from "../../shared/utils/typeSafety.js"
 import { applyIndentation, joinSyntax, prefixLines, syntax } from "../../utils/render.js"
-import { toCamelCase } from "../../utils/string.js"
-import { assertExhaustive } from "../../utils/typeSafety.js"
 
 export type TypeScriptRendererOptions = {
   indentation: number

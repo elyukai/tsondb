@@ -68,3 +68,8 @@ export const toSnakeCase = (str: string): string =>
   splitStringParts(str)
     .map(part => part.toLowerCase())
     .join("_")
+
+export const toTitleCase = (str: string): string =>
+  splitStringParts(str)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ")

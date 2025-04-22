@@ -1,0 +1,78 @@
+import { SerializedType } from "../../schema/types/Type.js"
+import { assertExhaustive } from "../../shared/utils/typeSafety.js"
+import { GetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.js"
+
+export const createTypeSkeleton = (
+  getDeclFromDeclName: GetDeclFromDeclName,
+  type: SerializedType,
+): unknown => {
+  switch (type.kind) {
+    case "BooleanType":
+      return false
+
+    case "DateType":
+      return type.time === true ? new Date().toISOString() : new Date().toDateString()
+
+    case "FloatType":
+      return 0.0
+
+    case "IntegerType":
+      return 0
+
+    case "StringType":
+      return ""
+
+    case "ArrayType":
+      return Array.from({ length: type.minItems ?? 0 }, () =>
+        createTypeSkeleton(getDeclFromDeclName, type.items),
+      )
+
+    case "ObjectType":
+      return Object.fromEntries(
+        Object.entries(type.properties).flatMap(([key, memberDecl]) =>
+          memberDecl.isRequired
+            ? [[key, createTypeSkeleton(getDeclFromDeclName, memberDecl.type)]]
+            : [],
+        ),
+      )
+
+    case "GenericArgumentIdentifierType":
+      return undefined
+
+    case "ReferenceIdentifierType":
+      return ""
+
+    case "IncludeIdentifierType": {
+      const referencedDecl = getDeclFromDeclName(type.reference)
+
+      if (referencedDecl === undefined) {
+        return undefined
+      }
+
+      switch (referencedDecl.kind) {
+        case "TypeAliasDecl":
+          return createTypeSkeleton(getDeclFromDeclName, referencedDecl.type)
+        case "EnumDecl": {
+          const firstCase = Object.entries(referencedDecl.values)[0]!
+
+          if (firstCase[1] === null) {
+            return { kind: firstCase[0] }
+          }
+
+          return {
+            kind: firstCase[0],
+            [firstCase[0]]: createTypeSkeleton(getDeclFromDeclName, firstCase[1]),
+          }
+        }
+        default:
+          return assertExhaustive(referencedDecl)
+      }
+    }
+
+    case "NestedEntityMapType":
+      return {}
+
+    default:
+      return assertExhaustive(type)
+  }
+}

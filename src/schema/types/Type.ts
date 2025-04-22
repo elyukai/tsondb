@@ -1,4 +1,4 @@
-import { assertExhaustive } from "../../utils/typeSafety.js"
+import { assertExhaustive } from "../../shared/utils/typeSafety.js"
 import { Decl, isDecl } from "../declarations/Declaration.js"
 import { BaseNode, GetReferences, NodeKind, Serializer } from "../Node.js"
 import { Validator } from "../validation/type.js"

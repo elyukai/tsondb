@@ -2,14 +2,7 @@ import { readdir, readFile } from "node:fs/promises"
 import { basename, extname, join } from "node:path"
 import { ModelContainer } from "../ModelContainer.js"
 import { EntityDecl } from "../schema/declarations/EntityDecl.js"
-
-export interface InstanceContainer {
-  fileName: string
-  id: string
-  content: unknown
-}
-
-export type InstancesByEntityName = Record<string, InstanceContainer[]>
+import { InstanceContainer, InstancesByEntityName } from "../shared/utils/instances.js"
 
 export const getInstancesByEntityName = async (
   modelContainer: ModelContainer,

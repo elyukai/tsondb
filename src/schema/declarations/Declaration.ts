@@ -1,4 +1,4 @@
-import { assertExhaustive } from "../../utils/typeSafety.js"
+import { assertExhaustive } from "../../shared/utils/typeSafety.js"
 import { BaseNode, GetReferences, Node, NodeKind, Serializer } from "../Node.js"
 import { SerializedTypeParameter, TypeParameter } from "../parameters/TypeParameter.js"
 import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.js"

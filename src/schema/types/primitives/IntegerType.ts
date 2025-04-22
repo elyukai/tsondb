@@ -1,8 +1,8 @@
+import { RangeBound, validateNumberConstraints } from "../../../shared/validation/number.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
-import { parallelizeErrors, Validator } from "../../validation/type.js"
+import { Validator } from "../../validation/type.js"
 import { BaseType, removeParentKey, SerializedBaseType } from "../Type.js"
-import { RangeBound, validateMultipleOf, validateRangeBound } from "./NumericType.js"
 
 export interface IntegerType extends BaseType {
   kind: NodeKind["IntegerType"]
@@ -43,11 +43,7 @@ export const validateIntegerType: Validator<IntegerType> = (_helpers, type, valu
     return [TypeError(`expected an integer, but got ${JSON.stringify(value)}`)]
   }
 
-  return parallelizeErrors([
-    validateRangeBound("lower", type.minimum, value),
-    validateRangeBound("upper", type.maximum, value),
-    validateMultipleOf(type.multipleOf, value),
-  ])
+  return validateNumberConstraints(type, value)
 }
 
 export const serializeIntegerType: Serializer<IntegerType, SerializedIntegerType> = type =>

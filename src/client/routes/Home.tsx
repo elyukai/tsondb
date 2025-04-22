@@ -1,17 +1,21 @@
 import { FunctionalComponent } from "preact"
 import { useEffect, useState } from "preact/hooks"
 import { SerializedEntityDecl } from "../../schema/index.js"
+import { toTitleCase } from "../../shared/utils/string.js"
 import { getAllEntities } from "../api.js"
+import { Layout } from "../components/Layout.js"
 
 export const Home: FunctionalComponent = () => {
-  const [entities, setEntities] = useState<SerializedEntityDecl[]>([])
+  const [entities, setEntities] = useState<
+    { declaration: SerializedEntityDecl; instanceCount: number }[]
+  >([])
 
   useEffect(() => {
-    console.log("Fetching entities...")
     getAllEntities()
       .then(data => {
-        console.log("Entities fetched: %d", data.length)
-        setEntities(data.slice().sort((a, b) => a.name.localeCompare(b.name)))
+        setEntities(
+          data.declarations.sort((a, b) => a.declaration.name.localeCompare(b.declaration.name)),
+        )
       })
       .catch(error => {
         console.error("Error fetching entities:", error)
@@ -19,25 +23,26 @@ export const Home: FunctionalComponent = () => {
   }, [])
 
   return (
-    <>
-      <header>
-        <nav>
-          <a href="/">Home</a>
-        </nav>
-      </header>
-      <main>
-        <h1>TSONDB</h1>
-        <ul>
-          {entities.map(entity => (
-            <li key={entity.name}>
-              <a href={`/entities/${entity.name}`}>
-                <h2>{entity.name}</h2>
-                <p>{entity.comment}</p>
+    <Layout breadcrumbs={[{ url: "/", label: "Home" }]}>
+      <h1>Entities</h1>
+      <ul class="entities">
+        {entities.map(entity => (
+          <li key={entity.declaration.name} class="entity-item">
+            <div className="title">
+              <h2>{toTitleCase(entity.declaration.name)}</h2>
+              {entity.declaration.comment && <p>{entity.declaration.comment}</p>}
+            </div>
+            <p class="meta">
+              {entity.instanceCount} instance{entity.instanceCount === 1 ? "" : "s"}
+            </p>
+            <div className="btns">
+              <a href={`/entities/${entity.declaration.name}`} class="btn">
+                View
               </a>
-            </li>
-          ))}
-        </ul>
-      </main>
-    </>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Layout>
   )
 }

@@ -1,8 +1,10 @@
+import { parallelizeErrors } from "../../../shared/utils/validation.js"
+import { validateArrayConstraints } from "../../../shared/validation/array.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
-import { parallelizeErrors, validateLengthRangeBound, Validator } from "../../validation/type.js"
+import { Validator } from "../../validation/type.js"
 import {
   BaseType,
   getReferencesForType,
@@ -76,32 +78,7 @@ export const validateArrayType: Validator<ArrayType> = (helpers, type, value) =>
   }
 
   return parallelizeErrors([
-    validateLengthRangeBound("lower", "item", type.minItems, value),
-    validateLengthRangeBound("upper", "item", type.maxItems, value),
-    type.uniqueItems
-      ? (() => {
-          // if (typeof this.uniqueItems === "function") {
-          //   const seen = new Set<any>()
-          //   for (const item of value) {
-          //     for (const other of seen) {
-          //       if (this.uniqueItems(item, other)) {
-          //         return TypeError(`Duplicate item found: ${JSON.stringify(item)}`)
-          //       }
-          //     }
-          //     seen.add(item)
-          //   }
-          // } else {
-          const seen = new Set()
-          for (const item of value) {
-            if (seen.has(item)) {
-              return TypeError(`duplicate item found: ${JSON.stringify(item)}`)
-            }
-            seen.add(item)
-          }
-          return undefined
-          // }
-        })()
-      : undefined,
+    ...validateArrayConstraints(type, value),
     ...value.map((item, index) =>
       wrapErrorsIfAny(`at index ${index}`, validate(helpers, type.items, item)),
     ),
