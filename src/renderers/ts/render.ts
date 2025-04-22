@@ -163,9 +163,9 @@ const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
             1,
             joinSyntax(
               `${discriminatorKey}: "${caseName}"`,
-              caseDef === null
+              caseDef.type === null
                 ? ""
-                : joinSyntax(EOL, caseName + ": ", renderType(options, caseDef)),
+                : joinSyntax(EOL, caseName + ": ", renderType(options, caseDef.type)),
             ),
             options.indentation,
           ),

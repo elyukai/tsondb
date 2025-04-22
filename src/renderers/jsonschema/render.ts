@@ -171,7 +171,7 @@ const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) => ({
       [discriminatorKey]: {
         const: caseName,
       },
-      ...(caseDef === null ? {} : { [caseName]: renderType(options, caseDef) }),
+      ...(caseDef.type === null ? {} : { [caseName]: renderType(options, caseDef.type) }),
     },
     required: [discriminatorKey, ...(caseDef === null ? [] : [caseName])],
   })),

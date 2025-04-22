@@ -55,13 +55,13 @@ export const createTypeSkeleton = (
         case "EnumDecl": {
           const firstCase = Object.entries(referencedDecl.values)[0]!
 
-          if (firstCase[1] === null) {
+          if (firstCase[1].type === null) {
             return { kind: firstCase[0] }
           }
 
           return {
             kind: firstCase[0],
-            [firstCase[0]]: createTypeSkeleton(getDeclFromDeclName, firstCase[1]),
+            [firstCase[0]]: createTypeSkeleton(getDeclFromDeclName, firstCase[1].type),
           }
         }
         default:

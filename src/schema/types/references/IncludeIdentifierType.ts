@@ -8,7 +8,7 @@ import {
   TypeArguments,
   validateDecl,
 } from "../../declarations/Declaration.js"
-import { EnumDecl } from "../../declarations/EnumDecl.js"
+import { EnumCaseDecl, EnumDecl } from "../../declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { SerializedTypeParameter, TypeParameter } from "../../parameters/TypeParameter.js"
@@ -24,7 +24,7 @@ import {
 
 type TConstraint<Params extends TypeParameter[]> =
   | TypeAliasDecl<string, Type, Params>
-  | EnumDecl<string, Record<string, Type | null>, Params>
+  | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
 
 export interface IncludeIdentifierType<
   Params extends TypeParameter[] = TypeParameter[],

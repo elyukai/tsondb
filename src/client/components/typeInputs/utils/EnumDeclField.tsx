@@ -36,22 +36,22 @@ export const EnumDeclField: FunctionComponent<Props> = ({
 
   const enumValues = Object.keys(decl.values)
   const activeEnumCase = value[discriminatorKey]
-  const associatedType = decl.values[activeEnumCase]
+  const caseMember = decl.values[activeEnumCase]
 
   return (
     <div class="field field--enum">
       <Select
         value={activeEnumCase}
         onInput={event => {
-          const associatedType = decl.values[event.currentTarget.value]
-          if (associatedType == null) {
+          const caseMember = decl.values[event.currentTarget.value]
+          if (caseMember?.type == null) {
             onChange({
               [discriminatorKey]: event.currentTarget.value,
             })
           } else {
             onChange({
               [discriminatorKey]: event.currentTarget.value,
-              [event.currentTarget.value]: createTypeSkeleton(getDeclFromDeclName, associatedType),
+              [event.currentTarget.value]: createTypeSkeleton(getDeclFromDeclName, caseMember.type),
             })
           }
         }}
@@ -62,10 +62,10 @@ export const EnumDeclField: FunctionComponent<Props> = ({
           </option>
         ))}
       </Select>
-      {associatedType == null ? null : (
+      {caseMember?.type == null ? null : (
         <div className="associated-type">
           <TypeInput
-            type={associatedType}
+            type={caseMember.type}
             value={(value as Record<string, unknown>)[activeEnumCase]}
             instanceNamesByEntity={instanceNamesByEntity}
             getDeclFromDeclName={getDeclFromDeclName}

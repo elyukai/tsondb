@@ -23,11 +23,13 @@ import {
   validateEntityDecl,
 } from "./EntityDecl.js"
 import {
+  EnumCaseDecl,
   EnumDecl,
   getNestedDeclarationsInEnumDecl,
   getReferencesForEnumDecl,
   isEnumDecl,
   resolveTypeArgumentsInEnumDecl,
+  SerializedEnumCaseDecl,
   SerializedEnumDecl,
   serializeEnumDecl,
   validateEnumDecl,
@@ -65,12 +67,12 @@ export type SerializedDecl = SerializedEntityDecl | SerializedEnumDecl | Seriali
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
   | EntityDecl<string, ObjectType>
-  | EnumDecl<string, Record<string, Type | null>, Params>
+  | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
   | TypeAliasDecl<string, Type, Params>
 
 export type SerializedDeclP<Params extends SerializedTypeParameter[] = SerializedTypeParameter[]> =
   | SerializedEntityDecl<string, SerializedObjectType>
-  | SerializedEnumDecl<string, Record<string, SerializedType | null>, Params>
+  | SerializedEnumDecl<string, Record<string, SerializedEnumCaseDecl>, Params>
   | SerializedTypeAliasDecl<string, SerializedType, Params>
 
 export type SecondaryDecl = EnumDecl | TypeAliasDecl

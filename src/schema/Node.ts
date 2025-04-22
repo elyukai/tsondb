@@ -7,6 +7,7 @@ import { Type } from "./types/Type.js"
 export interface NodeKind {
   EntityDecl: "EntityDecl"
   EnumDecl: "EnumDecl"
+  EnumCaseDecl: "EnumCaseDecl"
   TypeAliasDecl: "TypeAliasDecl"
   MemberDecl: "MemberDecl"
   ArrayType: "ArrayType"
@@ -26,6 +27,7 @@ export interface NodeKind {
 export const NodeKind: NodeKind = enumOfObject({
   EntityDecl: null,
   EnumDecl: null,
+  EnumCaseDecl: null,
   TypeAliasDecl: null,
   MemberDecl: null,
   ArrayType: null,
@@ -67,7 +69,7 @@ export const flatMapAuxiliaryDecls = (
         const newDecls = callbackFn(node, decls)
         return Object.values(node.values.value).reduce(
           (newDeclsAcc, caseDef) =>
-            caseDef === null ? newDecls : mapNodeTree(callbackFn, caseDef, newDeclsAcc),
+            caseDef.type === null ? newDecls : mapNodeTree(callbackFn, caseDef.type, newDeclsAcc),
           newDecls,
         )
       }

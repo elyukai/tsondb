@@ -27,7 +27,7 @@ import {
 
 export interface EnumDecl<
   Name extends string = string,
-  T extends Record<string, Type | null> = Record<string, Type | null>,
+  T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>,
   Params extends TypeParameter[] = TypeParameter[],
 > extends BaseDecl<Name, Params> {
   kind: NodeKind["EnumDecl"]
@@ -36,7 +36,7 @@ export interface EnumDecl<
 
 export interface SerializedEnumDecl<
   Name extends string = string,
-  T extends Record<string, SerializedType | null> = Record<string, SerializedType | null>,
+  T extends Record<string, SerializedEnumCaseDecl> = Record<string, SerializedEnumCaseDecl>,
   Params extends SerializedTypeParameter[] = SerializedTypeParameter[],
 > extends SerializedBaseDecl<Name, Params> {
   kind: NodeKind["EnumDecl"]
@@ -45,7 +45,7 @@ export interface SerializedEnumDecl<
 
 export const GenEnumDecl = <
   Name extends string,
-  T extends Record<string, Type | null>,
+  T extends Record<string, EnumCaseDecl>,
   Params extends TypeParameter[],
 >(
   sourceUrl: string,
@@ -65,8 +65,8 @@ export const GenEnumDecl = <
     values: Lazy.of(() => {
       const type = options.values(...options.parameters)
       Object.values(type).forEach(type => {
-        if (type) {
-          type.parent = decl
+        if (type.type) {
+          type.type.parent = decl
         }
       })
       return type
@@ -78,7 +78,7 @@ export const GenEnumDecl = <
 
 export { GenEnumDecl as GenEnum }
 
-export const EnumDecl = <Name extends string, T extends Record<string, Type | null>>(
+export const EnumDecl = <Name extends string, T extends Record<string, EnumCaseDecl>>(
   sourceUrl: string,
   options: {
     name: Name
@@ -96,8 +96,8 @@ export const EnumDecl = <Name extends string, T extends Record<string, Type | nu
     values: Lazy.of(() => {
       const type = options.values()
       Object.values(type).forEach(type => {
-        if (type) {
-          type.parent = decl
+        if (type.type) {
+          type.type.parent = decl
         }
       })
       return type
@@ -115,8 +115,8 @@ export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = 
   isDeclAdded,
   decl,
 ) =>
-  Object.values(decl.values.value).flatMap(caseDef =>
-    caseDef === null ? [] : getNestedDeclarations(isDeclAdded, caseDef),
+  Object.values(decl.values.value).flatMap(caseMember =>
+    caseMember.type === null ? [] : getNestedDeclarations(isDeclAdded, caseMember.type),
   )
 
 export const validateEnumDecl = (
@@ -153,7 +153,7 @@ export const validateEnumDecl = (
     return unknownKeyErrors
   }
 
-  const associatedType = decl.values.value[caseName]
+  const associatedType = decl.values.value[caseName]?.type
 
   if (associatedType != null) {
     if (!(caseName in value)) {
@@ -171,28 +171,55 @@ export const validateEnumDecl = (
 }
 
 export const resolveTypeArgumentsInEnumDecl = <Params extends TypeParameter[]>(
-  decl: EnumDecl<string, Record<string, Type | null>, Params>,
+  decl: EnumDecl<string, Record<string, EnumCaseDecl>, Params>,
   args: TypeArguments<Params>,
-): EnumDecl<string, Record<string, Type | null>, []> => {
+): EnumDecl<string, Record<string, EnumCaseDecl>, []> => {
   const resolvedArgs = getTypeArgumentsRecord(decl, args)
   return EnumDecl(decl.sourceUrl, {
     ...decl,
     values: () =>
       Object.fromEntries(
-        Object.entries(decl.values.value).map(([key, value]) => [
+        Object.entries(decl.values.value).map(([key, { type, ...caseMember }]) => [
           key,
-          value === null ? null : resolveTypeArgumentsInType(resolvedArgs, value),
+          {
+            ...caseMember,
+            type: type === null ? null : resolveTypeArgumentsInType(resolvedArgs, type),
+          },
         ]),
       ),
   })
 }
 
+export interface EnumCaseDecl<T extends Type | null = Type | null> {
+  kind: NodeKind["EnumCaseDecl"]
+  type: T
+  comment?: string
+}
+
+export interface SerializedEnumCaseDecl<T extends SerializedType | null = SerializedType | null> {
+  kind: NodeKind["EnumCaseDecl"]
+  type: T
+  comment?: string
+}
+
+export const EnumCaseDecl = <T extends Type | null>(
+  type: T,
+  comment?: string,
+): EnumCaseDecl<T> => ({
+  kind: NodeKind.EnumCaseDecl,
+  type,
+  comment,
+})
+
 export const serializeEnumDecl: Serializer<EnumDecl, SerializedEnumDecl> = type => ({
   ...type,
   values: Object.fromEntries(
-    Object.entries(type.values.value).map(([key, value]) => [
+    Object.entries(type.values.value).map(([key, caseMember]) => [
       key,
-      value === null ? null : serializeType(value),
+      {
+        ...caseMember,
+        type: caseMember.type === null ? null : serializeType(caseMember.type),
+      },
     ]),
   ),
   parameters: type.parameters.map(param => serializeTypeParameter(param)),
@@ -205,10 +232,10 @@ export const getReferencesForEnumDecl: GetReferences<EnumDecl> = (decl, value) =
   discriminatorKey in value &&
   typeof value[discriminatorKey] === "string" &&
   value[discriminatorKey] in decl.values.value &&
-  decl.values.value[value[discriminatorKey]] !== null &&
+  decl.values.value[value[discriminatorKey]]?.type == null &&
   value[discriminatorKey] in value
     ? getReferencesForType(
-        decl.values.value[value[discriminatorKey]]!,
+        decl.values.value[value[discriminatorKey]]!.type!,
         (value as Record<string, unknown>)[value[discriminatorKey]],
       )
     : []
