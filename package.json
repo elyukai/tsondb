@@ -1,6 +1,6 @@
 {
   "name": "tsondb",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "license": "ISC",
   "author": "Lukas Obermann",
@@ -13,6 +13,7 @@
   "exports": {
     ".": "./lib/index.js",
     "./renderer/jsonschema": "./lib/renderers/jsonschema/index.js",
+    "./renderer/md": "./lib/renderers/md/index.js",
     "./renderer/ts": "./lib/renderers/ts/index.js",
     "./modelcontainer": "./lib/ModelContainer.js",
     "./schema": "./lib/Schema.js",
