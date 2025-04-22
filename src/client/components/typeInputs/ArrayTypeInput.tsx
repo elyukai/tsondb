@@ -32,6 +32,18 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
         <ol>
           {value.map((item, i) => (
             <li class="container-item array-item" key={i}>
+              {isTuple ? null : (
+                <div className="container-item-header">
+                  <div className="container-item-title">{i + 1}.</div>
+                  <button
+                    class="destructive"
+                    onClick={() => onChange([...value.slice(0, i), ...value.slice(i + 1)])}
+                    disabled={type.minItems !== undefined && value.length <= type.minItems}
+                  >
+                    Delete Item
+                  </button>
+                </div>
+              )}
               <TypeInput
                 type={type.items}
                 value={item}
@@ -41,17 +53,6 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                   onChange([...value.slice(0, i), newItem, ...value.slice(i + 1)])
                 }
               />
-              {isTuple ? null : (
-                <button
-                  class="destructive"
-                  onClick={() =>
-                    onChange([...value, createTypeSkeleton(getDeclFromDeclName, type.items)])
-                  }
-                  disabled={type.minItems !== undefined && value.length <= type.minItems}
-                >
-                  Delete Item
-                </button>
-              )}
             </li>
           ))}
         </ol>
