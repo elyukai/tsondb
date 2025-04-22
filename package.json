@@ -5,6 +5,10 @@
   "license": "ISC",
   "author": "Lukas Obermann",
   "type": "module",
+  "files": [
+    "lib",
+    "public"
+  ],
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
