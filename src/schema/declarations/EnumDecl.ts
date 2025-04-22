@@ -215,6 +215,8 @@ export const EnumCaseDecl = <T extends Type | null>(options: {
   kind: NodeKind.EnumCaseDecl,
 })
 
+export { EnumCaseDecl as EnumCase }
+
 export const serializeEnumDecl: Serializer<EnumDecl, SerializedEnumDecl> = type => ({
   ...type,
   values: Object.fromEntries(
