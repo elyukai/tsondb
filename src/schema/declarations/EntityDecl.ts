@@ -41,6 +41,7 @@ export interface EntityDecl<Name extends string = string, T extends ObjectType =
          */
         pathInLocaleMap?: string
       }
+  isDeprecated?: boolean
 }
 
 export interface SerializedEntityDecl<
@@ -64,6 +65,7 @@ export interface SerializedEntityDecl<
          */
         pathInLocaleMap?: string
       }
+  isDeprecated?: boolean
 }
 
 export const EntityDecl = <Name extends string, T extends ObjectType>(
@@ -87,6 +89,7 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
            */
           pathInLocaleMap?: string
         }
+    isDeprecated?: boolean
   },
 ): EntityDecl<Name, T> => {
   validateDeclName(options.name)

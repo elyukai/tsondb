@@ -39,11 +39,16 @@ const defaultOptions: TypeScriptRendererOptions = {
 
 type RenderFn<T> = (options: TypeScriptRendererOptions, node: T) => string
 
-const renderDocumentation = (comment?: string): string =>
+const renderDocumentation = (comment?: string, isDeprecated?: boolean): string =>
   comment === undefined
     ? ""
     : syntax`/**
-${prefixLines(" * ", comment, true)}
+${prefixLines(" * ", comment, true)}${
+        isDeprecated
+          ? syntax`
+ * @deprecated`
+          : ""
+      }
  */
 `
 
@@ -73,7 +78,7 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, bool
     Object.entries(type.properties)
       .map(([name, config]) =>
         joinSyntax(
-          renderDocumentation(config.comment),
+          renderDocumentation(config.comment, config.isDeprecated),
           name,
           config.isRequired ? "" : "?",
           ": ",
@@ -138,7 +143,7 @@ const renderType: RenderFn<Type> = (options, type) => {
 
 const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
   joinSyntax(
-    renderDocumentation(decl.comment),
+    renderDocumentation(decl.comment, decl.isDeprecated),
     "export interface ",
     decl.name,
     " ",
@@ -147,7 +152,7 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
 
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
   joinSyntax(
-    renderDocumentation(decl.comment),
+    renderDocumentation(decl.comment, decl.isDeprecated),
     "export type ",
     decl.name,
     renderTypeParameters(options, decl.parameters),
@@ -184,7 +189,7 @@ const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>
   const type = decl.type.value
   return isObjectType(type)
     ? joinSyntax(
-        renderDocumentation(decl.comment),
+        renderDocumentation(decl.comment, decl.isDeprecated),
         "export interface ",
         decl.name,
         renderTypeParameters(options, decl.parameters),

@@ -31,6 +31,7 @@ export interface TypeAliasDecl<
 > extends BaseDecl<Name, Params> {
   kind: NodeKind["TypeAliasDecl"]
   type: Lazy<T>
+  isDeprecated?: boolean
 }
 
 export interface SerializedTypeAliasDecl<
@@ -40,6 +41,7 @@ export interface SerializedTypeAliasDecl<
 > extends SerializedBaseDecl<Name, Params> {
   kind: NodeKind["TypeAliasDecl"]
   type: T
+  isDeprecated?: boolean
 }
 
 export const GenTypeAliasDecl = <
@@ -51,6 +53,7 @@ export const GenTypeAliasDecl = <
   options: {
     name: Name
     comment?: string
+    isDeprecated?: boolean
     parameters: Params
     type: (...args: Params) => T
   },
@@ -78,6 +81,7 @@ export const TypeAliasDecl = <Name extends string, T extends Type>(
   options: {
     name: Name
     comment?: string
+    isDeprecated?: boolean
     type: () => T
   },
 ): TypeAliasDecl<Name, T, []> => {

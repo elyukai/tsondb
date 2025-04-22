@@ -53,7 +53,11 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, bool
   properties: Object.fromEntries(
     Object.entries(type.properties).map(([name, config]) => [
       name,
-      { description: config.comment, ...renderType(options, config.type) },
+      {
+        description: config.comment,
+        deprecated: config.isDeprecated,
+        ...renderType(options, config.type),
+      },
     ]),
   ),
   required: Object.entries(type.properties)
@@ -160,13 +164,16 @@ const renderType: RenderFn<Type> = (options, type) => {
 
 const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) => ({
   description: decl.comment,
+  deprecated: decl.isDeprecated,
   ...renderType(options, addEphemeralUUIDToType(decl)),
 })
 
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) => ({
   description: decl.comment,
+  deprecated: decl.isDeprecated,
   oneOf: Object.entries(decl.values.value).map(([caseName, caseDef]) => ({
     type: "object",
+    deprecated: caseDef.isDeprecated,
     properties: {
       [discriminatorKey]: {
         const: caseName,
@@ -182,6 +189,7 @@ const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>
   decl,
 ) => ({
   description: decl.comment,
+  deprecated: decl.isDeprecated,
   ...renderType(options, decl.type.value),
 })
 

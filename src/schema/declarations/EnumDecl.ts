@@ -32,6 +32,7 @@ export interface EnumDecl<
 > extends BaseDecl<Name, Params> {
   kind: NodeKind["EnumDecl"]
   values: Lazy<T>
+  isDeprecated?: boolean
 }
 
 export interface SerializedEnumDecl<
@@ -41,6 +42,7 @@ export interface SerializedEnumDecl<
 > extends SerializedBaseDecl<Name, Params> {
   kind: NodeKind["EnumDecl"]
   values: T
+  isDeprecated?: boolean
 }
 
 export const GenEnumDecl = <
@@ -194,21 +196,23 @@ export interface EnumCaseDecl<T extends Type | null = Type | null> {
   kind: NodeKind["EnumCaseDecl"]
   type: T
   comment?: string
+  isDeprecated?: boolean
 }
 
 export interface SerializedEnumCaseDecl<T extends SerializedType | null = SerializedType | null> {
   kind: NodeKind["EnumCaseDecl"]
   type: T
   comment?: string
+  isDeprecated?: boolean
 }
 
-export const EnumCaseDecl = <T extends Type | null>(
-  type: T,
-  comment?: string,
-): EnumCaseDecl<T> => ({
+export const EnumCaseDecl = <T extends Type | null>(options: {
+  type: T
+  comment?: string
+  isDeprecated?: boolean
+}): EnumCaseDecl<T> => ({
+  ...options,
   kind: NodeKind.EnumCaseDecl,
-  type,
-  comment,
 })
 
 export const serializeEnumDecl: Serializer<EnumDecl, SerializedEnumDecl> = type => ({

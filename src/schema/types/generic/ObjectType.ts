@@ -130,6 +130,7 @@ export interface MemberDecl<T extends Type = Type, R extends boolean = boolean> 
   isRequired: R
   type: T
   comment?: string
+  isDeprecated?: boolean
 }
 
 export interface SerializedMemberDecl<
@@ -140,24 +141,33 @@ export interface SerializedMemberDecl<
   isRequired: R
   type: T
   comment?: string
+  isDeprecated?: boolean
 }
 
 const MemberDecl = <T extends Type, R extends boolean>(
   isRequired: R,
   type: T,
   comment?: string,
+  isDeprecated?: boolean,
 ): MemberDecl<T, R> => ({
   kind: NodeKind.MemberDecl,
   isRequired,
   type,
   comment,
+  isDeprecated,
 })
 
-export const Required = <T extends Type>(options: { comment?: string; type: T }) =>
-  MemberDecl(true, options.type, options.comment)
+export const Required = <T extends Type>(options: {
+  comment?: string
+  isDeprecated?: boolean
+  type: T
+}) => MemberDecl(true, options.type, options.comment, options.isDeprecated)
 
-export const Optional = <T extends Type>(options: { comment?: string; type: T }) =>
-  MemberDecl(false, options.type, options.comment)
+export const Optional = <T extends Type>(options: {
+  comment?: string
+  isDeprecated?: boolean
+  type: T
+}) => MemberDecl(false, options.type, options.comment, options.isDeprecated)
 
 export const serializeObjectType: Serializer<ObjectType, SerializedObjectType> = type => ({
   ...removeParentKey(type),
