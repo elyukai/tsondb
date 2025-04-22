@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.2.0](https://github.com/elyukai/tsondb/compare/v0.1.3...v0.2.0) (2025-04-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* make ReferenceIdentifierType non-generic to improve type inference possibilities
+* enum values are wrapped in enum case members to have comments
+
+* make ReferenceIdentifierType non-generic to improve type inference possibilities ([4286f2c](https://github.com/elyukai/tsondb/commit/4286f2cc9a3a0a4a07b63e353abdb83c7f549aad))
+
+
+### Features
+
+* allow nested entity maps in all declarations ([bc86508](https://github.com/elyukai/tsondb/commit/bc86508210176fe472b340d83c4e2c1cb0ee81d1))
+* deprecation marker ([190126c](https://github.com/elyukai/tsondb/commit/190126cacbcacff32f10a6ddd08686a3fac44250))
+* enum values are wrapped in enum case members to have comments ([a37be0b](https://github.com/elyukai/tsondb/commit/a37be0b567cae0869d67974b4a9529c864b83853))
+* simple markdown preview ([7b692a7](https://github.com/elyukai/tsondb/commit/7b692a77a780d7a65443fea6d5bb5136bc4feaff)), closes [#3](https://github.com/elyukai/tsondb/issues/3)
+
+
+### Bug Fixes
+
+* circular references caused stack overflow when searching for nested declarations ([f788480](https://github.com/elyukai/tsondb/commit/f7884809600a3a711ff3fa64dc1bd570ec622e64))
+* deleting an array item should delete instead of add ([a7b11c7](https://github.com/elyukai/tsondb/commit/a7b11c76c37785046c959c2dcc4d83f1cad6413f))
+* provide EnumCase export ([27f8871](https://github.com/elyukai/tsondb/commit/27f88715028d216276c2df22181e73b394d0f7aa))
+* remove markdown renderer exports field ([20969f4](https://github.com/elyukai/tsondb/commit/20969f4f48bf7e4596504a4d603555067133a345))
+
 ## [0.1.3](https://github.com/elyukai/tsondb/compare/v0.1.2...v0.1.3) (2025-04-22)
 
 ## [0.1.2](https://github.com/elyukai/tsondb/compare/v0.1.1...v0.1.2) (2025-04-22)
