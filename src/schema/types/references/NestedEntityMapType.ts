@@ -2,7 +2,7 @@ import { parallelizeErrors } from "../../../shared/utils/validation.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import { Lazy } from "../../../utils/lazy.js"
 import { GetNestedDeclarations } from "../../declarations/Declaration.js"
-import { EntityDecl, isEntityDecl } from "../../declarations/EntityDecl.js"
+import { EntityDecl } from "../../declarations/EntityDecl.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { Validator } from "../../validation/type.js"
 import {
@@ -16,14 +16,7 @@ import {
   serializeObjectType,
   validateObjectType,
 } from "../generic/ObjectType.js"
-import {
-  BaseType,
-  getParentDecl,
-  removeParentKey,
-  SerializedBaseType,
-  SerializedType,
-  Type,
-} from "../Type.js"
+import { BaseType, removeParentKey, SerializedBaseType, SerializedType, Type } from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl<Type, boolean>>
 
@@ -61,16 +54,6 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
     ...options,
     kind: NodeKind.NestedEntityMapType,
     type: Lazy.of(() => {
-      const parentDecl = getParentDecl(nestedEntityMapType)
-
-      if (!parentDecl) {
-        throw new Error("Parent declaration not found")
-      }
-
-      if (!isEntityDecl(parentDecl)) {
-        throw new Error(`Parent declaration "${parentDecl.name}" is not an entity declaration`)
-      }
-
       const type = options.type
       type.parent = nestedEntityMapType
       return type
