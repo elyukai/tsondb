@@ -6,6 +6,8 @@ const separator = /[^a-z0-9]/
 const lastChar = (str: string) => str[str.length - 1]
 const lastElement = <T>(arr: T[]) => arr[arr.length - 1]
 
+const isAllUppercase = (str: string) => str === str.toUpperCase()
+
 export const splitStringParts = (str: string): string[] =>
   [...str].reduce((acc: string[], char, i, strArr) => {
     if (acc.length === 0) {
@@ -40,20 +42,18 @@ export const splitStringParts = (str: string): string[] =>
   }, [])
 
 export const toPascalCase = (str: string): string =>
-  splitStringParts(str)
+  splitStringParts(isAllUppercase(str) ? str.toLowerCase() : str)
     .map(part =>
-      part === part.toUpperCase()
-        ? part
-        : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
+      isAllUppercase(part) ? part : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
     )
     .join("")
 
 export const toCamelCase = (str: string): string =>
-  splitStringParts(str)
+  splitStringParts(isAllUppercase(str) ? str.toLowerCase() : str)
     .map((part, i) =>
       i === 0
         ? part.toLowerCase()
-        : part === part.toUpperCase()
+        : isAllUppercase(part)
         ? part
         : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
     )
