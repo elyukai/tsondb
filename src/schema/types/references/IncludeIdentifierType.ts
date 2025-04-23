@@ -1,3 +1,5 @@
+import { discriminatorKey } from "../../../shared/enum.js"
+import { sortObjectKeys } from "../../../shared/utils/object.js"
 import {
   GetNestedDeclarations,
   getNestedDeclarations,
@@ -15,6 +17,7 @@ import { SerializedTypeParameter, TypeParameter } from "../../parameters/TypePar
 import { Validator } from "../../validation/type.js"
 import {
   BaseType,
+  formatValue,
   removeParentKey,
   resolveTypeArgumentsInType,
   SerializedBaseType,
@@ -108,6 +111,39 @@ export const getReferencesForIncludeIdentifierType: GetReferences<IncludeIdentif
 ) => getReferencesForDecl(resolveTypeArgumentsInDecl(type.reference, type.args), value)
 
 export const formatIncludeIdentifierValue: StructureFormatter<IncludeIdentifierType> = (
-  _type,
+  type,
   value,
-) => value
+) => {
+  switch (type.reference.kind) {
+    case NodeKind.TypeAliasDecl:
+      return formatValue(type.reference.type.value, value)
+    case NodeKind.EnumDecl: {
+      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+        const _caseName = (value as Record<typeof discriminatorKey, unknown>)[discriminatorKey]
+        const caseName = typeof _caseName === "string" ? _caseName : undefined
+        if (caseName === undefined) {
+          return value
+        }
+        const caseDecl = type.reference.values.value[caseName]
+        return sortObjectKeys(
+          {
+            [discriminatorKey]: caseName,
+            ...(caseDecl?.type
+              ? {
+                  [caseName]: formatValue(
+                    caseDecl.type,
+                    (value as Record<typeof caseName, unknown>)[caseName],
+                  ),
+                }
+              : {}),
+          },
+          [discriminatorKey, ...Object.keys(type.reference.values.value)],
+        )
+      } else {
+        return value
+      }
+    }
+    default:
+      return value
+  }
+}
