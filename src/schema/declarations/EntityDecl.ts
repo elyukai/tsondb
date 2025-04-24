@@ -25,6 +25,7 @@ import { TypeAliasDecl } from "./TypeAliasDecl.js"
 export interface EntityDecl<Name extends string = string, T extends ObjectType = ObjectType>
   extends BaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
+  namePlural: string
   type: Lazy<T>
   /**
    * @default "name"
@@ -49,6 +50,7 @@ export interface SerializedEntityDecl<
   T extends SerializedObjectType = SerializedObjectType,
 > extends SerializedBaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
+  namePlural: string
   type: T
   /**
    * @default "name"
@@ -72,6 +74,7 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
   sourceUrl: string,
   options: {
     name: Name
+    namePlural: string
     comment?: string
     type: () => T
     /**

@@ -3,10 +3,12 @@ import {
   CreateInstanceOfEntityResponseBody,
   DeleteInstanceOfEntityResponseBody,
   GetAllDeclarationsResponseBody,
+  GetAllGitBranchesResponseBody,
   GetAllInstancesOfEntityResponseBody,
   GetAllInstancesResponseBody,
   GetDeclarationResponseBody,
   GetInstanceOfEntityResponseBody,
+  GitStatusResponseBody,
   UpdateInstanceOfEntityResponseBody,
 } from "../shared/api.js"
 
@@ -125,4 +127,142 @@ export const getAllInstances = async (locales: string[]): Promise<GetAllInstance
   }
 
   return response.json()
+}
+
+export const getGitStatus = async (locales: string[]): Promise<GitStatusResponseBody> => {
+  const url = new URL("/api/git/status", window.location.origin)
+
+  for (const locale of locales) {
+    url.searchParams.append("locales", locale)
+  }
+
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+
+  return response.json()
+}
+
+export const stageAllFiles = async (): Promise<void> => {
+  const response = await fetch(`/api/git/stage`, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+}
+
+export const stageAllFilesOfEntity = async (entityName: string): Promise<void> => {
+  const response = await fetch(`/api/git/stage/${entityName}`, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+}
+
+export const stageFileOfEntity = async (entityName: string, id: string): Promise<void> => {
+  const response = await fetch(`/api/git/stage/${entityName}/${id}`, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+}
+
+export const unstageAllFiles = async (): Promise<void> => {
+  const response = await fetch(`/api/git/unstage`, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+}
+
+export const unstageAllFilesOfEntity = async (entityName: string): Promise<void> => {
+  const response = await fetch(`/api/git/unstage/${entityName}`, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+}
+
+export const unstageFileOfEntity = async (entityName: string, id: string): Promise<void> => {
+  const response = await fetch(`/api/git/unstage/${entityName}/${id}`, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+}
+
+export const commitStagedFiles = async (
+  message: string,
+): Promise<DeleteInstanceOfEntityResponseBody> => {
+  const response = await fetch(`/api/git/commit`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+  return response.json()
+}
+
+export const pushCommits = async (): Promise<DeleteInstanceOfEntityResponseBody> => {
+  const response = await fetch(`/api/git/push`, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+  return response.json()
+}
+
+export const pullCommits = async (): Promise<DeleteInstanceOfEntityResponseBody> => {
+  const response = await fetch(`/api/git/pull`, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+  return response.json()
+}
+
+export const getBranches = async (): Promise<GetAllGitBranchesResponseBody> => {
+  const response = await fetch(`/api/git/branch`, {
+    method: "GET",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+  return response.json()
+}
+
+export const createBranch = async (branchName: string): Promise<void> => {
+  const response = await fetch(`/api/git/branch`, {
+    method: "POST",
+    body: JSON.stringify({ branchName }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+}
+
+export const switchBranch = async (branchName: string): Promise<void> => {
+  const response = await fetch(`/api/git/branch/${branchName}`, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
 }

@@ -40,6 +40,28 @@ body {
   padding: 1.5rem;
   line-height: 1.4;
   background: var(--background);
+  z-index: 1;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "header aside" "main main";
+  gap: 0 1rem;
+}
+
+@media (min-width: 80rem) {
+  #app {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "header header" "main aside";
+  }
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  grid-area: header;
 }
 
 header nav ol {
@@ -48,6 +70,10 @@ header nav ol {
   gap: 1rem;
   padding: 0;
   margin: 0;
+}
+
+main {
+  grid-area: main;
 }
 
 h1 {
@@ -66,6 +92,18 @@ h1 .id {
   font-family: var(--font-mono);
   display: block;
   margin-top: 0.25rem;
+}
+
+h2 {
+  margin: 1.8rem 0 1.25rem;
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+
+h2.h1-faded {
+  margin: 2rem 0 1.5rem;
+  font-size: 2.5rem;
+  color: var(--tertiary-color);
 }
 
 a {
@@ -389,7 +427,6 @@ form > .field--container {
   flex: 1 1 0;
 }
 
-
 .field--string .preview p {
   margin: 0.5rem 0 0;
 }
@@ -453,4 +490,166 @@ button[type="submit"] {
   font-size: 0.8rem;
   color: var(--secondary-color);
   margin: 0.5rem 0 0;
+}
+
+.git-status {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 2px;
+  text-align: center;
+  line-height: 1.75rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.instance-item .git-status {
+  margin-top: 0.3rem;
+}
+
+.git-status.git-status--U {
+  color: rgb(13, 149, 101);
+  background: rgba(13, 149, 101, 0.15);
+}
+
+.git-status.git-status--A {
+  color: rgb(20, 148, 29);
+  background: rgba(20, 148, 29, 0.15);
+}
+
+.git-status.git-status--M {
+  color: rgb(196, 155, 18);
+  background: rgba(196, 155, 18, 0.15);
+}
+
+.git-status.git-status--D {
+  color: rgb(135, 22, 11);
+  background: rgba(135, 22, 11, 0.15);
+}
+
+.git-status.git-status--R {
+  color: rgb(20, 97, 148);
+  background: rgba(20, 97, 148, 0.15);
+}
+
+aside.git {
+  max-width: 30rem;
+  grid-area: aside;
+}
+
+aside.git h2 {
+  display: none;
+}
+
+@media (min-width: 80rem) {
+  aside.git {
+    border-left: 1px solid var(--separator-color);
+    padding-left: 1rem;
+  }
+
+  aside.git h2 {
+    display: block;
+  }
+
+  aside.git > button {
+    display: none;
+  }
+}
+
+aside.git h3 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+aside.git ul {
+  list-style-type: " ";
+  padding: 0;
+  margin: 0;
+  display: block;
+}
+
+aside.git .git-entity-list-item > .title {
+  margin: 1rem 0 0.5rem;
+}
+
+aside.git .git-instance-list-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0 0;
+  gap: 0.25rem;
+}
+
+aside.git li .title {
+  display: block;
+  margin: 0.25rem 0;
+  flex: 1 1 0;
+}
+
+aside.git li.git-entity-list-item > .title {
+  font-weight: 600;
+}
+
+aside.git li button {
+  padding: 0 0.5rem;
+  line-height: 1.75rem;
+  height: 1.75rem;
+}
+
+aside.git .git-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0 0.5rem;
+}
+
+aside.git .git-section-title h2 {
+  margin: 0;
+}
+
+aside.git p.no-changes {
+  color: var(--tertiary-color);
+  margin: 0;
+}
+
+aside.git .commit,
+aside.git .sync,
+aside.git .branch {
+  display: flex;
+  gap: 0.5rem;
+}
+
+aside.git .sync,
+aside.git .branch {
+  margin-bottom: 1rem;
+}
+
+aside.git .commit input,
+aside.git .branch .select-wrapper {
+  flex: 1 1 0;
+}
+
+.git-overlay {
+  display: none;
+  position: absolute;
+  right: 1.5rem;
+  box-shadow: 0 0.5rem 2rem rgba(160, 163, 165, 0.5);
+  z-index: 1000;
+  padding: 1rem;
+  background: var(--background);
+  overflow-y: auto;
+  max-height: calc(90vh - 5rem);
+}
+
+@media (min-width: 80rem) {
+  .git-overlay {
+    display: block;
+    position: static;
+    box-shadow: none;
+    padding: 0.5rem 0 0;
+    max-height: none;
+  }
+}
+
+.git-overlay.git-overlay--open {
+  display: block;
 }

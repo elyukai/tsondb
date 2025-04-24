@@ -1,3 +1,4 @@
+import Debug from "debug"
 import { mkdir } from "fs/promises"
 import { join } from "path"
 import { Output } from "./renderers/Output.js"
@@ -8,6 +9,8 @@ import { InstancesByEntityName } from "./shared/utils/instances.js"
 import { parallelizeErrors } from "./shared/utils/validation.js"
 import { getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.js"
 import { getInstancesByEntityName } from "./utils/instances.js"
+
+const debug = Debug("tsondb:schema")
 
 export interface ModelContainer {
   schema: Schema
@@ -54,11 +57,11 @@ const _validate = async (
   )
 
   if (errors.length === 0) {
-    console.log("All entities are valid")
+    debug("All entities are valid")
   } else {
-    console.error("Errors:\n")
+    debug("Errors:\n")
     for (const error of errors) {
-      console.error(getErrorMessageForDisplay(error) + "\n")
+      debug(getErrorMessageForDisplay(error) + "\n")
     }
     throw new Error("Validation failed")
   }

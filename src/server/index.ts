@@ -1,24 +1,15 @@
+import Debug from "debug"
 import express from "express"
 import { join } from "node:path"
+import { SimpleGit, simpleGit } from "simple-git"
 import { ModelContainer } from "../ModelContainer.js"
-import { Decl, serializeDecl } from "../schema/declarations/Declaration.js"
-import { EntityDecl, isEntityDecl, serializeEntityDecl } from "../schema/declarations/EntityDecl.js"
-import { isEnumDecl } from "../schema/declarations/EnumDecl.js"
-import { isTypeAliasDecl } from "../schema/declarations/TypeAliasDecl.js"
-import {
-  CreateInstanceOfEntityResponseBody,
-  DeleteInstanceOfEntityResponseBody,
-  GetAllDeclarationsResponseBody,
-  GetAllInstancesOfEntityResponseBody,
-  GetAllInstancesResponseBody,
-  GetDeclarationResponseBody,
-  GetInstanceOfEntityResponseBody,
-  UpdateInstanceOfEntityResponseBody,
-} from "../shared/api.js"
-import { getDisplayNameFromEntityInstance } from "../shared/utils/displayName.js"
+import { Decl } from "../schema/declarations/Declaration.js"
+import { EntityDecl, isEntityDecl } from "../schema/declarations/EntityDecl.js"
 import { InstancesByEntityName } from "../shared/utils/instances.js"
-import { isOk } from "../utils/result.js"
-import { createInstance, deleteInstance, updateInstance } from "./instanceOperations.js"
+import { attachGitStatusToInstancesByEntityName } from "../utils/instances.js"
+import { api } from "./api/index.js"
+
+const debug = Debug("tsondb:server")
 
 type ServerOptions = {
   name: string
@@ -30,11 +21,43 @@ const defaultOptions: ServerOptions = {
   port: 3000,
 }
 
-export const createServer = (
+const getGit = async (modelContainer: ModelContainer) => {
+  const git = simpleGit({ baseDir: modelContainer.dataRootPath })
+  if (await git.checkIsRepo()) {
+    try {
+      const root = await git.revparse({ "--show-toplevel": null })
+      const status = await git.status()
+      return { git, root, status }
+    } catch {
+      return { git }
+    }
+  } else {
+    return { git }
+  }
+}
+
+interface TSONDBRequestLocals {
+  git: SimpleGit
+  gitRoot: string | undefined
+  dataRoot: string
+  declarations: readonly Decl[]
+  entities: readonly EntityDecl[]
+  instancesByEntityName: InstancesByEntityName
+  entitiesByName: Record<string, EntityDecl>
+  localeEntity?: EntityDecl
+}
+
+declare global {
+  namespace Express {
+    export interface Request extends TSONDBRequestLocals {}
+  }
+}
+
+export const createServer = async (
   modelContainer: ModelContainer,
   instancesByEntityName: InstancesByEntityName,
   options?: Partial<ServerOptions>,
-): void => {
+): Promise<void> => {
   const { name, port } = { ...defaultOptions, ...options }
 
   const app = express()
@@ -45,6 +68,8 @@ export const createServer = (
   app.use("/js/shared", express.static(join(import.meta.dirname, "../../lib/shared")))
   app.use(express.json())
 
+  const { git, root: gitRoot, status: gitStatus } = await getGit(modelContainer)
+
   const declarations = modelContainer.schema.declarations
   const entities = declarations.filter(isEntityDecl)
 
@@ -52,228 +77,34 @@ export const createServer = (
     entities.map(entity => [entity.name, entity]),
   ) as Record<string, EntityDecl>
 
-  const instancesByEntityNameInMemory: InstancesByEntityName = { ...instancesByEntityName }
+  const instancesByEntityNameInMemory = Object.assign({}, instancesByEntityName)
 
-  app.get("/api/declarations", (req, res) => {
-    let filteredEntities: readonly Decl[]
-
-    switch (req.query["kind"]) {
-      case "Entity":
-        filteredEntities = entities.filter(isEntityDecl)
-        break
-      case "TypeAlias":
-        filteredEntities = entities.filter(isTypeAliasDecl)
-        break
-      case "Enum":
-        filteredEntities = entities.filter(isEnumDecl)
-        break
-      default:
-        filteredEntities = declarations
-    }
-
-    const body: GetAllDeclarationsResponseBody = {
-      declarations: filteredEntities.map(decl => ({
-        declaration: serializeDecl(decl),
-        instanceCount: instancesByEntityNameInMemory[decl.name]?.length ?? 0,
-      })),
-      localeEntity: modelContainer.schema.localeEntity?.name,
-    }
-
-    res.json(body)
-  })
-
-  app.get("/api/declarations/:name", (req, res) => {
-    const decl = declarations.find(decl => decl.name === req.params.name)
-
-    if (decl === undefined) {
-      res.status(404).send(`Declaration "${req.params.name}" not found`)
-      return
-    }
-
-    const body: GetDeclarationResponseBody = {
-      declaration: serializeDecl(decl),
-      instanceCount: instancesByEntityNameInMemory[decl.name]?.length ?? 0,
-      isLocaleEntity: decl === modelContainer.schema.localeEntity,
-    }
-
-    res.json(body)
-  })
-
-  app.get("/api/declarations/:name/instances", (req, res) => {
-    const decl = declarations.find(decl => decl.name === req.params.name)
-
-    if (decl === undefined) {
-      res.status(404).send(`Declaration "${req.params.name}" not found`)
-      return
-    }
-
-    if (!isEntityDecl(decl)) {
-      res.status(400).send(`Declaration "${decl.name}" is not an entity`)
-      return
-    }
-
-    const body: GetAllInstancesOfEntityResponseBody = {
-      instances: instancesByEntityNameInMemory[req.params.name] ?? [],
-      isLocaleEntity: decl === modelContainer.schema.localeEntity,
-    }
-
-    res.json(body)
-  })
-
-  app.post("/api/declarations/:name/instances", async (req, res) => {
-    const decl = declarations.find(decl => decl.name === req.params.name)
-
-    if (decl === undefined) {
-      res.status(404).send(`Declaration "${req.params.name}" not found`)
-      return
-    }
-
-    if (!isEntityDecl(decl)) {
-      res.status(400).send(`Declaration "${decl.name}" is not an entity`)
-      return
-    }
-
-    const result = await createInstance(
-      modelContainer,
-      entitiesByName,
-      instancesByEntityNameInMemory,
-      decl.name,
-      req.body,
-      req.query["id"],
+  if (gitStatus) {
+    attachGitStatusToInstancesByEntityName(
+      instancesByEntityName,
+      modelContainer.dataRootPath,
+      gitRoot,
+      gitStatus,
     )
+  }
 
-    if (isOk(result)) {
-      const body: CreateInstanceOfEntityResponseBody = {
-        instance: result.value,
-        isLocaleEntity: decl === modelContainer.schema.localeEntity,
-      }
+  const requestLocals: TSONDBRequestLocals = {
+    git: git,
+    gitRoot: gitRoot,
+    dataRoot: modelContainer.dataRootPath,
+    declarations: declarations,
+    entities: entities,
+    instancesByEntityName: instancesByEntityNameInMemory,
+    entitiesByName: entitiesByName,
+    localeEntity: modelContainer.schema.localeEntity,
+  }
 
-      res.json(body)
-    } else {
-      res.status(result.error[0]).send(result.error[1])
-    }
+  app.use((req, _res, next) => {
+    Object.assign(req, requestLocals)
+    next()
   })
 
-  app.get("/api/declarations/:name/instances/:id", (req, res) => {
-    const decl = declarations.find(decl => decl.name === req.params.name)
-
-    if (decl === undefined) {
-      res.status(404).send(`Declaration "${req.params.name}" not found`)
-      return
-    }
-
-    if (!isEntityDecl(decl)) {
-      res.status(400).send(`Declaration "${decl.name}" is not an entity`)
-      return
-    }
-
-    const instance = instancesByEntityNameInMemory[decl.name]?.find(
-      instance => instance.id === req.params.id,
-    )
-
-    if (instance === undefined) {
-      res.status(404).send(`Instance "${req.params.id}" not found`)
-      return
-    }
-
-    const body: GetInstanceOfEntityResponseBody = {
-      instance: instance,
-      isLocaleEntity: decl === modelContainer.schema.localeEntity,
-    }
-
-    res.json(body)
-  })
-
-  app.put("/api/declarations/:name/instances/:id", async (req, res) => {
-    const decl = declarations.find(decl => decl.name === req.params.name)
-
-    if (decl === undefined) {
-      res.status(404).send(`Declaration "${req.params.name}" not found`)
-      return
-    }
-
-    if (!isEntityDecl(decl)) {
-      res.status(400).send(`Declaration "${decl.name}" is not an entity`)
-      return
-    }
-
-    const result = await updateInstance(
-      modelContainer,
-      entitiesByName,
-      instancesByEntityNameInMemory,
-      decl.name,
-      req.params.id,
-      req.body,
-    )
-
-    if (isOk(result)) {
-      const body: UpdateInstanceOfEntityResponseBody = {
-        instance: result.value,
-        isLocaleEntity: decl === modelContainer.schema.localeEntity,
-      }
-
-      res.json(body)
-    } else {
-      res.status(result.error[0]).send(result.error[1])
-    }
-  })
-
-  app.delete("/api/declarations/:name/instances/:id", async (req, res) => {
-    const decl = declarations.find(decl => decl.name === req.params.name)
-
-    if (decl === undefined) {
-      res.status(404).send(`Declaration "${req.params.name}" not found`)
-      return
-    }
-
-    if (!isEntityDecl(decl)) {
-      res.status(400).send(`Declaration "${decl.name}" is not an entity`)
-      return
-    }
-
-    const result = await deleteInstance(
-      modelContainer,
-      instancesByEntityNameInMemory,
-      decl.name,
-      req.params.id,
-    )
-
-    if (isOk(result)) {
-      const body: DeleteInstanceOfEntityResponseBody = {
-        instance: result.value,
-        isLocaleEntity: decl === modelContainer.schema.localeEntity,
-      }
-
-      res.json(body)
-    } else {
-      res.status(result.error[0]).send(result.error[1])
-    }
-  })
-
-  app.get("/api/instances", (req, res) => {
-    const locales = (
-      Array.isArray(req.query["locales"]) ? req.query["locales"] : [req.query["locales"]]
-    ).filter(locale => typeof locale === "string")
-
-    const body: GetAllInstancesResponseBody = {
-      instances: Object.fromEntries(
-        Object.entries(instancesByEntityNameInMemory).map(([entityName, instances]) => [
-          entityName,
-          instances.map(instance => ({
-            id: instance.id,
-            name: getDisplayNameFromEntityInstance(
-              serializeEntityDecl(entitiesByName[entityName]!),
-              instance.content,
-              instance.id,
-              locales,
-            ),
-          })),
-        ]),
-      ),
-    }
-
-    res.json(body)
-  })
+  app.use("/api", api)
 
   app.get(/^\/.*/, (_req, res) => {
     res.send(`<!DOCTYPE html>
@@ -302,6 +133,6 @@ export const createServer = (
   })
 
   app.listen(port, () => {
-    console.log(`${name} listening on http://localhost:${port}`)
+    debug(`${name} listening on http://localhost:${port}`)
   })
 }

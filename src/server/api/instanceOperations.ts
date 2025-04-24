@@ -1,21 +1,25 @@
 import { rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
+import { SimpleGit } from "simple-git"
 import { v4 as uuidv4 } from "uuid"
-import { ModelContainer } from "../ModelContainer.js"
-import { EntityDecl, validateEntityDecl } from "../schema/declarations/EntityDecl.js"
-import { formatValue } from "../schema/index.js"
-import { createValidators } from "../schema/Node.js"
-import { InstanceContainer, InstancesByEntityName } from "../shared/utils/instances.js"
-import { getErrorMessageForDisplay } from "../utils/error.js"
-import { error, ok, Result } from "../utils/result.js"
+import { EntityDecl, validateEntityDecl } from "../../schema/declarations/EntityDecl.js"
+import { formatValue } from "../../schema/index.js"
+import { createValidators } from "../../schema/Node.js"
+import { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.js"
+import { getErrorMessageForDisplay } from "../../utils/error.js"
+import { getGitFileStatusFromStatusResult } from "../../utils/git.js"
+import { error, ok, Result } from "../../utils/result.js"
 
 export const createInstance = async (
-  modelContainer: ModelContainer,
+  dataRootPath: string,
+  localeEntity: EntityDecl | undefined,
   entitiesByName: Record<string, EntityDecl>,
   instancesByEntityName: InstancesByEntityName,
   entityName: string,
   instance: unknown,
   idQueryParam: unknown,
+  git: SimpleGit,
+  gitRoot: string | undefined,
 ): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
   const entity = entitiesByName[entityName]!
 
@@ -29,14 +33,14 @@ export const createInstance = async (
     return error([400, validationErrors.map(getErrorMessageForDisplay).join("\n\n")])
   }
 
-  if (modelContainer.schema.localeEntity === entity && typeof idQueryParam !== "string") {
+  if (localeEntity === entity && typeof idQueryParam !== "string") {
     return error([400, "Missing id for locale entity"])
   }
 
-  const id = modelContainer.schema.localeEntity === entity ? (idQueryParam as string) : uuidv4()
+  const id = localeEntity === entity ? (idQueryParam as string) : uuidv4()
 
   if (
-    modelContainer.schema.localeEntity === entity &&
+    localeEntity === entity &&
     instancesByEntityName[entity.name]!.some(instance => instance.id === id)
   ) {
     return error([400, `Duplicate id "${id}" for locale entity`])
@@ -45,7 +49,7 @@ export const createInstance = async (
   const fileName = `${id}.json`
 
   await writeFile(
-    join(modelContainer.dataRootPath, entity.name, fileName),
+    join(dataRootPath, entity.name, fileName),
     JSON.stringify(formatValue(entity.type.value, instance), undefined, 2),
     { encoding: "utf-8" },
   )
@@ -54,6 +58,16 @@ export const createInstance = async (
     fileName,
     id,
     content: instance,
+    gitStatus:
+      gitRoot === undefined
+        ? undefined
+        : getGitFileStatusFromStatusResult(
+            await git.status(),
+            gitRoot,
+            dataRootPath,
+            entity.name,
+            fileName,
+          ),
   }
 
   instancesByEntityName[entity.name] = [
@@ -65,12 +79,14 @@ export const createInstance = async (
 }
 
 export const updateInstance = async (
-  modelContainer: ModelContainer,
+  dataRootPath: string,
   entitiesByName: Record<string, EntityDecl>,
   instancesByEntityName: InstancesByEntityName,
   entityName: string,
   id: string,
   instance: unknown,
+  git: SimpleGit,
+  gitRoot: string | undefined,
 ): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
   const instanceContainer = instancesByEntityName[entityName]?.find(instance => instance.id === id)
 
@@ -91,18 +107,28 @@ export const updateInstance = async (
   }
 
   await writeFile(
-    join(modelContainer.dataRootPath, entity.name, instanceContainer.fileName),
+    join(dataRootPath, entity.name, instanceContainer.fileName),
     JSON.stringify(formatValue(entity.type.value, instance), undefined, 2),
     { encoding: "utf-8" },
   )
 
   instanceContainer.content = instance
+  instanceContainer.gitStatus =
+    gitRoot === undefined
+      ? undefined
+      : getGitFileStatusFromStatusResult(
+          await git.status(),
+          gitRoot,
+          dataRootPath,
+          entity.name,
+          instanceContainer.fileName,
+        )
 
   return ok(instanceContainer)
 }
 
 export const deleteInstance = async (
-  modelContainer: ModelContainer,
+  dataRootPath: string,
   instancesByEntityName: InstancesByEntityName,
   entityName: string,
   id: string,
@@ -116,7 +142,7 @@ export const deleteInstance = async (
   }
 
   try {
-    await rm(join(modelContainer.dataRootPath, entityName, instanceContainer.fileName))
+    await rm(join(dataRootPath, entityName, instanceContainer.fileName))
     instancesByEntityName[entityName] = [
       ...instances.slice(0, instanceContainerIndex),
       ...instances.slice(instanceContainerIndex + 1),
