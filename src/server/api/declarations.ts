@@ -104,17 +104,7 @@ declarationsApi.post("/:name/instances", async (req, res) => {
     return
   }
 
-  const result = await createInstance(
-    req.dataRoot,
-    req.localeEntity,
-    req.entitiesByName,
-    req.instancesByEntityName,
-    decl.name,
-    req.body,
-    req.query["id"],
-    req.git,
-    req.gitRoot,
-  )
+  const result = await createInstance(req, req.params.name, req.body, req.query["id"])
 
   if (isOk(result)) {
     const body: CreateInstanceOfEntityResponseBody = {
@@ -171,16 +161,7 @@ declarationsApi.put("/:name/instances/:id", async (req, res) => {
     return
   }
 
-  const result = await updateInstance(
-    req.dataRoot,
-    req.entitiesByName,
-    req.instancesByEntityName,
-    decl.name,
-    req.params.id,
-    req.body,
-    req.git,
-    req.gitRoot,
-  )
+  const result = await updateInstance(req, req.params.name, req.params.id, req.body)
 
   if (isOk(result)) {
     const body: UpdateInstanceOfEntityResponseBody = {
@@ -207,12 +188,7 @@ declarationsApi.delete("/:name/instances/:id", async (req, res) => {
     return
   }
 
-  const result = await deleteInstance(
-    req.dataRoot,
-    req.instancesByEntityName,
-    decl.name,
-    req.params.id,
-  )
+  const result = await deleteInstance(req, req.params.name, req.params.id)
 
   if (isOk(result)) {
     const body: DeleteInstanceOfEntityResponseBody = {

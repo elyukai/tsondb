@@ -7,6 +7,7 @@ import { Decl } from "../schema/declarations/Declaration.js"
 import { EntityDecl, isEntityDecl } from "../schema/declarations/EntityDecl.js"
 import { InstancesByEntityName } from "../shared/utils/instances.js"
 import { attachGitStatusToInstancesByEntityName } from "../utils/instances.js"
+import { getReferencesToInstances, ReferencesToInstances } from "../utils/references.js"
 import { api } from "./api/index.js"
 
 const debug = Debug("tsondb:server")
@@ -36,7 +37,7 @@ const getGit = async (modelContainer: ModelContainer) => {
   }
 }
 
-interface TSONDBRequestLocals {
+export interface TSONDBRequestLocals {
   git: SimpleGit
   gitRoot: string | undefined
   dataRoot: string
@@ -45,6 +46,8 @@ interface TSONDBRequestLocals {
   instancesByEntityName: InstancesByEntityName
   entitiesByName: Record<string, EntityDecl>
   localeEntity?: EntityDecl
+  referencesToInstances: ReferencesToInstances
+  setReferencesToInstances: (newRefs: ReferencesToInstances) => void
 }
 
 declare global {
@@ -79,6 +82,8 @@ export const createServer = async (
 
   const instancesByEntityNameInMemory = Object.assign({}, instancesByEntityName)
 
+  const referencesToInstances = getReferencesToInstances(instancesByEntityName, entitiesByName)
+
   if (gitStatus) {
     attachGitStatusToInstancesByEntityName(
       instancesByEntityName,
@@ -97,6 +102,10 @@ export const createServer = async (
     instancesByEntityName: instancesByEntityNameInMemory,
     entitiesByName: entitiesByName,
     localeEntity: modelContainer.schema.localeEntity,
+    referencesToInstances,
+    setReferencesToInstances: (newRefs: ReferencesToInstances) => {
+      Object.assign(referencesToInstances, newRefs)
+    },
   }
 
   app.use((req, _res, next) => {

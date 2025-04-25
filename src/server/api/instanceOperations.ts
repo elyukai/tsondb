@@ -1,30 +1,27 @@
 import { rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
-import { SimpleGit } from "simple-git"
 import { v4 as uuidv4 } from "uuid"
-import { EntityDecl, validateEntityDecl } from "../../schema/declarations/EntityDecl.js"
+import { validateEntityDecl } from "../../schema/declarations/EntityDecl.js"
 import { formatValue } from "../../schema/index.js"
 import { createValidators } from "../../schema/Node.js"
-import { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.js"
+import { removeAt } from "../../shared/utils/array.js"
+import { InstanceContainer } from "../../shared/utils/instances.js"
 import { getErrorMessageForDisplay } from "../../utils/error.js"
 import { getGitFileStatusFromStatusResult } from "../../utils/git.js"
+import { updateReferencesToInstances } from "../../utils/references.js"
 import { error, ok, Result } from "../../utils/result.js"
+import { TSONDBRequestLocals } from "../index.js"
 
 export const createInstance = async (
-  dataRootPath: string,
-  localeEntity: EntityDecl | undefined,
-  entitiesByName: Record<string, EntityDecl>,
-  instancesByEntityName: InstancesByEntityName,
+  locals: TSONDBRequestLocals,
   entityName: string,
   instance: unknown,
   idQueryParam: unknown,
-  git: SimpleGit,
-  gitRoot: string | undefined,
 ): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
-  const entity = entitiesByName[entityName]!
+  const entity = locals.entitiesByName[entityName]!
 
   const validationErrors = validateEntityDecl(
-    createValidators(instancesByEntityName),
+    createValidators(locals.instancesByEntityName),
     entity,
     instance,
   )
@@ -33,15 +30,15 @@ export const createInstance = async (
     return error([400, validationErrors.map(getErrorMessageForDisplay).join("\n\n")])
   }
 
-  if (localeEntity === entity && typeof idQueryParam !== "string") {
+  if (locals.localeEntity === entity && typeof idQueryParam !== "string") {
     return error([400, "Missing id for locale entity"])
   }
 
-  const id = localeEntity === entity ? (idQueryParam as string) : uuidv4()
+  const id = locals.localeEntity === entity ? (idQueryParam as string) : uuidv4()
 
   if (
-    localeEntity === entity &&
-    instancesByEntityName[entity.name]!.some(instance => instance.id === id)
+    locals.localeEntity === entity &&
+    locals.instancesByEntityName[entity.name]!.some(instance => instance.id === id)
   ) {
     return error([400, `Duplicate id "${id}" for locale entity`])
   }
@@ -49,7 +46,7 @@ export const createInstance = async (
   const fileName = `${id}.json`
 
   await writeFile(
-    join(dataRootPath, entity.name, fileName),
+    join(locals.dataRoot, entity.name, fileName),
     JSON.stringify(formatValue(entity.type.value, instance), undefined, 2),
     { encoding: "utf-8" },
   )
@@ -59,45 +56,54 @@ export const createInstance = async (
     id,
     content: instance,
     gitStatus:
-      gitRoot === undefined
+      locals.gitRoot === undefined
         ? undefined
         : getGitFileStatusFromStatusResult(
-            await git.status(),
-            gitRoot,
-            dataRootPath,
+            await locals.git.status(),
+            locals.gitRoot,
+            locals.dataRoot,
             entity.name,
             fileName,
           ),
   }
 
-  instancesByEntityName[entity.name] = [
-    ...(instancesByEntityName[entity.name] ?? []),
+  locals.instancesByEntityName[entity.name] = [
+    ...(locals.instancesByEntityName[entity.name] ?? []),
     instanceContainer,
   ]
+
+  locals.setReferencesToInstances(
+    updateReferencesToInstances(
+      locals.entitiesByName,
+      locals.referencesToInstances,
+      entity.name,
+      id,
+      undefined,
+      instance,
+    ),
+  )
 
   return ok(instanceContainer)
 }
 
 export const updateInstance = async (
-  dataRootPath: string,
-  entitiesByName: Record<string, EntityDecl>,
-  instancesByEntityName: InstancesByEntityName,
+  locals: TSONDBRequestLocals,
   entityName: string,
-  id: string,
+  instanceId: string,
   instance: unknown,
-  git: SimpleGit,
-  gitRoot: string | undefined,
 ): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
-  const instanceContainer = instancesByEntityName[entityName]?.find(instance => instance.id === id)
+  const instanceContainer = locals.instancesByEntityName[entityName]?.find(
+    instance => instance.id === instanceId,
+  )
 
   if (instanceContainer === undefined) {
     return error([404, "Instance not found"])
   }
 
-  const entity = entitiesByName[entityName]!
+  const entity = locals.entitiesByName[entityName]!
 
   const validationErrors = validateEntityDecl(
-    createValidators(instancesByEntityName),
+    createValidators(locals.instancesByEntityName),
     entity,
     instance,
   )
@@ -107,46 +113,72 @@ export const updateInstance = async (
   }
 
   await writeFile(
-    join(dataRootPath, entity.name, instanceContainer.fileName),
+    join(locals.dataRoot, entity.name, instanceContainer.fileName),
     JSON.stringify(formatValue(entity.type.value, instance), undefined, 2),
     { encoding: "utf-8" },
   )
 
+  const oldInstance = instanceContainer.content
+
   instanceContainer.content = instance
   instanceContainer.gitStatus =
-    gitRoot === undefined
+    locals.gitRoot === undefined
       ? undefined
       : getGitFileStatusFromStatusResult(
-          await git.status(),
-          gitRoot,
-          dataRootPath,
+          await locals.git.status(),
+          locals.gitRoot,
+          locals.dataRoot,
           entity.name,
           instanceContainer.fileName,
         )
+
+  locals.setReferencesToInstances(
+    updateReferencesToInstances(
+      locals.entitiesByName,
+      locals.referencesToInstances,
+      entity.name,
+      instanceId,
+      oldInstance,
+      instance,
+    ),
+  )
 
   return ok(instanceContainer)
 }
 
 export const deleteInstance = async (
-  dataRootPath: string,
-  instancesByEntityName: InstancesByEntityName,
+  locals: TSONDBRequestLocals,
   entityName: string,
-  id: string,
+  instanceId: string,
 ): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
-  const instances = instancesByEntityName[entityName] ?? []
-  const instanceContainerIndex = instances.findIndex(instance => instance.id === id)
+  const instances = locals.instancesByEntityName[entityName] ?? []
+  const instanceContainerIndex = instances.findIndex(instance => instance.id === instanceId)
   const instanceContainer = instances[instanceContainerIndex]
 
   if (instanceContainer === undefined) {
     return error([404, "Instance not found"])
   }
 
+  if (locals.referencesToInstances[instanceId]?.some(ref => ref !== instanceId)) {
+    return error([400, "Cannot delete instance that is referenced by other instances"])
+  }
+
   try {
-    await rm(join(dataRootPath, entityName, instanceContainer.fileName))
-    instancesByEntityName[entityName] = [
-      ...instances.slice(0, instanceContainerIndex),
-      ...instances.slice(instanceContainerIndex + 1),
-    ]
+    await rm(join(locals.dataRoot, entityName, instanceContainer.fileName))
+
+    locals.instancesByEntityName[entityName] = removeAt(instances, instanceContainerIndex)
+
+    locals.setReferencesToInstances(
+      updateReferencesToInstances(
+        locals.entitiesByName,
+        locals.referencesToInstances,
+        entityName,
+        instanceId,
+        instanceContainer.content,
+        undefined,
+      ),
+    )
+
     return ok(instanceContainer)
   } catch (err) {
     return error([500, `Failed to delete instance: ${err}`])

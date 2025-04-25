@@ -1,5 +1,6 @@
 import { FunctionComponent } from "preact"
 import { SerializedArrayType } from "../../../schema/types/generic/ArrayType.js"
+import { removeAt, replaceAt } from "../../../shared/utils/array.js"
 import { validateArrayConstraints } from "../../../shared/validation/array.js"
 import { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
 import { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
@@ -37,7 +38,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                   <div className="container-item-title">{i + 1}.</div>
                   <button
                     class="destructive"
-                    onClick={() => onChange([...value.slice(0, i), ...value.slice(i + 1)])}
+                    onClick={() => onChange(removeAt(value, i))}
                     disabled={type.minItems !== undefined && value.length <= type.minItems}
                   >
                     Delete Item
@@ -49,9 +50,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                 value={item}
                 instanceNamesByEntity={instanceNamesByEntity}
                 getDeclFromDeclName={getDeclFromDeclName}
-                onChange={newItem =>
-                  onChange([...value.slice(0, i), newItem, ...value.slice(i + 1)])
-                }
+                onChange={newItem => onChange(replaceAt(value, i, newItem))}
               />
             </li>
           ))}
