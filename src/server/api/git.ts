@@ -6,6 +6,7 @@ import { GetAllGitBranchesResponseBody, GitStatusResponseBody } from "../../shar
 import { hasFileChanges } from "../../shared/utils/git.js"
 import { getInstanceContainerOverview } from "../../shared/utils/instances.js"
 import { attachGitStatusToInstancesByEntityName } from "../../utils/instances.js"
+import { reinit } from "../init.js"
 
 const debug = Debug("tsondb:server:api:git")
 
@@ -196,6 +197,7 @@ gitApi.post("/branch", async (req, res) => {
 
   try {
     await req.git.checkoutLocalBranch(branchName)
+    await reinit(req)
     res.status(200).send(`Creation of branch "${branchName}" successful`)
   } catch (error) {
     res.status(500).send(`Creation of branch "${branchName}" failed`)

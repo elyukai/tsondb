@@ -70,7 +70,10 @@ const _validate = async (
 export const validate = async (modelContainer: ModelContainer) => {
   const entities = getEntities(modelContainer.schema)
   await prepareFolders(modelContainer, entities)
-  const instancesByEntityName = await getInstancesByEntityName(modelContainer, entities)
+  const instancesByEntityName = await getInstancesByEntityName(
+    modelContainer.dataRootPath,
+    entities,
+  )
   return _validate(entities, instancesByEntityName)
 }
 
@@ -78,14 +81,20 @@ export const generateAndValidate = async (modelContainer: ModelContainer) => {
   await generateOutputs(modelContainer)
   const entities = getEntities(modelContainer.schema)
   await prepareFolders(modelContainer, entities)
-  const instancesByEntityName = await getInstancesByEntityName(modelContainer, entities)
+  const instancesByEntityName = await getInstancesByEntityName(
+    modelContainer.dataRootPath,
+    entities,
+  )
   await _validate(entities, instancesByEntityName)
 }
 
 export const serve = async (modelContainer: ModelContainer) => {
   const entities = getEntities(modelContainer.schema)
   await prepareFolders(modelContainer, entities)
-  const instancesByEntityName = await getInstancesByEntityName(modelContainer, entities)
+  const instancesByEntityName = await getInstancesByEntityName(
+    modelContainer.dataRootPath,
+    entities,
+  )
   createServer(modelContainer, instancesByEntityName)
 }
 
@@ -93,7 +102,10 @@ export const generateValidateAndServe = async (modelContainer: ModelContainer) =
   await generateOutputs(modelContainer)
   const entities = getEntities(modelContainer.schema)
   await prepareFolders(modelContainer, entities)
-  const instancesByEntityName = await getInstancesByEntityName(modelContainer, entities)
+  const instancesByEntityName = await getInstancesByEntityName(
+    modelContainer.dataRootPath,
+    entities,
+  )
   await _validate(entities, instancesByEntityName)
   createServer(modelContainer, instancesByEntityName)
 }

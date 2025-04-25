@@ -1,19 +1,18 @@
 import { readdir, readFile } from "node:fs/promises"
 import { basename, extname, join } from "node:path"
 import { StatusResult } from "simple-git"
-import { ModelContainer } from "../ModelContainer.js"
 import { EntityDecl } from "../schema/declarations/EntityDecl.js"
 import { InstanceContainer, InstancesByEntityName } from "../shared/utils/instances.js"
 import { getGitFileStatusFromStatusResult } from "./git.js"
 
 export const getInstancesByEntityName = async (
-  modelContainer: ModelContainer,
-  entities: EntityDecl[],
+  dataRoot: string,
+  entities: readonly EntityDecl[],
 ): Promise<InstancesByEntityName> =>
   Object.fromEntries(
     await Promise.all(
       entities.map(async entity => {
-        const entityDir = join(modelContainer.dataRootPath, entity.name)
+        const entityDir = join(dataRoot, entity.name)
         const instanceFileNames = await readdir(entityDir)
         const instances = await Promise.all(
           instanceFileNames.map(

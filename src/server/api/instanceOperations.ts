@@ -72,7 +72,8 @@ export const createInstance = async (
     instanceContainer,
   ]
 
-  locals.setReferencesToInstances(
+  Object.assign(
+    locals.referencesToInstances,
     updateReferencesToInstances(
       locals.entitiesByName,
       locals.referencesToInstances,
@@ -132,7 +133,8 @@ export const updateInstance = async (
           instanceContainer.fileName,
         )
 
-  locals.setReferencesToInstances(
+  Object.assign(
+    locals.referencesToInstances,
     updateReferencesToInstances(
       locals.entitiesByName,
       locals.referencesToInstances,
@@ -168,7 +170,8 @@ export const deleteInstance = async (
 
     locals.instancesByEntityName[entityName] = removeAt(instances, instanceContainerIndex)
 
-    locals.setReferencesToInstances(
+    Object.assign(
+      locals.referencesToInstances,
       updateReferencesToInstances(
         locals.entitiesByName,
         locals.referencesToInstances,
