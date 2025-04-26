@@ -31,10 +31,12 @@ import { applyIndentation, joinSyntax, prefixLines, syntax } from "../../utils/r
 
 export type TypeScriptRendererOptions = {
   indentation: number
+  objectTypeKeyword: "interface" | "type"
 }
 
 const defaultOptions: TypeScriptRendererOptions = {
   indentation: 2,
+  objectTypeKeyword: "interface",
 }
 
 type RenderFn<T> = (options: TypeScriptRendererOptions, node: T) => string
@@ -144,9 +146,12 @@ const renderType: RenderFn<Type> = (options, type) => {
 const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
   joinSyntax(
     renderDocumentation(decl.comment, decl.isDeprecated),
-    "export interface ",
+    "export ",
+    options.objectTypeKeyword,
+    " ",
     decl.name,
     " ",
+    options.objectTypeKeyword === "type" ? "= " : "",
     renderType(options, addEphemeralUUIDToType(decl)),
   )
 
@@ -187,7 +192,7 @@ const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>
   decl,
 ) => {
   const type = decl.type.value
-  return isObjectType(type)
+  return isObjectType(type) && options.objectTypeKeyword === "interface"
     ? joinSyntax(
         renderDocumentation(decl.comment, decl.isDeprecated),
         "export interface ",
