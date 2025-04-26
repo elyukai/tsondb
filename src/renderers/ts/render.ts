@@ -108,8 +108,9 @@ const renderGenericArgumentIdentifierType: RenderFn<
 const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_options, type) =>
   type.entity.name + "_ID"
 
-const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (_options, type) =>
-  type.reference.name
+const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (options, type) =>
+  type.reference.name +
+  (type.args.length === 0 ? "" : `<${type.args.map(arg => renderType(options, arg)).join(", ")}>`)
 
 const renderNestedEntityMapType: RenderFn<NestedEntityMapType> = (options, type) =>
   wrapAsObject(options, syntax`[${toCamelCase(type.secondaryEntity.name)}Id: string]: ${type.name}`)
