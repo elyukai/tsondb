@@ -28,11 +28,13 @@ import { assertExhaustive } from "../../shared/utils/typeSafety.js"
 import { RangeBound } from "../../shared/validation/number.js"
 
 export type JsonSchemaRendererOptions = {
-  indentation: number
+  format: "minified" | "tabs" | { kind: "spaces"; indentation?: number }
 }
 
+const defaultIndentation = 2
+
 const defaultOptions: JsonSchemaRendererOptions = {
-  indentation: 2,
+  format: { kind: "spaces" },
 }
 
 type RenderFn<T> = (options: JsonSchemaRendererOptions, node: T) => object
@@ -234,6 +236,10 @@ export const render = (
       ),
     },
     undefined,
-    finalOptions.indentation,
+    finalOptions.format === "minified"
+      ? undefined
+      : finalOptions.format === "tabs"
+      ? "\t"
+      : finalOptions.format.indentation ?? defaultIndentation,
   )
 }
