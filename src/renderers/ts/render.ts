@@ -1,4 +1,5 @@
 import { EOL } from "node:os"
+import { dirname, relative } from "node:path"
 import { Decl } from "../../schema/declarations/Declaration.js"
 import {
   addEphemeralUUIDToType,
@@ -27,49 +28,57 @@ import { getParentDecl, Type } from "../../schema/types/Type.js"
 import { discriminatorKey } from "../../shared/enum.js"
 import { toCamelCase } from "../../shared/utils/string.js"
 import { assertExhaustive } from "../../shared/utils/typeSafety.js"
-import { applyIndentation, joinSyntax, prefixLines, syntax } from "../../utils/render.js"
+import { ensureSpecialDirStart } from "../../utils/path.js"
+import { combineSyntaxes, indent, prefixLines, RenderResult, syntax } from "../../utils/render.js"
 
 export type TypeScriptRendererOptions = {
   indentation: number
   objectTypeKeyword: "interface" | "type"
+  preserveFiles: boolean
 }
 
 const defaultOptions: TypeScriptRendererOptions = {
   indentation: 2,
   objectTypeKeyword: "interface",
+  preserveFiles: false,
 }
 
-type RenderFn<T> = (options: TypeScriptRendererOptions, node: T) => string
+type RenderFn<T> = (options: TypeScriptRendererOptions, node: T) => RenderResult
 
-const renderDocumentation = (comment?: string, isDeprecated?: boolean): string =>
-  comment === undefined
-    ? ""
-    : syntax`/**
+const renderDocumentation = (comment?: string, isDeprecated?: boolean): RenderResult =>
+  syntax`${
+    comment === undefined
+      ? ""
+      : syntax`/**
 ${prefixLines(" * ", comment, true)}${
-        isDeprecated
-          ? syntax`
+          isDeprecated
+            ? syntax`
  * @deprecated`
-          : ""
-      }
+            : ""
+        }
  */
 `
+  }`
 
 const renderTypeParameters: RenderFn<TypeParameter[]> = (options, params) =>
-  params.length === 0
-    ? ""
-    : `<${params
-        .map(param =>
-          param.constraint === undefined
-            ? param.name
-            : joinSyntax(param.name, " extends ", renderType(options, param.constraint)),
-        )
-        .join(", ")}>`
+  syntax`${
+    params.length === 0
+      ? ""
+      : syntax`<${combineSyntaxes(
+          params.map(param =>
+            param.constraint === undefined
+              ? param.name
+              : syntax`${param.name} extends ${renderType(options, param.constraint)}`,
+          ),
+          ", ",
+        )}>`
+  }`
 
 const renderArrayType: RenderFn<ArrayType> = (options, type) =>
-  `${renderType(options, type.items)}[]`
+  syntax`${renderType(options, type.items)}[]`
 
-const wrapAsObject: RenderFn<string> = (options, syntax) =>
-  joinSyntax("{", EOL, applyIndentation(1, syntax, options.indentation), EOL, "}")
+const wrapAsObject: RenderFn<RenderResult> = (options, str) =>
+  syntax`{${EOL}${indent(options.indentation, 1, str)}${EOL}}`
 
 const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, boolean>>>> = (
   options,
@@ -77,40 +86,45 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, bool
 ) => {
   return wrapAsObject(
     options,
-    Object.entries(type.properties)
-      .map(([name, config]) =>
-        joinSyntax(
-          renderDocumentation(config.comment, config.isDeprecated),
-          name,
-          config.isRequired ? "" : "?",
-          ": ",
-          renderType(options, config.type),
-        ),
-      )
-      .join(
-        Object.values(type.properties).some(prop => prop.comment !== undefined) ? EOL + EOL : EOL,
+    combineSyntaxes(
+      Object.entries(type.properties).map(
+        ([name, config]) =>
+          syntax`${renderDocumentation(config.comment, config.isDeprecated)}${name}${
+            config.isRequired ? "" : "?"
+          }: ${renderType(options, config.type)}`,
       ),
+      Object.values(type.properties).some(prop => prop.comment !== undefined) ? EOL + EOL : EOL,
+    ),
   )
 }
 
-const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => "boolean"
+const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => syntax`boolean`
 
-const renderDateType: RenderFn<DateType> = (_options, _type) => "Date"
+const renderDateType: RenderFn<DateType> = (_options, _type) => syntax`Date`
 
-const renderNumericType: RenderFn<NumericType> = (_options, _type) => "number"
+const renderNumericType: RenderFn<NumericType> = (_options, _type) => syntax`number`
 
-const renderStringType: RenderFn<StringType> = (_options, _type) => "string"
+const renderStringType: RenderFn<StringType> = (_options, _type) => syntax`string`
 
 const renderGenericArgumentIdentifierType: RenderFn<
   GenericArgumentIdentifierType<TypeParameter>
-> = (_options, type) => type.argument.name
+> = (_options, type) => syntax`${type.argument.name}`
 
-const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_options, type) =>
-  type.entity.name + "_ID"
+const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_options, type) => [
+  { [type.entity.sourceUrl]: [type.entity.name + "_ID"] },
+  type.entity.name + "_ID",
+]
 
 const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (options, type) =>
-  type.reference.name +
-  (type.args.length === 0 ? "" : `<${type.args.map(arg => renderType(options, arg)).join(", ")}>`)
+  combineSyntaxes([
+    [{ [type.reference.sourceUrl]: [type.reference.name] }, type.reference.name],
+    type.args.length === 0
+      ? ""
+      : syntax`<${combineSyntaxes(
+          type.args.map(arg => renderType(options, arg)),
+          ", ",
+        )}>`,
+  ])
 
 const renderNestedEntityMapType: RenderFn<NestedEntityMapType> = (options, type) =>
   wrapAsObject(options, syntax`[${toCamelCase(type.secondaryEntity.name)}Id: string]: ${type.name}`)
@@ -145,72 +159,47 @@ const renderType: RenderFn<Type> = (options, type) => {
 }
 
 const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
-  joinSyntax(
-    renderDocumentation(decl.comment, decl.isDeprecated),
-    "export ",
-    options.objectTypeKeyword,
-    " ",
-    decl.name,
-    " ",
-    options.objectTypeKeyword === "type" ? "= " : "",
-    renderType(options, addEphemeralUUIDToType(decl)),
-  )
+  syntax`${renderDocumentation(decl.comment, decl.isDeprecated)}export ${
+    options.objectTypeKeyword
+  } ${decl.name} ${options.objectTypeKeyword === "type" ? "= " : ""}${renderType(
+    options,
+    addEphemeralUUIDToType(decl),
+  )}`
 
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
-  joinSyntax(
-    renderDocumentation(decl.comment, decl.isDeprecated),
-    "export type ",
-    decl.name,
-    renderTypeParameters(options, decl.parameters),
-    " =",
-    ...Object.entries(decl.values.value).map(([caseName, caseDef]) =>
-      applyIndentation(
-        1,
-        joinSyntax(
-          EOL,
-          "| {",
-          EOL,
-          applyIndentation(
-            1,
-            joinSyntax(
-              `${discriminatorKey}: "${caseName}"`,
-              caseDef.type === null
-                ? ""
-                : joinSyntax(EOL, caseName + ": ", renderType(options, caseDef.type)),
-            ),
-            options.indentation,
-          ),
-          EOL,
-          "}",
-        ),
+  syntax`${renderDocumentation(decl.comment, decl.isDeprecated)}export type ${
+    decl.name
+  }${renderTypeParameters(options, decl.parameters)} =${combineSyntaxes(
+    Object.entries(decl.values.value).map(([caseName, caseDef]) =>
+      indent(
         options.indentation,
+        1,
+        syntax`${EOL}| {${EOL}${indent(
+          options.indentation,
+          1,
+          syntax`${discriminatorKey}: "${caseName}"${
+            caseDef.type === null
+              ? ""
+              : syntax`${EOL}${caseName}: ${renderType(options, caseDef.type)}`
+          }`,
+        )}${EOL}}`,
       ),
     ),
-  )
+  )}`
 
 const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>> = (
   options,
   decl,
-) => {
-  const type = decl.type.value
-  return isObjectType(type) && options.objectTypeKeyword === "interface"
-    ? joinSyntax(
-        renderDocumentation(decl.comment, decl.isDeprecated),
-        "export interface ",
-        decl.name,
-        renderTypeParameters(options, decl.parameters),
-        " ",
-        renderType(options, type),
-      )
-    : joinSyntax(
-        renderDocumentation(decl.comment),
-        "export type ",
-        decl.name,
-        renderTypeParameters(options, decl.parameters),
-        " = ",
-        renderType(options, type),
-      )
-}
+) =>
+  isObjectType(decl.type.value)
+    ? syntax`${renderDocumentation(decl.comment, decl.isDeprecated)}export ${
+        options.objectTypeKeyword
+      } ${decl.name}${renderTypeParameters(options, decl.parameters)} ${
+        options.objectTypeKeyword === "type" ? "= " : ""
+      }${renderType(options, decl.type.value)}`
+    : syntax`${renderDocumentation(decl.comment, decl.isDeprecated)}export type ${
+        decl.name
+      }${renderTypeParameters(options, decl.parameters)} = ${renderType(options, decl.type.value)}`
 
 const renderDecl: RenderFn<Decl> = (options, decl) => {
   switch (decl.kind) {
@@ -226,14 +215,34 @@ const renderDecl: RenderFn<Decl> = (options, decl) => {
 }
 
 const renderDeclarations: RenderFn<Decl[]> = (options, declarations) =>
-  declarations.map(decl => renderDecl(options, decl)).join(EOL + EOL)
+  combineSyntaxes(
+    declarations.map(decl => renderDecl(options, decl)),
+    EOL + EOL,
+  )
+
+const renderImports = (currentUrl: string, imports: { [sourceUrl: string]: string[] }): string => {
+  const importsSyntax = Object.entries(imports)
+    .filter(([sourceUrl]) => sourceUrl !== currentUrl)
+    .map(([sourceUrl, names]): [string, string[]] => [
+      ensureSpecialDirStart(relative(dirname(currentUrl), sourceUrl)),
+      names,
+    ])
+    .toSorted(([sourceUrlA], [sourceUrlB]) => sourceUrlA.localeCompare(sourceUrlB))
+    .map(
+      ([sourceUrl, names]) =>
+        `import { ${names.toSorted((a, b) => a.localeCompare(b)).join(", ")} } from "${sourceUrl}"`,
+    )
+    .join(EOL)
+
+  return importsSyntax.length > 0 ? importsSyntax + EOL + EOL : ""
+}
 
 export const render = (
   options: Partial<TypeScriptRendererOptions> = defaultOptions,
   declarations: readonly Decl[],
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
-  return renderDeclarations(
+  const [imports, content] = renderDeclarations(
     finalOptions,
     flatMapAuxiliaryDecls(node => {
       if (isNestedEntityMapType(node)) {
@@ -249,4 +258,7 @@ export const render = (
       return undefined
     }, declarations),
   )
+  return finalOptions.preserveFiles
+    ? renderImports(declarations[0]!.sourceUrl, imports) + content
+    : content
 }

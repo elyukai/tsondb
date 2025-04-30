@@ -73,3 +73,14 @@ export const toTitleCase = (str: string): string =>
   splitStringParts(str)
     .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ")
+
+export const commonPrefix = (...strs: string[]): string => {
+  if (strs.length === 0) {
+    return ""
+  }
+
+  return strs.reduce((accPrefix, str) => {
+    const indexOfDifference = Array.from(accPrefix).findIndex((char, i) => str[i] !== char)
+    return indexOfDifference === -1 ? accPrefix : accPrefix.slice(0, indexOfDifference)
+  })
+}

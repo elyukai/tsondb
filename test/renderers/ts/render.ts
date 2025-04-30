@@ -5,10 +5,14 @@ import {
   Array,
   Boolean,
   Float,
+  GenericArgumentIdentifierType,
+  GenIncludeIdentifierType,
+  GenTypeAliasDecl,
   Integer,
   isObjectType,
   Object,
   Optional,
+  Param,
   Required,
   Type,
   TypeAliasDecl,
@@ -76,5 +80,27 @@ describe("render types", () => {
 }`,
       )
     })
+  })
+})
+
+describe("render declarations", () => {
+  it("should render generic type aliases", () => {
+    const A = GenTypeAliasDecl(import.meta.url, {
+      name: "A",
+      parameters: [Param("T")],
+      type: t => Array(GenericArgumentIdentifierType(t)),
+    })
+
+    const B = TypeAliasDecl(import.meta.url, {
+      name: "B",
+      type: () => GenIncludeIdentifierType(A, [String()]),
+    })
+
+    equal(
+      render(undefined, [A, B]),
+      `export type A<T> = T[]
+
+export type B = A<string>`,
+    )
   })
 })

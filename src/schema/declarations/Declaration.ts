@@ -209,3 +209,7 @@ export const getReferencesForDecl: GetReferences<Decl> = (decl, value) => {
       return assertExhaustive(decl)
   }
 }
+
+export const groupDeclarationsBySourceUrl = (
+  decls: readonly Decl[],
+): Partial<Record<string, Decl[]>> => Object.groupBy(decls, decl => decl.sourceUrl)

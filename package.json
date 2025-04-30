@@ -45,5 +45,8 @@
   "repository": "github:elyukai/tsondb",
   "bugs": {
     "url": "https://github.com/elyukai/tsondb/issues"
+  },
+  "engines": {
+    "node": ">=21.2.0"
   }
 }

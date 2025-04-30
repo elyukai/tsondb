@@ -1,12 +1,13 @@
 import { deepEqual, equal } from "assert/strict"
 import { describe, it } from "node:test"
 import {
+  commonPrefix,
   splitStringParts,
   toCamelCase,
   toKebabCase,
   toPascalCase,
   toSnakeCase,
-} from "../../src/shared/utils/string.js"
+} from "../../../src/shared/utils/string.js"
 
 describe("splitStringParts", () => {
   it("should split strings of various cases into its parts", () => {
@@ -154,5 +155,31 @@ describe("toSnakeCase", () => {
 
   it("should convert stringWithURL to string_with_url", () => {
     equal(toSnakeCase("stringWithURL"), "string_with_url")
+  })
+})
+
+describe("commonPrefix", () => {
+  it('should identify the common prefix of "helloWorld" and "helloEveryone" as "hello"', () => {
+    equal(commonPrefix("helloWorld", "helloEveryone"), "hello")
+  })
+
+  it('should identify the common prefix of "helloWorld" and "hiEveryone" as "h"', () => {
+    equal(commonPrefix("helloWorld", "hiEveryone"), "h")
+  })
+
+  it('should identify the common prefix of "helloWorld" and "hello" as "hello"', () => {
+    equal(commonPrefix("helloWorld", "hello"), "hello")
+  })
+
+  it('should identify the common prefix of "hello" and "helloWorld" as "hello"', () => {
+    equal(commonPrefix("hello", "helloWorld"), "hello")
+  })
+
+  it('should identify the common prefix of "hello" and "" as ""', () => {
+    equal(commonPrefix("hello", ""), "")
+  })
+
+  it('should identify the common prefix of "" and "" as ""', () => {
+    equal(commonPrefix("", ""), "")
   })
 })
