@@ -12,6 +12,7 @@ import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
 import { ArrayType } from "../../schema/types/generic/ArrayType.js"
+import { EnumType } from "../../schema/types/generic/EnumType.js"
 import { isObjectType, MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
 import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
 import { DateType } from "../../schema/types/primitives/DateType.js"
@@ -129,6 +130,25 @@ const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (options, t
 const renderNestedEntityMapType: RenderFn<NestedEntityMapType> = (options, type) =>
   wrapAsObject(options, syntax`[${toCamelCase(type.secondaryEntity.name)}Id: string]: ${type.name}`)
 
+const renderEnumType: RenderFn<EnumType> = (options, type) =>
+  combineSyntaxes(
+    Object.entries(type.values).map(([caseName, caseDef]) =>
+      indent(
+        options.indentation,
+        1,
+        syntax`${EOL}| {${EOL}${indent(
+          options.indentation,
+          1,
+          syntax`${discriminatorKey}: "${caseName}"${
+            caseDef.type === null
+              ? ""
+              : syntax`${EOL}${caseName}: ${renderType(options, caseDef.type)}`
+          }`,
+        )}${EOL}}`,
+      ),
+    ),
+  )
+
 const renderType: RenderFn<Type> = (options, type) => {
   switch (type.kind) {
     case NodeKind.ArrayType:
@@ -153,6 +173,8 @@ const renderType: RenderFn<Type> = (options, type) => {
       return renderIncludeIdentifierType(options, type)
     case NodeKind.NestedEntityMapType:
       return renderNestedEntityMapType(options, type)
+    case NodeKind.EnumType:
+      return renderEnumType(options, type)
     default:
       return assertExhaustive(type, "Unknown type")
   }
@@ -169,23 +191,7 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
   syntax`${renderDocumentation(decl.comment, decl.isDeprecated)}export type ${
     decl.name
-  }${renderTypeParameters(options, decl.parameters)} =${combineSyntaxes(
-    Object.entries(decl.values.value).map(([caseName, caseDef]) =>
-      indent(
-        options.indentation,
-        1,
-        syntax`${EOL}| {${EOL}${indent(
-          options.indentation,
-          1,
-          syntax`${discriminatorKey}: "${caseName}"${
-            caseDef.type === null
-              ? ""
-              : syntax`${EOL}${caseName}: ${renderType(options, caseDef.type)}`
-          }`,
-        )}${EOL}}`,
-      ),
-    ),
-  )}`
+  }${renderTypeParameters(options, decl.parameters)} =${renderEnumType(options, decl.type.value)}`
 
 const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>> = (
   options,

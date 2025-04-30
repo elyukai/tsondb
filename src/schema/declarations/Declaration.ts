@@ -3,6 +3,11 @@ import { BaseNode, GetReferences, Node, NodeKind, Serializer } from "../Node.js"
 import { SerializedTypeParameter, TypeParameter } from "../parameters/TypeParameter.js"
 import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.js"
 import {
+  EnumCaseDecl,
+  getNestedDeclarationsInEnumType,
+  SerializedEnumCaseDecl,
+} from "../types/generic/EnumType.js"
+import {
   getNestedDeclarationsInObjectType,
   ObjectType,
   SerializedObjectType,
@@ -23,13 +28,11 @@ import {
   validateEntityDecl,
 } from "./EntityDecl.js"
 import {
-  EnumCaseDecl,
   EnumDecl,
   getNestedDeclarationsInEnumDecl,
   getReferencesForEnumDecl,
   isEnumDecl,
   resolveTypeArgumentsInEnumDecl,
-  SerializedEnumCaseDecl,
   SerializedEnumDecl,
   serializeEnumDecl,
   validateEnumDecl,
@@ -104,6 +107,8 @@ export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node) =
       return getNestedDeclarationsInIncludeIdentifierType(addedDecls, node)
     case NodeKind.NestedEntityMapType:
       return getNestedDeclarationsInNestedEntityMapType(addedDecls, node)
+    case NodeKind.EnumType:
+      return getNestedDeclarationsInEnumType(addedDecls, node)
     default:
       return assertExhaustive(node)
   }

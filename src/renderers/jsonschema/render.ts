@@ -1,3 +1,4 @@
+import { dirname, relative } from "node:path"
 import { Decl } from "../../schema/declarations/Declaration.js"
 import {
   addEphemeralUUIDToType,
@@ -10,6 +11,7 @@ import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
 import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
 import { ArrayType } from "../../schema/types/generic/ArrayType.js"
+import { EnumType } from "../../schema/types/generic/EnumType.js"
 import { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
 import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
 import { DateType } from "../../schema/types/primitives/DateType.js"
@@ -26,15 +28,18 @@ import { getParentDecl, Type } from "../../schema/types/Type.js"
 import { discriminatorKey } from "../../shared/enum.js"
 import { assertExhaustive } from "../../shared/utils/typeSafety.js"
 import { RangeBound } from "../../shared/validation/number.js"
+import { ensureSpecialDirStart } from "../../utils/path.js"
 
 export type JsonSchemaRendererOptions = {
   format: "minified" | "tabs" | { kind: "spaces"; indentation?: number }
+  preserveFiles: boolean
 }
 
 const defaultIndentation = 2
 
 const defaultOptions: JsonSchemaRendererOptions = {
   format: { kind: "spaces" },
+  preserveFiles: false,
 }
 
 type RenderFn<T> = (options: JsonSchemaRendererOptions, node: T) => object
@@ -124,15 +129,36 @@ const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_optio
   $ref: `#/$defs/${type.entity.name}_ID`,
 })
 
-const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (_options, type) => ({
-  $ref: `#/$defs/${type.reference.name}`,
-})
+const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (options, type) => {
+  const sourceUrl = getParentDecl(type)?.sourceUrl ?? ""
+  const filePath =
+    options.preserveFiles && sourceUrl !== type.reference.sourceUrl
+      ? ensureSpecialDirStart(relative(dirname(sourceUrl), type.reference.sourceUrl))
+      : ""
+  return {
+    $ref: `${filePath}#/$defs/${type.reference.name}`,
+  }
+}
 
 const renderNestedEntityMapType: RenderFn<NestedEntityMapType> = (_options, type) => ({
   type: "object",
   additionalProperties: {
     $ref: `#/$defs/${type.name}`,
   },
+})
+
+const renderEnumType: RenderFn<EnumType> = (options, type) => ({
+  oneOf: Object.entries(type.values).map(([caseName, caseDef]) => ({
+    type: "object",
+    deprecated: caseDef.isDeprecated,
+    properties: {
+      [discriminatorKey]: {
+        const: caseName,
+      },
+      ...(caseDef.type === null ? {} : { [caseName]: renderType(options, caseDef.type) }),
+    },
+    required: [discriminatorKey, ...(caseDef === null ? [] : [caseName])],
+  })),
 })
 
 const renderType: RenderFn<Type> = (options, type) => {
@@ -159,6 +185,8 @@ const renderType: RenderFn<Type> = (options, type) => {
       return renderIncludeIdentifierType(options, type)
     case NodeKind.NestedEntityMapType:
       return renderNestedEntityMapType(options, type)
+    case NodeKind.EnumType:
+      return renderEnumType(options, type)
     default:
       return assertExhaustive(type, "Unknown type")
   }
@@ -173,17 +201,7 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) => ({
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) => ({
   description: decl.comment,
   deprecated: decl.isDeprecated,
-  oneOf: Object.entries(decl.values.value).map(([caseName, caseDef]) => ({
-    type: "object",
-    deprecated: caseDef.isDeprecated,
-    properties: {
-      [discriminatorKey]: {
-        const: caseName,
-      },
-      ...(caseDef.type === null ? {} : { [caseName]: renderType(options, caseDef.type) }),
-    },
-    required: [discriminatorKey, ...(caseDef === null ? [] : [caseName])],
-  })),
+  ...renderEnumType(options, decl.type.value),
 })
 
 const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>> = (

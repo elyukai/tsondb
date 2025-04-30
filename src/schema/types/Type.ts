@@ -12,6 +12,15 @@ import {
   validateArrayType,
 } from "./generic/ArrayType.js"
 import {
+  EnumType,
+  formatEnumType,
+  getReferencesForEnumType,
+  resolveTypeArgumentsInEnumType,
+  SerializedEnumType,
+  serializeEnumType,
+  validateEnumType,
+} from "./generic/EnumType.js"
+import {
   formatObjectValue,
   getReferencesForObjectType,
   MemberDecl,
@@ -117,6 +126,7 @@ export type Type =
   | ReferenceIdentifierType
   | IncludeIdentifierType
   | NestedEntityMapType
+  | EnumType
 
 export type SerializedType =
   | SerializedPrimitiveType
@@ -126,6 +136,7 @@ export type SerializedType =
   | SerializedReferenceIdentifierType
   | SerializedIncludeIdentifierType
   | SerializedNestedEntityMapType
+  | SerializedEnumType
 
 export const validate: Validator<Type> = (helpers, type, value) => {
   switch (type.kind) {
@@ -151,6 +162,8 @@ export const validate: Validator<Type> = (helpers, type, value) => {
       return validateIncludeIdentifierType(helpers, type, value)
     case NodeKind.NestedEntityMapType:
       return validateNestedEntityMapType(helpers, type, value)
+    case NodeKind.EnumType:
+      return validateEnumType(helpers, type, value)
     default:
       return assertExhaustive(type)
   }
@@ -179,6 +192,8 @@ export const resolveTypeArgumentsInType = <Args extends Record<string, Type>>(
       return resolveTypeArgumentsInIncludeIdentifierType(args, type)
     case NodeKind.NestedEntityMapType:
       return resolveTypeArgumentsInNestedEntityMapType(args, type)
+    case NodeKind.EnumType:
+      return resolveTypeArgumentsInEnumType(args, type)
     default:
       return assertExhaustive(type)
   }
@@ -204,6 +219,13 @@ export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): 
     case NodeKind.ReferenceIdentifierType:
     case NodeKind.IncludeIdentifierType:
       return callbackFn(type)
+    case NodeKind.EnumType:
+      callbackFn(type)
+      return Object.values(type.values).forEach(value => {
+        if (value.type) {
+          walkTypeNodeTree(callbackFn, value.type)
+        }
+      })
     default:
       return assertExhaustive(type)
   }
@@ -336,6 +358,8 @@ export const serializeType: Serializer<Type, SerializedType> = type => {
       return serializeIncludeIdentifierType(type)
     case NodeKind.NestedEntityMapType:
       return serializeNestedEntityMapType(type)
+    case NodeKind.EnumType:
+      return serializeEnumType(type)
     default:
       return assertExhaustive(type)
   }
@@ -370,6 +394,8 @@ export const getReferencesForType: GetReferences<Type> = (type, value) => {
       return getReferencesForIncludeIdentifierType(type, value)
     case NodeKind.NestedEntityMapType:
       return getReferencesForNestedEntityMapType(type, value)
+    case NodeKind.EnumType:
+      return getReferencesForEnumType(type, value)
     default:
       return assertExhaustive(type)
   }
@@ -404,6 +430,8 @@ export const formatValue: StructureFormatter<Type> = (type, value) => {
       return formatNestedEntityMapValue(type, value)
     case NodeKind.ReferenceIdentifierType:
       return formatReferenceIdentifierValue(type, value)
+    case NodeKind.EnumType:
+      return formatEnumType(type, value)
     default:
       return assertExhaustive(type)
   }

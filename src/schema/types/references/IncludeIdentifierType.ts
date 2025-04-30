@@ -1,20 +1,18 @@
-import { discriminatorKey } from "../../../shared/enum.js"
-import { sortObjectKeys } from "../../../shared/utils/object.js"
 import {
   GetNestedDeclarations,
   getNestedDeclarations,
   getReferencesForDecl,
   resolveTypeArgumentsInDecl,
-  SecondaryDecl,
   SerializedTypeArguments,
   TypeArguments,
   validateDecl,
 } from "../../declarations/Declaration.js"
-import { EnumCaseDecl, EnumDecl } from "../../declarations/EnumDecl.js"
+import { EnumDecl } from "../../declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
 import { SerializedTypeParameter, TypeParameter } from "../../parameters/TypeParameter.js"
 import { Validator } from "../../validation/type.js"
+import { EnumCaseDecl, formatEnumType } from "../generic/EnumType.js"
 import {
   BaseType,
   formatValue,
@@ -117,32 +115,8 @@ export const formatIncludeIdentifierValue: StructureFormatter<IncludeIdentifierT
   switch (type.reference.kind) {
     case NodeKind.TypeAliasDecl:
       return formatValue(type.reference.type.value, value)
-    case NodeKind.EnumDecl: {
-      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-        const _caseName = (value as Record<typeof discriminatorKey, unknown>)[discriminatorKey]
-        const caseName = typeof _caseName === "string" ? _caseName : undefined
-        if (caseName === undefined) {
-          return value
-        }
-        const caseDecl = type.reference.values.value[caseName]
-        return sortObjectKeys(
-          {
-            [discriminatorKey]: caseName,
-            ...(caseDecl?.type
-              ? {
-                  [caseName]: formatValue(
-                    caseDecl.type,
-                    (value as Record<typeof caseName, unknown>)[caseName],
-                  ),
-                }
-              : {}),
-          },
-          [discriminatorKey, ...Object.keys(type.reference.values.value)],
-        )
-      } else {
-        return value
-      }
-    }
+    case NodeKind.EnumDecl:
+      return formatEnumType(type.reference.type.value, value)
     default:
       return value
   }

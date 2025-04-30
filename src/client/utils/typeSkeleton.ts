@@ -49,28 +49,22 @@ export const createTypeSkeleton = (
         return undefined
       }
 
-      switch (referencedDecl.kind) {
-        case "TypeAliasDecl":
-          return createTypeSkeleton(getDeclFromDeclName, referencedDecl.type)
-        case "EnumDecl": {
-          const firstCase = Object.entries(referencedDecl.values)[0]!
-
-          if (firstCase[1].type === null) {
-            return { kind: firstCase[0] }
-          }
-
-          return {
-            kind: firstCase[0],
-            [firstCase[0]]: createTypeSkeleton(getDeclFromDeclName, firstCase[1].type),
-          }
-        }
-        default:
-          return assertExhaustive(referencedDecl)
-      }
+      return createTypeSkeleton(getDeclFromDeclName, referencedDecl.type)
     }
 
     case "NestedEntityMapType":
       return {}
+
+    case "EnumType": {
+      const firstCase = Object.entries(type.values)[0]!
+
+      return {
+        kind: firstCase[0],
+        ...(firstCase[1].type === null
+          ? {}
+          : { [firstCase[0]]: createTypeSkeleton(getDeclFromDeclName, firstCase[1].type) }),
+      }
+    }
 
     default:
       return assertExhaustive(type)

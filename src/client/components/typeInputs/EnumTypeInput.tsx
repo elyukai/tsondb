@@ -1,24 +1,24 @@
 import { FunctionComponent } from "preact"
-import { SerializedEnumDecl } from "../../../../schema/declarations/EnumDecl.js"
-import { discriminatorKey } from "../../../../shared/enum.js"
-import { toTitleCase } from "../../../../shared/utils/string.js"
-import { InstanceNamesByEntity } from "../../../hooks/useInstanceNamesByEntity.js"
-import { GetDeclFromDeclName } from "../../../hooks/useSecondaryDeclarations.js"
-import { createTypeSkeleton } from "../../../utils/typeSkeleton.js"
-import { Select } from "../../Select.js"
-import { TypeInput } from "../TypeInput.js"
-import { MismatchingTypeError } from "./MismatchingTypeError.js"
+import { SerializedEnumType } from "../../../schema/types/generic/EnumType.js"
+import { discriminatorKey } from "../../../shared/enum.js"
+import { toTitleCase } from "../../../shared/utils/string.js"
+import { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
+import { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
+import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
+import { Select } from "../Select.js"
+import { TypeInput } from "./TypeInput.js"
+import { MismatchingTypeError } from "./utils/MismatchingTypeError.js"
 
 type Props = {
-  decl: SerializedEnumDecl
+  type: SerializedEnumType
   value: unknown
   instanceNamesByEntity: InstanceNamesByEntity
   getDeclFromDeclName: GetDeclFromDeclName
   onChange: (value: unknown) => void
 }
 
-export const EnumDeclField: FunctionComponent<Props> = ({
-  decl,
+export const EnumTypeInput: FunctionComponent<Props> = ({
+  type,
   value,
   instanceNamesByEntity,
   getDeclFromDeclName,
@@ -34,16 +34,16 @@ export const EnumDeclField: FunctionComponent<Props> = ({
     return <MismatchingTypeError expected="enumeration value" actual={value} />
   }
 
-  const enumValues = Object.keys(decl.values)
+  const enumValues = Object.keys(type.values)
   const activeEnumCase = value[discriminatorKey]
-  const caseMember = decl.values[activeEnumCase]
+  const caseMember = type.values[activeEnumCase]
 
   return (
     <div class="field field--enum">
       <Select
         value={activeEnumCase}
         onInput={event => {
-          const caseMember = decl.values[event.currentTarget.value]
+          const caseMember = type.values[event.currentTarget.value]
           if (caseMember?.type == null) {
             onChange({
               [discriminatorKey]: event.currentTarget.value,

@@ -6,6 +6,7 @@ import { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
 import { ArrayTypeInput } from "./ArrayTypeInput.js"
 import { BooleanTypeInput } from "./BooleanTypeInput.js"
 import { DateTypeInput } from "./DateTypeInput.js"
+import { EnumTypeInput } from "./EnumTypeInput.js"
 import { FloatTypeInput } from "./FloatTypeInput.js"
 import { GenericArgumentIdentifierTypeInput } from "./GenericTypeArgumentIdentifierTypeInput.js"
 import { IncludeIdentifierTypeInput } from "./IncludeIdentifierTypeInput.js"
@@ -139,6 +140,17 @@ export const TypeInput: FunctionComponent<Props> = ({
       } else {
         return <MismatchingTypeError expected="entity map" actual={value} />
       }
+
+    case "EnumType":
+      return (
+        <EnumTypeInput
+          type={type}
+          value={value}
+          instanceNamesByEntity={instanceNamesByEntity}
+          getDeclFromDeclName={getDeclFromDeclName}
+          onChange={onChange}
+        />
+      )
 
     default:
       return assertExhaustive(type)

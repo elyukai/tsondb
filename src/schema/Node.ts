@@ -22,6 +22,7 @@ export interface NodeKind {
   ReferenceIdentifierType: "ReferenceIdentifierType"
   IncludeIdentifierType: "IncludeIdentifierType"
   NestedEntityMapType: "NestedEntityMapType"
+  EnumType: "EnumType"
 }
 
 export const NodeKind: NodeKind = enumOfObject({
@@ -42,6 +43,7 @@ export const NodeKind: NodeKind = enumOfObject({
   ReferenceIdentifierType: null,
   IncludeIdentifierType: null,
   NestedEntityMapType: null,
+  EnumType: null,
 })
 
 export interface BaseNode {
@@ -67,11 +69,7 @@ export const flatMapAuxiliaryDecls = (
 
       case NodeKind.EnumDecl: {
         const newDecls = callbackFn(node, decls)
-        return Object.values(node.values.value).reduce(
-          (newDeclsAcc, caseDef) =>
-            caseDef.type === null ? newDecls : mapNodeTree(callbackFn, caseDef.type, newDeclsAcc),
-          newDecls,
-        )
+        return mapNodeTree(callbackFn, node.type.value, newDecls)
       }
 
       case NodeKind.TypeAliasDecl: {
@@ -101,6 +99,15 @@ export const flatMapAuxiliaryDecls = (
       case NodeKind.IncludeIdentifierType:
       case NodeKind.NestedEntityMapType:
         return callbackFn(node, decls)
+
+      case NodeKind.EnumType: {
+        const newDecls = callbackFn(node, decls)
+        return Object.values(node.values).reduce(
+          (newDeclsAcc, caseDef) =>
+            caseDef.type === null ? newDecls : mapNodeTree(callbackFn, caseDef.type, newDeclsAcc),
+          newDecls,
+        )
+      }
 
       default:
         return assertExhaustive(node)
