@@ -9,12 +9,6 @@ export const insertAt = <T>(arr: T[], index: number, item: T): T[] => [
   ...arr.slice(index),
 ]
 
-export const replaceAt = <T>(arr: T[], index: number, item: T): T[] => [
-  ...arr.slice(0, index),
-  item,
-  ...arr.slice(index + 1),
-]
-
 /**
  * Calculates the difference between two arrays, including duplicated values.
  * @param oldArr - The original array.

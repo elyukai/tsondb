@@ -1,6 +1,6 @@
 import { FunctionComponent } from "preact"
 import { SerializedArrayType } from "../../../schema/types/generic/ArrayType.js"
-import { removeAt, replaceAt } from "../../../shared/utils/array.js"
+import { removeAt } from "../../../shared/utils/array.js"
 import { validateArrayConstraints } from "../../../shared/validation/array.js"
 import { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
 import { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
@@ -50,7 +50,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                 value={item}
                 instanceNamesByEntity={instanceNamesByEntity}
                 getDeclFromDeclName={getDeclFromDeclName}
-                onChange={newItem => onChange(replaceAt(value, i, newItem))}
+                onChange={newItem => onChange(value.with(i, newItem))}
               />
             </li>
           ))}
