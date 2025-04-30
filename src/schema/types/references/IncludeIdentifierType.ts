@@ -88,11 +88,13 @@ export const validateIncludeIdentifierType: Validator<IncludeIdentifierType> = (
 export const resolveTypeArgumentsInIncludeIdentifierType = (
   args: Record<string, Type>,
   type: IncludeIdentifierType,
-): IncludeIdentifierType =>
-  GenIncludeIdentifierType(
-    type.reference as unknown as SecondaryDecl,
-    type.args.map(arg => resolveTypeArgumentsInType(args, arg)),
-  )
+): Type =>
+  type.args.length === 0
+    ? type
+    : resolveTypeArgumentsInDecl(
+        type.reference,
+        type.args.map(arg => resolveTypeArgumentsInType(args, arg)),
+      ).type.value
 
 export const serializeIncludeIdentifierType: Serializer<
   IncludeIdentifierType,
