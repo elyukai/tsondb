@@ -1,6 +1,7 @@
 import { simpleGit } from "simple-git"
 import { ModelContainer } from "../ModelContainer.js"
 import { EntityDecl, isEntityDecl } from "../schema/declarations/EntityDecl.js"
+import { resolveTypeArgumentsInDecls } from "../schema/index.js"
 import { InstancesByEntityName } from "../shared/utils/instances.js"
 import {
   attachGitStatusToInstancesByEntityName,
@@ -30,7 +31,7 @@ export const init = async (
 ): Promise<TSONDBRequestLocals> => {
   const { git, root: gitRoot, status: gitStatus } = await getGit(modelContainer)
 
-  const declarations = modelContainer.schema.declarations
+  const declarations = resolveTypeArgumentsInDecls(modelContainer.schema.declarations)
   const entities = declarations.filter(isEntityDecl)
 
   const entitiesByName = Object.fromEntries(
