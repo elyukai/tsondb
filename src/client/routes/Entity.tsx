@@ -1,16 +1,16 @@
 import { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
-import { useEffect, useState } from "preact/hooks"
-import { SerializedEntityDecl } from "../../schema/declarations/EntityDecl.js"
+import { useEffect } from "preact/hooks"
 import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.js"
 import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.js"
-import { InstanceContainer } from "../../shared/utils/instances.js"
 import {
   deleteInstanceByEntityNameAndId,
   getEntityByName,
   getInstancesByEntityName,
 } from "../api.js"
 import { Layout } from "../components/Layout.js"
+import { useAPIResource } from "../hooks/useAPIResource.js"
+import { useMappedAPIResource } from "../hooks/useMappedAPIResource.js"
 import { NotFound } from "./NotFound.js"
 
 export const Entity: FunctionalComponent = () => {
@@ -19,24 +19,14 @@ export const Entity: FunctionalComponent = () => {
     query: { created },
   } = useRoute()
 
-  const [entity, setEntity] = useState<{
-    declaration: SerializedEntityDecl
-    isLocaleEntity: boolean
-  }>()
-  const [instances, setInstances] = useState<InstanceContainer[]>()
+  const [entity] = useAPIResource(getEntityByName, name ?? "")
+  const [instances, reloadInstances] = useMappedAPIResource(
+    getInstancesByEntityName,
+    data => data.instances,
+    name ?? "",
+  )
 
   useEffect(() => {
-    if (name) {
-      Promise.all([getEntityByName(name), getInstancesByEntityName(name)])
-        .then(([entityData, instancesData]) => {
-          setEntity(entityData)
-          setInstances(instancesData.instances)
-        })
-        .catch(error => {
-          console.error("Error fetching entities:", error)
-        })
-    }
-
     if (created) {
       const instanceElement = document.getElementById(`instance-${created}`)
       if (instanceElement) {
@@ -111,9 +101,7 @@ export const Entity: FunctionalComponent = () => {
                   onClick={() => {
                     if (confirm("Are you sure you want to delete this instance?")) {
                       deleteInstanceByEntityNameAndId(entity.declaration.name, instance.id)
-                        .then(() => {
-                          setInstances(instances.filter(i => i.id !== instance.id))
-                        })
+                        .then(() => reloadInstances())
                         .catch(error => {
                           alert("Error deleting instance:\n\n" + error)
                         })

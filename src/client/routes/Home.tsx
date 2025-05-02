@@ -1,32 +1,19 @@
 import { FunctionalComponent } from "preact"
-import { useEffect, useState } from "preact/hooks"
-import { SerializedEntityDecl } from "../../schema/index.js"
 import { toTitleCase } from "../../shared/utils/string.js"
 import { getAllEntities } from "../api.js"
 import { Layout } from "../components/Layout.js"
+import { useMappedAPIResource } from "../hooks/useMappedAPIResource.js"
 
 export const Home: FunctionalComponent = () => {
-  const [entities, setEntities] = useState<
-    { declaration: SerializedEntityDecl; instanceCount: number }[]
-  >([])
-
-  useEffect(() => {
-    getAllEntities()
-      .then(data => {
-        setEntities(
-          data.declarations.sort((a, b) => a.declaration.name.localeCompare(b.declaration.name)),
-        )
-      })
-      .catch(error => {
-        console.error("Error fetching entities:", error)
-      })
-  }, [])
+  const [entities] = useMappedAPIResource(getAllEntities, data =>
+    data.declarations.sort((a, b) => a.declaration.name.localeCompare(b.declaration.name)),
+  )
 
   return (
     <Layout breadcrumbs={[{ url: "/", label: "Home" }]}>
       <h1>Entities</h1>
       <ul class="entities">
-        {entities.map(entity => (
+        {(entities ?? []).map(entity => (
           <li key={entity.declaration.name} class="entity-item">
             <div className="title">
               <h2>{toTitleCase(entity.declaration.name)}</h2>
