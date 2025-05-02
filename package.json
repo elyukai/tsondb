@@ -6,7 +6,8 @@
   "author": "Lukas Obermann",
   "type": "module",
   "files": [
-    "lib",
+    "lib/**/*.d.ts",
+    "lib/**/*.js",
     "public"
   ],
   "main": "lib/index.js",
