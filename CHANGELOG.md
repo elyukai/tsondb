@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.3.0](https://github.com/elyukai/tsondb/compare/v0.2.0...v0.3.0) (2025-05-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* simple git gui
+
+### Features
+
+* ensure object key order for consistent serialization ([8d881e0](https://github.com/elyukai/tsondb/commit/8d881e04385ab3e4dc6489ce3ca1452fcaa2ff7a)), closes [#1](https://github.com/elyukai/tsondb/issues/1)
+* **jsonschema-renderer:** add option to preserve the file structure of type definitions ([78f727e](https://github.com/elyukai/tsondb/commit/78f727ed3e2d55e2bd1b90e327631996ec7384c9)), closes [#10](https://github.com/elyukai/tsondb/issues/10)
+* **jsonschema-renderer:** add option to render a JSON Schema without whitespace or with tabs ([be695ef](https://github.com/elyukai/tsondb/commit/be695ef107e199b6e896daacc70987c7433d559c)), closes [#10](https://github.com/elyukai/tsondb/issues/10)
+* simple git gui ([e074daf](https://github.com/elyukai/tsondb/commit/e074dafc135507ba6ae84de5083d10e1d3cb7650)), closes [#2](https://github.com/elyukai/tsondb/issues/2)
+* **ts-renderer:** add objectTypeKeyword option ([c5561c0](https://github.com/elyukai/tsondb/commit/c5561c0af281e105725c33426db921333df6699f)), closes [#10](https://github.com/elyukai/tsondb/issues/10)
+* **ts-renderer:** add option to preserve the file structure of type definitions ([23cc520](https://github.com/elyukai/tsondb/commit/23cc5203d88d67103962319ec0dd3dc1dfaffd8c)), closes [#10](https://github.com/elyukai/tsondb/issues/10)
+
+
+### Bug Fixes
+
+* **api:** resolve type arguments in declarations for API requests ([3624e3a](https://github.com/elyukai/tsondb/commit/3624e3a27392fa41e1b9f40acc173b306d355781)), closes [#8](https://github.com/elyukai/tsondb/issues/8)
+* ensure formatting of values of nested declarations ([84ffa95](https://github.com/elyukai/tsondb/commit/84ffa9571b0de83e74768a599c85bb908024ee4a))
+* inline generic types with resolves type parameters ([71de01f](https://github.com/elyukai/tsondb/commit/71de01ff3e22c99f274420376f859846ffed37c3))
+* markdown editor doesn't preview adjacent inline formats ([6811d8c](https://github.com/elyukai/tsondb/commit/6811d8c8acde746e00992c040668820947c048c0)), closes [#11](https://github.com/elyukai/tsondb/issues/11)
+* only allow instances to be deleted if no other instance references/depends on it ([a743a11](https://github.com/elyukai/tsondb/commit/a743a11cceb8ee2de76a2f6a854d9710b44626d0)), closes [#6](https://github.com/elyukai/tsondb/issues/6)
+* reload all files when switching git branches ([8285e87](https://github.com/elyukai/tsondb/commit/8285e8787a6c6a37c8172654ee1143043eb165c4)), closes [#7](https://github.com/elyukai/tsondb/issues/7)
+* **ts-renderer:** render type arguments ([57d514c](https://github.com/elyukai/tsondb/commit/57d514cc6ee92c0e0a331add4901eb3ff0a986a8))
+
 ## [0.2.0](https://github.com/elyukai/tsondb/compare/v0.1.3...v0.2.0) (2025-04-22)
 
 
