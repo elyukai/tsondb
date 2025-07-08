@@ -19,6 +19,14 @@ The client uses the `preact` library, because `react` itself would be quite a la
 
 Always format your code using Prettier before requesting a merge. A `.prettierrc.yml` is contained in the repository, so everybody has the same settings.
 
+## Commit Messages
+
+Commit messages on `main` **must** follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/) so that a proper change log can be generated automatically.
+
+Possible scopes to use manually are `api`, `client`, `<type>-renderer` (where `<type>` is the directory of the renderer, e.g. `jsonschema-renderer`). Please add more scopes here if you find others useful.
+
+You can use any commit messages on your own branches as long as then the final feature is **squash-merged** with a proper commit message.
+
 ## Publish
 
 To make a new release to npm on `main`, run
@@ -34,3 +42,5 @@ git push --follow-tags
 ```
 
 to push the change log commit as well as its associated tag. The tag will cause GitHub Actions to build and publish a new release to npm.
+
+This is the only time that you should commit directly on the `main` branch.
