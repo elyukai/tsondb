@@ -7,6 +7,7 @@ import {
   toKebabCase,
   toPascalCase,
   toSnakeCase,
+  toTitleCase,
 } from "../../../src/shared/utils/string.js"
 
 describe("splitStringParts", () => {
@@ -158,6 +159,40 @@ describe("toSnakeCase", () => {
   })
 })
 
+describe("toTitleCase", () => {
+  it("should convert PascalCase to Pascal Case", () => {
+    equal(toTitleCase("PascalCase"), "Pascal Case")
+  })
+
+  it("should convert camelCase to Camel Case", () => {
+    equal(toTitleCase("camelCase"), "Camel Case")
+  })
+
+  it("should convert snake_case to Snake Case", () => {
+    equal(toTitleCase("snake_case"), "Snake Case")
+  })
+
+  it("should convert kebab-case to Kebab Case", () => {
+    equal(toTitleCase("kebab-case"), "Kebab Case")
+  })
+
+  it("should convert UPPER_CASE to Upper Case", () => {
+    equal(toTitleCase("UPPER_CASE"), "Upper Case")
+  })
+
+  it("should convert UPPERCASE to Uppercase", () => {
+    equal(toTitleCase("UPPERCASE"), "Uppercase")
+  })
+
+  it("should convert lowercase to Lowercase", () => {
+    equal(toTitleCase("lowercase"), "Lowercase")
+  })
+
+  it("should convert stringWithURL to String With URL", () => {
+    equal(toTitleCase("stringWithURL"), "String With URL")
+  })
+})
+
 describe("commonPrefix", () => {
   it('should identify the common prefix of "helloWorld" and "helloEveryone" as "hello"', () => {
     equal(commonPrefix("helloWorld", "helloEveryone"), "hello")
@@ -181,5 +216,9 @@ describe("commonPrefix", () => {
 
   it('should identify the common prefix of "" and "" as ""', () => {
     equal(commonPrefix("", ""), "")
+  })
+
+  it("returns an empty string if no strings have been passed", () => {
+    equal(commonPrefix(), "")
   })
 })
