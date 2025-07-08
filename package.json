@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsc -b",
     "watch": "tsc -b -w",
-    "test": "glob -c \"node --import tsx --test\" \"./test/**/*.ts\"",
+    "test": "node --import tsx --test",
     "release": "commit-and-tag-version"
   },
   "devDependencies": {
@@ -30,7 +30,6 @@
     "@types/express": "^5.0.1",
     "@types/node": "^22.13.14",
     "commit-and-tag-version": "^12.5.1",
-    "glob": "^11.0.1",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   },
