@@ -18,13 +18,13 @@ import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
 import { DateType } from "../../schema/types/primitives/DateType.js"
 import { NumericType } from "../../schema/types/primitives/NumericType.js"
 import { StringType } from "../../schema/types/primitives/StringType.js"
-import { GenericArgumentIdentifierType } from "../../schema/types/references/GenericArgumentIdentifierType.js"
 import { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.js"
 import {
   isNestedEntityMapType,
   NestedEntityMapType,
 } from "../../schema/types/references/NestedEntityMapType.js"
 import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
+import { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.js"
 import { getParentDecl, Type } from "../../schema/types/Type.js"
 import { discriminatorKey } from "../../shared/enum.js"
 import { toCamelCase } from "../../shared/utils/string.js"
@@ -107,9 +107,8 @@ const renderNumericType: RenderFn<NumericType> = (_options, _type) => syntax`num
 
 const renderStringType: RenderFn<StringType> = (_options, _type) => syntax`string`
 
-const renderGenericArgumentIdentifierType: RenderFn<
-  GenericArgumentIdentifierType<TypeParameter>
-> = (_options, type) => syntax`${type.argument.name}`
+const renderTypeArgumentType: RenderFn<TypeArgumentType<TypeParameter>> = (_options, type) =>
+  syntax`${type.argument.name}`
 
 const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_options, type) => [
   { [type.entity.sourceUrl]: [type.entity.name + "_ID"] },
@@ -165,8 +164,8 @@ const renderType: RenderFn<Type> = (options, type) => {
       return renderNumericType(options, type)
     case NodeKind.StringType:
       return renderStringType(options, type)
-    case NodeKind.GenericArgumentIdentifierType:
-      return renderGenericArgumentIdentifierType(options, type)
+    case NodeKind.TypeArgumentType:
+      return renderTypeArgumentType(options, type)
     case NodeKind.ReferenceIdentifierType:
       return renderReferenceIdentifierType(options, type)
     case NodeKind.IncludeIdentifierType:

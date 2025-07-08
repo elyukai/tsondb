@@ -73,15 +73,6 @@ import {
   validateStringType,
 } from "./primitives/StringType.js"
 import {
-  formatGenericArgumentIdentifierValue,
-  GenericArgumentIdentifierType,
-  getReferencesForGenericArgumentIdentifierType,
-  resolveTypeArgumentsInGenericArgumentIdentifierType,
-  SerializedGenericArgumentIdentifierType,
-  serializeGenericArgumentIdentifierType,
-  validateGenericArgumentIdentifierType,
-} from "./references/GenericArgumentIdentifierType.js"
-import {
   formatIncludeIdentifierValue,
   getReferencesForIncludeIdentifierType,
   IncludeIdentifierType,
@@ -108,6 +99,15 @@ import {
   serializeReferenceIdentifierType,
   validateReferenceIdentifierType,
 } from "./references/ReferenceIdentifierType.js"
+import {
+  formatTypeArgumentValue,
+  getReferencesForTypeArgumentType,
+  resolveTypeArgumentsInTypeArgumentType,
+  SerializedTypeArgumentType,
+  serializeTypeArgumentType,
+  TypeArgumentType,
+  validateTypeArgumentType,
+} from "./references/TypeArgumentType.js"
 
 export interface BaseType extends BaseNode {
   /**
@@ -122,7 +122,7 @@ export type Type =
   | PrimitiveType
   | ArrayType
   | ObjectType
-  | GenericArgumentIdentifierType
+  | TypeArgumentType
   | ReferenceIdentifierType
   | IncludeIdentifierType
   | NestedEntityMapType
@@ -132,7 +132,7 @@ export type SerializedType =
   | SerializedPrimitiveType
   | SerializedArrayType
   | SerializedObjectType
-  | SerializedGenericArgumentIdentifierType
+  | SerializedTypeArgumentType
   | SerializedReferenceIdentifierType
   | SerializedIncludeIdentifierType
   | SerializedNestedEntityMapType
@@ -154,8 +154,8 @@ export const validate: Validator<Type> = (helpers, type, value) => {
       return validateIntegerType(helpers, type, value)
     case NodeKind.StringType:
       return validateStringType(helpers, type, value)
-    case NodeKind.GenericArgumentIdentifierType:
-      return validateGenericArgumentIdentifierType(helpers, type, value)
+    case NodeKind.TypeArgumentType:
+      return validateTypeArgumentType(helpers, type, value)
     case NodeKind.ReferenceIdentifierType:
       return validateReferenceIdentifierType(helpers, type, value)
     case NodeKind.IncludeIdentifierType:
@@ -184,8 +184,8 @@ export const resolveTypeArgumentsInType = <Args extends Record<string, Type>>(
     case NodeKind.IntegerType:
     case NodeKind.StringType:
       return type
-    case NodeKind.GenericArgumentIdentifierType:
-      return resolveTypeArgumentsInGenericArgumentIdentifierType(args, type)
+    case NodeKind.TypeArgumentType:
+      return resolveTypeArgumentsInTypeArgumentType(args, type)
     case NodeKind.ReferenceIdentifierType:
       return resolveTypeArgumentsInReferenceIdentifierType(args, type)
     case NodeKind.IncludeIdentifierType:
@@ -215,7 +215,7 @@ export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): 
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
     case NodeKind.StringType:
-    case NodeKind.GenericArgumentIdentifierType:
+    case NodeKind.TypeArgumentType:
     case NodeKind.ReferenceIdentifierType:
     case NodeKind.IncludeIdentifierType:
       return callbackFn(type)
@@ -249,7 +249,7 @@ export type AsType<T extends Type> = T extends ArrayType<infer I>
   ? number
   : T extends StringType
   ? string
-  : T extends GenericArgumentIdentifierType
+  : T extends TypeArgumentType
   ? unknown
   : T extends IncludeIdentifierType
   ? unknown
@@ -277,7 +277,7 @@ export type SerializedAsType<T extends SerializedType> = T extends SerializedArr
   ? number
   : T extends SerializedStringType
   ? string
-  : T extends SerializedGenericArgumentIdentifierType
+  : T extends SerializedTypeArgumentType
   ? unknown
   : T extends SerializedIncludeIdentifierType
   ? unknown
@@ -350,8 +350,8 @@ export const serializeType: Serializer<Type, SerializedType> = type => {
       return serializeIntegerType(type)
     case NodeKind.StringType:
       return serializeStringType(type)
-    case NodeKind.GenericArgumentIdentifierType:
-      return serializeGenericArgumentIdentifierType(type)
+    case NodeKind.TypeArgumentType:
+      return serializeTypeArgumentType(type)
     case NodeKind.ReferenceIdentifierType:
       return serializeReferenceIdentifierType(type)
     case NodeKind.IncludeIdentifierType:
@@ -386,8 +386,8 @@ export const getReferencesForType: GetReferences<Type> = (type, value) => {
       return getReferencesForIntegerType(type, value)
     case NodeKind.StringType:
       return getReferencesForStringType(type, value)
-    case NodeKind.GenericArgumentIdentifierType:
-      return getReferencesForGenericArgumentIdentifierType(type, value)
+    case NodeKind.TypeArgumentType:
+      return getReferencesForTypeArgumentType(type, value)
     case NodeKind.ReferenceIdentifierType:
       return getReferencesForReferenceIdentifierType(type, value)
     case NodeKind.IncludeIdentifierType:
@@ -422,8 +422,8 @@ export const formatValue: StructureFormatter<Type> = (type, value) => {
       return formatIntegerValue(type, value)
     case NodeKind.StringType:
       return formatStringValue(type, value)
-    case NodeKind.GenericArgumentIdentifierType:
-      return formatGenericArgumentIdentifierValue(type, value)
+    case NodeKind.TypeArgumentType:
+      return formatTypeArgumentValue(type, value)
     case NodeKind.IncludeIdentifierType:
       return formatIncludeIdentifierValue(type, value)
     case NodeKind.NestedEntityMapType:

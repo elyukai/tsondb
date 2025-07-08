@@ -5,7 +5,6 @@ import {
   Array,
   Boolean,
   Float,
-  GenericArgumentIdentifierType,
   GenIncludeIdentifierType,
   GenTypeAliasDecl,
   Integer,
@@ -16,6 +15,7 @@ import {
   Required,
   Type,
   TypeAliasDecl,
+  TypeArgumentType,
 } from "../../../src/schema/index.js"
 import { String } from "../../../src/schema/types/primitives/StringType.js"
 
@@ -88,7 +88,7 @@ describe("render declarations", () => {
     const A = GenTypeAliasDecl(import.meta.url, {
       name: "A",
       parameters: [Param("T")],
-      type: t => Array(GenericArgumentIdentifierType(t)),
+      type: t => Array(TypeArgumentType(t)),
     })
 
     const B = TypeAliasDecl(import.meta.url, {

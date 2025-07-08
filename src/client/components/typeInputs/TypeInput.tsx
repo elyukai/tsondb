@@ -8,7 +8,7 @@ import { BooleanTypeInput } from "./BooleanTypeInput.js"
 import { DateTypeInput } from "./DateTypeInput.js"
 import { EnumTypeInput } from "./EnumTypeInput.js"
 import { FloatTypeInput } from "./FloatTypeInput.js"
-import { GenericArgumentIdentifierTypeInput } from "./GenericTypeArgumentIdentifierTypeInput.js"
+import { TypeArgumentTypeInput } from "./GenericTypeArgumentIdentifierTypeInput.js"
 import { IncludeIdentifierTypeInput } from "./IncludeIdentifierTypeInput.js"
 import { IntegerTypeInput } from "./IntegerTypeInput.js"
 import { NestedEntityMapTypeInput } from "./NestedEntityMapTypeInput.js"
@@ -98,8 +98,8 @@ export const TypeInput: FunctionComponent<Props> = ({
         return <MismatchingTypeError expected="object" actual={value} />
       }
 
-    case "GenericArgumentIdentifierType":
-      return <GenericArgumentIdentifierTypeInput type={type} />
+    case "TypeArgumentType":
+      return <TypeArgumentTypeInput type={type} />
 
     case "ReferenceIdentifierType":
       if (typeof value === "string") {

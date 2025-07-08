@@ -17,7 +17,7 @@ export interface NodeKind {
   IntegerType: "IntegerType"
   StringType: "StringType"
   DateType: "DateType"
-  GenericArgumentIdentifierType: "GenericArgumentIdentifierType"
+  TypeArgumentType: "TypeArgumentType"
   GenericParameter: "GenericParameter"
   ReferenceIdentifierType: "ReferenceIdentifierType"
   IncludeIdentifierType: "IncludeIdentifierType"
@@ -38,7 +38,7 @@ export const NodeKind: NodeKind = enumOfObject({
   IntegerType: null,
   StringType: null,
   DateType: null,
-  GenericArgumentIdentifierType: null,
+  TypeArgumentType: null,
   GenericParameter: null,
   ReferenceIdentifierType: null,
   IncludeIdentifierType: null,
@@ -94,7 +94,7 @@ export const flatMapAuxiliaryDecls = (
       case NodeKind.FloatType:
       case NodeKind.IntegerType:
       case NodeKind.StringType:
-      case NodeKind.GenericArgumentIdentifierType:
+      case NodeKind.TypeArgumentType:
       case NodeKind.ReferenceIdentifierType:
       case NodeKind.IncludeIdentifierType:
       case NodeKind.NestedEntityMapType:

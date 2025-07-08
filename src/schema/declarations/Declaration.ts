@@ -99,7 +99,7 @@ export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node) =
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
     case NodeKind.StringType:
-    case NodeKind.GenericArgumentIdentifierType:
+    case NodeKind.TypeArgumentType:
       return addedDecls
     case NodeKind.ReferenceIdentifierType:
       return getNestedDeclarationsInReferenceIdentifierType(addedDecls, node)

@@ -36,7 +36,7 @@ export const createTypeSkeleton = (
         ),
       )
 
-    case "GenericArgumentIdentifierType":
+    case "TypeArgumentType":
       return undefined
 
     case "ReferenceIdentifierType":

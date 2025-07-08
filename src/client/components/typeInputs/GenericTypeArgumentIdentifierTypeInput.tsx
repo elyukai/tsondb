@@ -1,11 +1,11 @@
 import { FunctionComponent } from "preact"
-import { SerializedGenericArgumentIdentifierType } from "../../../schema/types/references/GenericArgumentIdentifierType.js"
+import { SerializedTypeArgumentType } from "../../../schema/types/references/TypeArgumentType.js"
 
 type Props = {
-  type: SerializedGenericArgumentIdentifierType
+  type: SerializedTypeArgumentType
 }
 
-export const GenericArgumentIdentifierTypeInput: FunctionComponent<Props> = ({ type }) => {
+export const TypeArgumentTypeInput: FunctionComponent<Props> = ({ type }) => {
   return (
     <div role="alert">
       Unresolved type argument <code>{type.argument.name}</code>

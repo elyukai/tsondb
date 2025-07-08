@@ -17,13 +17,13 @@ import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
 import { DateType } from "../../schema/types/primitives/DateType.js"
 import { FloatType, IntegerType } from "../../schema/types/primitives/NumericType.js"
 import { StringType } from "../../schema/types/primitives/StringType.js"
-import { GenericArgumentIdentifierType } from "../../schema/types/references/GenericArgumentIdentifierType.js"
 import { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.js"
 import {
   isNestedEntityMapType,
   NestedEntityMapType,
 } from "../../schema/types/references/NestedEntityMapType.js"
 import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
+import { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.js"
 import { getParentDecl, Type } from "../../schema/types/Type.js"
 import { discriminatorKey } from "../../shared/enum.js"
 import { assertExhaustive } from "../../shared/utils/typeSafety.js"
@@ -119,10 +119,8 @@ const renderStringType: RenderFn<StringType> = (_options, type) => ({
   pattern: type.pattern?.source,
 })
 
-const renderGenericArgumentIdentifierType: RenderFn<
-  GenericArgumentIdentifierType<TypeParameter>
-> = (_options, _type) => {
-  throw new TypeError("GenericArgumentIdentifierType is not supported in JSON Schema.")
+const renderTypeArgumentType: RenderFn<TypeArgumentType<TypeParameter>> = (_options, _type) => {
+  throw new TypeError("TypeArgumentType is not supported in JSON Schema.")
 }
 
 const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_options, type) => ({
@@ -177,8 +175,8 @@ const renderType: RenderFn<Type> = (options, type) => {
       return renderIntegerType(options, type)
     case NodeKind.StringType:
       return renderStringType(options, type)
-    case NodeKind.GenericArgumentIdentifierType:
-      return renderGenericArgumentIdentifierType(options, type)
+    case NodeKind.TypeArgumentType:
+      return renderTypeArgumentType(options, type)
     case NodeKind.ReferenceIdentifierType:
       return renderReferenceIdentifierType(options, type)
     case NodeKind.IncludeIdentifierType:
