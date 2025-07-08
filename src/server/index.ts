@@ -75,9 +75,6 @@ export const createServer = async (
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TSONDB</title>
   <link rel="stylesheet" href="/css/styles.css">
-</head>
-<body>
-  <div id="app"></div>
   <script type="importmap">
     {
       "imports": {
@@ -88,6 +85,9 @@ export const createServer = async (
       }
     }
   </script>
+</head>
+<body>
+  <div id="app"></div>
   <script type="module" src="/js/client/index.js"></script>
 </body>
 </html>`)
