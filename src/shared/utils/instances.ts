@@ -1,4 +1,4 @@
-import { SerializedEntityDecl } from "../../schema/index.js"
+import { SerializedEntityDecl } from "../../node/schema/index.js"
 import { getDisplayNameFromEntityInstance } from "./displayName.js"
 import { GitFileStatus } from "./git.js"
 

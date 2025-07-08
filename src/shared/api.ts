@@ -1,4 +1,4 @@
-import { SerializedDecl } from "../schema/declarations/Declaration.js"
+import { SerializedDecl } from "../node/schema/declarations/Declaration.js"
 import { InstanceContainer, InstanceContainerOverview } from "./utils/instances.js"
 
 export interface GetAllDeclarationsResponseBody<D extends SerializedDecl = SerializedDecl> {
