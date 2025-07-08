@@ -12,7 +12,7 @@ import { init } from "./init.js"
 
 const debug = Debug("tsondb:server")
 
-type ServerOptions = {
+export type ServerOptions = {
   name: string
   port: number
 }
