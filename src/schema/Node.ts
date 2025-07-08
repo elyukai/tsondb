@@ -1,6 +1,6 @@
+import { enumOfObject } from "../shared/utils/enum.js"
 import { InstancesByEntityName } from "../shared/utils/instances.js"
 import { assertExhaustive } from "../shared/utils/typeSafety.js"
-import { enumOfObject } from "../utils/enum.js"
 import { Decl } from "./declarations/Declaration.js"
 import { Type } from "./types/Type.js"
 

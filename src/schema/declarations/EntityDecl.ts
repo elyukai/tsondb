@@ -1,5 +1,5 @@
-import { Lazy } from "../../utils/lazy.js"
-import { Leaves } from "../../utils/object.js"
+import { Lazy } from "../../shared/utils/lazy.js"
+import { Leaves } from "../../shared/utils/object.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
 import {
   getNestedDeclarationsInObjectType,

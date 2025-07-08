@@ -1,6 +1,6 @@
 import { equal } from "assert"
 import { describe, it } from "node:test"
-import { Lazy } from "../../src/utils/lazy.js"
+import { Lazy } from "../../../src/shared/utils/lazy.js"
 
 describe("Lazy", () => {
   it("should only evaluate the given expression when needed", () => {

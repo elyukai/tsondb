@@ -13,7 +13,7 @@ import {
   GetInstanceOfEntityResponseBody,
   UpdateInstanceOfEntityResponseBody,
 } from "../../shared/api.js"
-import { isOk } from "../../utils/result.js"
+import { isOk } from "../../shared/utils/result.js"
 import { createInstance, deleteInstance, updateInstance } from "./instanceOperations.js"
 
 const debug = Debug("tsondb:server:api:declarations")

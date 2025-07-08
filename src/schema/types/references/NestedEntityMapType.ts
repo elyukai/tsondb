@@ -1,7 +1,7 @@
+import { Lazy } from "../../../shared/utils/lazy.js"
 import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.js"
 import { parallelizeErrors } from "../../../shared/utils/validation.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
-import { Lazy } from "../../../utils/lazy.js"
 import { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { EntityDecl } from "../../declarations/EntityDecl.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"

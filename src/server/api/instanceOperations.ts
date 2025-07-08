@@ -6,10 +6,10 @@ import { formatValue } from "../../schema/index.js"
 import { createValidators } from "../../schema/Node.js"
 import { removeAt } from "../../shared/utils/array.js"
 import { InstanceContainer } from "../../shared/utils/instances.js"
+import { error, ok, Result } from "../../shared/utils/result.js"
 import { getErrorMessageForDisplay } from "../../utils/error.js"
 import { getGitFileStatusFromStatusResult } from "../../utils/git.js"
 import { updateReferencesToInstances } from "../../utils/references.js"
-import { error, ok, Result } from "../../utils/result.js"
 import { TSONDBRequestLocals } from "../index.js"
 
 export const createInstance = async (
