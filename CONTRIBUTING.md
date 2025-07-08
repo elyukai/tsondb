@@ -4,6 +4,14 @@
 
 TSON-DB follows [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow), which is a light-weight branch-based collaboration workflow. If you have access to this repository, make sure to not commit to the `main` branch directly. There is no `develop` branch or anything, so just target the `main` branch in a pull request &mdash; unless you want to contribute to someone else’s work, of course.
 
+### Folder structure
+
+- `public`: assets for the web client
+- `src`
+  - `node`: code running in Node.js
+  - `shared`: code able to run in both Node.js and the browser
+  - `web`: code running in the browser
+
 ### Useful commands
 
 ```sh
