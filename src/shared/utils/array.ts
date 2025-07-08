@@ -1,13 +1,18 @@
-export const removeAt = <T>(arr: T[], index: number): T[] => [
-  ...arr.slice(0, index),
-  ...arr.slice(index + 1),
-]
+export const removeAt = <T>(arr: T[], index: number): T[] => {
+  if (index < 0 || index >= arr.length) {
+    throw new RangeError(`index ${index} is out of bounds for array of length ${arr.length}`)
+  }
 
-export const insertAt = <T>(arr: T[], index: number, item: T): T[] => [
-  ...arr.slice(0, index),
-  item,
-  ...arr.slice(index),
-]
+  return [...arr.slice(0, index), ...arr.slice(index + 1)]
+}
+
+export const insertAt = <T>(arr: T[], index: number, item: T): T[] => {
+  if (index < 0 || index > arr.length) {
+    throw new RangeError(`index ${index} is out of bounds for array of length ${arr.length}`)
+  }
+
+  return [...arr.slice(0, index), item, ...arr.slice(index)]
+}
 
 /**
  * Calculates the difference between two arrays, including duplicated values.

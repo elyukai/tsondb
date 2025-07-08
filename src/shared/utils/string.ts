@@ -70,8 +70,10 @@ export const toSnakeCase = (str: string): string =>
     .join("_")
 
 export const toTitleCase = (str: string): string =>
-  splitStringParts(str)
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+  splitStringParts(isAllUppercase(str) ? str.toLowerCase() : str)
+    .map(part =>
+      isAllUppercase(part) ? part : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
+    )
     .join(" ")
 
 export const commonPrefix = (...strs: string[]): string => {
