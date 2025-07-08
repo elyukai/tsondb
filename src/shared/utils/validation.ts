@@ -5,6 +5,9 @@ export const parallelizeErrors = (errors: (Error | undefined)[]): Error[] =>
 
 export type NumerusLabel = [singular: string, plural: string]
 
+const normalizeLabel = (label: string | NumerusLabel): NumerusLabel =>
+  Array.isArray(label) ? label : [label, label + "s"]
+
 export const validateLengthRangeBound = (
   end: "lower" | "upper",
   label: string | NumerusLabel,
@@ -16,14 +19,12 @@ export const validateLengthRangeBound = (
   }
 
   const [operator, description] = end === "lower" ? [gte, "least"] : [lte, "most"]
-
   const length = value.length
-
-  const normalizedLabel = Array.isArray(label) ? label : ([label, label + "s"] as NumerusLabel)
+  const normalizedLabel = normalizeLabel(label)
 
   if (!operator(length, rangeBound)) {
     return RangeError(
-      `Expected at ${description} ${rangeBound} ${
+      `expected at ${description} ${rangeBound} ${
         normalizedLabel[rangeBound === 1 ? 0 : 1]
       }, but got ${length} ${normalizedLabel[length === 1 ? 0 : 1]}`,
     )

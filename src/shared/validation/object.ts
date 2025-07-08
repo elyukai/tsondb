@@ -12,11 +12,12 @@ export const validateObjectConstraints = (
   value: object,
 ) => {
   const label: NumerusLabel = ["property", "properties"]
+  const actualKeys = Object.keys(value)
   return parallelizeErrors([
-    validateLengthRangeBound("lower", label, constraints.minProperties, expectedKeys),
-    validateLengthRangeBound("upper", label, constraints.maxProperties, expectedKeys),
+    validateLengthRangeBound("lower", label, constraints.minProperties, actualKeys),
+    validateLengthRangeBound("upper", label, constraints.maxProperties, actualKeys),
     ...(constraints.additionalProperties !== true
-      ? Object.keys(value).flatMap(valueKey =>
+      ? actualKeys.flatMap(valueKey =>
           expectedKeys.includes(valueKey)
             ? []
             : [TypeError(`object does not allow unknown keys and key "${valueKey}" is not known`)],

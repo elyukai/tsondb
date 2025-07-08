@@ -22,12 +22,18 @@ export const validateStringConstraints = (constraints: StringConstraints, value:
           }, but got ${value.length} character${value.length === 1 ? "" : "s"}`,
         )
       : undefined,
-    constraints.pattern !== undefined &&
-    !(
-      typeof constraints.pattern === "string"
-        ? new RegExp(constraints.pattern)
-        : constraints.pattern
-    ).test(value)
-      ? TypeError(`string does not match the pattern ${constraints.pattern}`)
-      : undefined,
+    (() => {
+      if (constraints.pattern === undefined) {
+        return undefined
+      }
+
+      const pattern =
+        typeof constraints.pattern === "string"
+          ? new RegExp(constraints.pattern)
+          : constraints.pattern
+
+      return !pattern.test(value)
+        ? TypeError(`string does not match the pattern ${pattern.toString()}`)
+        : undefined
+    })(),
   ])

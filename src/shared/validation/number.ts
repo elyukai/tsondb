@@ -39,7 +39,7 @@ export const validateRangeBound = (
       ? [lt, "less than"]
       : [lte, "less than or equal"]
 
-  if (operator(value, normalizedRangeBound.value)) {
+  if (!operator(value, normalizedRangeBound.value)) {
     return RangeError(
       `expected a value ${description} ${normalizedRangeBound.value}, but got ${value}`,
     )
