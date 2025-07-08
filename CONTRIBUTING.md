@@ -11,6 +11,10 @@ npm run build # to type-check and build the project once
 npm run watch # to watch changes to the project and type-check and build on every change
 ```
 
+## Web Client
+
+The client uses the `preact` library, because `react` itself would be quite a large library for such a small application. If you want to use more libraries, make sure they work with `preact` **without** the `preact/compat` layer.
+
 ## Formatting
 
 Always format your code using Prettier before requesting a merge. A `.prettierrc.yml` is contained in the repository, so everybody has the same settings.
