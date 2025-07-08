@@ -10,7 +10,7 @@ import {
 import { EnumDecl } from "../../declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
-import { SerializedTypeParameter, TypeParameter } from "../../parameters/TypeParameter.js"
+import { SerializedTypeParameter, TypeParameter } from "../../TypeParameter.js"
 import { Validator } from "../../validation/type.js"
 import { EnumCaseDecl, formatEnumType } from "../generic/EnumType.js"
 import {

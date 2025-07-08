@@ -1,6 +1,6 @@
 import { assertExhaustive } from "../../shared/utils/typeSafety.js"
 import { BaseNode, GetReferences, Node, NodeKind, Serializer } from "../Node.js"
-import { SerializedTypeParameter, TypeParameter } from "../parameters/TypeParameter.js"
+import { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js"
 import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.js"
 import {
   EnumCaseDecl,

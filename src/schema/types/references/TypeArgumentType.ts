@@ -3,7 +3,7 @@ import {
   SerializedTypeParameter,
   serializeTypeParameter,
   TypeParameter,
-} from "../../parameters/TypeParameter.js"
+} from "../../TypeParameter.js"
 import { Validator } from "../../validation/type.js"
 import { BaseType, removeParentKey, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
 

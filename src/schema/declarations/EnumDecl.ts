@@ -1,10 +1,6 @@
 import { Lazy } from "../../utils/lazy.js"
 import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
-import {
-  SerializedTypeParameter,
-  serializeTypeParameter,
-  TypeParameter,
-} from "../parameters/TypeParameter.js"
+import { SerializedTypeParameter, serializeTypeParameter, TypeParameter } from "../TypeParameter.js"
 import {
   EnumCaseDecl,
   EnumType,

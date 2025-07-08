@@ -9,7 +9,7 @@ import {
 import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
-import { TypeParameter } from "../../schema/parameters/TypeParameter.js"
+import { TypeParameter } from "../../schema/TypeParameter.js"
 import { ArrayType } from "../../schema/types/generic/ArrayType.js"
 import { EnumType } from "../../schema/types/generic/EnumType.js"
 import { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"

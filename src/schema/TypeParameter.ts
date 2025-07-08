@@ -1,11 +1,11 @@
-import { NodeKind, Serializer } from "../Node.js"
+import { NodeKind, Serializer } from "./Node.js"
 import {
   removeParentKey,
   SerializedBaseType,
   SerializedType,
   serializeType,
   Type,
-} from "../types/Type.js"
+} from "./types/Type.js"
 
 export interface TypeParameter<N extends string = string, T extends Type = Type> {
   kind: NodeKind["GenericParameter"]
