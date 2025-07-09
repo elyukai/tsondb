@@ -49,6 +49,8 @@ export default defineConfig([
           ignoreRestSiblings: true,
         },
       ],
+      "@typescript-eslint/consistent-type-exports": "error",
+      "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-empty-object-type": [
         "error",
         {

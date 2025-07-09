@@ -20,9 +20,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "../lib",
+    "rewriteRelativeImportExtensions": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",
-    "useUnknownInCatchVariables": true
+    "useUnknownInCatchVariables": true,
+    "verbatimModuleSyntax": true,
   }
 }

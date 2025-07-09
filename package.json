@@ -54,6 +54,6 @@
     "url": "https://github.com/elyukai/tsondb/issues"
   },
   "engines": {
-    "node": ">=21.2.0"
+    "node": ">=23.6.0"
   }
 }

@@ -18,9 +18,11 @@
     "noUncheckedSideEffectImports": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "rewriteRelativeImportExtensions": true,
     "strict": true,
     "target": "ESNext",
-    "useUnknownInCatchVariables": true
+    "useUnknownInCatchVariables": true,
+    "verbatimModuleSyntax": true,
   },
   "references": [
     { "path": "../src" }
