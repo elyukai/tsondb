@@ -24,6 +24,8 @@
     "watch": "tsc -b -w",
     "test": "node --import tsx --test",
     "lint": "eslint",
+    "check-format": "prettier \"{src,test}/**/*.{ts,tsx}\" --check",
+    "format": "prettier \"{src,test}/**/*.{ts,tsx}\" --write",
     "release": "commit-and-tag-version"
   },
   "devDependencies": {
@@ -36,6 +38,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.3.0",
+    "prettier": "^3.6.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.36.0"
