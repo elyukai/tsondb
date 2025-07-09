@@ -35,8 +35,8 @@ export const attachGitStatusToInstancesByEntityName = (
   dataRoot: string,
   gitRoot: string,
   gitStatus: StatusResult,
-): void =>
-  { Object.entries(instancesByEntityName).forEach(([entityName, instances]) => {
+): void => {
+  Object.entries(instancesByEntityName).forEach(([entityName, instances]) => {
     instancesByEntityName[entityName] = instances.map(instanceContainer => ({
       ...instanceContainer,
       gitStatus: getGitFileStatusFromStatusResult(
@@ -47,4 +47,5 @@ export const attachGitStatusToInstancesByEntityName = (
         instanceContainer.fileName,
       ),
     }))
-  }); }
+  })
+}

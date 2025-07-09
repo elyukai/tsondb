@@ -1,10 +1,10 @@
-import type { RangeBound} from "../../../../shared/validation/number.js";
+import type { RangeBound } from "../../../../shared/validation/number.js"
 import { validateNumberConstraints } from "../../../../shared/validation/number.js"
-import type { GetReferences, Node, Serializer } from "../../Node.js";
+import type { GetReferences, Node, Serializer } from "../../Node.js"
 import { NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
 import type { Validator } from "../../validation/type.js"
-import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.js";
+import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.js"
 import { removeParentKey } from "../Type.js"
 
 export interface IntegerType extends BaseType {

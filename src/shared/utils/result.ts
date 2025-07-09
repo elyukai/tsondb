@@ -27,8 +27,7 @@ export const ok = <T>(value: T): Result<T, never> => ({ tag: "Ok", value })
 /**
  * Checks if a result contains a value.
  */
-export const isOk = <T, E>(result: Result<T, E>): result is Ok<T> =>
-  result.tag === "Ok"
+export const isOk = <T, E>(result: Result<T, E>): result is Ok<T> => result.tag === "Ok"
 
 /**
  * Creates a result that contains an error.
@@ -41,8 +40,7 @@ export const error = <E>(error: E): Result<never, E> => ({
 /**
  * Checks if a result contains an error.
  */
-export const isError = <T, E>(result: Result<T, E>): result is Error<E> =>
-  result.tag === "Error"
+export const isError = <T, E>(result: Result<T, E>): result is Error<E> => result.tag === "Error"
 
 /**
  * Reduces a result to a value of a common type.
@@ -50,30 +48,26 @@ export const isError = <T, E>(result: Result<T, E>): result is Error<E> =>
 export const reduce = <T, E, R>(
   result: Result<T, E>,
   fok: (value: T) => R,
-  ferror: (error: E) => R
+  ferror: (error: E) => R,
 ): R => (isOk(result) ? fok(result.value) : ferror(result.error))
 
 /**
  * Maps the value of a result to a new value.
  */
-export const map = <T, U, E>(
-  result: Result<T, E>,
-  f: (value: T) => U
-): Result<U, E> => (isOk(result) ? ok(f(result.value)) : result)
+export const map = <T, U, E>(result: Result<T, E>, f: (value: T) => U): Result<U, E> =>
+  isOk(result) ? ok(f(result.value)) : result
 
 /**
  * Maps an error to a new error.
  */
-export const mapError = <T, E, F>(
-  result: Result<T, E>,
-  f: (value: E) => F
-): Result<T, F> => (isError(result) ? error(f(result.error)) : result)
+export const mapError = <T, E, F>(result: Result<T, E>, f: (value: E) => F): Result<T, F> =>
+  isError(result) ? error(f(result.error)) : result
 
 export const combine = <T1, T2, TR, E1, E2, ER>(
   result1: Result<T1, E1>,
   result2: Result<T2, E2>,
   fok: (value1: T1, value2: T2) => TR,
-  ferror: (error1: E1, error2: E2) => ER
+  ferror: (error1: E1, error2: E2) => ER,
 ): Result<TR, E1 | E2 | ER> =>
   isOk(result1)
     ? isOk(result2)

@@ -10,7 +10,7 @@ import type {
   UpdateInstanceOfEntityResponseBody,
 } from "../../../shared/api.js"
 import { isOk } from "../../../shared/utils/result.js"
-import type { Decl} from "../../schema/declarations/Declaration.js";
+import type { Decl } from "../../schema/declarations/Declaration.js"
 import { serializeDecl } from "../../schema/declarations/Declaration.js"
 import { isEntityDecl } from "../../schema/declarations/EntityDecl.js"
 import { isEnumDecl } from "../../schema/declarations/EnumDecl.js"

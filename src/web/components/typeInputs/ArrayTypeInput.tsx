@@ -38,7 +38,9 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                   <div className="container-item-title">{i + 1}.</div>
                   <button
                     class="destructive"
-                    onClick={() => { onChange(removeAt(value, i)); }}
+                    onClick={() => {
+                      onChange(removeAt(value, i))
+                    }}
                     disabled={type.minItems !== undefined && value.length <= type.minItems}
                   >
                     Delete Item
@@ -50,7 +52,9 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                 value={item}
                 instanceNamesByEntity={instanceNamesByEntity}
                 getDeclFromDeclName={getDeclFromDeclName}
-                onChange={newItem => { onChange(value.with(i, newItem)); }}
+                onChange={newItem => {
+                  onChange(value.with(i, newItem))
+                }}
               />
             </li>
           ))}
@@ -59,9 +63,9 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
       {isTuple ? null : (
         <div class="add-item-container">
           <button
-            onClick={() =>
-              { onChange([...value, createTypeSkeleton(getDeclFromDeclName, type.items)]); }
-            }
+            onClick={() => {
+              onChange([...value, createTypeSkeleton(getDeclFromDeclName, type.items)])
+            }}
             disabled={type.maxItems !== undefined && value.length >= type.maxItems}
           >
             Add Item

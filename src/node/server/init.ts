@@ -1,7 +1,7 @@
 import { simpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.js"
 import type { ModelContainer } from "../ModelContainer.js"
-import type { EntityDecl} from "../schema/declarations/EntityDecl.js";
+import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.js"
 import { resolveTypeArgumentsInDecls } from "../schema/index.js"
 import {

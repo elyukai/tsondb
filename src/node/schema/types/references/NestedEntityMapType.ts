@@ -4,14 +4,15 @@ import { parallelizeErrors } from "../../../../shared/utils/validation.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
 import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import type { EntityDecl } from "../../declarations/EntityDecl.js"
-import type { GetReferences, Node, Serializer } from "../../Node.js";
+import type { GetReferences, Node, Serializer } from "../../Node.js"
 import { NodeKind } from "../../Node.js"
 import type { Validator } from "../../validation/type.js"
 import type {
   MemberDecl,
   ObjectType,
   SerializedMemberDecl,
-  SerializedObjectType} from "../generic/ObjectType.js";
+  SerializedObjectType,
+} from "../generic/ObjectType.js"
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
@@ -19,7 +20,7 @@ import {
   serializeObjectType,
   validateObjectType,
 } from "../generic/ObjectType.js"
-import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.js";
+import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
 import { removeParentKey } from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl>

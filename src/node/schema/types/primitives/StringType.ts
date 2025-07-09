@@ -1,12 +1,9 @@
-import type {
-  StringConstraints} from "../../../../shared/validation/string.js";
-import {
-  validateStringConstraints,
-} from "../../../../shared/validation/string.js"
-import type { GetReferences, Node, Serializer } from "../../Node.js";
+import type { StringConstraints } from "../../../../shared/validation/string.js"
+import { validateStringConstraints } from "../../../../shared/validation/string.js"
+import type { GetReferences, Node, Serializer } from "../../Node.js"
 import { NodeKind } from "../../Node.js"
 import type { Validator } from "../../validation/type.js"
-import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.js";
+import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.js"
 import { removeParentKey } from "../Type.js"
 
 export interface StringType extends BaseType, StringConstraints {

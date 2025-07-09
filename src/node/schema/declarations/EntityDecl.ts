@@ -1,11 +1,8 @@
 import { Lazy } from "../../../shared/utils/lazy.js"
 import type { Leaves } from "../../../shared/utils/object.js"
-import type { GetReferences, Node, Serializer } from "../Node.js";
+import type { GetReferences, Node, Serializer } from "../Node.js"
 import { NodeKind } from "../Node.js"
-import type {
-  MemberDecl,
-  ObjectType,
-  SerializedObjectType} from "../types/generic/ObjectType.js";
+import type { MemberDecl, ObjectType, SerializedObjectType } from "../types/generic/ObjectType.js"
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
@@ -14,16 +11,11 @@ import {
   serializeObjectType,
 } from "../types/generic/ObjectType.js"
 import { StringType } from "../types/primitives/StringType.js"
-import type { AsType, SerializedAsType} from "../types/Type.js";
+import type { AsType, SerializedAsType } from "../types/Type.js"
 import { validate } from "../types/Type.js"
 import type { ValidatorHelpers } from "../validation/type.js"
-import type {
-  BaseDecl,
-  GetNestedDeclarations,
-  SerializedBaseDecl} from "./Declaration.js";
-import {
-  validateDeclName,
-} from "./Declaration.js"
+import type { BaseDecl, GetNestedDeclarations, SerializedBaseDecl } from "./Declaration.js"
+import { validateDeclName } from "./Declaration.js"
 import { TypeAliasDecl } from "./TypeAliasDecl.js"
 
 export interface EntityDecl<Name extends string = string, T extends ObjectType = ObjectType>

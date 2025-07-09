@@ -1,12 +1,13 @@
 import { Lazy } from "../../../shared/utils/lazy.js"
-import type { GetReferences, Node, Serializer } from "../Node.js";
+import type { GetReferences, Node, Serializer } from "../Node.js"
 import { NodeKind } from "../Node.js"
-import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js";
+import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js"
 import { serializeTypeParameter } from "../TypeParameter.js"
 import type {
   EnumCaseDecl,
   SerializedEnumCaseDecl,
-  SerializedEnumType} from "../types/generic/EnumType.js";
+  SerializedEnumType,
+} from "../types/generic/EnumType.js"
 import {
   EnumType,
   getNestedDeclarationsInEnumType,
@@ -21,11 +22,9 @@ import type {
   BaseDecl,
   GetNestedDeclarations,
   SerializedBaseDecl,
-  TypeArguments} from "./Declaration.js";
-import {
-  getTypeArgumentsRecord,
-  validateDeclName,
+  TypeArguments,
 } from "./Declaration.js"
+import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.js"
 
 export interface EnumDecl<
   Name extends string = string,

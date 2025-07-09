@@ -1,11 +1,9 @@
 import { Lazy } from "../../../shared/utils/lazy.js"
-import type { GetReferences, Node, Serializer } from "../Node.js";
+import type { GetReferences, Node, Serializer } from "../Node.js"
 import { NodeKind } from "../Node.js"
-import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js";
+import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js"
 import { serializeTypeParameter } from "../TypeParameter.js"
-import type {
-  SerializedType,
-  Type} from "../types/Type.js";
+import type { SerializedType, Type } from "../types/Type.js"
 import {
   getReferencesForType,
   resolveTypeArgumentsInType,
@@ -17,12 +15,9 @@ import type {
   BaseDecl,
   GetNestedDeclarations,
   SerializedBaseDecl,
-  TypeArguments} from "./Declaration.js";
-import {
-  getNestedDeclarations,
-  getTypeArgumentsRecord,
-  validateDeclName,
+  TypeArguments,
 } from "./Declaration.js"
+import { getNestedDeclarations, getTypeArgumentsRecord, validateDeclName } from "./Declaration.js"
 
 export interface TypeAliasDecl<
   Name extends string = string,
