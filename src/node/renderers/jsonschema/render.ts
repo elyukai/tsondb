@@ -85,10 +85,10 @@ const renderNumericRangeBounds = (
   rangeBound === undefined
     ? undefined
     : typeof rangeBound === "number"
-    ? { [inclusiveKey]: rangeBound }
-    : rangeBound.isExclusive
-    ? { [exclusiveKey]: rangeBound.value }
-    : { [inclusiveKey]: rangeBound.value }
+      ? { [inclusiveKey]: rangeBound }
+      : rangeBound.isExclusive
+        ? { [exclusiveKey]: rangeBound.value }
+        : { [inclusiveKey]: rangeBound.value }
 
 const renderMultipleOf = (multipleOf: number | undefined) =>
   multipleOf === undefined ? undefined : { multipleOf }
@@ -247,7 +247,7 @@ export const render = (
     finalOptions.format === "minified"
       ? undefined
       : finalOptions.format === "tabs"
-      ? "\t"
-      : finalOptions.format.indentation ?? defaultIndentation,
+        ? "\t"
+        : (finalOptions.format.indentation ?? defaultIndentation),
   )
 }

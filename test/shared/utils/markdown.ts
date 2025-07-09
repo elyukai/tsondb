@@ -1,6 +1,6 @@
 import { deepEqual } from "assert/strict"
 import { describe, it } from "node:test"
-import type { BlockMarkdownNode} from "../../../src/shared/utils/markdown.js";
+import type { BlockMarkdownNode } from "../../../src/shared/utils/markdown.js"
 import { parseBlockMarkdown } from "../../../src/shared/utils/markdown.js"
 
 describe("parseBlockMarkdown", () => {

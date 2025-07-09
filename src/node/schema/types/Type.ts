@@ -246,79 +246,81 @@ export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): 
   }
 }
 
-export type AsType<T extends Type> = T extends ArrayType<infer I>
-  ? AsType<I>[]
-  : T extends ObjectType<infer P>
-  ? {
-      [K in keyof P]: P[K] extends MemberDecl<Type, true>
-        ? AsType<P[K]["type"]>
-        : AsType<P[K]["type"]> | undefined
-    }
-  : T extends BooleanType
-  ? boolean
-  : T extends DateType
-  ? Date
-  : T extends FloatType
-  ? number
-  : T extends IntegerType
-  ? number
-  : T extends StringType
-  ? string
-  : T extends TypeArgumentType
-  ? unknown
-  : T extends IncludeIdentifierType
-  ? unknown
-  : T extends NestedEntityMapType
-  ? unknown
-  : T extends ReferenceIdentifierType
-  ? unknown
-  : never
+export type AsType<T extends Type> =
+  T extends ArrayType<infer I>
+    ? AsType<I>[]
+    : T extends ObjectType<infer P>
+      ? {
+          [K in keyof P]: P[K] extends MemberDecl<Type, true>
+            ? AsType<P[K]["type"]>
+            : AsType<P[K]["type"]> | undefined
+        }
+      : T extends BooleanType
+        ? boolean
+        : T extends DateType
+          ? Date
+          : T extends FloatType
+            ? number
+            : T extends IntegerType
+              ? number
+              : T extends StringType
+                ? string
+                : T extends TypeArgumentType
+                  ? unknown
+                  : T extends IncludeIdentifierType
+                    ? unknown
+                    : T extends NestedEntityMapType
+                      ? unknown
+                      : T extends ReferenceIdentifierType
+                        ? unknown
+                        : never
 
-export type SerializedAsType<T extends SerializedType> = T extends SerializedArrayType<infer I>
-  ? SerializedAsType<I>[]
-  : T extends SerializedObjectType<infer P>
-  ? {
-      [K in keyof P]: P[K] extends SerializedMemberDecl<SerializedType, true>
-        ? SerializedAsType<P[K]["type"]>
-        : SerializedAsType<P[K]["type"]> | undefined
-    }
-  : T extends SerializedBooleanType
-  ? boolean
-  : T extends SerializedDateType
-  ? Date
-  : T extends SerializedFloatType
-  ? number
-  : T extends SerializedIntegerType
-  ? number
-  : T extends SerializedStringType
-  ? string
-  : T extends SerializedTypeArgumentType
-  ? unknown
-  : T extends SerializedIncludeIdentifierType
-  ? unknown
-  : T extends SerializedNestedEntityMapType
-  ? unknown
-  : T extends SerializedReferenceIdentifierType
-  ? unknown
-  : never
+export type SerializedAsType<T extends SerializedType> =
+  T extends SerializedArrayType<infer I>
+    ? SerializedAsType<I>[]
+    : T extends SerializedObjectType<infer P>
+      ? {
+          [K in keyof P]: P[K] extends SerializedMemberDecl<SerializedType, true>
+            ? SerializedAsType<P[K]["type"]>
+            : SerializedAsType<P[K]["type"]> | undefined
+        }
+      : T extends SerializedBooleanType
+        ? boolean
+        : T extends SerializedDateType
+          ? Date
+          : T extends SerializedFloatType
+            ? number
+            : T extends SerializedIntegerType
+              ? number
+              : T extends SerializedStringType
+                ? string
+                : T extends SerializedTypeArgumentType
+                  ? unknown
+                  : T extends SerializedIncludeIdentifierType
+                    ? unknown
+                    : T extends SerializedNestedEntityMapType
+                      ? unknown
+                      : T extends SerializedReferenceIdentifierType
+                        ? unknown
+                        : never
 
 export type AsNode<T> = T extends (infer I)[]
   ? ArrayType<AsNode<I>>
   : T extends Record<string, unknown>
-  ? ObjectType<{
-      [K in keyof T]: T[K] extends MemberDecl
-        ? T[K]
-        : T extends null | undefined
-        ? MemberDecl<AsNode<NonNullable<T[K]>>, false>
-        : MemberDecl<AsNode<T[K]>, true>
-    }>
-  : T extends string
-  ? StringType
-  : T extends number
-  ? FloatType
-  : T extends boolean
-  ? BooleanType
-  : never
+    ? ObjectType<{
+        [K in keyof T]: T[K] extends MemberDecl
+          ? T[K]
+          : T extends null | undefined
+            ? MemberDecl<AsNode<NonNullable<T[K]>>, false>
+            : MemberDecl<AsNode<T[K]>, true>
+      }>
+    : T extends string
+      ? StringType
+      : T extends number
+        ? FloatType
+        : T extends boolean
+          ? BooleanType
+          : never
 
 export const getParentDecl = (type: Type): Decl | undefined => {
   if (type.parent === undefined) {

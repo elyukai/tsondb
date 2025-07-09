@@ -16,6 +16,6 @@ export const validateDateConstraints = (constraints: DateConstraints, value: str
         ? undefined
         : TypeError(`invalid ISO 8601 date time string: ${value}`)
       : datePattern.test(value) && isValidISODateString(value)
-      ? undefined
-      : TypeError(`invalid ISO 8601 date-only string: ${value}`),
+        ? undefined
+        : TypeError(`invalid ISO 8601 date-only string: ${value}`),
   ])

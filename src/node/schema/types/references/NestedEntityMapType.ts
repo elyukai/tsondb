@@ -152,7 +152,10 @@ export const getReferencesForNestedEntityMapType: GetReferences<NestedEntityMapT
         .concat(Object.keys(value))
     : []
 
-export const formatNestedEntityMapValue: StructureFormatter<NestedEntityMapType> = (_type, value) =>
+export const formatNestedEntityMapValue: StructureFormatter<NestedEntityMapType> = (
+  _type,
+  value,
+) =>
   typeof value === "object" && value !== null && !Array.isArray(value)
     ? sortObjectKeysAlphabetically(value as Record<string, unknown>)
     : value

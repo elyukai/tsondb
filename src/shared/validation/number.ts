@@ -36,8 +36,8 @@ export const validateRangeBound = (
         ? [gt, "greater than"]
         : [gte, "greater than or equal"]
       : normalizedRangeBound.isExclusive
-      ? [lt, "less than"]
-      : [lte, "less than or equal"]
+        ? [lt, "less than"]
+        : [lte, "less than or equal"]
 
   if (!operator(value, normalizedRangeBound.value)) {
     return RangeError(

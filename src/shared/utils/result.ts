@@ -74,8 +74,8 @@ export const combine = <T1, T2, TR, E1, E2, ER>(
       ? ok(fok(result1.value, result2.value))
       : result2
     : isOk(result2)
-    ? result1
-    : error(ferror(result1.error, result2.error))
+      ? result1
+      : error(ferror(result1.error, result2.error))
 
 export const Result = Object.freeze({
   ok,

@@ -1,8 +1,7 @@
 import { equal } from "assert"
 import { describe, it } from "node:test"
 import { render } from "../../../../src/node/renderers/ts/render.js"
-import type {
-  Type} from "../../../../src/node/schema/index.js";
+import type { Type } from "../../../../src/node/schema/index.js"
 import {
   Array,
   Boolean,
@@ -21,13 +20,14 @@ import {
 import { String } from "../../../../src/node/schema/types/primitives/StringType.js"
 
 describe("render types", () => {
-  const testType = (type: Type, expected: string) =>
-    { equal(
+  const testType = (type: Type, expected: string) => {
+    equal(
       render(undefined, [TypeAliasDecl("", { name: "Test", type: () => type })]),
       `export ${isObjectType(type) ? "interface" : "type"} Test${
         isObjectType(type) ? "" : " ="
       } ${expected}`,
-    ); }
+    )
+  }
 
   describe("render primitives", () => {
     it("should render a BooleanType", () => {

@@ -32,7 +32,7 @@ export const getDisplayNameFromEntityInstance = (
 
     return availableLocales.length === 0
       ? defaultName
-      : locales.reduce(
+      : (locales.reduce(
           (name: string | undefined, locale) =>
             name ??
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -43,6 +43,6 @@ export const getDisplayNameFromEntityInstance = (
           (getValueAtPath(localeMap![availableLocales[0]!], pathInLocaleMap) as
             | string
             | undefined) ??
-          defaultName
+          defaultName)
   }
 }
