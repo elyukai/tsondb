@@ -1,18 +1,22 @@
 import { discriminatorKey } from "../../../../shared/enum.js"
-import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
-import { Validator } from "../../validation/type.js"
-import {
+import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
+import { getNestedDeclarations } from "../../declarations/Declaration.js"
+import type { GetReferences, Node, Serializer } from "../../Node.js"
+import { NodeKind } from "../../Node.js"
+import type { Validator } from "../../validation/type.js"
+import type {
   BaseType,
+  SerializedBaseType,
+  SerializedType,
+  StructureFormatter,
+  Type,
+} from "../Type.js"
+import {
   formatValue,
   getReferencesForType,
   removeParentKey,
   resolveTypeArgumentsInType,
-  SerializedBaseType,
-  SerializedType,
   serializeType,
-  StructureFormatter,
-  Type,
   validate,
 } from "../Type.js"
 
@@ -165,6 +169,7 @@ export const getReferencesForEnumType: GetReferences<EnumType> = (type, value) =
   type.values[value[discriminatorKey]]?.type == null &&
   value[discriminatorKey] in value
     ? getReferencesForType(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         type.values[value[discriminatorKey]]!.type!,
         (value as Record<string, unknown>)[value[discriminatorKey]],
       )

@@ -1,4 +1,4 @@
-import { FunctionComponent } from "preact"
+import type { FunctionComponent } from "preact"
 
 type Props = {
   errors: Error[]

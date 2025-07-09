@@ -1,28 +1,30 @@
 import { sortObjectKeys } from "../../../../shared/utils/object.js"
 import { parallelizeErrors } from "../../../../shared/utils/validation.js"
-import {
-  ObjectConstraints,
-  validateObjectConstraints,
-} from "../../../../shared/validation/object.js"
+import type { ObjectConstraints } from "../../../../shared/validation/object.js"
+import { validateObjectConstraints } from "../../../../shared/validation/object.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
-import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
+import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
+import { getNestedDeclarations } from "../../declarations/Declaration.js"
+import type { GetReferences, Node, Serializer } from "../../Node.js"
+import { NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
-import { Validator } from "../../validation/type.js"
-import {
+import type { Validator } from "../../validation/type.js"
+import type {
   BaseType,
+  SerializedBaseType,
+  SerializedType,
+  StructureFormatter,
+  Type,
+} from "../Type.js"
+import {
   getReferencesForType,
   removeParentKey,
   resolveTypeArgumentsInType,
-  SerializedBaseType,
-  SerializedType,
   serializeType,
-  StructureFormatter,
-  Type,
   validate,
 } from "../Type.js"
 
-type TConstraint = Record<string, MemberDecl<Type, boolean>>
+type TConstraint = Record<string, MemberDecl>
 
 export interface ObjectType<T extends TConstraint = TConstraint>
   extends BaseType,
@@ -31,7 +33,7 @@ export interface ObjectType<T extends TConstraint = TConstraint>
   properties: T
 }
 
-type TSerializedConstraint = Record<string, SerializedMemberDecl<SerializedType, boolean>>
+type TSerializedConstraint = Record<string, SerializedMemberDecl>
 
 export interface SerializedObjectType<T extends TSerializedConstraint = TSerializedConstraint>
   extends SerializedBaseType,
@@ -73,6 +75,7 @@ export const ObjectType = <T extends TConstraint>(
       )
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     properties[key]!.type.parent = type
   })
 
@@ -102,6 +105,7 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
   return parallelizeErrors([
     ...validateObjectConstraints(type, expectedKeys, value),
     ...expectedKeys.map(key => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const prop = type.properties[key]!
 
       if (prop.isRequired && !(key in value)) {
@@ -194,6 +198,7 @@ export const serializeObjectType: Serializer<ObjectType, SerializedObjectType> =
 export const getReferencesForObjectType: GetReferences<ObjectType> = (type, value) =>
   typeof value === "object" && value !== null
     ? Object.entries(value).flatMap(([key, propValue]) =>
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         key in type.properties ? getReferencesForType(type.properties[key]!.type, propValue) : [],
       )
     : []

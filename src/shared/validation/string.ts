@@ -10,16 +10,16 @@ export const validateStringConstraints = (constraints: StringConstraints, value:
   parallelizeErrors([
     constraints.minLength !== undefined && value.length < constraints.minLength
       ? RangeError(
-          `expected a string with at least ${constraints.minLength} character${
+          `expected a string with at least ${constraints.minLength.toString()} character${
             constraints.minLength === 1 ? "" : "s"
-          }, but got ${value.length} character${value.length === 1 ? "" : "s"}`,
+          }, but got ${value.length.toString()} character${value.length === 1 ? "" : "s"}`,
         )
       : undefined,
     constraints.maxLength !== undefined && value.length > constraints.maxLength
       ? RangeError(
-          `expected a string with at most ${constraints.maxLength} character${
+          `expected a string with at most ${constraints.maxLength.toString()} character${
             constraints.maxLength === 1 ? "" : "s"
-          }, but got ${value.length} character${value.length === 1 ? "" : "s"}`,
+          }, but got ${value.length.toString()} character${value.length === 1 ? "" : "s"}`,
         )
       : undefined,
     (() => {

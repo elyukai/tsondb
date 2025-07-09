@@ -1,8 +1,8 @@
 import { readdir, readFile } from "node:fs/promises"
 import { basename, extname, join } from "node:path"
-import { StatusResult } from "simple-git"
-import { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.js"
-import { EntityDecl } from "../schema/declarations/EntityDecl.js"
+import type { StatusResult } from "simple-git"
+import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.js"
+import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
 import { getGitFileStatusFromStatusResult } from "./git.js"
 
 export const getInstancesByEntityName = async (
@@ -36,7 +36,7 @@ export const attachGitStatusToInstancesByEntityName = (
   gitRoot: string,
   gitStatus: StatusResult,
 ): void =>
-  Object.entries(instancesByEntityName).forEach(([entityName, instances]) => {
+  { Object.entries(instancesByEntityName).forEach(([entityName, instances]) => {
     instancesByEntityName[entityName] = instances.map(instanceContainer => ({
       ...instanceContainer,
       gitStatus: getGitFileStatusFromStatusResult(
@@ -47,4 +47,4 @@ export const attachGitStatusToInstancesByEntityName = (
         instanceContainer.fileName,
       ),
     }))
-  })
+  }); }

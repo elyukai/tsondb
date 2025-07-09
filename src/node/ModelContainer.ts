@@ -1,12 +1,15 @@
 import Debug from "debug"
 import { mkdir } from "fs/promises"
 import { join } from "path"
-import { InstancesByEntityName } from "../shared/utils/instances.js"
+import type { InstancesByEntityName } from "../shared/utils/instances.js"
 import { parallelizeErrors } from "../shared/utils/validation.js"
-import { Output } from "./renderers/Output.js"
-import { getEntities, Schema } from "./Schema.js"
-import { createValidators, EntityDecl, validateEntityDecl } from "./schema/index.js"
-import { createServer, ServerOptions } from "./server/index.js"
+import type { Output } from "./renderers/Output.js"
+import type { Schema } from "./Schema.js"
+import { getEntities } from "./Schema.js"
+import type { EntityDecl } from "./schema/index.js"
+import { createValidators, validateEntityDecl } from "./schema/index.js"
+import type { ServerOptions } from "./server/index.js"
+import { createServer } from "./server/index.js"
 import { getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.js"
 import { getInstancesByEntityName } from "./utils/instances.js"
 
@@ -41,18 +44,15 @@ export const generateOutputs = async (modelContainer: ModelContainer): Promise<v
   }
 }
 
-const _validate = async (
-  entities: EntityDecl[],
-  instancesByEntityName: InstancesByEntityName,
-): Promise<void> => {
+const _validate = (entities: EntityDecl[], instancesByEntityName: InstancesByEntityName): void => {
   const errors = entities.flatMap(entity =>
     parallelizeErrors(
-      instancesByEntityName[entity.name]!.map(instance =>
+      instancesByEntityName[entity.name]?.map(instance =>
         wrapErrorsIfAny(
           `in file "${entity.name}/${instance.fileName}"`,
           validateEntityDecl(createValidators(instancesByEntityName), entity, instance.content),
         ),
-      ),
+      ) ?? [],
     ),
   )
 
@@ -74,7 +74,7 @@ export const validate = async (modelContainer: ModelContainer) => {
     modelContainer.dataRootPath,
     entities,
   )
-  return _validate(entities, instancesByEntityName)
+  _validate(entities, instancesByEntityName)
 }
 
 export const generateAndValidate = async (modelContainer: ModelContainer) => {
@@ -85,7 +85,7 @@ export const generateAndValidate = async (modelContainer: ModelContainer) => {
     modelContainer.dataRootPath,
     entities,
   )
-  await _validate(entities, instancesByEntityName)
+  _validate(entities, instancesByEntityName)
 }
 
 export const serve = async (
@@ -98,7 +98,7 @@ export const serve = async (
     modelContainer.dataRootPath,
     entities,
   )
-  createServer(modelContainer, instancesByEntityName, serverOptions)
+  await createServer(modelContainer, instancesByEntityName, serverOptions)
 }
 
 export const generateValidateAndServe = async (
@@ -112,6 +112,6 @@ export const generateValidateAndServe = async (
     modelContainer.dataRootPath,
     entities,
   )
-  await _validate(entities, instancesByEntityName)
-  createServer(modelContainer, instancesByEntityName, serverOptions)
+  _validate(entities, instancesByEntityName)
+  await createServer(modelContainer, instancesByEntityName, serverOptions)
 }

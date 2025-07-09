@@ -2,15 +2,16 @@ import { rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { v4 as uuidv4 } from "uuid"
 import { removeAt } from "../../../shared/utils/array.js"
-import { InstanceContainer } from "../../../shared/utils/instances.js"
-import { error, ok, Result } from "../../../shared/utils/result.js"
+import type { InstanceContainer } from "../../../shared/utils/instances.js"
+import type { Result } from "../../../shared/utils/result.js"
+import { error, ok } from "../../../shared/utils/result.js"
 import { validateEntityDecl } from "../../schema/declarations/EntityDecl.js"
 import { formatValue } from "../../schema/index.js"
 import { createValidators } from "../../schema/Node.js"
 import { getErrorMessageForDisplay } from "../../utils/error.js"
 import { getGitFileStatusFromStatusResult } from "../../utils/git.js"
 import { updateReferencesToInstances } from "../../utils/references.js"
-import { TSONDBRequestLocals } from "../index.js"
+import type { TSONDBRequestLocals } from "../index.js"
 
 export const createInstance = async (
   locals: TSONDBRequestLocals,
@@ -18,7 +19,11 @@ export const createInstance = async (
   instance: unknown,
   idQueryParam: unknown,
 ): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
-  const entity = locals.entitiesByName[entityName]!
+  const entity = locals.entitiesByName[entityName]
+
+  if (entity === undefined) {
+    return error([400, "Entity not found"])
+  }
 
   const validationErrors = validateEntityDecl(
     createValidators(locals.instancesByEntityName),
@@ -38,7 +43,7 @@ export const createInstance = async (
 
   if (
     locals.localeEntity === entity &&
-    locals.instancesByEntityName[entity.name]!.some(instance => instance.id === id)
+    locals.instancesByEntityName[entity.name]?.some(instance => instance.id === id)
   ) {
     return error([400, `Duplicate id "${id}" for locale entity`])
   }
@@ -101,7 +106,11 @@ export const updateInstance = async (
     return error([404, "Instance not found"])
   }
 
-  const entity = locals.entitiesByName[entityName]!
+  const entity = locals.entitiesByName[entityName]
+
+  if (entity === undefined) {
+    return error([400, "Entity not found"])
+  }
 
   const validationErrors = validateEntityDecl(
     createValidators(locals.instancesByEntityName),
@@ -184,6 +193,9 @@ export const deleteInstance = async (
 
     return ok(instanceContainer)
   } catch (err) {
-    return error([500, `Failed to delete instance: ${err}`])
+    return error([
+      500,
+      `Failed to delete instance: ${err instanceof Error ? err.toString() : String(err)}`,
+    ])
   }
 }

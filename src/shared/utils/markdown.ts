@@ -9,22 +9,22 @@ type Rule = {
 
 const boldWithItalicRule: Rule = {
   pattern: /\*\*(.*?\*.+?\*.*?)\*\*/,
-  map: (result, parseInside) => ({ kind: "bold", content: parseInside(result[1]!) }),
+  map: (result, parseInside) => ({ kind: "bold", content: parseInside(result[1] ?? "") }),
 }
 
 const italicWithBoldRule: Rule = {
   pattern: /\*(.*?\*\*.+?\*\*.*?)\*/,
-  map: (result, parseInside) => ({ kind: "italic", content: parseInside(result[1]!) }),
+  map: (result, parseInside) => ({ kind: "italic", content: parseInside(result[1] ?? "") }),
 }
 
 const boldRule: Rule = {
   pattern: /\*\*(.+?)\*\*/,
-  map: (result, parseInside) => ({ kind: "bold", content: parseInside(result[1]!) }),
+  map: (result, parseInside) => ({ kind: "bold", content: parseInside(result[1] ?? "") }),
 }
 
 const italicRule: Rule = {
   pattern: /\*(.+?)\*/,
-  map: (result, parseInside) => ({ kind: "italic", content: parseInside(result[1]!) }),
+  map: (result, parseInside) => ({ kind: "italic", content: parseInside(result[1] ?? "") }),
 }
 
 const rules: Rule[] = [boldWithItalicRule, italicWithBoldRule, boldRule, italicRule]
@@ -56,11 +56,12 @@ const parseForRules = (rules: Rule[], text: string): InlineMarkdownNode[] => {
     return []
   }
 
-  if (rules.length === 0) {
+  const activeRule = rules[0]
+
+  if (activeRule === undefined) {
     return [{ kind: "text", content: text }]
   }
 
-  const activeRule = rules[0]!
   const res = activeRule.pattern.exec(text)
   if (res && (activeRule.predicate?.(res) ?? true)) {
     const { index } = res

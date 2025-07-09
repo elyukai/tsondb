@@ -1,9 +1,9 @@
-import { FunctionalComponent } from "preact"
+import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute } from "preact-iso"
 import { useEffect, useMemo, useState } from "preact/hooks"
 import { deepEqual } from "../../shared/utils/compare.js"
 import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.js"
-import { InstanceContainer } from "../../shared/utils/instances.js"
+import type { InstanceContainer } from "../../shared/utils/instances.js"
 import {
   deleteInstanceByEntityNameAndId,
   getInstanceByEntityNameAndId,
@@ -41,23 +41,24 @@ export const Instance: FunctionalComponent = () => {
           setInstance(instanceData.instance)
           setOriginalInstance(instanceData.instance)
         })
-        .catch(error => {
+        .catch((error: unknown) => {
           console.error("Error fetching entities:", error)
         })
     }
-  }, [])
+  }, [id, name])
 
   const handleSubmit = (event: Event) => {
     event.preventDefault()
     if (name && id && instance) {
       updateInstanceByEntityNameAndId(name, id, instance.content)
         .then(updatedInstance => {
-          0
           setInstance(updatedInstance.instance)
           setOriginalInstance(updatedInstance.instance)
         })
-        .catch(error => {
-          alert(`Error updating instance:\n\n${error}`)
+        .catch((error: unknown) => {
+          if (error instanceof Error) {
+            alert(`Error updating instance:\n\n${error}`)
+          }
         })
     }
   }
@@ -109,8 +110,10 @@ export const Instance: FunctionalComponent = () => {
                 .then(() => {
                   route(`/entities/${name}`)
                 })
-                .catch(error => {
-                  alert("Error deleting instance:\n\n" + error)
+                .catch((error: unknown) => {
+                  if (error instanceof Error) {
+                    alert("Error deleting instance:\n\n" + error.toString())
+                  }
                 })
             }
           }}
@@ -124,7 +127,10 @@ export const Instance: FunctionalComponent = () => {
           value={instance.content}
           instanceNamesByEntity={instanceNamesByEntity}
           getDeclFromDeclName={getDeclFromDeclName}
-          onChange={value => setInstance(container => ({ ...container!, content: value }))}
+          onChange={value => {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            setInstance(container => ({ ...container!, content: value }))
+          }}
         />
         <button type="submit" disabled={!hasChanges} class="primary">
           Save

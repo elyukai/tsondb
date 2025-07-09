@@ -1,4 +1,4 @@
-import { SerializedEntityDecl } from "../../node/schema/index.js"
+import type { SerializedEntityDecl } from "../../node/schema/index.js"
 
 const getValueAtPath = (value: unknown, path: string): unknown => {
   const parts = path.split(".")
@@ -35,11 +35,11 @@ export const getDisplayNameFromEntityInstance = (
       : locales.reduce(
           (name: string | undefined, locale) =>
             name ??
-            (getValueAtPath(localeMap![locale as LocaleMapKey], pathInLocaleMap) as
-              | string
-              | undefined),
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            (getValueAtPath(localeMap![locale], pathInLocaleMap) as string | undefined),
           undefined,
         ) ??
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           (getValueAtPath(localeMap![availableLocales[0]!], pathInLocaleMap) as
             | string
             | undefined) ??

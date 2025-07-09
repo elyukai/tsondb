@@ -1,9 +1,9 @@
-import { FunctionComponent } from "preact"
-import { SerializedArrayType } from "../../../node/schema/types/generic/ArrayType.js"
+import type { FunctionComponent } from "preact"
+import type { SerializedArrayType } from "../../../node/schema/types/generic/ArrayType.js"
 import { removeAt } from "../../../shared/utils/array.js"
 import { validateArrayConstraints } from "../../../shared/validation/array.js"
-import { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
+import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
 import { TypeInput } from "./TypeInput.js"
 import { ValidationErrors } from "./utils/ValidationErrors.js"
@@ -38,7 +38,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                   <div className="container-item-title">{i + 1}.</div>
                   <button
                     class="destructive"
-                    onClick={() => onChange(removeAt(value, i))}
+                    onClick={() => { onChange(removeAt(value, i)); }}
                     disabled={type.minItems !== undefined && value.length <= type.minItems}
                   >
                     Delete Item
@@ -50,7 +50,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                 value={item}
                 instanceNamesByEntity={instanceNamesByEntity}
                 getDeclFromDeclName={getDeclFromDeclName}
-                onChange={newItem => onChange(value.with(i, newItem))}
+                onChange={newItem => { onChange(value.with(i, newItem)); }}
               />
             </li>
           ))}
@@ -60,7 +60,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
         <div class="add-item-container">
           <button
             onClick={() =>
-              onChange([...value, createTypeSkeleton(getDeclFromDeclName, type.items)])
+              { onChange([...value, createTypeSkeleton(getDeclFromDeclName, type.items)]); }
             }
             disabled={type.maxItems !== undefined && value.length >= type.maxItems}
           >

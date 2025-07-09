@@ -1,33 +1,31 @@
 import { dirname, relative } from "node:path"
 import { discriminatorKey } from "../../../shared/enum.js"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.js"
-import { RangeBound } from "../../../shared/validation/number.js"
-import { Decl } from "../../schema/declarations/Declaration.js"
+import type { RangeBound } from "../../../shared/validation/number.js"
+import type { Decl } from "../../schema/declarations/Declaration.js"
+import type { EntityDecl } from "../../schema/declarations/EntityDecl.js"
 import {
   addEphemeralUUIDToType,
   createEntityIdentifierTypeAsDecl,
-  EntityDecl,
   isEntityDecl,
 } from "../../schema/declarations/EntityDecl.js"
-import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
+import type { EnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
-import { TypeParameter } from "../../schema/TypeParameter.js"
-import { ArrayType } from "../../schema/types/generic/ArrayType.js"
-import { EnumType } from "../../schema/types/generic/EnumType.js"
-import { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
-import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
-import { DateType } from "../../schema/types/primitives/DateType.js"
-import { FloatType, IntegerType } from "../../schema/types/primitives/NumericType.js"
-import { StringType } from "../../schema/types/primitives/StringType.js"
-import { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.js"
-import {
-  isNestedEntityMapType,
-  NestedEntityMapType,
-} from "../../schema/types/references/NestedEntityMapType.js"
-import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
-import { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.js"
-import { getParentDecl, Type } from "../../schema/types/Type.js"
+import type { ArrayType } from "../../schema/types/generic/ArrayType.js"
+import type { EnumType } from "../../schema/types/generic/EnumType.js"
+import type { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
+import type { BooleanType } from "../../schema/types/primitives/BooleanType.js"
+import type { DateType } from "../../schema/types/primitives/DateType.js"
+import type { FloatType, IntegerType } from "../../schema/types/primitives/NumericType.js"
+import type { StringType } from "../../schema/types/primitives/StringType.js"
+import type { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.js"
+import type { NestedEntityMapType } from "../../schema/types/references/NestedEntityMapType.js"
+import { isNestedEntityMapType } from "../../schema/types/references/NestedEntityMapType.js"
+import type { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
+import type { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.js"
+import type { Type } from "../../schema/types/Type.js"
+import { getParentDecl } from "../../schema/types/Type.js"
 import { ensureSpecialDirStart } from "../../utils/path.js"
 
 export type JsonSchemaRendererOptions = {
@@ -52,10 +50,7 @@ const renderArrayType: RenderFn<ArrayType> = (options, type) => ({
   uniqueItems: type.uniqueItems,
 })
 
-const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, boolean>>>> = (
-  options,
-  type,
-) => ({
+const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (options, type) => ({
   type: "object",
   properties: Object.fromEntries(
     Object.entries(type.properties).map(([name, config]) => [
@@ -119,7 +114,7 @@ const renderStringType: RenderFn<StringType> = (_options, type) => ({
   pattern: type.pattern?.source,
 })
 
-const renderTypeArgumentType: RenderFn<TypeArgumentType<TypeParameter>> = (_options, _type) => {
+const renderTypeArgumentType: RenderFn<TypeArgumentType> = (_options, _type) => {
   throw new TypeError("TypeArgumentType is not supported in JSON Schema.")
 }
 
@@ -155,7 +150,7 @@ const renderEnumType: RenderFn<EnumType> = (options, type) => ({
       },
       ...(caseDef.type === null ? {} : { [caseName]: renderType(options, caseDef.type) }),
     },
-    required: [discriminatorKey, ...(caseDef === null ? [] : [caseName])],
+    required: [discriminatorKey, ...(caseDef.type === null ? [] : [caseName])],
   })),
 })
 
@@ -202,10 +197,7 @@ const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) => ({
   ...renderEnumType(options, decl.type.value),
 })
 
-const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>> = (
-  options,
-  decl,
-) => ({
+const renderTypeAliasDecl: RenderFn<TypeAliasDecl> = (options, decl) => ({
   description: decl.comment,
   deprecated: decl.isDeprecated,
   ...renderType(options, decl.type.value),

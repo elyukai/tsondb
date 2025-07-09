@@ -1,4 +1,4 @@
-import { FunctionalComponent } from "preact"
+import type { FunctionalComponent } from "preact"
 import { toTitleCase } from "../../shared/utils/string.js"
 import { getAllEntities } from "../api.js"
 import { Layout } from "../components/Layout.js"

@@ -3,10 +3,11 @@ import { mkdir, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, extname, join, relative } from "node:path"
 import { fileURLToPath } from "node:url"
 import { commonPrefix } from "../../../shared/utils/string.js"
-import { Schema } from "../../Schema.js"
+import type { Schema } from "../../Schema.js"
 import { groupDeclarationsBySourceUrl } from "../../schema/declarations/Declaration.js"
-import { Output } from "../Output.js"
-import { render, TypeScriptRendererOptions } from "./render.js"
+import type { Output } from "../Output.js"
+import type { TypeScriptRendererOptions } from "./render.js"
+import { render } from "./render.js"
 
 const debug = Debug("tsondb:renderer:ts")
 
@@ -31,7 +32,7 @@ export const TypeScriptOutput = (options: {
           const newDir = join(options.targetPath, relativePath)
           const newPath = join(newDir, basename(sourcePath, extname(sourcePath)) + extension)
           await mkdir(newDir, { recursive: true })
-          await writeFile(newPath, render(options.rendererOptions, decls!), {
+          await writeFile(newPath, render(options.rendererOptions, decls ?? []), {
             encoding: "utf-8",
           })
         }

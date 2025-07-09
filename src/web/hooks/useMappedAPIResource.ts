@@ -1,29 +1,30 @@
 import { useCallback, useEffect, useState } from "preact/hooks"
 
-export const useMappedAPIResource = <T, A extends any[], U>(
+export const useMappedAPIResource = <T, A extends unknown[], U>(
   apiFn: (...args: A) => Promise<T>,
   mapFn: (data: T) => U,
   ...args: A
 ): [U | undefined, () => Promise<void>] => {
   const [data, setData] = useState<U>()
 
-  const fetchData = () =>
-    apiFn(...args)
-      .then(result => {
+  const fetchData = useCallback(
+    () =>
+      apiFn(...args).then(result => {
         setData(mapFn(result))
-      })
-      .catch(err => {
-        console.log(err)
-      })
+      }),
+    [apiFn, args, mapFn],
+  )
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData().catch((err: unknown) => {
+      console.log(err)
+    })
+  }, [fetchData])
 
   const reload = useCallback(() => {
     setData(undefined)
     return fetchData()
-  }, [apiFn, ...args])
+  }, [fetchData])
 
   return [data, reload]
 }

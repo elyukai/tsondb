@@ -1,7 +1,12 @@
 import Debug from "debug"
-import express from "express"
+import express, { type Request } from "express"
 import { join } from "node:path"
-import { GetAllGitBranchesResponseBody, GitStatusResponseBody } from "../../../shared/api.js"
+import type {
+  CreateBranchRequestBody,
+  CreateCommitRequestBody,
+  GetAllGitBranchesResponseBody,
+  GitStatusResponseBody,
+} from "../../../shared/api.js"
 import { hasFileChanges } from "../../../shared/utils/git.js"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.js"
 import { serializeEntityDecl } from "../../schema/index.js"
@@ -32,6 +37,7 @@ gitApi.get("/status", async (req, res) => {
   attachGitStatusToInstancesByEntityName(
     req.instancesByEntityName,
     req.dataRoot,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     req.gitRoot!,
     status,
   )
@@ -46,6 +52,7 @@ gitApi.get("/status", async (req, res) => {
           .filter(instance => hasFileChanges(instance.gitStatus))
           .map(instance =>
             getInstanceContainerOverview(
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               serializeEntityDecl(req.entitiesByName[entityName]!),
               instance,
               locales,
@@ -142,7 +149,9 @@ gitApi.post("/unstage/:entityName/:instanceId", async (req, res) => {
   }
 })
 
-gitApi.post("/commit", async (req, res) => {
+type CreateCommitRequest = Request<unknown, unknown, CreateCommitRequestBody>
+
+gitApi.post("/commit", async (req: CreateCommitRequest, res) => {
   const message = req.body.message
 
   if (typeof message !== "string" || message.length === 0) {
@@ -153,7 +162,7 @@ gitApi.post("/commit", async (req, res) => {
   try {
     await req.git.commit(message)
     res.status(200).send("Commit successful")
-  } catch (error) {
+  } catch {
     res.status(500).send("Commit failed")
   }
 })
@@ -162,7 +171,7 @@ gitApi.post("/push", async (req, res) => {
   try {
     await req.git.push()
     res.status(200).send("Push successful")
-  } catch (error) {
+  } catch {
     res.status(500).send("Push failed")
   }
 })
@@ -171,7 +180,7 @@ gitApi.post("/pull", async (req, res) => {
   try {
     await req.git.pull()
     res.status(200).send("Pull successful")
-  } catch (error) {
+  } catch {
     res.status(500).send("Pull failed")
   }
 })
@@ -187,7 +196,9 @@ gitApi.get("/branch", async (req, res) => {
   res.json(body)
 })
 
-gitApi.post("/branch", async (req, res) => {
+type CreateBranchRequest = Request<unknown, unknown, CreateBranchRequestBody>
+
+gitApi.post("/branch", async (req: CreateBranchRequest, res) => {
   const branchName = req.body.branchName
 
   if (typeof branchName !== "string" || branchName.length === 0) {
@@ -199,7 +210,7 @@ gitApi.post("/branch", async (req, res) => {
     await req.git.checkoutLocalBranch(branchName)
     await reinit(req)
     res.status(200).send(`Creation of branch "${branchName}" successful`)
-  } catch (error) {
+  } catch {
     res.status(500).send(`Creation of branch "${branchName}" failed`)
   }
 })
@@ -208,7 +219,7 @@ gitApi.post("/branch/:branchName", async (req, res) => {
   try {
     await req.git.checkout(req.params.branchName)
     res.status(200).send(`Switch to branch "${req.params.branchName}" successful`)
-  } catch (error) {
+  } catch {
     res.status(500).send(`Switch to branch "${req.params.branchName}" failed`)
   }
 })

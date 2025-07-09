@@ -1,22 +1,26 @@
 import { Lazy } from "../../../shared/utils/lazy.js"
-import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
-import { SerializedTypeParameter, serializeTypeParameter, TypeParameter } from "../TypeParameter.js"
+import type { GetReferences, Node, Serializer } from "../Node.js";
+import { NodeKind } from "../Node.js"
+import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js";
+import { serializeTypeParameter } from "../TypeParameter.js"
+import type {
+  SerializedType,
+  Type} from "../types/Type.js";
 import {
   getReferencesForType,
   resolveTypeArgumentsInType,
-  SerializedType,
   serializeType,
-  Type,
   validate,
 } from "../types/Type.js"
-import { ValidatorHelpers } from "../validation/type.js"
-import {
+import type { ValidatorHelpers } from "../validation/type.js"
+import type {
   BaseDecl,
   GetNestedDeclarations,
+  SerializedBaseDecl,
+  TypeArguments} from "./Declaration.js";
+import {
   getNestedDeclarations,
   getTypeArgumentsRecord,
-  SerializedBaseDecl,
-  TypeArguments,
   validateDeclName,
 } from "./Declaration.js"
 
@@ -100,7 +104,7 @@ export const TypeAliasDecl = <Name extends string, T extends Type>(
 
 export { TypeAliasDecl as TypeAlias }
 
-export const isTypeAliasDecl = (node: Node): node is TypeAliasDecl<string, Type, TypeParameter[]> =>
+export const isTypeAliasDecl = (node: Node): node is TypeAliasDecl =>
   node.kind === NodeKind.TypeAliasDecl
 
 export const getNestedDeclarationsInTypeAliasDecl: GetNestedDeclarations<TypeAliasDecl> = (

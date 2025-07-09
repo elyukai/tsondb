@@ -17,6 +17,7 @@ export const mergeObjects = <T>(
   Object.entries(obj2).reduce(
     (acc, [key, value]) => ({
       ...acc,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       [key]: Object.hasOwn(acc, key) ? solveConflict(acc[key]!, value) : value,
     }),
     obj1,
@@ -24,7 +25,7 @@ export const mergeObjects = <T>(
 
 export type Leaves<T> = T extends object
   ? {
-      [K in keyof T]: T[K] extends any[]
+      [K in keyof T]: T[K] extends unknown[]
         ? never
         : `${Exclude<K, symbol>}${Leaves<T[K]> extends never ? "" : `.${Leaves<T[K]>}`}`
     }[keyof T]

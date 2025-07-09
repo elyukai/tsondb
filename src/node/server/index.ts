@@ -1,12 +1,12 @@
 import Debug from "debug"
 import express from "express"
 import { join } from "node:path"
-import { SimpleGit } from "simple-git"
-import { InstancesByEntityName } from "../../shared/utils/instances.js"
-import { ModelContainer } from "../ModelContainer.js"
-import { Decl } from "../schema/declarations/Declaration.js"
-import { EntityDecl } from "../schema/declarations/EntityDecl.js"
-import { ReferencesToInstances } from "../utils/references.js"
+import type { SimpleGit } from "simple-git"
+import type { InstancesByEntityName } from "../../shared/utils/instances.js"
+import type { ModelContainer } from "../ModelContainer.js"
+import type { Decl } from "../schema/declarations/Declaration.js"
+import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
+import type { ReferencesToInstances } from "../utils/references.js"
 import { api } from "./api/index.js"
 import { init } from "./init.js"
 
@@ -94,6 +94,6 @@ export const createServer = async (
   })
 
   app.listen(port, () => {
-    debug(`${name} listening on http://localhost:${port}`)
+    debug(`${name} listening on http://localhost:${port.toString()}`)
   })
 }

@@ -1,4 +1,5 @@
-import { FunctionComponent, render } from "preact"
+import type { FunctionComponent} from "preact";
+import { render } from "preact"
 import { LocationProvider, Route, Router } from "preact-iso"
 import { CreateInstance } from "./routes/CreateInstance.js"
 import { Entity } from "./routes/Entity.js"

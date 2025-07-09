@@ -1,6 +1,6 @@
-import { SerializedType } from "../../node/schema/types/Type.js"
+import type { SerializedType } from "../../node/schema/types/Type.js"
 import { assertExhaustive } from "../../shared/utils/typeSafety.js"
-import { GetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.js"
+import type { GetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.js"
 
 export const createTypeSkeleton = (
   getDeclFromDeclName: GetDeclFromDeclName,
@@ -56,7 +56,11 @@ export const createTypeSkeleton = (
       return {}
 
     case "EnumType": {
-      const firstCase = Object.entries(type.values)[0]!
+      const firstCase = Object.entries(type.values)[0]
+
+      if (firstCase === undefined) {
+        return {}
+      }
 
       return {
         kind: firstCase[0],

@@ -1,8 +1,8 @@
 import { enumOfObject } from "../../shared/utils/enum.js"
-import { InstancesByEntityName } from "../../shared/utils/instances.js"
+import type { InstancesByEntityName } from "../../shared/utils/instances.js"
 import { assertExhaustive } from "../../shared/utils/typeSafety.js"
-import { Decl } from "./declarations/Declaration.js"
-import { Type } from "./types/Type.js"
+import type { Decl } from "./declarations/Declaration.js"
+import type { Type } from "./types/Type.js"
 
 export interface NodeKind {
   EntityDecl: "EntityDecl"
@@ -143,7 +143,7 @@ export interface Validators {
 
 export const createValidators = (instancesByEntityName: InstancesByEntityName): Validators => ({
   checkReferentialIntegrity: ({ name, value }) =>
-    instancesByEntityName[name]!.some(
+    instancesByEntityName[name]?.some(
       instance =>
         typeof instance.content === "object" &&
         instance.content !== null &&

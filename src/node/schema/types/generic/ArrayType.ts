@@ -1,21 +1,25 @@
 import { parallelizeErrors } from "../../../../shared/utils/validation.js"
 import { validateArrayConstraints } from "../../../../shared/validation/array.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
-import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
+import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
+import { getNestedDeclarations } from "../../declarations/Declaration.js"
+import type { GetReferences, Node, Serializer } from "../../Node.js"
+import { NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
-import { Validator } from "../../validation/type.js"
-import {
+import type { Validator } from "../../validation/type.js"
+import type {
   BaseType,
+  SerializedBaseType,
+  SerializedType,
+  StructureFormatter,
+  Type,
+} from "../Type.js"
+import {
   formatValue,
   getReferencesForType,
   removeParentKey,
   resolveTypeArgumentsInType,
-  SerializedBaseType,
-  SerializedType,
   serializeType,
-  StructureFormatter,
-  Type,
   validate,
 } from "../Type.js"
 
@@ -82,7 +86,7 @@ export const validateArrayType: Validator<ArrayType> = (helpers, type, value) =>
   return parallelizeErrors([
     ...validateArrayConstraints(type, value),
     ...value.map((item, index) =>
-      wrapErrorsIfAny(`at index ${index}`, validate(helpers, type.items, item)),
+      wrapErrorsIfAny(`at index ${index.toString()}`, validate(helpers, type.items, item)),
     ),
   ])
 }

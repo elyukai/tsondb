@@ -1,6 +1,6 @@
 import { join } from "path"
-import { StatusResult } from "simple-git"
-import { GitFileStatus, GitFileStatusCode } from "../../shared/utils/git.js"
+import type { StatusResult } from "simple-git"
+import type { GitFileStatus, GitFileStatusCode } from "../../shared/utils/git.js"
 
 export const getGitFileStatusFromStatusResult = (
   statusResult: StatusResult,

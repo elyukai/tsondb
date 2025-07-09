@@ -1,9 +1,11 @@
+import type {
+  Decl} from "./schema/declarations/Declaration.js";
 import {
-  Decl,
   getNestedDeclarations,
   getParameterNames,
 } from "./schema/declarations/Declaration.js"
-import { EntityDecl, isEntityDecl } from "./schema/declarations/EntityDecl.js"
+import type { EntityDecl} from "./schema/declarations/EntityDecl.js";
+import { isEntityDecl } from "./schema/declarations/EntityDecl.js"
 import { isStringType } from "./schema/types/primitives/StringType.js"
 import { isNestedEntityMapType } from "./schema/types/references/NestedEntityMapType.js"
 import { findTypeAtPath } from "./schema/types/Type.js"

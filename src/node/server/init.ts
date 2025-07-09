@@ -1,14 +1,15 @@
 import { simpleGit } from "simple-git"
-import { InstancesByEntityName } from "../../shared/utils/instances.js"
-import { ModelContainer } from "../ModelContainer.js"
-import { EntityDecl, isEntityDecl } from "../schema/declarations/EntityDecl.js"
+import type { InstancesByEntityName } from "../../shared/utils/instances.js"
+import type { ModelContainer } from "../ModelContainer.js"
+import type { EntityDecl} from "../schema/declarations/EntityDecl.js";
+import { isEntityDecl } from "../schema/declarations/EntityDecl.js"
 import { resolveTypeArgumentsInDecls } from "../schema/index.js"
 import {
   attachGitStatusToInstancesByEntityName,
   getInstancesByEntityName,
 } from "../utils/instances.js"
 import { getReferencesToInstances } from "../utils/references.js"
-import { TSONDBRequestLocals } from "./index.js"
+import type { TSONDBRequestLocals } from "./index.js"
 
 const getGit = async (modelContainer: ModelContainer) => {
   const git = simpleGit({ baseDir: modelContainer.dataRootPath })

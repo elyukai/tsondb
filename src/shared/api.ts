@@ -1,5 +1,5 @@
-import { SerializedDecl } from "../node/schema/declarations/Declaration.js"
-import { InstanceContainer, InstanceContainerOverview } from "./utils/instances.js"
+import type { SerializedDecl } from "../node/schema/declarations/Declaration.js"
+import type { InstanceContainer, InstanceContainerOverview } from "./utils/instances.js"
 
 export interface GetAllDeclarationsResponseBody<D extends SerializedDecl = SerializedDecl> {
   declarations: { declaration: D; instanceCount: number }[]
@@ -54,4 +54,12 @@ export interface GitStatusResponseBody {
 export interface GetAllGitBranchesResponseBody {
   allBranches: string[]
   currentBranch: string
+}
+
+export interface CreateCommitRequestBody {
+  message: string
+}
+
+export interface CreateBranchRequestBody {
+  branchName: string
 }

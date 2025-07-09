@@ -1,6 +1,6 @@
-import { FunctionComponent } from "preact"
+import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
-import { SerializedFloatType } from "../../../node/schema/types/primitives/FloatType.js"
+import type { SerializedFloatType } from "../../../node/schema/types/primitives/FloatType.js"
 import { validateNumberConstraints } from "../../../shared/validation/number.js"
 import { ValidationErrors } from "./utils/ValidationErrors.js"
 

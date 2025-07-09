@@ -1,10 +1,10 @@
-import { FunctionComponent } from "preact"
-import { SerializedObjectType } from "../../../node/schema/types/generic/ObjectType.js"
+import type { FunctionComponent } from "preact"
+import type { SerializedObjectType } from "../../../node/schema/types/generic/ObjectType.js"
 import { sortObjectKeys } from "../../../shared/utils/object.js"
 import { toTitleCase } from "../../../shared/utils/string.js"
 import { validateObjectConstraints } from "../../../shared/validation/object.js"
-import { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
+import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
 import { TypeInput } from "./TypeInput.js"
 import { ValidationErrors } from "./utils/ValidationErrors.js"
@@ -59,6 +59,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = ({
                   class="destructive"
                   onClick={() => {
                     const newObj = { ...value }
+                    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
                     delete newObj[key]
                     onChange(newObj)
                   }}
@@ -73,11 +74,11 @@ export const ObjectTypeInput: FunctionComponent<Props> = ({
                 value={value[key]}
                 instanceNamesByEntity={instanceNamesByEntity}
                 getDeclFromDeclName={getDeclFromDeclName}
-                onChange={newItem =>
+                onChange={newItem => {
                   onChange(
                     sortObjectKeys({ ...value, [key]: newItem }, Object.keys(type.properties)),
                   )
-                }
+                }}
               />
             ) : null}
           </li>

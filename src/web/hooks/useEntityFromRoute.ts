@@ -1,6 +1,6 @@
 import { useRoute } from "preact-iso"
 import { useEffect, useMemo, useState } from "preact/hooks"
-import { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.js"
+import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.js"
 import { getEntityByName } from "../api.js"
 
 export const useEntityFromRoute = ():
@@ -21,7 +21,7 @@ export const useEntityFromRoute = ():
         .then(data => {
           setEntityData(data)
         })
-        .catch(error => {
+        .catch((error: unknown) => {
           console.error("Error fetching data:", error)
         })
     }

@@ -1,16 +1,16 @@
-import { FunctionComponent } from "preact"
-import { TargetedEvent } from "preact/compat"
+import type { FunctionComponent } from "preact"
+import type { TargetedEvent } from "preact/compat"
 import { useEffect, useState } from "preact/hooks"
-import { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.js"
-import { GitStatusResponseBody } from "../../shared/api.js"
+import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.js"
+import type { GitStatusResponseBody } from "../../shared/api.js"
+import type { GitFileStatus } from "../../shared/utils/git.js"
 import {
   getGitStatusForDisplay,
   getLabelForGitStatus,
-  GitFileStatus,
   isChangedInIndex,
   isChangedInWorkingDir,
 } from "../../shared/utils/git.js"
-import { InstanceContainerOverview } from "../../shared/utils/instances.js"
+import type { InstanceContainerOverview } from "../../shared/utils/instances.js"
 import {
   commitStagedFiles,
   createBranch,
@@ -69,7 +69,7 @@ const GitFileList: FunctionComponent<{
                 <li key={instance.fileName} class="git-instance-list-item">
                   <span class="title">{instance.displayName}</span>
                   <span
-                    class={`git-status git-status--${gitStatusForDisplay}`}
+                    class={`git-status git-status--${gitStatusForDisplay ?? ""}`}
                     title={getLabelForGitStatus(gitStatusForDisplay)}
                   >
                     {gitStatusForDisplay}
@@ -112,27 +112,57 @@ export const Git: FunctionComponent = () => {
     })
 
   useEffect(() => {
-    getAllEntities().then(async data => {
-      const entitiesFromServer = data.declarations.map(decl => decl.declaration)
-      setEntities(entitiesFromServer)
-      return updateGitStatus(entitiesFromServer)
-    })
+    getAllEntities()
+      .then(async data => {
+        const entitiesFromServer = data.declarations.map(decl => decl.declaration)
+        setEntities(entitiesFromServer)
+        return updateGitStatus(entitiesFromServer)
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Error fetching entities:", error.toString())
+        }
+      })
   }, [])
 
   const stage = (entityName: string, instance: InstanceContainerOverview) => {
-    stageFileOfEntity(entityName, instance.id).then(() => updateGitStatus(entities))
+    stageFileOfEntity(entityName, instance.id)
+      .then(() => updateGitStatus(entities))
+      .catch((error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Error staging instance:", error.toString())
+        }
+      })
   }
 
   const stageAll = () => {
-    stageAllFiles().then(() => updateGitStatus(entities))
+    stageAllFiles()
+      .then(() => updateGitStatus(entities))
+      .catch((error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Error staging all instances:", error.toString())
+        }
+      })
   }
 
   const unstage = (entityName: string, instance: InstanceContainerOverview) => {
-    unstageFileOfEntity(entityName, instance.id).then(() => updateGitStatus(entities))
+    unstageFileOfEntity(entityName, instance.id)
+      .then(() => updateGitStatus(entities))
+      .catch((error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Error unstaging instance:", error.toString())
+        }
+      })
   }
 
   const unstageAll = () => {
-    unstageAllFiles().then(() => updateGitStatus(entities))
+    unstageAllFiles()
+      .then(() => updateGitStatus(entities))
+      .catch((error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Error unstaging all instances:", error.toString())
+        }
+      })
   }
 
   const commit = () => {
@@ -141,10 +171,16 @@ export const Git: FunctionComponent = () => {
       indexFiles.length > 0 &&
       confirm("Do you want to commit all staged files?")
     ) {
-      commitStagedFiles(commitMessage).then(() => {
-        setCommitMessage("")
-        return updateGitStatus(entities)
-      })
+      commitStagedFiles(commitMessage)
+        .then(() => {
+          setCommitMessage("")
+          return updateGitStatus(entities)
+        })
+        .catch((error: unknown) => {
+          if (error instanceof Error) {
+            console.error("Error committing instances:", error.toString())
+          }
+        })
     }
   }
 
@@ -154,7 +190,7 @@ export const Git: FunctionComponent = () => {
         alert("Pushed commits successfully")
         return updateGitStatus(entities)
       })
-      .catch(error => {
+      .catch((error: unknown) => {
         console.error("Error pushing commits:", error)
       })
   }
@@ -165,7 +201,7 @@ export const Git: FunctionComponent = () => {
         alert("Pulled commits successfully")
         return updateGitStatus(entities)
       })
-      .catch(error => {
+      .catch((error: unknown) => {
         console.error("Error pulling commits:", error)
       })
   }
@@ -187,8 +223,10 @@ export const Git: FunctionComponent = () => {
       .then(() => {
         return updateGitStatus(entities)
       })
-      .catch(error => {
-        alert("Error switching branch: " + error)
+      .catch((error: unknown) => {
+        if (error instanceof Error) {
+          alert("Error switching branch:" + error.toString())
+        }
       })
   }
 
@@ -197,19 +235,31 @@ export const Git: FunctionComponent = () => {
       .then(() => {
         return updateGitStatus(entities)
       })
-      .catch(error => {
-        alert("Error switching branch: " + error)
+      .catch((error: unknown) => {
+        if (error instanceof Error) {
+          alert("Error switching branch: " + error.toString())
+        }
       })
   }
 
   return (
     <aside class="git">
       <h2 class="h1-faded">Version Control</h2>
-      <button onClick={() => setIsOpen(b => !b)}>File changes</button>
+      <button
+        onClick={() => {
+          setIsOpen(b => !b)
+        }}
+      >
+        File changes
+      </button>
       <div className={`git-overlay ${isOpen ? "git-overlay--open" : ""}`}>
         <div class="sync">
-          <button onClick={push}>Push{commitsAhead > 0 ? ` (${commitsAhead})` : ""}</button>
-          <button onClick={pull}>Pull{commitsBehind > 0 ? ` (${commitsBehind})` : ""}</button>
+          <button onClick={push}>
+            Push{commitsAhead > 0 ? ` (${commitsAhead.toString()})` : ""}
+          </button>
+          <button onClick={pull}>
+            Pull{commitsBehind > 0 ? ` (${commitsBehind.toString()})` : ""}
+          </button>
         </div>
         <div className="branch">
           <div className="select-wrapper">
@@ -227,7 +277,9 @@ export const Git: FunctionComponent = () => {
           <input
             type="text"
             value={commitMessage}
-            onInput={event => setCommitMessage(event.currentTarget.value)}
+            onInput={event => {
+              setCommitMessage(event.currentTarget.value)
+            }}
             placeholder="added X to instance Y, …"
           />
           <button onClick={commit} disabled={commitMessage.length === 0 || indexFiles.length === 0}>

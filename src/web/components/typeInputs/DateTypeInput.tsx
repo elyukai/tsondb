@@ -1,5 +1,5 @@
-import { FunctionComponent } from "preact"
-import { SerializedDateType } from "../../../node/schema/types/primitives/DateType.js"
+import type { FunctionComponent } from "preact"
+import type { SerializedDateType } from "../../../node/schema/types/primitives/DateType.js"
 import { validateDateConstraints } from "../../../shared/validation/date.js"
 import { ValidationErrors } from "./utils/ValidationErrors.js"
 

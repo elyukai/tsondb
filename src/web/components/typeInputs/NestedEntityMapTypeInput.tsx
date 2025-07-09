@@ -1,9 +1,9 @@
-import { FunctionComponent } from "preact"
+import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
-import { SerializedNestedEntityMapType } from "../../../node/schema/types/references/NestedEntityMapType.js"
+import type { SerializedNestedEntityMapType } from "../../../node/schema/types/references/NestedEntityMapType.js"
 import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.js"
-import { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
+import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
 import { Select } from "../Select.js"
 import { TypeInput } from "./TypeInput.js"
@@ -40,7 +40,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
                 <div className="container-item-title">
                   <span>
                     <strong>
-                      {instanceNamesByEntity[type.secondaryEntity]!.find(
+                      {instanceNamesByEntity[type.secondaryEntity]?.find(
                         instance => instance.id === key,
                       )?.name ?? key}
                     </strong>{" "}
@@ -52,6 +52,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
                     class="destructive"
                     onClick={() => {
                       const newObj = { ...value }
+                      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
                       delete newObj[key]
                       onChange(newObj)
                     }}
@@ -65,9 +66,9 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
                 value={item}
                 instanceNamesByEntity={instanceNamesByEntity}
                 getDeclFromDeclName={getDeclFromDeclName}
-                onChange={newItem =>
+                onChange={newItem => {
                   onChange(sortObjectKeysAlphabetically({ ...value, [key]: newItem }))
-                }
+                }}
               />
             </li>
           ))}
@@ -76,7 +77,9 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
       <div class="add-item-container">
         <Select
           value={newKey}
-          onInput={event => setNewKey(event.currentTarget.value)}
+          onInput={event => {
+            setNewKey(event.currentTarget.value)
+          }}
           disabled={secondaryInstances.length === 0}
         >
           {secondaryInstances.length === 0 ? (
@@ -89,7 +92,9 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
             </option>
           )}
           {secondaryInstances.map(instance => (
-            <option value={instance.id}>{instance.name}</option>
+            <option key={instance.id} value={instance.id}>
+              {instance.name}
+            </option>
           ))}
         </Select>
         <button
@@ -97,7 +102,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
             onChange(
               sortObjectKeysAlphabetically({
                 ...value,
-                [newKey as string]: createTypeSkeleton(getDeclFromDeclName, type.type),
+                [newKey]: createTypeSkeleton(getDeclFromDeclName, type.type),
               }),
             )
             setNewKey("")

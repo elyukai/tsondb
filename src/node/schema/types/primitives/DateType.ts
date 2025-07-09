@@ -1,7 +1,10 @@
-import { DateConstraints, validateDateConstraints } from "../../../../shared/validation/date.js"
-import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
-import { Validator } from "../../validation/type.js"
-import { BaseType, removeParentKey, SerializedBaseType, StructureFormatter } from "../Type.js"
+import type { DateConstraints} from "../../../../shared/validation/date.js";
+import { validateDateConstraints } from "../../../../shared/validation/date.js"
+import type { GetReferences, Node, Serializer } from "../../Node.js";
+import { NodeKind } from "../../Node.js"
+import type { Validator } from "../../validation/type.js"
+import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.js";
+import { removeParentKey } from "../Type.js"
 
 export interface DateType extends BaseType, DateConstraints {
   kind: NodeKind["DateType"]

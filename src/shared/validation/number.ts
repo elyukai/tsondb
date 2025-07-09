@@ -41,7 +41,7 @@ export const validateRangeBound = (
 
   if (!operator(value, normalizedRangeBound.value)) {
     return RangeError(
-      `expected a value ${description} ${normalizedRangeBound.value}, but got ${value}`,
+      `expected a value ${description} ${normalizedRangeBound.value.toString()}, but got ${value.toString()}`,
     )
   }
 
@@ -57,7 +57,9 @@ export const validateMultipleOf = (
   }
 
   if (value % multipleOf !== 0) {
-    return RangeError(`expected a value that is a multiple of ${multipleOf}, but got ${value}`)
+    return RangeError(
+      `expected a value that is a multiple of ${multipleOf.toString()}, but got ${value.toString()}`,
+    )
   }
 
   return

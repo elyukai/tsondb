@@ -1,9 +1,6 @@
-import { FunctionalComponent } from "preact"
-import {
-  BlockMarkdownNode,
-  InlineMarkdownNode,
-  parseBlockMarkdown,
-} from "../../../../shared/utils/markdown.js"
+import type { FunctionalComponent } from "preact"
+import type { BlockMarkdownNode, InlineMarkdownNode } from "../../../../shared/utils/markdown.js"
+import { parseBlockMarkdown } from "../../../../shared/utils/markdown.js"
 
 type Props = {
   string: string
@@ -11,7 +8,7 @@ type Props = {
 
 export const Markdown: FunctionalComponent<Props> = ({ string }) => {
   const blocks = parseBlockMarkdown(string)
-  return blocks.map((block, i) => <BlockMarkdown key={`md-block-${i}`} node={block} />)
+  return blocks.map((block, i) => <BlockMarkdown key={`md-block-${i.toString()}`} node={block} />)
 }
 
 const BlockMarkdown: FunctionalComponent<{ node: BlockMarkdownNode }> = ({ node }) => {

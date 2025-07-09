@@ -9,16 +9,20 @@ const lastElement = <T>(arr: T[]) => arr[arr.length - 1]
 const isAllUppercase = (str: string) => str === str.toUpperCase()
 
 export const splitStringParts = (str: string): string[] =>
-  [...str].reduce((acc: string[], char, i, strArr) => {
+  [...new Intl.Segmenter().segment(str)].reduce((acc: string[], segment, i, strArr) => {
+    const char = segment.segment
+
     if (acc.length === 0) {
       return letterOrDigit.test(char) ? [char] : acc
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const lastPart = lastElement(acc)!
 
     if (uppercase.test(char)) {
       const lastCharOfLastPart = lastChar(lastPart)
-      const nextChar = strArr[i + 1]
+      const nextSegment = strArr[i + 1]
+      const nextChar = nextSegment?.segment
 
       if (
         lastCharOfLastPart === undefined ||

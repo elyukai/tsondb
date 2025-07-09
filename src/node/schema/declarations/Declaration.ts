@@ -1,50 +1,41 @@
 import { assertExhaustive } from "../../../shared/utils/typeSafety.js"
-import { BaseNode, GetReferences, Node, NodeKind, Serializer } from "../Node.js"
-import { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js"
+import type { BaseNode, GetReferences, Node, Serializer } from "../Node.js"
+import { NodeKind } from "../Node.js"
+import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js"
 import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.js"
-import {
-  EnumCaseDecl,
-  getNestedDeclarationsInEnumType,
-  SerializedEnumCaseDecl,
-} from "../types/generic/EnumType.js"
-import {
-  getNestedDeclarationsInObjectType,
-  ObjectType,
-  SerializedObjectType,
-} from "../types/generic/ObjectType.js"
+import type { EnumCaseDecl, SerializedEnumCaseDecl } from "../types/generic/EnumType.js"
+import { getNestedDeclarationsInEnumType } from "../types/generic/EnumType.js"
+import { getNestedDeclarationsInObjectType } from "../types/generic/ObjectType.js"
 import { getNestedDeclarationsInIncludeIdentifierType } from "../types/references/IncludeIdentifierType.js"
 import { getNestedDeclarationsInNestedEntityMapType } from "../types/references/NestedEntityMapType.js"
 import { getNestedDeclarationsInReferenceIdentifierType } from "../types/references/ReferenceIdentifierType.js"
-import { SerializedType, Type } from "../types/Type.js"
-import { ValidatorHelpers } from "../validation/type.js"
+import type { SerializedType, Type } from "../types/Type.js"
+import type { ValidatorHelpers } from "../validation/type.js"
+import type { EntityDecl, SerializedEntityDecl } from "./EntityDecl.js"
 import {
-  EntityDecl,
   getNestedDeclarationsInEntityDecl,
   getReferencesForEntityDecl,
   isEntityDecl,
   resolveTypeArgumentsInEntityDecl,
-  SerializedEntityDecl,
   serializeEntityDecl,
   validateEntityDecl,
 } from "./EntityDecl.js"
+import type { EnumDecl, SerializedEnumDecl } from "./EnumDecl.js"
 import {
-  EnumDecl,
   getNestedDeclarationsInEnumDecl,
   getReferencesForEnumDecl,
   isEnumDecl,
   resolveTypeArgumentsInEnumDecl,
-  SerializedEnumDecl,
   serializeEnumDecl,
   validateEnumDecl,
 } from "./EnumDecl.js"
+import type { SerializedTypeAliasDecl, TypeAliasDecl } from "./TypeAliasDecl.js"
 import {
   getNestedDeclarationsInTypeAliasDecl,
   getReferencesForTypeAliasDecl,
   isTypeAliasDecl,
   resolveTypeArgumentsInTypeAliasDecl,
-  SerializedTypeAliasDecl,
   serializeTypeAliasDecl,
-  TypeAliasDecl,
   validateTypeAliasDecl,
 } from "./TypeAliasDecl.js"
 
@@ -62,19 +53,22 @@ export const getTypeArgumentsRecord = <Params extends TypeParameter[]>(
   decl: DeclP<Params>,
   args: TypeArguments<Params>,
 ): Record<string, Type> =>
-  Object.fromEntries(args.map((arg, i) => [decl.parameters[i]!.name, arg] as const))
+  Object.fromEntries(
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    args.slice(0, decl.parameters.length).map((arg, i) => [decl.parameters[i]!.name, arg] as const),
+  )
 
 export type Decl = EntityDecl | EnumDecl | TypeAliasDecl
 
 export type SerializedDecl = SerializedEntityDecl | SerializedEnumDecl | SerializedTypeAliasDecl
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
-  | EntityDecl<string, ObjectType>
+  | EntityDecl
   | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
   | TypeAliasDecl<string, Type, Params>
 
 export type SerializedDeclP<Params extends SerializedTypeParameter[] = SerializedTypeParameter[]> =
-  | SerializedEntityDecl<string, SerializedObjectType>
+  | SerializedEntityDecl
   | SerializedEnumDecl<string, Record<string, SerializedEnumCaseDecl>, Params>
   | SerializedTypeAliasDecl<string, SerializedType, Params>
 

@@ -1,4 +1,4 @@
-import { FunctionalComponent } from "preact"
+import type { FunctionalComponent } from "preact"
 import { Layout } from "../components/Layout.js"
 
 export const NotFound: FunctionalComponent = () => {

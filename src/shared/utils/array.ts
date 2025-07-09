@@ -1,6 +1,8 @@
 export const removeAt = <T>(arr: T[], index: number): T[] => {
   if (index < 0 || index >= arr.length) {
-    throw new RangeError(`index ${index} is out of bounds for array of length ${arr.length}`)
+    throw new RangeError(
+      `index ${index.toString()} is out of bounds for array of length ${arr.length.toString()}`,
+    )
   }
 
   return [...arr.slice(0, index), ...arr.slice(index + 1)]
@@ -8,7 +10,9 @@ export const removeAt = <T>(arr: T[], index: number): T[] => {
 
 export const insertAt = <T>(arr: T[], index: number, item: T): T[] => {
   if (index < 0 || index > arr.length) {
-    throw new RangeError(`index ${index} is out of bounds for array of length ${arr.length}`)
+    throw new RangeError(
+      `index ${index.toString()} is out of bounds for array of length ${arr.length.toString()}`,
+    )
   }
 
   return [...arr.slice(0, index), item, ...arr.slice(index)]

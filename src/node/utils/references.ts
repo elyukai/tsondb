@@ -1,6 +1,7 @@
 import { difference, removeAt } from "../../shared/utils/array.js"
-import { InstanceContainer } from "../../shared/utils/instances.js"
-import { EntityDecl, getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.js"
+import type { InstanceContainer } from "../../shared/utils/instances.js"
+import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
+import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.js"
 
 export type ReferencesToInstances = {
   [instanceId: string]: string[]
@@ -85,10 +86,8 @@ export const updateReferencesToInstances = (
       )
     }
 
-    const oldReferences =
-      oldInstance === undefined ? [] : getReferencesForEntityDecl(entity, oldInstance)
-    const newReferences =
-      newInstance === undefined ? [] : getReferencesForEntityDecl(entity, newInstance)
+    const oldReferences = getReferencesForEntityDecl(entity, oldInstance)
+    const newReferences = getReferencesForEntityDecl(entity, newInstance)
 
     const { added, removed } = difference(oldReferences, newReferences)
 

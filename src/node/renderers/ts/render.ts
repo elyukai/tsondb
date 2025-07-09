@@ -3,34 +3,35 @@ import { dirname, relative } from "node:path"
 import { discriminatorKey } from "../../../shared/enum.js"
 import { toCamelCase } from "../../../shared/utils/string.js"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.js"
-import { Decl } from "../../schema/declarations/Declaration.js"
+import type { Decl } from "../../schema/declarations/Declaration.js"
+import type { EntityDecl } from "../../schema/declarations/EntityDecl.js"
 import {
   addEphemeralUUIDToType,
   createEntityIdentifierTypeAsDecl,
-  EntityDecl,
   isEntityDecl,
 } from "../../schema/declarations/EntityDecl.js"
-import { EnumDecl } from "../../schema/declarations/EnumDecl.js"
+import type { EnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.js"
-import { TypeParameter } from "../../schema/TypeParameter.js"
-import { ArrayType } from "../../schema/types/generic/ArrayType.js"
-import { EnumType } from "../../schema/types/generic/EnumType.js"
-import { isObjectType, MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
-import { BooleanType } from "../../schema/types/primitives/BooleanType.js"
-import { DateType } from "../../schema/types/primitives/DateType.js"
-import { NumericType } from "../../schema/types/primitives/NumericType.js"
-import { StringType } from "../../schema/types/primitives/StringType.js"
-import { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.js"
-import {
-  isNestedEntityMapType,
-  NestedEntityMapType,
-} from "../../schema/types/references/NestedEntityMapType.js"
-import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
-import { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.js"
-import { getParentDecl, Type } from "../../schema/types/Type.js"
+import type { TypeParameter } from "../../schema/TypeParameter.js"
+import type { ArrayType } from "../../schema/types/generic/ArrayType.js"
+import type { EnumType } from "../../schema/types/generic/EnumType.js"
+import type { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.js"
+import { isObjectType } from "../../schema/types/generic/ObjectType.js"
+import type { BooleanType } from "../../schema/types/primitives/BooleanType.js"
+import type { DateType } from "../../schema/types/primitives/DateType.js"
+import type { NumericType } from "../../schema/types/primitives/NumericType.js"
+import type { StringType } from "../../schema/types/primitives/StringType.js"
+import type { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.js"
+import type { NestedEntityMapType } from "../../schema/types/references/NestedEntityMapType.js"
+import { isNestedEntityMapType } from "../../schema/types/references/NestedEntityMapType.js"
+import type { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.js"
+import type { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.js"
+import type { Type } from "../../schema/types/Type.js"
+import { getParentDecl } from "../../schema/types/Type.js"
 import { ensureSpecialDirStart } from "../../utils/path.js"
-import { combineSyntaxes, indent, prefixLines, RenderResult, syntax } from "../../utils/render.js"
+import type { RenderResult } from "../../utils/render.js"
+import { combineSyntaxes, indent, prefixLines, syntax } from "../../utils/render.js"
 
 export type TypeScriptRendererOptions = {
   indentation: number
@@ -81,10 +82,7 @@ const renderArrayType: RenderFn<ArrayType> = (options, type) =>
 const wrapAsObject: RenderFn<RenderResult> = (options, str) =>
   syntax`{${EOL}${indent(options.indentation, 1, str)}${EOL}}`
 
-const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl<Type, boolean>>>> = (
-  options,
-  type,
-) => {
+const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (options, type) => {
   return wrapAsObject(
     options,
     combineSyntaxes(
@@ -107,7 +105,7 @@ const renderNumericType: RenderFn<NumericType> = (_options, _type) => syntax`num
 
 const renderStringType: RenderFn<StringType> = (_options, _type) => syntax`string`
 
-const renderTypeArgumentType: RenderFn<TypeArgumentType<TypeParameter>> = (_options, type) =>
+const renderTypeArgumentType: RenderFn<TypeArgumentType> = (_options, type) =>
   syntax`${type.argument.name}`
 
 const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_options, type) => [
@@ -192,10 +190,7 @@ const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
     decl.name
   }${renderTypeParameters(options, decl.parameters)} =${renderEnumType(options, decl.type.value)}`
 
-const renderTypeAliasDecl: RenderFn<TypeAliasDecl<string, Type, TypeParameter[]>> = (
-  options,
-  decl,
-) =>
+const renderTypeAliasDecl: RenderFn<TypeAliasDecl> = (options, decl) =>
   isObjectType(decl.type.value)
     ? syntax`${renderDocumentation(decl.comment, decl.isDeprecated)}export ${
         options.objectTypeKeyword
@@ -264,6 +259,7 @@ export const render = (
     }, declarations),
   )
   return finalOptions.preserveFiles
-    ? renderImports(declarations[0]!.sourceUrl, imports) + content
+    ? (declarations[0] === undefined ? "" : renderImports(declarations[0].sourceUrl, imports)) +
+        content
     : content
 }

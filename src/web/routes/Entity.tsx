@@ -1,4 +1,4 @@
-import { FunctionalComponent } from "preact"
+import type { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
 import { useEffect } from "preact/hooks"
 import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.js"
@@ -33,7 +33,7 @@ export const Entity: FunctionalComponent = () => {
         instanceElement.scrollIntoView({ behavior: "smooth", block: "center" })
       }
     }
-  }, [])
+  }, [created])
 
   if (!name) {
     return <NotFound />
@@ -102,8 +102,10 @@ export const Entity: FunctionalComponent = () => {
                     if (confirm("Are you sure you want to delete this instance?")) {
                       deleteInstanceByEntityNameAndId(entity.declaration.name, instance.id)
                         .then(() => reloadInstances())
-                        .catch(error => {
-                          alert("Error deleting instance:\n\n" + error)
+                        .catch((error: unknown) => {
+                          if (error instanceof Error) {
+                            alert("Error deleting instance:\n\n" + error.toString())
+                          }
                         })
                     }
                   }}

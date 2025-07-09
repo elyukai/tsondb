@@ -1,5 +1,7 @@
-import { SerializedEntityDecl } from "../node/schema/declarations/EntityDecl.js"
-import {
+import type { SerializedEntityDecl } from "../node/schema/declarations/EntityDecl.js"
+import type {
+  CreateBranchRequestBody,
+  CreateCommitRequestBody,
   CreateInstanceOfEntityResponseBody,
   DeleteInstanceOfEntityResponseBody,
   GetAllDeclarationsResponseBody,
@@ -23,7 +25,7 @@ export const getAllDeclarations = async (
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<GetAllDeclarationsResponseBody>
 }
 
 export const getAllEntities = (): Promise<GetAllDeclarationsResponseBody<SerializedEntityDecl>> =>
@@ -36,7 +38,7 @@ export const getEntityByName = async (
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<GetDeclarationResponseBody<SerializedEntityDecl>>
 }
 
 export const getInstancesByEntityName = async (
@@ -46,7 +48,7 @@ export const getInstancesByEntityName = async (
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<GetAllInstancesOfEntityResponseBody>
 }
 
 export const createInstanceByEntityNameAndId = async (
@@ -68,7 +70,7 @@ export const createInstanceByEntityNameAndId = async (
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<CreateInstanceOfEntityResponseBody>
 }
 
 export const getInstanceByEntityNameAndId = async (
@@ -79,7 +81,7 @@ export const getInstanceByEntityNameAndId = async (
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<GetInstanceOfEntityResponseBody>
 }
 
 export const updateInstanceByEntityNameAndId = async (
@@ -97,7 +99,7 @@ export const updateInstanceByEntityNameAndId = async (
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<UpdateInstanceOfEntityResponseBody>
 }
 
 export const deleteInstanceByEntityNameAndId = async (
@@ -110,7 +112,7 @@ export const deleteInstanceByEntityNameAndId = async (
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<DeleteInstanceOfEntityResponseBody>
 }
 
 export const getAllInstances = async (locales: string[]): Promise<GetAllInstancesResponseBody> => {
@@ -126,7 +128,7 @@ export const getAllInstances = async (locales: string[]): Promise<GetAllInstance
     throw new Error(await response.text())
   }
 
-  return response.json()
+  return response.json() as Promise<GetAllInstancesResponseBody>
 }
 
 export const getGitStatus = async (locales: string[]): Promise<GitStatusResponseBody> => {
@@ -142,7 +144,7 @@ export const getGitStatus = async (locales: string[]): Promise<GitStatusResponse
     throw new Error(await response.text())
   }
 
-  return response.json()
+  return response.json() as Promise<GitStatusResponseBody>
 }
 
 export const stageAllFiles = async (): Promise<void> => {
@@ -202,9 +204,10 @@ export const unstageFileOfEntity = async (entityName: string, id: string): Promi
 export const commitStagedFiles = async (
   message: string,
 ): Promise<DeleteInstanceOfEntityResponseBody> => {
+  const body: CreateCommitRequestBody = { message }
   const response = await fetch(`/api/git/commit`, {
     method: "POST",
-    body: JSON.stringify({ message }),
+    body: JSON.stringify(body),
     headers: {
       "Content-Type": "application/json",
     },
@@ -212,7 +215,7 @@ export const commitStagedFiles = async (
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<DeleteInstanceOfEntityResponseBody>
 }
 
 export const pushCommits = async (): Promise<DeleteInstanceOfEntityResponseBody> => {
@@ -222,7 +225,7 @@ export const pushCommits = async (): Promise<DeleteInstanceOfEntityResponseBody>
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<DeleteInstanceOfEntityResponseBody>
 }
 
 export const pullCommits = async (): Promise<DeleteInstanceOfEntityResponseBody> => {
@@ -232,7 +235,7 @@ export const pullCommits = async (): Promise<DeleteInstanceOfEntityResponseBody>
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<DeleteInstanceOfEntityResponseBody>
 }
 
 export const getBranches = async (): Promise<GetAllGitBranchesResponseBody> => {
@@ -242,13 +245,14 @@ export const getBranches = async (): Promise<GetAllGitBranchesResponseBody> => {
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  return response.json()
+  return response.json() as Promise<GetAllGitBranchesResponseBody>
 }
 
 export const createBranch = async (branchName: string): Promise<void> => {
+  const body: CreateBranchRequestBody = { branchName }
   const response = await fetch(`/api/git/branch`, {
     method: "POST",
-    body: JSON.stringify({ branchName }),
+    body: JSON.stringify(body),
     headers: {
       "Content-Type": "application/json",
     },

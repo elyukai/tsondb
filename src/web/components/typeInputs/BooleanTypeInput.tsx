@@ -1,5 +1,5 @@
-import { FunctionComponent } from "preact"
-import { SerializedBooleanType } from "../../../node/schema/types/primitives/BooleanType.js"
+import type { FunctionComponent } from "preact"
+import type { SerializedBooleanType } from "../../../node/schema/types/primitives/BooleanType.js"
 
 type Props = {
   type: SerializedBooleanType

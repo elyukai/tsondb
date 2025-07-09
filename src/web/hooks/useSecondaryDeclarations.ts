@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "preact/hooks"
-import { SerializedSecondaryDecl } from "../../node/schema/declarations/Declaration.js"
-import { SerializedEnumDecl } from "../../node/schema/declarations/EnumDecl.js"
-import { SerializedTypeAliasDecl } from "../../node/schema/declarations/TypeAliasDecl.js"
+import type { SerializedSecondaryDecl } from "../../node/schema/declarations/Declaration.js"
+import type { SerializedEnumDecl } from "../../node/schema/declarations/EnumDecl.js"
+import type { SerializedTypeAliasDecl } from "../../node/schema/declarations/TypeAliasDecl.js"
 import { getAllDeclarations } from "../api.js"
 
 export type GetDeclFromDeclName = (name: string) => SerializedSecondaryDecl | undefined
@@ -21,8 +21,10 @@ export const useGetDeclFromDeclName = (): GetDeclFromDeclName => {
             ),
         )
       })
-      .catch(error => {
-        console.error("Error fetching data:", error)
+      .catch((error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Error fetching data:", error.toString())
+        }
       })
   }, [])
 

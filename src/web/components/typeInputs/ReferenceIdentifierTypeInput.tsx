@@ -1,6 +1,6 @@
-import { FunctionComponent } from "preact"
-import { SerializedReferenceIdentifierType } from "../../../node/schema/types/references/ReferenceIdentifierType.js"
-import { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
+import type { FunctionComponent } from "preact"
+import type { SerializedReferenceIdentifierType } from "../../../node/schema/types/references/ReferenceIdentifierType.js"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
 import { Select } from "../Select.js"
 import { ValidationErrors } from "./utils/ValidationErrors.js"
 
@@ -24,7 +24,9 @@ export const ReferenceIdentifierTypeInput: FunctionComponent<Props> = ({
     <div class="field">
       <Select
         value={value}
-        onInput={event => onChange(event.currentTarget.value)}
+        onInput={event => {
+          onChange(event.currentTarget.value)
+        }}
         disabled={instances.length === 0}
         aria-invalid={!value}
       >
@@ -38,7 +40,9 @@ export const ReferenceIdentifierTypeInput: FunctionComponent<Props> = ({
           </option>
         )}
         {instances.map(instance => (
-          <option value={instance.id}>{instance.name}</option>
+          <option key={instance.id} value={instance.id}>
+            {instance.name}
+          </option>
         ))}
       </Select>
       <ValidationErrors errors={!value ? [ReferenceError("no reference provided")] : []} />

@@ -1,4 +1,4 @@
-import { ComponentChildren, FunctionComponent } from "preact"
+import type { ComponentChildren, FunctionComponent } from "preact"
 import { Git } from "./Git.js"
 
 type Props = {
@@ -13,7 +13,7 @@ export const Layout: FunctionComponent<Props> = ({ breadcrumbs, children }) => {
         <nav>
           <ol>
             {breadcrumbs.map(({ url, label }) => (
-              <li>
+              <li key={url}>
                 <a href={url}>{label}</a>
               </li>
             ))}

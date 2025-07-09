@@ -1,10 +1,12 @@
-import { NodeKind, Serializer } from "./Node.js"
-import {
-  removeParentKey,
+import type { Serializer } from "./Node.js";
+import { NodeKind } from "./Node.js"
+import type {
   SerializedBaseType,
   SerializedType,
-  serializeType,
-  Type,
+  Type} from "./types/Type.js";
+import {
+  removeParentKey,
+  serializeType
 } from "./types/Type.js"
 
 export interface TypeParameter<N extends string = string, T extends Type = Type> {

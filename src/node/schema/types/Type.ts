@@ -1,111 +1,113 @@
 import { assertExhaustive } from "../../../shared/utils/typeSafety.js"
-import { Decl, isDecl } from "../declarations/Declaration.js"
-import { BaseNode, GetReferences, NodeKind, Serializer } from "../Node.js"
-import { Validator } from "../validation/type.js"
+import type { Decl } from "../declarations/Declaration.js"
+import { isDecl } from "../declarations/Declaration.js"
+import type { BaseNode, GetReferences, Serializer } from "../Node.js"
+import { NodeKind } from "../Node.js"
+import type { Validator } from "../validation/type.js"
+import type { ArrayType, SerializedArrayType } from "./generic/ArrayType.js"
 import {
-  ArrayType,
   formatArrayValue,
   getReferencesForArrayType,
   resolveTypeArgumentsInArrayType,
   serializeArrayType,
-  SerializedArrayType,
   validateArrayType,
 } from "./generic/ArrayType.js"
+import type { EnumType, SerializedEnumType } from "./generic/EnumType.js"
 import {
-  EnumType,
   formatEnumType,
   getReferencesForEnumType,
   resolveTypeArgumentsInEnumType,
-  SerializedEnumType,
   serializeEnumType,
   validateEnumType,
 } from "./generic/EnumType.js"
+import type {
+  MemberDecl,
+  ObjectType,
+  SerializedMemberDecl,
+  SerializedObjectType,
+} from "./generic/ObjectType.js"
 import {
   formatObjectValue,
   getReferencesForObjectType,
-  MemberDecl,
-  ObjectType,
   resolveTypeArgumentsInObjectType,
-  SerializedMemberDecl,
-  SerializedObjectType,
   serializeObjectType,
   validateObjectType,
 } from "./generic/ObjectType.js"
+import type { BooleanType, SerializedBooleanType } from "./primitives/BooleanType.js"
 import {
-  BooleanType,
   formatBooleanValue,
   getReferencesForBooleanType,
   serializeBooleanType,
-  SerializedBooleanType,
   validateBooleanType,
 } from "./primitives/BooleanType.js"
+import type { DateType, SerializedDateType } from "./primitives/DateType.js"
 import {
-  DateType,
   formatDateValue,
   getReferencesForDateType,
   serializeDateType,
-  SerializedDateType,
   validateDateType,
 } from "./primitives/DateType.js"
+import type { FloatType, SerializedFloatType } from "./primitives/FloatType.js"
 import {
-  FloatType,
   formatFloatValue,
   getReferencesForFloatType,
-  SerializedFloatType,
   serializeFloatType,
   validateFloatType,
 } from "./primitives/FloatType.js"
+import type { IntegerType, SerializedIntegerType } from "./primitives/IntegerType.js"
 import {
   formatIntegerValue,
   getReferencesForIntegerType,
-  IntegerType,
-  SerializedIntegerType,
   serializeIntegerType,
   validateIntegerType,
 } from "./primitives/IntegerType.js"
-import { PrimitiveType, SerializedPrimitiveType } from "./primitives/PrimitiveType.js"
+import type { PrimitiveType, SerializedPrimitiveType } from "./primitives/PrimitiveType.js"
+import type { SerializedStringType, StringType } from "./primitives/StringType.js"
 import {
   formatStringValue,
   getReferencesForStringType,
-  SerializedStringType,
   serializeStringType,
-  StringType,
   validateStringType,
 } from "./primitives/StringType.js"
+import type {
+  IncludeIdentifierType,
+  SerializedIncludeIdentifierType,
+} from "./references/IncludeIdentifierType.js"
 import {
   formatIncludeIdentifierValue,
   getReferencesForIncludeIdentifierType,
-  IncludeIdentifierType,
   resolveTypeArgumentsInIncludeIdentifierType,
-  SerializedIncludeIdentifierType,
   serializeIncludeIdentifierType,
   validateIncludeIdentifierType,
 } from "./references/IncludeIdentifierType.js"
+import type {
+  NestedEntityMapType,
+  SerializedNestedEntityMapType,
+} from "./references/NestedEntityMapType.js"
 import {
   formatNestedEntityMapValue,
   getReferencesForNestedEntityMapType,
-  NestedEntityMapType,
   resolveTypeArgumentsInNestedEntityMapType,
-  SerializedNestedEntityMapType,
   serializeNestedEntityMapType,
   validateNestedEntityMapType,
 } from "./references/NestedEntityMapType.js"
+import type {
+  ReferenceIdentifierType,
+  SerializedReferenceIdentifierType,
+} from "./references/ReferenceIdentifierType.js"
 import {
   formatReferenceIdentifierValue,
   getReferencesForReferenceIdentifierType,
-  ReferenceIdentifierType,
   resolveTypeArgumentsInReferenceIdentifierType,
-  SerializedReferenceIdentifierType,
   serializeReferenceIdentifierType,
   validateReferenceIdentifierType,
 } from "./references/ReferenceIdentifierType.js"
+import type { SerializedTypeArgumentType, TypeArgumentType } from "./references/TypeArgumentType.js"
 import {
   formatTypeArgumentValue,
   getReferencesForTypeArgumentType,
   resolveTypeArgumentsInTypeArgumentType,
-  SerializedTypeArgumentType,
   serializeTypeArgumentType,
-  TypeArgumentType,
   validateTypeArgumentType,
 } from "./references/TypeArgumentType.js"
 
@@ -169,10 +171,7 @@ export const validate: Validator<Type> = (helpers, type, value) => {
   }
 }
 
-export const resolveTypeArgumentsInType = <Args extends Record<string, Type>>(
-  args: Args,
-  type: Type,
-): Type => {
+export const resolveTypeArgumentsInType = (args: Record<string, Type>, type: Type): Type => {
   switch (type.kind) {
     case NodeKind.ArrayType:
       return resolveTypeArgumentsInArrayType(args, type)
@@ -203,13 +202,24 @@ export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): 
   switch (type.kind) {
     case NodeKind.ArrayType:
       callbackFn(type)
-      return walkTypeNodeTree(callbackFn, type.items)
+      {
+        walkTypeNodeTree(callbackFn, type.items)
+        return
+      }
     case NodeKind.ObjectType:
       callbackFn(type)
-      return Object.values(type.properties).forEach(prop => walkTypeNodeTree(callbackFn, prop.type))
+      {
+        Object.values(type.properties).forEach(prop => {
+          walkTypeNodeTree(callbackFn, prop.type)
+        })
+        return
+      }
     case NodeKind.NestedEntityMapType:
       callbackFn(type)
-      return walkTypeNodeTree(callbackFn, type.type.value)
+      {
+        walkTypeNodeTree(callbackFn, type.type.value)
+        return
+      }
     case NodeKind.BooleanType:
     case NodeKind.DateType:
     case NodeKind.FloatType:
@@ -217,15 +227,20 @@ export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): 
     case NodeKind.StringType:
     case NodeKind.TypeArgumentType:
     case NodeKind.ReferenceIdentifierType:
-    case NodeKind.IncludeIdentifierType:
-      return callbackFn(type)
+    case NodeKind.IncludeIdentifierType: {
+      callbackFn(type)
+      return
+    }
     case NodeKind.EnumType:
       callbackFn(type)
-      return Object.values(type.values).forEach(value => {
-        if (value.type) {
-          walkTypeNodeTree(callbackFn, value.type)
-        }
-      })
+      {
+        Object.values(type.values).forEach(value => {
+          if (value.type) {
+            walkTypeNodeTree(callbackFn, value.type)
+          }
+        })
+        return
+      }
     default:
       return assertExhaustive(type)
   }
@@ -289,9 +304,9 @@ export type SerializedAsType<T extends SerializedType> = T extends SerializedArr
 
 export type AsNode<T> = T extends (infer I)[]
   ? ArrayType<AsNode<I>>
-  : T extends Record<string, any>
+  : T extends Record<string, unknown>
   ? ObjectType<{
-      [K in keyof T]: T[K] extends MemberDecl<Type, boolean>
+      [K in keyof T]: T[K] extends MemberDecl
         ? T[K]
         : T extends null | undefined
         ? MemberDecl<AsNode<NonNullable<T[K]>>, false>
@@ -316,14 +331,14 @@ export const getParentDecl = (type: Type): Decl | undefined => {
 }
 
 export const findTypeAtPath = (type: Type, path: string[]): Type | undefined => {
-  if (path.length === 0) {
+  const [head, ...tail] = path
+
+  if (head === undefined) {
     return type
   }
 
-  const [head, ...tail] = path
-
   if (type.kind === NodeKind.ObjectType) {
-    const prop = type.properties[head!]
+    const prop = type.properties[head]
     if (prop) {
       return findTypeAtPath(prop.type, tail)
     }

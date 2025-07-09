@@ -1,4 +1,5 @@
-import { NumerusLabel, parallelizeErrors, validateLengthRangeBound } from "../utils/validation.js"
+import type { NumerusLabel} from "../utils/validation.js";
+import { parallelizeErrors, validateLengthRangeBound } from "../utils/validation.js"
 
 export interface ObjectConstraints {
   additionalProperties?: boolean

@@ -24,9 +24,9 @@ export const validateLengthRangeBound = (
 
   if (!operator(length, rangeBound)) {
     return RangeError(
-      `expected at ${description} ${rangeBound} ${
+      `expected at ${description} ${rangeBound.toString()} ${
         normalizedLabel[rangeBound === 1 ? 0 : 1]
-      }, but got ${length} ${normalizedLabel[length === 1 ? 0 : 1]}`,
+      }, but got ${length.toString()} ${normalizedLabel[length === 1 ? 0 : 1]}`,
     )
   }
 

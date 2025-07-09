@@ -4,7 +4,10 @@ export const getErrorMessageForDisplay = (error: Error): string => {
   if (error instanceof AggregateError) {
     return `${error.message}\n${applyIndentation(
       1,
-      error.errors.map(subError => getErrorMessageForDisplay(subError)).join("\n"),
+      error.errors
+        .filter(subError => subError instanceof Error)
+        .map(subError => getErrorMessageForDisplay(subError))
+        .join("\n"),
       2,
     )}`
   } else if (error.cause instanceof Error) {

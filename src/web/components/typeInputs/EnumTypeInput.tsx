@@ -1,9 +1,9 @@
-import { FunctionComponent } from "preact"
-import { SerializedEnumType } from "../../../node/schema/types/generic/EnumType.js"
+import type { FunctionComponent } from "preact"
+import type { SerializedEnumType } from "../../../node/schema/types/generic/EnumType.js"
 import { discriminatorKey } from "../../../shared/enum.js"
 import { toTitleCase } from "../../../shared/utils/string.js"
-import { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
+import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
 import { Select } from "../Select.js"
 import { TypeInput } from "./TypeInput.js"
@@ -57,7 +57,7 @@ export const EnumTypeInput: FunctionComponent<Props> = ({
         }}
       >
         {enumValues.map(enumValue => (
-          <option value={enumValue} selected={enumValue === activeEnumCase}>
+          <option key={enumValue} value={enumValue} selected={enumValue === activeEnumCase}>
             {toTitleCase(enumValue)}
           </option>
         ))}

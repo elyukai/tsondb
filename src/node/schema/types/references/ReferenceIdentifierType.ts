@@ -1,15 +1,12 @@
-import { GetNestedDeclarations, getNestedDeclarations } from "../../declarations/Declaration.js"
-import { createEntityIdentifierType, EntityDecl } from "../../declarations/EntityDecl.js"
-import { GetReferences, Node, NodeKind, Serializer } from "../../Node.js"
-import { Validator } from "../../validation/type.js"
-import {
-  BaseType,
-  removeParentKey,
-  SerializedBaseType,
-  StructureFormatter,
-  Type,
-  validate,
-} from "../Type.js"
+import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
+import { getNestedDeclarations } from "../../declarations/Declaration.js"
+import type { EntityDecl } from "../../declarations/EntityDecl.js"
+import { createEntityIdentifierType } from "../../declarations/EntityDecl.js"
+import type { GetReferences, Node, Serializer } from "../../Node.js"
+import { NodeKind } from "../../Node.js"
+import type { Validator } from "../../validation/type.js"
+import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
+import { removeParentKey, validate } from "../Type.js"
 
 export interface ReferenceIdentifierType extends BaseType {
   kind: NodeKind["ReferenceIdentifierType"]
@@ -50,8 +47,8 @@ export const validateReferenceIdentifierType: Validator<ReferenceIdentifierType>
     }),
   )
 
-export const resolveTypeArgumentsInReferenceIdentifierType = <Args extends Record<string, Type>>(
-  _args: Args,
+export const resolveTypeArgumentsInReferenceIdentifierType = (
+  _args: Record<string, Type>,
   type: ReferenceIdentifierType,
 ): ReferenceIdentifierType => type
 

@@ -1,23 +1,27 @@
 import { Lazy } from "../../../shared/utils/lazy.js"
-import { Leaves } from "../../../shared/utils/object.js"
-import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
+import type { Leaves } from "../../../shared/utils/object.js"
+import type { GetReferences, Node, Serializer } from "../Node.js";
+import { NodeKind } from "../Node.js"
+import type {
+  MemberDecl,
+  ObjectType,
+  SerializedObjectType} from "../types/generic/ObjectType.js";
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
-  MemberDecl,
-  ObjectType,
   Required,
   resolveTypeArgumentsInObjectType,
-  SerializedObjectType,
   serializeObjectType,
 } from "../types/generic/ObjectType.js"
 import { StringType } from "../types/primitives/StringType.js"
-import { AsType, SerializedAsType, Type, validate } from "../types/Type.js"
-import { ValidatorHelpers } from "../validation/type.js"
-import {
+import type { AsType, SerializedAsType} from "../types/Type.js";
+import { validate } from "../types/Type.js"
+import type { ValidatorHelpers } from "../validation/type.js"
+import type {
   BaseDecl,
   GetNestedDeclarations,
-  SerializedBaseDecl,
+  SerializedBaseDecl} from "./Declaration.js";
+import {
   validateDeclName,
 } from "./Declaration.js"
 import { TypeAliasDecl } from "./TypeAliasDecl.js"
@@ -143,7 +147,7 @@ export const resolveTypeArgumentsInEntityDecl = (decl: EntityDecl): EntityDecl =
 const createEntityIdentifierComment = () =>
   "The entity’s identifier. A UUID or a locale code if it is registered as the locale entity."
 
-export const addEphemeralUUIDToType = <T extends Record<string, MemberDecl<Type, boolean>>>(
+export const addEphemeralUUIDToType = <T extends Record<string, MemberDecl>>(
   decl: EntityDecl<string, ObjectType<T>>,
 ): ObjectType<Omit<T, "id"> & { id: MemberDecl<StringType, true> }> => ({
   ...decl.type.value,
@@ -160,9 +164,7 @@ export const addEphemeralUUIDToType = <T extends Record<string, MemberDecl<Type,
 
 export const createEntityIdentifierType = () => StringType()
 
-export const createEntityIdentifierTypeAsDecl = <Name extends string>(
-  decl: EntityDecl<Name, ObjectType>,
-) =>
+export const createEntityIdentifierTypeAsDecl = <Name extends string>(decl: EntityDecl<Name>) =>
   TypeAliasDecl(decl.sourceUrl, {
     comment: createEntityIdentifierComment(),
     name: (decl.name + "_ID") as `${Name}_ID`,

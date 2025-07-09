@@ -1,5 +1,5 @@
-import { FunctionComponent } from "preact"
-import { SerializedStringType } from "../../../node/schema/types/primitives/StringType.js"
+import type { FunctionComponent } from "preact"
+import type { SerializedStringType } from "../../../node/schema/types/primitives/StringType.js"
 import { validateStringConstraints } from "../../../shared/validation/string.js"
 import { Markdown } from "./utils/Markdown.js"
 import { ValidationErrors } from "./utils/ValidationErrors.js"

@@ -1,4 +1,4 @@
-import { FunctionalComponent } from "preact"
+import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute } from "preact-iso"
 import { useEffect, useState } from "preact/hooks"
 import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.js"
@@ -67,8 +67,10 @@ export const CreateInstance: FunctionalComponent = () => {
             )
           }
         })
-        .catch(error => {
-          alert(`Error updating instance:\n\n${error}`)
+        .catch((error: unknown) => {
+          if (error instanceof Error) {
+            alert(`Error creating instance:\n\n${error.toString()}`)
+          }
         })
     }
   }

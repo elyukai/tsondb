@@ -1,25 +1,29 @@
 import { Lazy } from "../../../shared/utils/lazy.js"
-import { GetReferences, Node, NodeKind, Serializer } from "../Node.js"
-import { SerializedTypeParameter, serializeTypeParameter, TypeParameter } from "../TypeParameter.js"
-import {
+import type { GetReferences, Node, Serializer } from "../Node.js";
+import { NodeKind } from "../Node.js"
+import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js";
+import { serializeTypeParameter } from "../TypeParameter.js"
+import type {
   EnumCaseDecl,
+  SerializedEnumCaseDecl,
+  SerializedEnumType} from "../types/generic/EnumType.js";
+import {
   EnumType,
   getNestedDeclarationsInEnumType,
   getReferencesForEnumType,
   resolveTypeArgumentsInEnumType,
-  SerializedEnumCaseDecl,
-  SerializedEnumType,
   serializeEnumType,
   validateEnumType,
 } from "../types/generic/EnumType.js"
-import { Type } from "../types/Type.js"
-import { ValidatorHelpers } from "../validation/type.js"
-import {
+import type { Type } from "../types/Type.js"
+import type { ValidatorHelpers } from "../validation/type.js"
+import type {
   BaseDecl,
   GetNestedDeclarations,
-  getTypeArgumentsRecord,
   SerializedBaseDecl,
-  TypeArguments,
+  TypeArguments} from "./Declaration.js";
+import {
+  getTypeArgumentsRecord,
   validateDeclName,
 } from "./Declaration.js"
 

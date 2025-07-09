@@ -1,6 +1,6 @@
 import Debug from "debug"
 import express from "express"
-import { GetAllInstancesResponseBody } from "../../../shared/api.js"
+import type { GetAllInstancesResponseBody } from "../../../shared/api.js"
 import { getDisplayNameFromEntityInstance } from "../../../shared/utils/displayName.js"
 import { serializeEntityDecl } from "../../schema/declarations/EntityDecl.js"
 
@@ -20,18 +20,21 @@ instancesApi.get("/", (req, res) => {
 
   const body: GetAllInstancesResponseBody = {
     instances: Object.fromEntries(
-      Object.entries(req.instancesByEntityName).map(([entityName, instances]) => [
-        entityName,
-        instances.map(instance => ({
-          id: instance.id,
-          name: getDisplayNameFromEntityInstance(
-            serializeEntityDecl(req.entitiesByName[entityName]!),
-            instance.content,
-            instance.id,
-            locales,
-          ),
-        })),
-      ]),
+      Object.entries(req.instancesByEntityName)
+        .filter(([entityName]) => Object.hasOwn(req.entitiesByName, entityName))
+        .map(([entityName, instances]) => [
+          entityName,
+          instances.map(instance => ({
+            id: instance.id,
+            name: getDisplayNameFromEntityInstance(
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              serializeEntityDecl(req.entitiesByName[entityName]!),
+              instance.content,
+              instance.id,
+              locales,
+            ),
+          })),
+        ]),
     ),
   }
 
