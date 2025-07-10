@@ -13,7 +13,7 @@
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
-    "./renderer/jsonschema": "./lib/rnode/enderers/jsonschema/index.js",
+    "./renderer/jsonschema": "./lib/node/renderers/jsonschema/index.js",
     "./renderer/ts": "./lib/node/renderers/ts/index.js",
     "./modelcontainer": "./lib/node/ModelContainer.js",
     "./schema": "./lib/node/Schema.js",
