@@ -3,7 +3,7 @@ import express from "express"
 import { join } from "node:path"
 import type { SimpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.js"
-import type { ModelContainer } from "../ModelContainer.js"
+import type { Schema } from "../Schema.ts"
 import type { Decl } from "../schema/declarations/Declaration.js"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
 import type { ReferencesToInstances } from "../utils/references.js"
@@ -41,7 +41,8 @@ declare global {
 }
 
 export const createServer = async (
-  modelContainer: ModelContainer,
+  schema: Schema,
+  dataRootPath: string,
   instancesByEntityName: InstancesByEntityName,
   options?: Partial<ServerOptions>,
 ): Promise<void> => {
@@ -56,7 +57,8 @@ export const createServer = async (
   app.use(express.json())
 
   const requestLocals: TSONDBRequestLocals = await init(
-    modelContainer,
+    schema,
+    dataRootPath,
     Object.assign({}, instancesByEntityName),
   )
 

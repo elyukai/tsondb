@@ -1,6 +1,6 @@
 import { simpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.js"
-import type { ModelContainer } from "../ModelContainer.js"
+import type { Schema } from "../Schema.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.js"
 import { resolveTypeArgumentsInDecls } from "../schema/index.js"
@@ -11,8 +11,8 @@ import {
 import { getReferencesToInstances } from "../utils/references.js"
 import type { TSONDBRequestLocals } from "./index.js"
 
-const getGit = async (modelContainer: ModelContainer) => {
-  const git = simpleGit({ baseDir: modelContainer.dataRootPath })
+const getGit = async (dataRootPath: string) => {
+  const git = simpleGit({ baseDir: dataRootPath })
   if (await git.checkIsRepo()) {
     try {
       const root = await git.revparse({ "--show-toplevel": null })
@@ -27,12 +27,13 @@ const getGit = async (modelContainer: ModelContainer) => {
 }
 
 export const init = async (
-  modelContainer: ModelContainer,
+  schema: Schema,
+  dataRootPath: string,
   instancesByEntityName: InstancesByEntityName,
 ): Promise<TSONDBRequestLocals> => {
-  const { git, root: gitRoot, status: gitStatus } = await getGit(modelContainer)
+  const { git, root: gitRoot, status: gitStatus } = await getGit(dataRootPath)
 
-  const declarations = resolveTypeArgumentsInDecls(modelContainer.schema.declarations)
+  const declarations = resolveTypeArgumentsInDecls(schema.declarations)
   const entities = declarations.filter(isEntityDecl)
 
   const entitiesByName = Object.fromEntries(
@@ -44,23 +45,18 @@ export const init = async (
   const referencesToInstances = getReferencesToInstances(instancesByEntityName, entitiesByName)
 
   if (gitStatus) {
-    attachGitStatusToInstancesByEntityName(
-      instancesByEntityName,
-      modelContainer.dataRootPath,
-      gitRoot,
-      gitStatus,
-    )
+    attachGitStatusToInstancesByEntityName(instancesByEntityName, dataRootPath, gitRoot, gitStatus)
   }
 
   const requestLocals: TSONDBRequestLocals = {
     git: git,
     gitRoot: gitRoot,
-    dataRoot: modelContainer.dataRootPath,
+    dataRoot: dataRootPath,
     declarations: declarations,
     entities: entities,
     instancesByEntityName: instancesByEntityNameInMemory,
     entitiesByName: entitiesByName,
-    localeEntity: modelContainer.schema.localeEntity,
+    localeEntity: schema.localeEntity,
     referencesToInstances,
   }
 

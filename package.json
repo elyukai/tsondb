@@ -10,12 +10,14 @@
     "lib/**/*.js",
     "public"
   ],
+  "bin": {
+    "tsondb": "lib/bin/tsondb.js"
+  },
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
     "./renderer/jsonschema": "./lib/node/renderers/jsonschema/index.js",
     "./renderer/ts": "./lib/node/renderers/ts/index.js",
-    "./modelcontainer": "./lib/node/ModelContainer.js",
     "./schema": "./lib/node/Schema.js",
     "./schema/def": "./lib/node/schema/index.js"
   },
@@ -48,6 +50,7 @@
     "express": "^5.1.0",
     "preact": "^10.26.9",
     "preact-iso": "^2.9.2",
+    "simple-cli-args": "^0.1.0",
     "simple-git": "^3.28.0",
     "supports-color": "^10.0.0",
     "uuid": "^11.1.0"
