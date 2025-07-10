@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.0](https://github.com/elyukai/tsondb/compare/v0.3.0...v0.4.0) (2025-07-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename GenericArgumentIdentifier to TypeArgument to align with TypeParameter
+
+* rename GenericArgumentIdentifier to TypeArgument to align with TypeParameter ([cdbbb3d](https://github.com/elyukai/tsondb/commit/cdbbb3d972b9a96b0c359b87d7d36c80cb8a94ac))
+
+
+### Features
+
+* add server options parameter to functions that create the webserver ([c138407](https://github.com/elyukai/tsondb/commit/c138407f75343218bc266893540cdbcd458b4044))
+* command line interface for generating outputs, validating data and starting the server ([c1fc2e3](https://github.com/elyukai/tsondb/commit/c1fc2e37e2113c74e0f56d1f79d31d668c134443))
+* move the importmap into the head ([a4cb775](https://github.com/elyukai/tsondb/commit/a4cb7755df602ada7b72597469cf5d127ad89a9b))
+
+
+### Bug Fixes
+
+* array utility argument validation and string title case manipulation ([94949e1](https://github.com/elyukai/tsondb/commit/94949e1aca0358461e7a4f2792f52ea34a36c4c7))
+* make all exports from EnumType available for public use ([bdf9f91](https://github.com/elyukai/tsondb/commit/bdf9f917ac909f6a48695614a690397719068a66))
+* mistyped export of jsonschema renderer ([1a7782d](https://github.com/elyukai/tsondb/commit/1a7782d0c7d62f736a3e8d96eb077055f4b38ebc))
+* wrong validation results and error messages ([aa27167](https://github.com/elyukai/tsondb/commit/aa271674976280a59584d0ecbab314166244c7ec))
+
 ## [0.3.0](https://github.com/elyukai/tsondb/compare/v0.2.0...v0.3.0) (2025-05-02)
 
 
