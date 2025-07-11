@@ -8,6 +8,7 @@ import { parseArguments } from "simple-cli-args"
 import { generateOutputs, serve, validate } from "../node/index.ts"
 import type { Output } from "../node/renderers/Output.ts"
 import type { Schema } from "../node/Schema.ts"
+import type { ServerOptions } from "../node/server/index.ts"
 
 const debug = Debug("tsondb:cli")
 
@@ -35,6 +36,7 @@ const possibleConfigNames = [
 ]
 
 export type Config = {
+  serverOptions?: ServerOptions
   schema: Schema
   outputs: Output[]
   dataRootPath: string
@@ -80,7 +82,7 @@ switch (passedArguments.command.name) {
     break
   case "serve":
     debug(`running command: serve`)
-    await serve(config.schema, config.dataRootPath)
+    await serve(config.schema, config.dataRootPath, config.serverOptions)
     break
   case "validate":
     debug(`running command: validate`)
