@@ -120,9 +120,13 @@ export const flatMapAuxiliaryDecls = (
       decl => decl !== undefined,
     )
     normalizedResult.forEach(decl => {
-      if (decls.some(existingDecl => existingDecl.name === decl.name)) {
+      const existingDeclWithSameName = decls.find(
+        existingDecl => existingDecl !== decl && existingDecl.name === decl.name,
+      )
+      if (existingDeclWithSameName) {
+        console.log(decl, existingDeclWithSameName)
         throw new Error(
-          `Duplicate declaration name: "${decl.name}". Make sure declaration names are globally unique.`,
+          `Duplicate declaration name: "${decl.name}" in "${decl.sourceUrl}" and "${existingDeclWithSameName.sourceUrl}". Make sure declaration names are globally unique.`,
         )
       }
     })

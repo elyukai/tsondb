@@ -12,15 +12,15 @@ export interface Schema {
 }
 
 const checkDuplicateIdentifier = (existingDecls: Decl[], decl: Decl) => {
-  if (
-    existingDecls
-      .values()
-      .some(
-        otherDecl => otherDecl !== decl && otherDecl.name.toLowerCase() === decl.name.toLowerCase(),
-      )
-  ) {
+  const existingDeclWithSameName = existingDecls
+    .values()
+    .find(
+      otherDecl => otherDecl !== decl && otherDecl.name.toLowerCase() === decl.name.toLowerCase(),
+    )
+
+  if (existingDeclWithSameName) {
     throw new Error(
-      `Duplicate declaration name: "${decl.name}". Make sure declaration names are globally unique.`,
+      `Duplicate declaration name "${decl.name}" in "${decl.sourceUrl}" and "${existingDeclWithSameName.sourceUrl}". Make sure declaration names are globally unique.`,
     )
   }
 }
