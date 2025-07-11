@@ -48,10 +48,10 @@ export const createServer = async (
 
   const app = express()
 
-  app.use(express.static(join(import.meta.dirname, "../../public")))
-  app.use("/js/node_modules", express.static(join(import.meta.dirname, "../../node_modules")))
-  app.use("/js/client", express.static(join(import.meta.dirname, "../../lib/client")))
-  app.use("/js/shared", express.static(join(import.meta.dirname, "../../lib/shared")))
+  app.use(express.static(join(import.meta.dirname, "../../../public")))
+  app.use("/js/node_modules", express.static(join(import.meta.dirname, "../../../node_modules")))
+  app.use("/js/client", express.static(join(import.meta.dirname, "../../../lib/web")))
+  app.use("/js/shared", express.static(join(import.meta.dirname, "../../../lib/shared")))
   app.use(express.json())
 
   const requestLocals: TSONDBRequestLocals = await init(
