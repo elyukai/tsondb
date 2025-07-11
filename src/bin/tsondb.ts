@@ -37,7 +37,7 @@ const possibleConfigNames = [
 export type Config = {
   schema: Schema
   outputs: Output[]
-  dataRootPath?: string
+  dataRootPath: string
 }
 
 const config: Config | undefined = await (async () => {
@@ -80,16 +80,10 @@ switch (passedArguments.command.name) {
     break
   case "serve":
     debug(`running command: serve`)
-    if (config.dataRootPath === undefined) {
-      throw new Error("No dataRootPath specified in config")
-    }
     await serve(config.schema, config.dataRootPath)
     break
   case "validate":
     debug(`running command: validate`)
-    if (config.dataRootPath === undefined) {
-      throw new Error("No dataRootPath specified in config")
-    }
     await validate(config.schema, config.dataRootPath)
     break
 }
