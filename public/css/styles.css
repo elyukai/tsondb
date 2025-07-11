@@ -15,6 +15,7 @@
   --separator-color: #e9e5eb;
   --secondary-color: #7e7f87;
   --tertiary-color: #bcbdc2;
+  --input-border-color: #black;
   --button-background: #c7cad0;
   --button-background-hover: #dedfe4;
   --button-background-primary: black;
@@ -32,10 +33,51 @@
   --highlight-color: #a08500;
   --highlight-background: #fdfab9;
   --disabled-color: #cdced2;
+  --git-status-untracked-color: rgb(13, 149, 101);
+  --git-status-untracked-background: rgba(13, 149, 101, 0.15);
+  --git-status-added-color: rgb(20, 148, 29);
+  --git-status-added-background: rgba(20, 148, 29, 0.15);
+  --git-status-modified-color: rgb(196, 155, 18);
+  --git-status-modified-background: rgba(196, 155, 18, 0.15);
+  --git-status-deleted-color: rgb(135, 22, 11);
+  --git-status-deleted-background: rgba(135, 22, 11, 0.15);
+  --git-status-renamed-color: rgb(20, 97, 148);
+  --git-status-renamed-background: rgba(20, 97, 148, 0.15);
+  --shadow-color: rgba(160, 163, 165, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: hsl(260, 6%, 10%);
+    --markdown-background: hsl(260, 6%, 17%);
+    --color: hsl(260, 6%, 88%);
+    --error-color: #ff6b6b;
+    --separator-color: hsl(260, 6%, 24%);
+    --secondary-color: hsl(260, 6%, 69%);
+    --tertiary-color: hsl(260, 6%, 49%);
+    --input-border-color: hsl(260, 6%, 40%);
+    --button-background: hsl(260, 6%, 24%);
+    --button-background-hover: hsl(260, 6%, 30%);
+    --button-background-primary: hsl(260, 6%, 80%);
+    --button-background-primary-hover: hsl(260, 6%, 60%);
+    --button-background-destructive: #922727;
+    --button-background-destructive-hover: #ff8080;
+    --button-background-disabled: hsl(260, 6%, 35%);
+    --button-color: #fff;
+    --button-color-hover: #fff;
+    --button-color-primary: #000;
+    --button-color-primary-hover: #000;
+    --button-color-destructive: #fff;
+    --button-color-destructive-hover: #fff;
+    --button-color-disabled: hsl(260, 6%, 54%);
+    --highlight-color: #f2d600;
+    --highlight-background: #333300;
+  }
 }
 
 body {
   font-family: var(--font-sans);
+  color: var(--color);
   margin: 0;
   padding: 1.5rem;
   line-height: 1.4;
@@ -143,6 +185,13 @@ button.primary {
   border: none;
 }
 
+@media (prefers-color-scheme: dark) {
+  a.btn--primary,
+  button.primary {
+    font-weight: 700;
+  }
+}
+
 a.btn--primary:hover,
 button.primary:hover {
   background: var(--button-background-primary-hover);
@@ -179,8 +228,10 @@ button.destructive:disabled {
 input,
 textarea,
 select {
+  background: var(--background);
+  color: var(--color);
   font-family: var(--font-sans);
-  border: 1px solid var(--color);
+  border: 1px solid var(--input-border-color);
   padding: 0.5rem;
   display: block;
   width: 100%;
@@ -507,28 +558,28 @@ button[type="submit"] {
 }
 
 .git-status.git-status--U {
-  color: rgb(13, 149, 101);
-  background: rgba(13, 149, 101, 0.15);
+  color: var(--git-status-untracked-color);
+  background: var(--git-status-untracked-background);
 }
 
 .git-status.git-status--A {
-  color: rgb(20, 148, 29);
-  background: rgba(20, 148, 29, 0.15);
+  color: var(--git-status-added-color);
+  background: var(--git-status-added-background);
 }
 
 .git-status.git-status--M {
-  color: rgb(196, 155, 18);
-  background: rgba(196, 155, 18, 0.15);
+  color: var(--git-status-modified-color);
+  background: var(--git-status-modified-background);
 }
 
 .git-status.git-status--D {
-  color: rgb(135, 22, 11);
-  background: rgba(135, 22, 11, 0.15);
+  color: var(--git-status-deleted-color);
+  background: var(--git-status-deleted-background);
 }
 
 .git-status.git-status--R {
-  color: rgb(20, 97, 148);
-  background: rgba(20, 97, 148, 0.15);
+  color: var(--git-status-renamed-color);
+  background: var(--git-status-renamed-background);
 }
 
 aside.git {
@@ -632,7 +683,7 @@ aside.git .branch .select-wrapper {
   display: none;
   position: absolute;
   right: 1.5rem;
-  box-shadow: 0 0.5rem 2rem rgba(160, 163, 165, 0.5);
+  box-shadow: 0 0.5rem 2rem var(--shadow-color);
   z-index: 1000;
   padding: 1rem;
   background: var(--background);
