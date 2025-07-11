@@ -38,6 +38,7 @@ export interface EntityDecl<Name extends string = string, T extends ObjectType =
          */
         pathInLocaleMap?: string
       }
+    | null
   isDeprecated?: boolean
 }
 
@@ -63,6 +64,7 @@ export interface SerializedEntityDecl<
          */
         pathInLocaleMap?: string
       }
+    | null
   isDeprecated?: boolean
 }
 
@@ -88,6 +90,7 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
            */
           pathInLocaleMap?: string
         }
+      | null
     isDeprecated?: boolean
   },
 ): EntityDecl<Name, T> => {

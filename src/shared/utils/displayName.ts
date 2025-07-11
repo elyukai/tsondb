@@ -19,6 +19,10 @@ export const getDisplayNameFromEntityInstance = (
   defaultName: string,
   locales: string[] = [],
 ): string => {
+  if (entity.displayName === null) {
+    return defaultName
+  }
+
   const displayNamePath = entity.displayName ?? "name"
 
   if (typeof displayNamePath === "string") {
