@@ -12,7 +12,7 @@ import {
 } from "../types/generic/ObjectType.js"
 import { StringType } from "../types/primitives/StringType.js"
 import type { AsType, SerializedAsType } from "../types/Type.js"
-import { validate } from "../types/Type.js"
+import { setParent, validate } from "../types/Type.js"
 import type { ValidatorHelpers } from "../validation/type.js"
 import type { BaseDecl, GetNestedDeclarations, SerializedBaseDecl } from "./Declaration.js"
 import { validateDeclName } from "./Declaration.js"
@@ -107,8 +107,7 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
           )
         }
       })
-      type.parent = decl
-      return type
+      return setParent(type, decl)
     }),
   }
 

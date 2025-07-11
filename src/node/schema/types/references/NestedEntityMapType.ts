@@ -21,7 +21,7 @@ import {
   validateObjectType,
 } from "../generic/ObjectType.js"
 import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
-import { removeParentKey } from "../Type.js"
+import { removeParentKey, setParent } from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl>
 
@@ -58,11 +58,7 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
     kind: NodeKind.NestedEntityMapType,
-    type: Lazy.of(() => {
-      const type = options.type
-      type.parent = nestedEntityMapType
-      return type
-    }),
+    type: Lazy.of(() => setParent(options.type, nestedEntityMapType)),
   }
 
   return nestedEntityMapType
@@ -79,11 +75,7 @@ const _NestedEntityMapType = <Name extends string, T extends TConstraint>(option
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
     kind: NodeKind.NestedEntityMapType,
-    type: Lazy.of(() => {
-      const type = options.type()
-      type.parent = nestedEntityMapType
-      return type
-    }),
+    type: Lazy.of(() => setParent(options.type(), nestedEntityMapType)),
   }
 
   return nestedEntityMapType

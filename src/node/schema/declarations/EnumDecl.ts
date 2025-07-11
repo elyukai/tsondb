@@ -16,7 +16,7 @@ import {
   serializeEnumType,
   validateEnumType,
 } from "../types/generic/EnumType.js"
-import type { Type } from "../types/Type.js"
+import { setParent, type Type } from "../types/Type.js"
 import type { ValidatorHelpers } from "../validation/type.js"
 import type {
   BaseDecl,
@@ -65,11 +65,7 @@ export const GenEnumDecl = <
     ...options,
     kind: NodeKind.EnumDecl,
     sourceUrl,
-    type: Lazy.of(() => {
-      const type = EnumType(options.values(...options.parameters))
-      type.parent = decl
-      return type
-    }),
+    type: Lazy.of(() => setParent(EnumType(options.values(...options.parameters)), decl)),
   }
 
   return decl
@@ -92,11 +88,7 @@ export const EnumDecl = <Name extends string, T extends Record<string, EnumCaseD
     kind: NodeKind.EnumDecl,
     sourceUrl,
     parameters: [],
-    type: Lazy.of(() => {
-      const type = EnumType(options.values())
-      type.parent = decl
-      return type
-    }),
+    type: Lazy.of(() => setParent(EnumType(options.values()), decl)),
   }
 
   return decl

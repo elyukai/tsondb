@@ -332,6 +332,24 @@ export const getParentDecl = (type: Type): Decl | undefined => {
   }
 }
 
+/**
+ * Sets the `parent` property of the passed `type` to the passed `parentNode`.
+ *
+ * The property is set on the instance. It does not create a new instance.
+ */
+export const setParent = <T extends BaseType>(
+  type: Omit<T, "parent">,
+  parentNode: Type | Decl,
+): T => {
+  ;(type as T).parent = parentNode
+  return type as T
+}
+
+export const removeParentKey = <T extends BaseType>(type: T): Omit<T, "parent"> => {
+  const { parent: _parent, ...rest } = type
+  return rest
+}
+
 export const findTypeAtPath = (type: Type, path: string[]): Type | undefined => {
   const [head, ...tail] = path
 
@@ -380,11 +398,6 @@ export const serializeType: Serializer<Type, SerializedType> = type => {
     default:
       return assertExhaustive(type)
   }
-}
-
-export const removeParentKey = <T extends BaseType>(type: T): Omit<T, "parent"> => {
-  const { parent: _parent, ...rest } = type
-  return rest
 }
 
 export const getReferencesForType: GetReferences<Type> = (type, value) => {

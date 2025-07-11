@@ -8,6 +8,7 @@ import {
   getReferencesForType,
   resolveTypeArgumentsInType,
   serializeType,
+  setParent,
   validate,
 } from "../types/Type.js"
 import type { ValidatorHelpers } from "../validation/type.js"
@@ -59,11 +60,7 @@ export const GenTypeAliasDecl = <
     ...options,
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,
-    type: Lazy.of(() => {
-      const type = options.type(...options.parameters)
-      type.parent = decl
-      return type
-    }),
+    type: Lazy.of(() => setParent(options.type(...options.parameters), decl)),
   }
 
   return decl
@@ -87,11 +84,7 @@ export const TypeAliasDecl = <Name extends string, T extends Type>(
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,
     parameters: [],
-    type: Lazy.of(() => {
-      const type = options.type()
-      type.parent = decl
-      return type
-    }),
+    type: Lazy.of(() => setParent(options.type(), decl)),
   }
 
   return decl

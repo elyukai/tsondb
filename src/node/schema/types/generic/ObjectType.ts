@@ -21,6 +21,7 @@ import {
   removeParentKey,
   resolveTypeArgumentsInType,
   serializeType,
+  setParent,
   validate,
 } from "../Type.js"
 
@@ -76,7 +77,7 @@ export const ObjectType = <T extends TConstraint>(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    properties[key]!.type.parent = type
+    setParent(properties[key]!.type, type)
   })
 
   return type

@@ -20,6 +20,7 @@ import {
   removeParentKey,
   resolveTypeArgumentsInType,
   serializeType,
+  setParent,
   validate,
 } from "../Type.js"
 
@@ -64,7 +65,7 @@ export const ArrayType = <T extends Type>(
     items,
   }
 
-  items.parent = type
+  setParent(type.items, type)
 
   return type
 }
