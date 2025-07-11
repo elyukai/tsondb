@@ -13,12 +13,10 @@ import { init } from "./init.js"
 const debug = Debug("tsondb:server")
 
 export type ServerOptions = {
-  name: string
   port: number
 }
 
 const defaultOptions: ServerOptions = {
-  name: "tsondb server",
   port: 3000,
 }
 
@@ -46,7 +44,7 @@ export const createServer = async (
   instancesByEntityName: InstancesByEntityName,
   options?: Partial<ServerOptions>,
 ): Promise<void> => {
-  const { name, port } = { ...defaultOptions, ...options }
+  const { port } = { ...defaultOptions, ...options }
 
   const app = express()
 
@@ -63,6 +61,7 @@ export const createServer = async (
   )
 
   app.use((req, _res, next) => {
+    debug("%s %s", req.method, req.originalUrl)
     Object.assign(req, requestLocals)
     next()
   })
@@ -96,6 +95,6 @@ export const createServer = async (
   })
 
   app.listen(port, () => {
-    debug(`${name} listening on http://localhost:${port.toString()}`)
+    debug(`server listening on http://localhost:${port.toString()}`)
   })
 }
