@@ -79,13 +79,21 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
   const caseName = value[discriminatorKey]
 
   if (!(caseName in type.values)) {
-    return [TypeError(`discriminator "${caseName}" is not a valid enum case`)]
+    return [
+      TypeError(
+        `discriminator "${caseName}" is not a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
+      ),
+    ]
   }
 
   const unknownKeyErrors = actualKeys.flatMap(actualKey =>
     actualKey === discriminatorKey || actualKey in type.values
       ? []
-      : [TypeError(`key "${actualKey}" is not the discriminator key or a valid enum case`)],
+      : [
+          TypeError(
+            `key "${actualKey}" is not the discriminator key "${caseName}" or a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
+          ),
+        ],
   )
 
   if (unknownKeyErrors.length > 0) {
