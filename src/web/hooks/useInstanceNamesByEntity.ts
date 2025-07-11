@@ -21,7 +21,7 @@ export const useInstanceNamesByEntity = (
           console.error("Error fetching data:", error.toString())
         }
       })
-  }, [locales])
+  }, [locales.toString()])
 
   useEffect(() => {
     updateInstanceNamesByEntity()
