@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.0](https://github.com/elyukai/tsondb/compare/v0.4.0...v0.5.0) (2025-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* require dataRootPath in config file
+* remove server name option
+
+### Features
+
+* add locations of types to error message if duplicate identifiers are found ([c2c6b8e](https://github.com/elyukai/tsondb/commit/c2c6b8e5699612c65b65b9445816945989a67a0f))
+* add server options setting to config ([64fbcf8](https://github.com/elyukai/tsondb/commit/64fbcf88ae2857be46d331e4e76ebe3c65c5ba84))
+* disable display name derivation by setting displayName to null ([9fc76e3](https://github.com/elyukai/tsondb/commit/9fc76e34547fa071c8c26c4e40deeb6c9d4ca74e))
+* display errors when starting the server, especially when the port is already in use ([ec872da](https://github.com/elyukai/tsondb/commit/ec872da21d794d098c70b458c243af782dfb7345))
+* display full file name for validation errors ([a204c35](https://github.com/elyukai/tsondb/commit/a204c35adc29e0bc4abdd7878cc23f60dab293f0))
+* improve error reporting for invalid enum value definitions ([e17499d](https://github.com/elyukai/tsondb/commit/e17499d05711f58992de5dcd4ea18b5e26927224))
+* **jsonschema-renderer:** add debug logs to jsonschema renderer ([bf3258f](https://github.com/elyukai/tsondb/commit/bf3258f221457ea95b06e3c1f3bbfe5a73efb8b5))
+* new format command ([ddb050e](https://github.com/elyukai/tsondb/commit/ddb050e84165b4d67b4d0d99250f39338738c950))
+* provide sorted instance container overviews if all instances of an entity are fetched ([8ed543a](https://github.com/elyukai/tsondb/commit/8ed543af590caf8a00ba751846b62e9e02ec746f))
+* remove server name option ([c3a531c](https://github.com/elyukai/tsondb/commit/c3a531c1a43bb9aa27ec675b1d544c3142b76cc0))
+* require dataRootPath in config file ([6a5ae62](https://github.com/elyukai/tsondb/commit/6a5ae6255f5f7b29c79f9b8d013475e51800a9c3))
+
+
+### Bug Fixes
+
+* duplicate nested entity declaration as auxiliary declaration in generic declaration ([a3e93d1](https://github.com/elyukai/tsondb/commit/a3e93d1d26ec9a08c6d31b362b96f57cba999579))
+* hook dependencies for useInstanceNamesByEntity ([021029c](https://github.com/elyukai/tsondb/commit/021029cd8e87faebf44e7b40a795011b93f440eb))
+* hook dependencies for useMappedAPIResource ([1907a94](https://github.com/elyukai/tsondb/commit/1907a949833c231c88283b6ae0c3260a64bc8f5f))
+* static folders after folder layout change ([82dd047](https://github.com/elyukai/tsondb/commit/82dd047b9124cfaab1f22c88851b872fbdff4133))
+* **ts-renderer:** import types only once ([11629e7](https://github.com/elyukai/tsondb/commit/11629e7b4f57cfdfef7218314798384813400d52))
+
 ## [0.4.0](https://github.com/elyukai/tsondb/compare/v0.3.0...v0.4.0) (2025-07-10)
 
 
