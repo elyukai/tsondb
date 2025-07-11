@@ -28,7 +28,8 @@
     "lint": "eslint",
     "check-format": "prettier \"{src,test}/**/*.{ts,tsx}\" --check",
     "format": "prettier \"{src,test}/**/*.{ts,tsx}\" --write",
-    "release": "commit-and-tag-version"
+    "release": "commit-and-tag-version",
+    "release:sign": "commit-and-tag-version --sign --signoff"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
