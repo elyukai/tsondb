@@ -1,6 +1,6 @@
 import { deepEqual, throws } from "assert/strict"
 import { describe, it } from "node:test"
-import { difference, insertAt, removeAt } from "../../../src/shared/utils/array.js"
+import { difference, insertAt, removeAt, unique } from "../../../src/shared/utils/array.js"
 
 describe("removeAt", () => {
   it("removes an element at the given index", () => {
@@ -45,5 +45,21 @@ describe("insertAt", () => {
 describe("difference", () => {
   it("only evaluates the given expression when needed", () => {
     deepEqual(difference([1, 2, 3, 4, 4], [2, 3, 4, 5]), { added: [5], removed: [1, 4] })
+  })
+})
+
+describe("unique", () => {
+  it("returns an empty array when given an empty array", () => {
+    deepEqual(unique([]), [])
+  })
+
+  it("removes duplicate values from the array using shallow equality checks", () => {
+    deepEqual(unique([1, 2, 2, 3, 4, 4]), [1, 2, 3, 4])
+  })
+
+  it("removes duplicate values from the array using custom equality checks", () => {
+    const arr = [{ id: 1 }, { id: 2 }, { id: 1 }]
+    const equalityCheck = (a: { id: number }, b: { id: number }) => a.id === b.id
+    deepEqual(unique(arr, equalityCheck), [{ id: 1 }, { id: 2 }])
   })
 })

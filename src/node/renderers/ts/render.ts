@@ -1,6 +1,7 @@
 import { EOL } from "node:os"
 import { dirname, relative } from "node:path"
 import { discriminatorKey } from "../../../shared/enum.js"
+import { unique } from "../../../shared/utils/array.ts"
 import { toCamelCase } from "../../../shared/utils/string.js"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.js"
 import type { Decl } from "../../schema/declarations/Declaration.js"
@@ -230,7 +231,9 @@ const renderImports = (currentUrl: string, imports: { [sourceUrl: string]: strin
     .toSorted(([sourceUrlA], [sourceUrlB]) => sourceUrlA.localeCompare(sourceUrlB))
     .map(
       ([sourceUrl, names]) =>
-        `import { ${names.toSorted((a, b) => a.localeCompare(b)).join(", ")} } from "${sourceUrl}"`,
+        `import { ${unique(names)
+          .toSorted((a, b) => a.localeCompare(b))
+          .join(", ")} } from "${sourceUrl}"`,
     )
     .join(EOL)
 

@@ -52,3 +52,6 @@ export interface ArrayDiffResult<T> {
    */
   removed: T[]
 }
+
+export const unique = <T>(arr: T[], equalityCheck: (a: T, b: T) => boolean = (a, b) => a === b) =>
+  arr.filter((item, index) => arr.findIndex(other => equalityCheck(item, other)) === index)
