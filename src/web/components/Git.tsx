@@ -102,7 +102,7 @@ export const Git: FunctionComponent = () => {
   const [currentBranch, setCurrentBranch] = useState("")
 
   const updateGitStatus = (localEntities: SerializedEntityDecl[]) =>
-    Promise.all([getGitStatus(["de-DE"]), getBranches()]).then(([statusData, branchesData]) => {
+    Promise.all([getGitStatus(), getBranches()]).then(([statusData, branchesData]) => {
       setIndexFiles(filterFilesForDisplay(isChangedInIndex, localEntities, statusData))
       setWorkingTreeFiles(filterFilesForDisplay(isChangedInWorkingDir, localEntities, statusData))
       setCommitsAhead(statusData.commitsAhead)

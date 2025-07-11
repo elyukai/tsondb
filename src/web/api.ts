@@ -131,12 +131,8 @@ export const getAllInstances = async (locales: string[]): Promise<GetAllInstance
   return response.json() as Promise<GetAllInstancesResponseBody>
 }
 
-export const getGitStatus = async (locales: string[]): Promise<GitStatusResponseBody> => {
+export const getGitStatus = async (): Promise<GitStatusResponseBody> => {
   const url = new URL("/api/git/status", window.location.origin)
-
-  for (const locale of locales) {
-    url.searchParams.append("locales", locale)
-  }
 
   const response = await fetch(url)
 

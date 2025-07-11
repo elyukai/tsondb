@@ -30,6 +30,7 @@ export interface TSONDBRequestLocals {
   entitiesByName: Record<string, EntityDecl>
   localeEntity?: EntityDecl
   referencesToInstances: ReferencesToInstances
+  locales: string[]
 }
 
 declare global {

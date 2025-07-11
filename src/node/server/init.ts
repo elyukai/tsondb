@@ -58,6 +58,7 @@ export const init = async (
     entitiesByName: entitiesByName,
     localeEntity: schema.localeEntity,
     referencesToInstances,
+    locales: ["de-DE", "en-US"], // TODO: Make this configurable
   }
 
   return requestLocals

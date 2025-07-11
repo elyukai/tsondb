@@ -28,10 +28,6 @@ gitApi.use((req, res, next) => {
 })
 
 gitApi.get("/status", async (req, res) => {
-  const locales = (
-    Array.isArray(req.query["locales"]) ? req.query["locales"] : [req.query["locales"]]
-  ).filter(locale => typeof locale === "string")
-
   const status = await req.git.status()
 
   attachGitStatusToInstancesByEntityName(
@@ -55,7 +51,7 @@ gitApi.get("/status", async (req, res) => {
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               serializeEntityDecl(req.entitiesByName[entityName]!),
               instance,
-              locales,
+              req.locales,
             ),
           ),
       ]),

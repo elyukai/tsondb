@@ -9,10 +9,11 @@ import type {
   GetInstanceOfEntityResponseBody,
   UpdateInstanceOfEntityResponseBody,
 } from "../../../shared/api.js"
+import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
 import { isOk } from "../../../shared/utils/result.js"
 import type { Decl } from "../../schema/declarations/Declaration.js"
 import { serializeDecl } from "../../schema/declarations/Declaration.js"
-import { isEntityDecl } from "../../schema/declarations/EntityDecl.js"
+import { isEntityDecl, serializeEntityDecl } from "../../schema/declarations/EntityDecl.js"
 import { isEnumDecl } from "../../schema/declarations/EnumDecl.js"
 import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
 import { createInstance, deleteInstance, updateInstance } from "./instanceOperations.js"
@@ -84,8 +85,15 @@ declarationsApi.get("/:name/instances", (req, res) => {
     return
   }
 
+  const serializedEntityDecl = serializeEntityDecl(decl)
+
   const body: GetAllInstancesOfEntityResponseBody = {
-    instances: req.instancesByEntityName[req.params.name] ?? [],
+    instances:
+      req.instancesByEntityName[req.params.name]
+        ?.map(instanceContainer =>
+          getInstanceContainerOverview(serializedEntityDecl, instanceContainer, req.locales),
+        )
+        .toSorted((a, b) => a.displayName.localeCompare(b.displayName)) ?? [],
     isLocaleEntity: decl === req.localeEntity,
   }
 

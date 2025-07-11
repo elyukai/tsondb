@@ -2,7 +2,6 @@ import type { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
 import { useEffect } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
-import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.js"
 import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.js"
 import {
   deleteInstanceByEntityNameAndId,
@@ -74,13 +73,7 @@ export const Entity: FunctionalComponent = () => {
                 gitStatusForDisplay === undefined ? "" : `git-status--${gitStatusForDisplay}`
               }`}
             >
-              <h2>
-                {getDisplayNameFromEntityInstance(
-                  entity.declaration,
-                  instance.content,
-                  instance.id,
-                )}
-              </h2>
+              <h2>{instance.displayName}</h2>
               <p aria-hidden class="id">
                 {instance.id}
               </p>

@@ -13,7 +13,7 @@ export interface GetDeclarationResponseBody<D extends SerializedDecl = Serialize
 }
 
 export interface GetAllInstancesOfEntityResponseBody {
-  instances: InstanceContainer[]
+  instances: InstanceContainerOverview[]
   isLocaleEntity: boolean
 }
 
