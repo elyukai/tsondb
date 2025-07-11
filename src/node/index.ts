@@ -30,12 +30,16 @@ export const generateOutputs = async (schema: Schema, outputs: Output[]): Promis
   }
 }
 
-const _validate = (entities: EntityDecl[], instancesByEntityName: InstancesByEntityName): void => {
+const _validate = (
+  dataRootPath: string,
+  entities: EntityDecl[],
+  instancesByEntityName: InstancesByEntityName,
+): void => {
   const errors = entities.flatMap(entity =>
     parallelizeErrors(
       instancesByEntityName[entity.name]?.map(instance =>
         wrapErrorsIfAny(
-          `in file "${entity.name}/${instance.fileName}"`,
+          `in file "${join(dataRootPath, entity.name, instance.fileName)}"`,
           validateEntityDecl(createValidators(instancesByEntityName), entity, instance.content),
         ),
       ) ?? [],
@@ -57,7 +61,7 @@ export const validate = async (schema: Schema, dataRootPath: string) => {
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-  _validate(entities, instancesByEntityName)
+  _validate(dataRootPath, entities, instancesByEntityName)
 }
 
 export const generateAndValidate = async (
@@ -69,7 +73,7 @@ export const generateAndValidate = async (
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-  _validate(entities, instancesByEntityName)
+  _validate(dataRootPath, entities, instancesByEntityName)
 }
 
 export const serve = async (
@@ -93,7 +97,7 @@ export const generateValidateAndServe = async (
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-  _validate(entities, instancesByEntityName)
+  _validate(dataRootPath, entities, instancesByEntityName)
   await createServer(schema, dataRootPath, instancesByEntityName, serverOptions)
 }
 
