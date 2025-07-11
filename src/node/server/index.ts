@@ -94,7 +94,15 @@ export const createServer = async (
 </html>`)
   })
 
-  app.listen(port, () => {
-    debug(`server listening on http://localhost:${port.toString()}`)
+  app.listen(port, (error?: NodeJS.ErrnoException) => {
+    if (error) {
+      if (error.code === "EADDRINUSE") {
+        debug(`port ${port.toString()} is already in use`)
+      } else {
+        debug("error starting server:", error)
+      }
+    } else {
+      debug(`server listening on http://localhost:${port.toString()}`)
+    }
   })
 }
