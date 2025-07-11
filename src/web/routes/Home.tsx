@@ -1,13 +1,16 @@
 import type { FunctionalComponent } from "preact"
+import type { SerializedEntityDecl } from "../../node/schema/index.ts"
+import type { GetAllDeclarationsResponseBody } from "../../shared/api.ts"
 import { toTitleCase } from "../../shared/utils/string.js"
 import { getAllEntities } from "../api.js"
 import { Layout } from "../components/Layout.js"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.js"
 
+const mapEntities = (data: GetAllDeclarationsResponseBody<SerializedEntityDecl>) =>
+  data.declarations.sort((a, b) => a.declaration.name.localeCompare(b.declaration.name))
+
 export const Home: FunctionalComponent = () => {
-  const [entities] = useMappedAPIResource(getAllEntities, data =>
-    data.declarations.sort((a, b) => a.declaration.name.localeCompare(b.declaration.name)),
-  )
+  const [entities] = useMappedAPIResource(getAllEntities, mapEntities)
 
   return (
     <Layout breadcrumbs={[{ url: "/", label: "Home" }]}>

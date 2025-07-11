@@ -12,7 +12,8 @@ export const useMappedAPIResource = <T, A extends unknown[], U>(
       apiFn(...args).then(result => {
         setData(mapFn(result))
       }),
-    [apiFn, args, mapFn],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [apiFn, mapFn, ...args],
   )
 
   useEffect(() => {

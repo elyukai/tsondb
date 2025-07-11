@@ -1,6 +1,7 @@
 import type { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
 import { useEffect } from "preact/hooks"
+import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
 import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.js"
 import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.js"
 import {
@@ -13,6 +14,8 @@ import { useAPIResource } from "../hooks/useAPIResource.js"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.js"
 import { NotFound } from "./NotFound.js"
 
+const mapInstances = (data: GetAllInstancesOfEntityResponseBody) => data.instances
+
 export const Entity: FunctionalComponent = () => {
   const {
     params: { name },
@@ -22,7 +25,7 @@ export const Entity: FunctionalComponent = () => {
   const [entity] = useAPIResource(getEntityByName, name ?? "")
   const [instances, reloadInstances] = useMappedAPIResource(
     getInstancesByEntityName,
-    data => data.instances,
+    mapInstances,
     name ?? "",
   )
 
