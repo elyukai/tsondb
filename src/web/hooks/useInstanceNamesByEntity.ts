@@ -21,6 +21,7 @@ export const useInstanceNamesByEntity = (
           console.error("Error fetching data:", error.toString())
         }
       })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locales.toString()])
 
   useEffect(() => {
