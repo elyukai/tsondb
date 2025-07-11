@@ -53,7 +53,7 @@ export interface BaseNode {
 export type Node = Decl | Type
 
 export const flatMapAuxiliaryDecls = (
-  callbackFn: (node: Node) => (Decl | undefined)[] | Decl | undefined,
+  callbackFn: (node: Node, existingDecls: Decl[]) => (Decl | undefined)[] | Decl | undefined,
   declarations: readonly Decl[],
 ): Decl[] => {
   const mapNodeTree = (
@@ -115,7 +115,7 @@ export const flatMapAuxiliaryDecls = (
   }
 
   const reducer = (node: Node, decls: Decl[]): Decl[] => {
-    const result = callbackFn(node)
+    const result = callbackFn(node, decls)
     const normalizedResult = (Array.isArray(result) ? result : [result]).filter(
       decl => decl !== undefined,
     )

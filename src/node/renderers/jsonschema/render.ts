@@ -228,8 +228,13 @@ export const render = (
     {
       $defs: renderDeclarations(
         finalOptions,
-        flatMapAuxiliaryDecls(node => {
+        flatMapAuxiliaryDecls((node, existingDecls) => {
           if (isNestedEntityMapType(node)) {
+            if (existingDecls.some(decl => decl.name === node.name)) {
+              // this may happen when a nested entity map is defined in a generic declaration and the generic declaration is used multiple times
+              // TODO: circumvent by defining the nested entity declaration outside the generic declaration
+              return undefined
+            }
             return TypeAliasDecl(getParentDecl(node)?.sourceUrl ?? "", {
               name: node.name,
               comment: node.comment,
