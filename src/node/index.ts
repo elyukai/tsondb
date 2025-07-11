@@ -1,5 +1,5 @@
 import Debug from "debug"
-import { mkdir } from "fs/promises"
+import { mkdir, writeFile } from "fs/promises"
 import { join } from "path"
 import type { InstancesByEntityName } from "../shared/utils/instances.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
@@ -11,7 +11,7 @@ import { createValidators, validateEntityDecl } from "./schema/index.ts"
 import type { ServerOptions } from "./server/index.ts"
 import { createServer } from "./server/index.ts"
 import { getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
-import { getInstancesByEntityName } from "./utils/instances.ts"
+import { formatInstance, getInstancesByEntityName } from "./utils/instances.ts"
 
 const debug = Debug("tsondb:schema")
 
@@ -95,4 +95,23 @@ export const generateValidateAndServe = async (
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
   _validate(entities, instancesByEntityName)
   await createServer(schema, dataRootPath, instancesByEntityName, serverOptions)
+}
+
+export const format = async (schema: Schema, dataRootPath: string) => {
+  const entities = getEntities(schema)
+  await prepareFolders(dataRootPath, entities)
+  const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
+
+  for (const entityName in instancesByEntityName) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const entity = entities.find(entity => entity.name === entityName)!
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    for (const instance of instancesByEntityName[entityName]!) {
+      await writeFile(
+        join(dataRootPath, entityName, instance.fileName),
+        formatInstance(entity, instance.content),
+        { encoding: "utf-8" },
+      )
+    }
+  }
 }

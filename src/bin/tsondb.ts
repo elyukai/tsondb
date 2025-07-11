@@ -5,7 +5,7 @@ import { access, constants } from "node:fs/promises"
 import { join } from "node:path"
 import { cwd } from "node:process"
 import { parseArguments } from "simple-cli-args"
-import { generateOutputs, serve, validate } from "../node/index.ts"
+import { format, generateOutputs, serve, validate } from "../node/index.ts"
 import type { Output } from "../node/renderers/Output.ts"
 import type { Schema } from "../node/Schema.ts"
 import type { ServerOptions } from "../node/server/index.ts"
@@ -22,6 +22,9 @@ const passedArguments = parseArguments({
     },
     serve: {
       name: "serve",
+    },
+    format: {
+      name: "format",
     },
   },
 })
@@ -87,5 +90,9 @@ switch (passedArguments.command.name) {
   case "validate":
     debug(`running command: validate`)
     await validate(config.schema, config.dataRootPath)
+    break
+  case "format":
+    debug(`running command: format`)
+    await format(config.schema, config.dataRootPath)
     break
 }

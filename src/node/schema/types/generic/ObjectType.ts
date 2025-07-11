@@ -17,6 +17,7 @@ import type {
   Type,
 } from "../Type.js"
 import {
+  formatValue,
   getReferencesForType,
   removeParentKey,
   resolveTypeArgumentsInType,
@@ -206,5 +207,13 @@ export const getReferencesForObjectType: GetReferences<ObjectType> = (type, valu
 
 export const formatObjectValue: StructureFormatter<ObjectType> = (type, value) =>
   typeof value === "object" && value !== null && !Array.isArray(value)
-    ? sortObjectKeys(value as Record<string, unknown>, Object.keys(type.properties))
+    ? sortObjectKeys(
+        Object.fromEntries(
+          Object.entries(value).map(([key, item]) => [
+            key,
+            type.properties[key] ? formatValue(type.properties[key].type, item) : item,
+          ]),
+        ),
+        Object.keys(type.properties),
+      )
     : value

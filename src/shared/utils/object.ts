@@ -2,7 +2,10 @@ export const sortObjectKeys = (
   obj: Record<string, unknown>,
   keys: string[],
 ): Record<string, unknown> =>
-  Object.fromEntries(keys.flatMap(key => (obj[key] === undefined ? [] : [[key, obj[key]]])))
+  Object.fromEntries([
+    ...keys.flatMap(key => (obj[key] === undefined ? [] : [[key, obj[key]] as [string, unknown]])),
+    ...Object.entries(obj).filter(([key]) => !keys.includes(key)),
+  ])
 
 export const sortObjectKeysAlphabetically = (
   obj: Record<string, unknown>,

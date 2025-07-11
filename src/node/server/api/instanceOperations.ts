@@ -6,10 +6,10 @@ import type { InstanceContainer } from "../../../shared/utils/instances.js"
 import type { Result } from "../../../shared/utils/result.js"
 import { error, ok } from "../../../shared/utils/result.js"
 import { validateEntityDecl } from "../../schema/declarations/EntityDecl.js"
-import { formatValue } from "../../schema/index.js"
 import { createValidators } from "../../schema/Node.js"
 import { getErrorMessageForDisplay } from "../../utils/error.js"
 import { getGitFileStatusFromStatusResult } from "../../utils/git.js"
+import { formatInstance } from "../../utils/instances.ts"
 import { updateReferencesToInstances } from "../../utils/references.js"
 import type { TSONDBRequestLocals } from "../index.js"
 
@@ -50,11 +50,9 @@ export const createInstance = async (
 
   const fileName = `${id}.json`
 
-  await writeFile(
-    join(locals.dataRoot, entity.name, fileName),
-    JSON.stringify(formatValue(entity.type.value, instance), undefined, 2),
-    { encoding: "utf-8" },
-  )
+  await writeFile(join(locals.dataRoot, entity.name, fileName), formatInstance(entity, instance), {
+    encoding: "utf-8",
+  })
 
   const instanceContainer: InstanceContainer = {
     fileName,
@@ -124,7 +122,7 @@ export const updateInstance = async (
 
   await writeFile(
     join(locals.dataRoot, entity.name, instanceContainer.fileName),
-    JSON.stringify(formatValue(entity.type.value, instance), undefined, 2),
+    formatInstance(entity, instance),
     { encoding: "utf-8" },
   )
 

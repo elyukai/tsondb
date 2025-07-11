@@ -21,7 +21,7 @@ import {
   validateObjectType,
 } from "../generic/ObjectType.js"
 import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
-import { removeParentKey, setParent } from "../Type.js"
+import { formatValue, removeParentKey, setParent } from "../Type.js"
 
 type TConstraint = Record<string, MemberDecl>
 
@@ -144,10 +144,11 @@ export const getReferencesForNestedEntityMapType: GetReferences<NestedEntityMapT
         .concat(Object.keys(value))
     : []
 
-export const formatNestedEntityMapValue: StructureFormatter<NestedEntityMapType> = (
-  _type,
-  value,
-) =>
+export const formatNestedEntityMapValue: StructureFormatter<NestedEntityMapType> = (type, value) =>
   typeof value === "object" && value !== null && !Array.isArray(value)
-    ? sortObjectKeysAlphabetically(value as Record<string, unknown>)
+    ? sortObjectKeysAlphabetically(
+        Object.fromEntries(
+          Object.entries(value).map(([key, item]) => [key, formatValue(type.type.value, item)]),
+        ),
+      )
     : value

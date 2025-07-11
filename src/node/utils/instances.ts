@@ -3,6 +3,7 @@ import { basename, extname, join } from "node:path"
 import type { StatusResult } from "simple-git"
 import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.js"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
+import { formatValue } from "../schema/index.ts"
 import { getGitFileStatusFromStatusResult } from "./git.js"
 
 export const getInstancesByEntityName = async (
@@ -49,3 +50,6 @@ export const attachGitStatusToInstancesByEntityName = (
     }))
   })
 }
+
+export const formatInstance = (entity: EntityDecl, instanceContent: unknown) =>
+  JSON.stringify(formatValue(entity.type.value, instanceContent), undefined, 2) + "\n"
