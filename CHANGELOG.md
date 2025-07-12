@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.2](https://github.com/elyukai/tsondb/compare/v0.5.1...v0.5.2) (2025-07-12)
+
+
+### Features
+
+* format comments as markdown and add rules for code and lists ([f0478b7](https://github.com/elyukai/tsondb/commit/f0478b716c3cfc2c151b1199599978d0fac5bc48))
+* only report a type parameter shadowing a declaration if the declaration is referenced within the scope of the type parameter ([2bfa050](https://github.com/elyukai/tsondb/commit/2bfa05052e0bd23de65626f2b9aac9712af0fa3d))
+
+
+### Bug Fixes
+
+* include type arguments in nested declaration search ([73ff195](https://github.com/elyukai/tsondb/commit/73ff1955f168c61cd4893d63b6f5665947167501))
+* wrong input border color syntax ([13d77dd](https://github.com/elyukai/tsondb/commit/13d77dd13253d5af90c3acc6daffadb3ab3d67dc))
+
 ## [0.5.1](https://github.com/elyukai/tsondb/compare/v0.5.0...v0.5.1) (2025-07-12)
 
 
