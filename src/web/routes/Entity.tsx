@@ -11,6 +11,7 @@ import {
 import { Layout } from "../components/Layout.js"
 import { useAPIResource } from "../hooks/useAPIResource.js"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.js"
+import { Markdown } from "../utils/Markdown.tsx"
 import { NotFound } from "./NotFound.js"
 
 const mapInstances = (data: GetAllInstancesOfEntityResponseBody) => data.instances
@@ -58,7 +59,9 @@ export const Entity: FunctionalComponent = () => {
           Add
         </a>
       </div>
-      {entity.declaration.comment && <p className="description">{entity.declaration.comment}</p>}
+      {entity.declaration.comment && (
+        <Markdown class="description" string={entity.declaration.comment} />
+      )}
       <p>
         {instances.length} instance{instances.length === 1 ? "" : "s"}
       </p>

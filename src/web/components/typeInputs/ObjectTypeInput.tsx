@@ -5,6 +5,7 @@ import { toTitleCase } from "../../../shared/utils/string.js"
 import { validateObjectConstraints } from "../../../shared/validation/object.js"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
+import { Markdown } from "../../utils/Markdown.tsx"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
 import { TypeInput } from "./TypeInput.js"
 import { ValidationErrors } from "./utils/ValidationErrors.js"
@@ -35,7 +36,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = ({
               <div className="container-item-title">
                 <strong>{toTitleCase(key)}</strong>
                 {memberDecl.comment === undefined ? null : (
-                  <p class="comment">{memberDecl.comment}</p>
+                  <Markdown class="comment" string={memberDecl.comment} />
                 )}
               </div>
               {memberDecl.isRequired ? null : value[key] === undefined ? (

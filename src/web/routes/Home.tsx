@@ -5,6 +5,7 @@ import { toTitleCase } from "../../shared/utils/string.js"
 import { getAllEntities } from "../api.js"
 import { Layout } from "../components/Layout.js"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.js"
+import { Markdown } from "../utils/Markdown.tsx"
 
 const mapEntities = (data: GetAllDeclarationsResponseBody<SerializedEntityDecl>) =>
   data.declarations.sort((a, b) => a.declaration.name.localeCompare(b.declaration.name))
@@ -20,7 +21,9 @@ export const Home: FunctionalComponent = () => {
           <li key={entity.declaration.name} class="entity-item">
             <div className="title">
               <h2>{toTitleCase(entity.declaration.name)}</h2>
-              {entity.declaration.comment && <p>{entity.declaration.comment}</p>}
+              {entity.declaration.comment && (
+                <Markdown class="description" string={entity.declaration.comment} />
+              )}
             </div>
             <p class="meta">
               {entity.instanceCount} instance{entity.instanceCount === 1 ? "" : "s"}

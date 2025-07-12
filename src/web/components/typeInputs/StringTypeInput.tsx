@@ -1,7 +1,7 @@
 import type { FunctionComponent } from "preact"
 import type { SerializedStringType } from "../../../node/schema/types/primitives/StringType.js"
 import { validateStringConstraints } from "../../../shared/validation/string.js"
-import { Markdown } from "./utils/Markdown.js"
+import { Markdown } from "../../utils/Markdown.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.js"
 
 type Props = {

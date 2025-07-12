@@ -436,29 +436,29 @@ form > .field--container {
   border: none;
 }
 
-.field--container ul,
-.field--container ol {
+.field--container > ul,
+.field--container > ol {
   margin: 0;
   padding: 0;
   list-style-type: " ";
 }
 
-.field--container ul li,
-.field--container ol li {
+.field--container > ul > li,
+.field--container > ol > li {
   padding-top: 0.5rem;
   padding-bottom: 0.75rem;
   border-top: 1px solid var(--separator-color);
   display: block;
 }
 
-.field--container ul li:first-child,
-.field--container ol li:first-child {
+.field--container > ul > li:first-child,
+.field--container > ol > li:first-child {
   padding-top: 0;
   border-top: none;
 }
 
-.field--container ul li:last-child,
-.field--container ol li:last-child {
+.field--container > ul > li:last-child,
+.field--container > ol > li:last-child {
   padding-bottom: 0;
 }
 
@@ -539,8 +539,20 @@ button[type="submit"] {
 
 .comment {
   font-size: 0.8rem;
+  line-height: 1.4;
   color: var(--secondary-color);
   margin: 0.5rem 0 0;
+  max-width: 55em;
+}
+
+.comment p {
+  margin: 0.35rem 0 0;
+}
+
+.comment ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.35rem 0 0;
 }
 
 .git-status {

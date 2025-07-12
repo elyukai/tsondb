@@ -117,4 +117,63 @@ describe("parseBlockMarkdown", () => {
       },
     ])
   })
+
+  it("should evaluate multiple blocks into multiple block nodes", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`This is a paragraph.
+
+This is another paragraph.
+
+- This is the first unordered list item.
+- This is the second unordered list item.
+
+This is yet another paragraph.
+
+1. This is the first and only ordered list item.
+
+This is the final paragraph.`),
+      [
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is a paragraph." }],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is another paragraph." }],
+        },
+        {
+          kind: "list",
+          ordered: false,
+          content: [
+            {
+              kind: "listitem",
+              content: [{ kind: "text", content: "This is the first unordered list item." }],
+            },
+            {
+              kind: "listitem",
+              content: [{ kind: "text", content: "This is the second unordered list item." }],
+            },
+          ],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is yet another paragraph." }],
+        },
+        {
+          kind: "list",
+          ordered: true,
+          content: [
+            {
+              kind: "listitem",
+              content: [{ kind: "text", content: "This is the first and only ordered list item." }],
+            },
+          ],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is the final paragraph." }],
+        },
+      ],
+    )
+  })
 })

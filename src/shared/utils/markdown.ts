@@ -1,4 +1,4 @@
-type Rule = {
+type InlineRule = {
   pattern: RegExp
   predicate?: (result: RegExpExecArray) => boolean
   map: (
@@ -7,27 +7,38 @@ type Rule = {
   ) => InlineMarkdownNode
 }
 
-const boldWithItalicRule: Rule = {
+const codeRule: InlineRule = {
+  pattern: /`(.*?)`/,
+  map: result => ({ kind: "code", content: result[1] ?? "" }),
+}
+
+const boldWithItalicRule: InlineRule = {
   pattern: /\*\*(.*?\*.+?\*.*?)\*\*/,
   map: (result, parseInside) => ({ kind: "bold", content: parseInside(result[1] ?? "") }),
 }
 
-const italicWithBoldRule: Rule = {
+const italicWithBoldRule: InlineRule = {
   pattern: /\*(.*?\*\*.+?\*\*.*?)\*/,
   map: (result, parseInside) => ({ kind: "italic", content: parseInside(result[1] ?? "") }),
 }
 
-const boldRule: Rule = {
+const boldRule: InlineRule = {
   pattern: /\*\*(.+?)\*\*/,
   map: (result, parseInside) => ({ kind: "bold", content: parseInside(result[1] ?? "") }),
 }
 
-const italicRule: Rule = {
+const italicRule: InlineRule = {
   pattern: /\*(.+?)\*/,
   map: (result, parseInside) => ({ kind: "italic", content: parseInside(result[1] ?? "") }),
 }
 
-const rules: Rule[] = [boldWithItalicRule, italicWithBoldRule, boldRule, italicRule]
+const inlineRules: InlineRule[] = [
+  codeRule,
+  boldWithItalicRule,
+  italicWithBoldRule,
+  boldRule,
+  italicRule,
+]
 
 type TextNode = {
   kind: "text"
@@ -39,19 +50,13 @@ export type InlineMarkdownNode =
       kind: "bold" | "italic"
       content: InlineMarkdownNode[]
     }
-  | TextNode
-
-export type BlockMarkdownNode =
   | {
-      kind: "paragraph"
-      content: InlineMarkdownNode[]
+      kind: "code"
+      content: string
     }
   | TextNode
 
-export const parseBlockMarkdown = (text: string): BlockMarkdownNode[] =>
-  text.split(/\n{2,}/).map(par => ({ kind: "paragraph", content: parseInlineMarkdown(par) }))
-
-const parseForRules = (rules: Rule[], text: string): InlineMarkdownNode[] => {
+const parseForInlineRules = (rules: InlineRule[], text: string): InlineMarkdownNode[] => {
   if (text.length === 0) {
     return []
   }
@@ -68,13 +73,83 @@ const parseForRules = (rules: Rule[], text: string): InlineMarkdownNode[] => {
     const before = text.slice(0, index)
     const after = text.slice(index + res[0].length)
     return [
-      ...(before.length > 0 ? parseForRules(rules.slice(1), before) : []),
-      activeRule.map(res, text => parseForRules(rules.slice(1), text)),
-      ...(after.length > 0 ? parseForRules(rules, after) : []),
+      ...(before.length > 0 ? parseForInlineRules(rules.slice(1), before) : []),
+      activeRule.map(res, text => parseForInlineRules(rules.slice(1), text)),
+      ...(after.length > 0 ? parseForInlineRules(rules, after) : []),
     ]
   } else {
-    return parseForRules(rules.slice(1), text)
+    return parseForInlineRules(rules.slice(1), text)
   }
 }
 
-const parseInlineMarkdown = (text: string): InlineMarkdownNode[] => parseForRules(rules, text)
+const parseInlineMarkdown = (text: string): InlineMarkdownNode[] =>
+  parseForInlineRules(inlineRules, text)
+
+type BlockRule = {
+  pattern: RegExp
+  predicate?: (result: RegExpExecArray) => boolean
+  map: (result: RegExpExecArray) => BlockMarkdownNode
+}
+
+const listRule: BlockRule = {
+  pattern: /^((?:(?:\d+\.|[-*]) [^\n]+?)(?:\n(?:\d+\.|[-*]) [^\n]+?)*)(?:\n{2,}|$)/,
+  map: result => ({
+    kind: "list",
+    ordered: /^\d+\. /.test(result[0]),
+    content: (result[1] ?? "").split("\n").map(item => ({
+      kind: "listitem",
+      content: parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, "")),
+    })),
+  }),
+}
+
+const paragraphRule: BlockRule = {
+  pattern: /^((?:[^\n]+?)(?:\n[^\n]+?)*)(?:\n{2,}|$)/,
+  map: result => ({ kind: "paragraph", content: parseInlineMarkdown(result[1] ?? "") }),
+}
+
+const blockRules: BlockRule[] = [listRule, paragraphRule]
+
+export type BlockMarkdownNode =
+  | {
+      kind: "paragraph"
+      content: InlineMarkdownNode[]
+    }
+  | {
+      kind: "list"
+      ordered: boolean
+      content: {
+        kind: "listitem"
+        content: InlineMarkdownNode[]
+      }[]
+    }
+  | TextNode
+
+const parseForBlockRules = (
+  rules: BlockRule[],
+  text: string,
+  remainingRules: BlockRule[] = rules,
+): BlockMarkdownNode[] => {
+  if (text.length === 0) {
+    return []
+  }
+
+  const activeRule = remainingRules[0]
+
+  if (activeRule === undefined) {
+    return [{ kind: "paragraph", content: [{ kind: "text", content: text }] }]
+  }
+
+  const res = activeRule.pattern.exec(text)
+
+  if (res && (activeRule.predicate?.(res) ?? true)) {
+    const { index } = res
+    const after = text.slice(index + res[0].length)
+    return [activeRule.map(res), ...(after.length > 0 ? parseForBlockRules(rules, after) : [])]
+  } else {
+    return parseForBlockRules(rules, text, remainingRules.slice(1))
+  }
+}
+
+export const parseBlockMarkdown = (text: string): BlockMarkdownNode[] =>
+  parseForBlockRules(blockRules, text)
