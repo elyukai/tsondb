@@ -1,6 +1,7 @@
 import Debug from "debug"
 import express from "express"
-import { join } from "node:path"
+import { findPackageJSON } from "node:module"
+import { dirname, join } from "node:path"
 import type { SimpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.js"
 import type { Schema } from "../Schema.ts"
@@ -39,6 +40,14 @@ declare global {
   }
 }
 
+const staticNodeModule = (moduleName: string) => {
+  const pathToPackageJson = findPackageJSON(moduleName, import.meta.url)
+  if (!pathToPackageJson) {
+    throw new Error(`Could not find module "${moduleName}"`)
+  }
+  return express.static(dirname(pathToPackageJson))
+}
+
 export const createServer = async (
   schema: Schema,
   dataRootPath: string,
@@ -50,7 +59,8 @@ export const createServer = async (
   const app = express()
 
   app.use(express.static(join(import.meta.dirname, "../../../public")))
-  app.use("/js/node_modules", express.static(join(import.meta.dirname, "../../../node_modules")))
+  app.use("/js/node_modules/preact", staticNodeModule("preact"))
+  app.use("/js/node_modules/preact-iso", staticNodeModule("preact-iso"))
   app.use("/js/client", express.static(join(import.meta.dirname, "../../../lib/web")))
   app.use("/js/shared", express.static(join(import.meta.dirname, "../../../lib/shared")))
   app.use(express.json())
