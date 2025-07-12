@@ -20,6 +20,7 @@ export const IncludeIdentifierTypeInput: FunctionComponent<Props> = ({
   onChange,
 }) => {
   const decl = getDeclFromDeclName(type.reference)
+
   if (decl === undefined) {
     return (
       <div role="alert">
