@@ -71,9 +71,12 @@ export const isIncludeIdentifierType = (node: Node): node is IncludeIdentifierTy
 export const getNestedDeclarationsInIncludeIdentifierType: GetNestedDeclarations<
   IncludeIdentifierType
 > = (addedDecls, type) =>
-  addedDecls.includes(type.reference)
-    ? addedDecls
-    : getNestedDeclarations([type.reference, ...addedDecls], type.reference)
+  type.args.reduce(
+    (accAddedDecls, arg) => getNestedDeclarations(accAddedDecls, arg),
+    addedDecls.includes(type.reference)
+      ? addedDecls
+      : getNestedDeclarations([type.reference, ...addedDecls], type.reference),
+  )
 
 export const validateIncludeIdentifierType: Validator<IncludeIdentifierType> = (
   helpers,
