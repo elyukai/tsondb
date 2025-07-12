@@ -1,8 +1,13 @@
 import type { Decl } from "./schema/declarations/Declaration.js"
-import { getNestedDeclarations, getParameterNames } from "./schema/declarations/Declaration.js"
+import {
+  getNestedDeclarations,
+  getParameterNames,
+  walkNodeTree,
+} from "./schema/declarations/Declaration.js"
 import type { EntityDecl } from "./schema/declarations/EntityDecl.js"
 import { isEntityDecl } from "./schema/declarations/EntityDecl.js"
 import { isStringType } from "./schema/types/primitives/StringType.js"
+import { isIncludeIdentifierType } from "./schema/types/references/IncludeIdentifierType.ts"
 import { isNestedEntityMapType } from "./schema/types/references/NestedEntityMapType.js"
 import { findTypeAtPath } from "./schema/types/Type.js"
 
@@ -28,9 +33,13 @@ const checkDuplicateIdentifier = (existingDecls: Decl[], decl: Decl) => {
 const checkParameterNamesShadowing = (decls: Decl[]) => {
   for (const decl of decls) {
     for (const param of getParameterNames(decl)) {
-      if (decls.values().some(decl => decl.name === param)) {
-        throw new Error(`Parameter name "${param}" shadows declaration name.`)
-      }
+      walkNodeTree(node => {
+        if (isIncludeIdentifierType(node) && node.reference.name === param) {
+          throw new Error(
+            `Parameter name "${param}" shadows declaration name in declaration "${decl.name}".`,
+          )
+        }
+      }, decl)
     }
   }
 }

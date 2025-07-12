@@ -9,7 +9,7 @@ import { getNestedDeclarationsInObjectType } from "../types/generic/ObjectType.j
 import { getNestedDeclarationsInIncludeIdentifierType } from "../types/references/IncludeIdentifierType.js"
 import { getNestedDeclarationsInNestedEntityMapType } from "../types/references/NestedEntityMapType.js"
 import { getNestedDeclarationsInReferenceIdentifierType } from "../types/references/ReferenceIdentifierType.js"
-import type { SerializedType, Type } from "../types/Type.js"
+import { walkTypeNodeTree, type SerializedType, type Type } from "../types/Type.js"
 import type { ValidatorHelpers } from "../validation/type.js"
 import type { EntityDecl, SerializedEntityDecl } from "./EntityDecl.js"
 import {
@@ -182,6 +182,28 @@ export const isDeclWithoutTypeParameters = (decl: Decl): decl is DeclP<[]> =>
 
 export const resolveTypeArgumentsInDecls = (decls: readonly Decl[]) =>
   decls.filter(isDeclWithoutTypeParameters).map(decl => resolveTypeArgumentsInDecl(decl, []))
+
+export function walkNodeTree(callbackFn: (node: Node) => void, decl: Decl): void {
+  switch (decl.kind) {
+    case NodeKind.EntityDecl: {
+      callbackFn(decl)
+      walkTypeNodeTree(callbackFn, decl.type.value)
+      return
+    }
+    case NodeKind.EnumDecl: {
+      callbackFn(decl)
+      walkTypeNodeTree(callbackFn, decl.type.value)
+      return
+    }
+    case NodeKind.TypeAliasDecl: {
+      callbackFn(decl)
+      walkTypeNodeTree(callbackFn, decl.type.value)
+      return
+    }
+    default:
+      return assertExhaustive(decl)
+  }
+}
 
 export const serializeDecl: Serializer<Decl, SerializedDecl> = decl => {
   switch (decl.kind) {

@@ -200,47 +200,49 @@ export const resolveTypeArgumentsInType = (args: Record<string, Type>, type: Typ
 
 export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): void {
   switch (type.kind) {
-    case NodeKind.ArrayType:
+    case NodeKind.ArrayType: {
       callbackFn(type)
-      {
-        walkTypeNodeTree(callbackFn, type.items)
-        return
-      }
-    case NodeKind.ObjectType:
+      walkTypeNodeTree(callbackFn, type.items)
+      return
+    }
+    case NodeKind.ObjectType: {
       callbackFn(type)
-      {
-        Object.values(type.properties).forEach(prop => {
-          walkTypeNodeTree(callbackFn, prop.type)
-        })
-        return
-      }
-    case NodeKind.NestedEntityMapType:
+      Object.values(type.properties).forEach(prop => {
+        walkTypeNodeTree(callbackFn, prop.type)
+      })
+      return
+    }
+    case NodeKind.NestedEntityMapType: {
       callbackFn(type)
-      {
-        walkTypeNodeTree(callbackFn, type.type.value)
-        return
-      }
+      walkTypeNodeTree(callbackFn, type.type.value)
+      return
+    }
     case NodeKind.BooleanType:
     case NodeKind.DateType:
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
     case NodeKind.StringType:
     case NodeKind.TypeArgumentType:
-    case NodeKind.ReferenceIdentifierType:
-    case NodeKind.IncludeIdentifierType: {
+    case NodeKind.ReferenceIdentifierType: {
       callbackFn(type)
       return
     }
-    case NodeKind.EnumType:
+    case NodeKind.IncludeIdentifierType: {
       callbackFn(type)
-      {
-        Object.values(type.values).forEach(value => {
-          if (value.type) {
-            walkTypeNodeTree(callbackFn, value.type)
-          }
-        })
-        return
-      }
+      type.args.forEach(arg => {
+        walkTypeNodeTree(callbackFn, arg)
+      })
+      return
+    }
+    case NodeKind.EnumType: {
+      callbackFn(type)
+      Object.values(type.values).forEach(value => {
+        if (value.type) {
+          walkTypeNodeTree(callbackFn, value.type)
+        }
+      })
+      return
+    }
     default:
       return assertExhaustive(type)
   }
