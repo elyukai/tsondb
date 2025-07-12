@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.1](https://github.com/elyukai/tsondb/compare/v0.5.0...v0.5.1) (2025-07-12)
+
+
+### Features
+
+* dark mode ([43806d4](https://github.com/elyukai/tsondb/commit/43806d4c047e3d98bc54af391b5ff7c122d24006))
+
+
+### Bug Fixes
+
+* list item title alignment ([f2248dd](https://github.com/elyukai/tsondb/commit/f2248dd87bd3f503be7349ce7d27b41ad95e3d42))
+* serve preact and preact-iso regardless of where they are located ([7087465](https://github.com/elyukai/tsondb/commit/7087465b1a01fb6f90778714191bf9bd956f10f7))
+
 ## [0.5.0](https://github.com/elyukai/tsondb/compare/v0.4.0...v0.5.0) (2025-07-11)
 
 
