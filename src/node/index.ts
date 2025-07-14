@@ -10,7 +10,7 @@ import type { EntityDecl } from "./schema/index.ts"
 import { createValidators, validateEntityDecl } from "./schema/index.ts"
 import type { ServerOptions } from "./server/index.ts"
 import { createServer } from "./server/index.ts"
-import { getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
+import { countErrors, getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
 import { formatInstance, getInstancesByEntityName } from "./utils/instances.ts"
 
 const debug = Debug("tsondb:schema")
@@ -55,7 +55,7 @@ const _validate = (
     for (const error of errors) {
       debug(getErrorMessageForDisplay(error) + "\n")
     }
-    throw new Error("Validation failed")
+    throw new Error(`Validation failed with ${countErrors(errors).toString()} errors`)
   }
 }
 
