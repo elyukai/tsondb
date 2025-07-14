@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.3](https://github.com/elyukai/tsondb/compare/v0.5.2...v0.5.3) (2025-07-14)
+
+
+### Features
+
+* sort validation errors by file path ([665e46b](https://github.com/elyukai/tsondb/commit/665e46b7809ea1c949e84c984703add9ee46dd30))
+
 ## [0.5.2](https://github.com/elyukai/tsondb/compare/v0.5.1...v0.5.2) (2025-07-12)
 
 
