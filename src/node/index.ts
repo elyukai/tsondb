@@ -35,16 +35,18 @@ const _validate = (
   entities: EntityDecl[],
   instancesByEntityName: InstancesByEntityName,
 ): void => {
-  const errors = entities.flatMap(entity =>
-    parallelizeErrors(
-      instancesByEntityName[entity.name]?.map(instance =>
-        wrapErrorsIfAny(
-          `in file "${join(dataRootPath, entity.name, instance.fileName)}"`,
-          validateEntityDecl(createValidators(instancesByEntityName), entity, instance.content),
-        ),
-      ) ?? [],
-    ),
-  )
+  const errors = entities
+    .flatMap(entity =>
+      parallelizeErrors(
+        instancesByEntityName[entity.name]?.map(instance =>
+          wrapErrorsIfAny(
+            `in file "${join(dataRootPath, entity.name, instance.fileName)}"`,
+            validateEntityDecl(createValidators(instancesByEntityName), entity, instance.content),
+          ),
+        ) ?? [],
+      ),
+    )
+    .toSorted((a, b) => a.message.localeCompare(b.message))
 
   if (errors.length === 0) {
     debug("All entities are valid")
