@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.5](https://github.com/elyukai/tsondb/compare/v0.5.4...v0.5.5) (2025-07-16)
+
+
+### Bug Fixes
+
+* make absolute config import work on windows ([8cdcdc2](https://github.com/elyukai/tsondb/commit/8cdcdc27d6cbddd9ffb49394be575ae6cc7c1e9b))
+
 ## [0.5.4](https://github.com/elyukai/tsondb/compare/v0.5.3...v0.5.4) (2025-07-14)
 
 
