@@ -4,6 +4,7 @@ import Debug from "debug"
 import { access, constants } from "node:fs/promises"
 import { join } from "node:path"
 import { cwd } from "node:process"
+import { pathToFileURL } from "node:url"
 import { parseArguments } from "simple-cli-args"
 import { format, generateOutputs, serve, validate } from "../node/index.ts"
 import type { Output } from "../node/renderers/Output.ts"
@@ -56,7 +57,7 @@ const config: Config | undefined = await (async () => {
       continue
     }
 
-    const foundConfigModule = (await import(fullPath)) as object
+    const foundConfigModule = (await import(pathToFileURL(fullPath).toString())) as object
     if ("default" in foundConfigModule) {
       debug(`config file ${fullPath} found with config`)
       return foundConfigModule.default as Config | undefined
