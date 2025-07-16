@@ -1,3 +1,4 @@
+import { json } from "../../../utils/errorFormatting.ts"
 import type { GetReferences, Node, Serializer } from "../../Node.js"
 import { NodeKind } from "../../Node.js"
 import type { Validator } from "../../validation/type.js"
@@ -22,7 +23,7 @@ export const isBooleanType = (node: Node): node is BooleanType => node.kind === 
 
 export const validateBooleanType: Validator<BooleanType> = (_helpers, _type, value) => {
   if (typeof value !== "boolean") {
-    return [TypeError(`expected a boolean value, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected a boolean value, but got ${json(value)}`)]
   }
 
   return []

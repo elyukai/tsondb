@@ -1,6 +1,7 @@
 import { enumOfObject } from "../../shared/utils/enum.js"
 import type { InstancesByEntityName } from "../../shared/utils/instances.js"
 import { assertExhaustive } from "../../shared/utils/typeSafety.js"
+import { entity, json } from "../utils/errorFormatting.ts"
 import type { Decl } from "./declarations/Declaration.js"
 import type { Type } from "./types/Type.js"
 
@@ -156,7 +157,7 @@ export const createValidators = (instancesByEntityName: InstancesByEntityName): 
       ? []
       : [
           ReferenceError(
-            `Invalid reference to instance of entity "${name}" with identifier ${JSON.stringify(
+            `Invalid reference to instance of entity ${entity(`"${name}"`)} with identifier ${json(
               value,
             )}`,
           ),

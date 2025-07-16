@@ -1,6 +1,7 @@
 import Debug from "debug"
 import { mkdir, writeFile } from "fs/promises"
-import { join } from "path"
+import { join, sep } from "path"
+import { styleText } from "util"
 import type { InstancesByEntityName } from "../shared/utils/instances.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
 import type { Output } from "./renderers/Output.ts"
@@ -40,7 +41,7 @@ const _validate = (
       parallelizeErrors(
         instancesByEntityName[entity.name]?.map(instance =>
           wrapErrorsIfAny(
-            `in file "${join(dataRootPath, entity.name, instance.fileName)}"`,
+            `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, instance.fileName))}"`)}`,
             validateEntityDecl(createValidators(instancesByEntityName), entity, instance.content),
           ),
         ) ?? [],
@@ -51,10 +52,9 @@ const _validate = (
   if (errors.length === 0) {
     debug("All entities are valid")
   } else {
-    debug("Errors:\n")
-    for (const error of errors) {
-      debug(getErrorMessageForDisplay(error) + "\n")
-    }
+    console.error(
+      styleText("red", "\n" + errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")),
+    )
     throw new Error(`Validation failed with ${countErrors(errors).toString()} errors`)
   }
 }

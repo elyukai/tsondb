@@ -1,6 +1,7 @@
 import { parallelizeErrors } from "../../../../shared/utils/validation.js"
 import { validateArrayConstraints } from "../../../../shared/validation/array.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
+import { json, key } from "../../../utils/errorFormatting.ts"
 import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { getNestedDeclarations } from "../../declarations/Declaration.js"
 import type { GetReferences, Node, Serializer } from "../../Node.js"
@@ -81,13 +82,13 @@ export const getNestedDeclarationsInArrayType: GetNestedDeclarations<ArrayType> 
 
 export const validateArrayType: Validator<ArrayType> = (helpers, type, value) => {
   if (!Array.isArray(value)) {
-    return [TypeError(`expected an array, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected an array, but got ${json(value)}`)]
   }
 
   return parallelizeErrors([
     ...validateArrayConstraints(type, value),
     ...value.map((item, index) =>
-      wrapErrorsIfAny(`at index ${index.toString()}`, validate(helpers, type.items, item)),
+      wrapErrorsIfAny(`at index ${key(index.toString())}`, validate(helpers, type.items, item)),
     ),
   ])
 }

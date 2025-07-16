@@ -2,6 +2,7 @@ import { Lazy } from "../../../../shared/utils/lazy.js"
 import { sortObjectKeysAlphabetically } from "../../../../shared/utils/object.js"
 import { parallelizeErrors } from "../../../../shared/utils/validation.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
+import { entity, json, key as keyColor } from "../../../utils/errorFormatting.ts"
 import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import type { EntityDecl } from "../../declarations/EntityDecl.js"
 import type { GetReferences, Node, Serializer } from "../../Node.js"
@@ -98,13 +99,13 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
   value,
 ) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`expected an object, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected an object, but got ${json(value)}`)]
   }
 
   return parallelizeErrors(
     Object.keys(value).map(key =>
       wrapErrorsIfAny(
-        `at nested entity map "${type.name}" at key "${key}"`,
+        `at nested entity map ${entity(`"${type.name}"`)} at key ${keyColor(`"${key}"`)}`,
         validateObjectType(helpers, type.type.value, value[key as keyof typeof value]).concat(
           helpers.checkReferentialIntegrity({
             name: type.secondaryEntity.name,

@@ -3,6 +3,7 @@ import { parallelizeErrors } from "../../../../shared/utils/validation.js"
 import type { ObjectConstraints } from "../../../../shared/validation/object.js"
 import { validateObjectConstraints } from "../../../../shared/validation/object.js"
 import { wrapErrorsIfAny } from "../../../utils/error.js"
+import { json, key as keyColor } from "../../../utils/errorFormatting.ts"
 import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { getNestedDeclarations } from "../../declarations/Declaration.js"
 import type { GetReferences, Node, Serializer } from "../../Node.js"
@@ -99,7 +100,7 @@ export const getNestedDeclarationsInObjectType: GetNestedDeclarations<ObjectType
 
 export const validateObjectType: Validator<ObjectType> = (helpers, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`expected an object, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected an object, but got ${json(value)}`)]
   }
 
   const expectedKeys = Object.keys(type.properties)
@@ -111,10 +112,10 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
       const prop = type.properties[key]!
 
       if (prop.isRequired && !(key in value)) {
-        return TypeError(`missing required property "${key}"`)
+        return TypeError(`missing required property ${keyColor(`"${key}"`)}`)
       } else if (prop.isRequired || (value as Record<string, unknown>)[key] !== undefined) {
         return wrapErrorsIfAny(
-          `at object key "${key}"`,
+          `at object key ${keyColor(`"${key}"`)}`,
           validate(helpers, prop.type, (value as Record<string, unknown>)[key]),
         )
       }

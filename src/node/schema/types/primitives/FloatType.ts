@@ -1,5 +1,6 @@
 import type { RangeBound } from "../../../../shared/validation/number.js"
 import { validateNumberConstraints } from "../../../../shared/validation/number.js"
+import { json } from "../../../utils/errorFormatting.ts"
 import type { GetReferences, Node, Serializer } from "../../Node.js"
 import { NodeKind } from "../../Node.js"
 import type { Validator } from "../../validation/type.js"
@@ -37,7 +38,7 @@ export const isFloatType = (node: Node): node is FloatType => node.kind === Node
 
 export const validateFloatType: Validator<FloatType> = (_helpers, type, value) => {
   if (typeof value !== "number") {
-    return [TypeError(`expected a floating-point number, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected a floating-point number, but got ${json(value)}`)]
   }
 
   return validateNumberConstraints(type, value)

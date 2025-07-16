@@ -1,4 +1,5 @@
 import { discriminatorKey } from "../../../../shared/enum.js"
+import { json, key } from "../../../utils/errorFormatting.ts"
 import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
 import { getNestedDeclarations } from "../../declarations/Declaration.js"
 import type { GetReferences, Node, Serializer } from "../../Node.js"
@@ -65,14 +66,16 @@ export const getNestedDeclarationsInEnumType: GetNestedDeclarations<EnumType> = 
 
 export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`expected an object, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected an object, but got ${json(value)}`)]
   }
 
   const actualKeys = Object.keys(value)
 
   if (!(discriminatorKey in value) || typeof value[discriminatorKey] !== "string") {
     return [
-      TypeError(`missing required discriminator value at key "${discriminatorKey}" of type string`),
+      TypeError(
+        `missing required discriminator value at key ${key(`"${discriminatorKey}"`)} of type string`,
+      ),
     ]
   }
 
@@ -81,7 +84,7 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
   if (!(caseName in type.values)) {
     return [
       TypeError(
-        `discriminator "${caseName}" is not a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
+        `discriminator ${key(`"${caseName}"`)} is not a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
       ),
     ]
   }
@@ -91,7 +94,7 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
       ? []
       : [
           TypeError(
-            `key "${actualKey}" is not the discriminator key "${caseName}" or a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
+            `key ${key(`"${actualKey}"`)} is not the discriminator key ${key(`"${caseName}"`)} or a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
           ),
         ],
   )
@@ -104,7 +107,7 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
 
   if (associatedType != null) {
     if (!(caseName in value)) {
-      return [TypeError(`missing required associated value for case "${caseName}"`)]
+      return [TypeError(`missing required associated value for case ${key(`"${caseName}"`)}`)]
     }
 
     return validate(helpers, associatedType, (value as Record<typeof caseName, unknown>)[caseName])

@@ -1,5 +1,6 @@
 import type { StringConstraints } from "../../../../shared/validation/string.js"
 import { validateStringConstraints } from "../../../../shared/validation/string.js"
+import { json } from "../../../utils/errorFormatting.ts"
 import type { GetReferences, Node, Serializer } from "../../Node.js"
 import { NodeKind } from "../../Node.js"
 import type { Validator } from "../../validation/type.js"
@@ -36,7 +37,7 @@ export const isStringType = (node: Node): node is StringType => node.kind === No
 
 export const validateStringType: Validator<StringType> = (_helpers, type, value) => {
   if (typeof value !== "string") {
-    return [TypeError(`expected a string, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected a string, but got ${json(value)}`)]
   }
 
   return validateStringConstraints(type, value)

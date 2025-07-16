@@ -1,5 +1,6 @@
 import type { RangeBound } from "../../../../shared/validation/number.js"
 import { validateNumberConstraints } from "../../../../shared/validation/number.js"
+import { json } from "../../../utils/errorFormatting.ts"
 import type { GetReferences, Node, Serializer } from "../../Node.js"
 import { NodeKind } from "../../Node.js"
 import { validateOption } from "../../validation/options.js"
@@ -43,7 +44,7 @@ export const isIntegerType = (node: Node): node is IntegerType => node.kind === 
 
 export const validateIntegerType: Validator<IntegerType> = (_helpers, type, value) => {
   if (typeof value !== "number" || !Number.isInteger(value)) {
-    return [TypeError(`expected an integer, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected an integer, but got ${json(value)}`)]
   }
 
   return validateNumberConstraints(type, value)

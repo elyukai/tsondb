@@ -1,5 +1,6 @@
 import type { DateConstraints } from "../../../../shared/validation/date.js"
 import { validateDateConstraints } from "../../../../shared/validation/date.js"
+import { json } from "../../../utils/errorFormatting.ts"
 import type { GetReferences, Node, Serializer } from "../../Node.js"
 import { NodeKind } from "../../Node.js"
 import type { Validator } from "../../validation/type.js"
@@ -25,7 +26,7 @@ export const isDateType = (node: Node): node is DateType => node.kind === NodeKi
 
 export const validateDateType: Validator<DateType> = (_helpers, type, value) => {
   if (typeof value !== "string") {
-    return [TypeError(`expected a string, but got ${JSON.stringify(value)}`)]
+    return [TypeError(`expected a string, but got ${json(value)}`)]
   }
 
   return validateDateConstraints(type, value)
