@@ -33,10 +33,10 @@ const passedArguments = parseArguments({
 // import the config
 
 const possibleConfigNames = [
-  "tsondb.config.ts",
   "tsondb.config.mts",
-  "tsondb.config.js",
+  "tsondb.config.ts",
   "tsondb.config.mjs",
+  "tsondb.config.js",
 ]
 
 export type Config = {

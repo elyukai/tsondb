@@ -10,6 +10,44 @@ TSON-DB can also be used to render type declarations in multiple languages or vo
 npm install tsondb
 ```
 
+## Configuration
+
+To configure `tsondb`, create a configuration file at the location from where you are going to run its commands, usually the project root. The following file names are possible and are checked in the given order:
+
+1. `tsondb.config.mts`
+2. `tsondb.config.ts`
+3. `tsondb.config.mjs`
+4. `tsondb.config.js`
+
+You need to export an object conforming to the `Config` type as the default export.
+
+```ts
+// tsondb.config.ts
+import { join } from "node:path"
+import { type Config, Schema } from "tsondb"
+import { JsonSchemaOutput } from "tsondb/renderer/jsonschema"
+import { TypeScriptOutput } from "tsondb/renderer/ts"
+
+export default {
+  schema: new Schema(
+    [
+      // add your entities here
+    ]
+  ),
+  outputs: [
+    TypeScriptOutput({
+      targetPath: join(import.meta.dirname, "gen", "ts"),
+    }),
+    JsonSchemaOutput({
+      targetPath: join(import.meta.dirname, "gen", "schema"),
+    }),
+  ],
+  dataRootPath: join(import.meta.dirname, "data"),
+} satisfies Config
+```
+
+See the following sections for details on how the different parts come together.
+
 ## Define a Schema
 
 You define a schema by declarations that consist of types.
@@ -39,6 +77,8 @@ You can also add comments that, while not displayed by IDEs during the developme
 Note that some imports may shadow global objects (like `String` and `Object` in the example above). If you need a different name for an import, instead renaming an import, you can import a longer version of all declaration and type functions &mdash; declarations have a `Decl` suffix (e.g. `EntityDecl`) and types have a `Type` suffix (e.g. `StringType`). The simple imports are preferred due to simplicity, but you can also always use the suffixed names if you prefer to not shadow global objects.
 
 Make sure to always pass `import.meta.url` as the first parameter to each declaration function, otherwise some functionality will not work at all or will not work as expected.
+
+To actually add `Ùser` to your schema, either list it in the array passed to the `Schema` function or reference it in an entity that is already listed.
 
 ### Available Declarations
 
@@ -146,26 +186,23 @@ If the database is in a Git repository, you’ll also get a simple Git GUI for m
 
 ## Generate typings
 
-To generate typings, you have to define the `outputs` option on the `ModelContainer`.
+To generate typings, you have to define the `outputs` property in the configuration file.
 
 ```ts
-ModelContainer({
+export default {
   // ...
   outputs: [
     TypeScriptOutput({
-      targetPath: join(import.meta.dirname, "..", "gen", "types.d.ts"),
-      rendererOptions: {
-        preserveFiles: false,
-      },
+      targetPath: join(import.meta.dirname, "gen", "types.d.ts"),
     }),
     JsonSchemaOutput({
-      targetPath: join(import.meta.dirname, "..", "gen", "types.schema.json"),
+      targetPath: join(import.meta.dirname, "gen", "schema"),
       rendererOptions: {
         preserveFiles: true,
       },
     }),
   ],
-})
+} satisfies Config
 ```
 
 You specify a target path where to save each generated content, and you can optionally provide custom settings to the respective renderers.
