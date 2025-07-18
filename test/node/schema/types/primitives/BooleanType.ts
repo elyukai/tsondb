@@ -36,7 +36,7 @@ describe("validateBooleanType", () => {
       [],
     )
     deepEqual(validateBooleanType({ checkReferentialIntegrity: () => [] }, BooleanType(), "true"), [
-      TypeError(`expected a boolean value, but got "true"`),
+      TypeError(`expected a boolean value, but got ${json("true")}`),
     ])
   })
 })
