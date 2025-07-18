@@ -1,11 +1,11 @@
-import type { StringConstraints } from "../../../../shared/validation/string.js"
-import { validateStringConstraints } from "../../../../shared/validation/string.js"
+import type { StringConstraints } from "../../../../shared/validation/string.ts"
+import { validateStringConstraints } from "../../../../shared/validation/string.ts"
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.js"
-import { NodeKind } from "../../Node.js"
-import type { Validator } from "../../validation/type.js"
-import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.js"
-import { removeParentKey } from "../Type.js"
+import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import { NodeKind } from "../../Node.ts"
+import type { Validator } from "../../validation/type.ts"
+import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.ts"
+import { removeParentKey } from "../Type.ts"
 
 export interface StringType extends BaseType, StringConstraints {
   kind: NodeKind["StringType"]

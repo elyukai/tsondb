@@ -1,5 +1,5 @@
-import type { SerializedDecl } from "../node/schema/declarations/Declaration.js"
-import type { InstanceContainer, InstanceContainerOverview } from "./utils/instances.js"
+import type { SerializedDecl } from "../node/schema/declarations/Declaration.ts"
+import type { InstanceContainer, InstanceContainerOverview } from "./utils/instances.ts"
 
 export interface GetAllDeclarationsResponseBody<D extends SerializedDecl = SerializedDecl> {
   declarations: { declaration: D; instanceCount: number }[]

@@ -8,7 +8,7 @@ import {
   toPascalCase,
   toSnakeCase,
   toTitleCase,
-} from "../../../src/shared/utils/string.js"
+} from "../../../src/shared/utils/string.ts"
 
 describe("splitStringParts", () => {
   it("should split strings of various cases into its parts", () => {

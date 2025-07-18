@@ -1,6 +1,6 @@
 import { deepEqual } from "node:assert/strict"
 import { describe, it } from "node:test"
-import { validateStringConstraints } from "../../../src/shared/validation/string.js"
+import { validateStringConstraints } from "../../../src/shared/validation/string.ts"
 
 describe("validateStringConstraints", () => {
   it("combines checks for bounds and multiple of", () => {

@@ -1,12 +1,12 @@
-import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
-import { getNestedDeclarations } from "../../declarations/Declaration.js"
-import type { EntityDecl } from "../../declarations/EntityDecl.js"
-import { createEntityIdentifierType } from "../../declarations/EntityDecl.js"
-import type { GetReferences, Node, Serializer } from "../../Node.js"
-import { NodeKind } from "../../Node.js"
-import type { Validator } from "../../validation/type.js"
-import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
-import { removeParentKey, validate } from "../Type.js"
+import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
+import { getNestedDeclarations } from "../../declarations/Declaration.ts"
+import type { EntityDecl } from "../../declarations/EntityDecl.ts"
+import { createEntityIdentifierType } from "../../declarations/EntityDecl.ts"
+import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import { NodeKind } from "../../Node.ts"
+import type { Validator } from "../../validation/type.ts"
+import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.ts"
+import { removeParentKey, validate } from "../Type.ts"
 
 export interface ReferenceIdentifierType extends BaseType {
   kind: NodeKind["ReferenceIdentifierType"]

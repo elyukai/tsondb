@@ -8,7 +8,7 @@ import {
   lt,
   lte,
   neq,
-} from "../../../src/shared/utils/compare.js"
+} from "../../../src/shared/utils/compare.ts"
 
 describe("lt", () => {
   it("equals true if the first number is less than the second", () => {

@@ -1,16 +1,16 @@
 import type { FunctionComponent } from "preact"
 import type { TargetedEvent } from "preact/compat"
 import { useEffect, useState } from "preact/hooks"
-import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.js"
-import type { GitStatusResponseBody } from "../../shared/api.js"
-import type { GitFileStatus } from "../../shared/utils/git.js"
+import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.ts"
+import type { GitStatusResponseBody } from "../../shared/api.ts"
+import type { GitFileStatus } from "../../shared/utils/git.ts"
 import {
   getGitStatusForDisplay,
   getLabelForGitStatus,
   isChangedInIndex,
   isChangedInWorkingDir,
-} from "../../shared/utils/git.js"
-import type { InstanceContainerOverview } from "../../shared/utils/instances.js"
+} from "../../shared/utils/git.ts"
+import type { InstanceContainerOverview } from "../../shared/utils/instances.ts"
 import {
   commitStagedFiles,
   createBranch,
@@ -24,7 +24,7 @@ import {
   switchBranch,
   unstageAllFiles,
   unstageFileOfEntity,
-} from "../api.js"
+} from "../api.ts"
 
 type Overview = [
   entityName: string,

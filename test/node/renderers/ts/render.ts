@@ -1,7 +1,7 @@
 import { equal } from "assert"
 import { describe, it } from "node:test"
-import { render } from "../../../../src/node/renderers/ts/render.js"
-import type { Type } from "../../../../src/node/schema/index.js"
+import { render } from "../../../../src/node/renderers/ts/render.ts"
+import type { Type } from "../../../../src/node/schema/index.ts"
 import {
   Array,
   Boolean,
@@ -16,8 +16,8 @@ import {
   Required,
   TypeAliasDecl,
   TypeArgumentType,
-} from "../../../../src/node/schema/index.js"
-import { String } from "../../../../src/node/schema/types/primitives/StringType.js"
+} from "../../../../src/node/schema/index.ts"
+import { String } from "../../../../src/node/schema/types/primitives/StringType.ts"
 
 describe("render types", () => {
   const testType = (type: Type, expected: string) => {

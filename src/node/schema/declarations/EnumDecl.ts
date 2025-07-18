@@ -1,13 +1,13 @@
-import { Lazy } from "../../../shared/utils/lazy.js"
-import type { GetReferences, Node, Serializer } from "../Node.js"
-import { NodeKind } from "../Node.js"
-import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js"
-import { serializeTypeParameter } from "../TypeParameter.js"
+import { Lazy } from "../../../shared/utils/lazy.ts"
+import type { GetReferences, Node, Serializer } from "../Node.ts"
+import { NodeKind } from "../Node.ts"
+import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.ts"
+import { serializeTypeParameter } from "../TypeParameter.ts"
 import type {
   EnumCaseDecl,
   SerializedEnumCaseDecl,
   SerializedEnumType,
-} from "../types/generic/EnumType.js"
+} from "../types/generic/EnumType.ts"
 import {
   EnumType,
   getNestedDeclarationsInEnumType,
@@ -15,16 +15,16 @@ import {
   resolveTypeArgumentsInEnumType,
   serializeEnumType,
   validateEnumType,
-} from "../types/generic/EnumType.js"
-import { setParent, type Type } from "../types/Type.js"
-import type { ValidatorHelpers } from "../validation/type.js"
+} from "../types/generic/EnumType.ts"
+import { setParent, type Type } from "../types/Type.ts"
+import type { ValidatorHelpers } from "../validation/type.ts"
 import type {
   BaseDecl,
   GetNestedDeclarations,
   SerializedBaseDecl,
   TypeArguments,
-} from "./Declaration.js"
-import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.js"
+} from "./Declaration.ts"
+import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
 
 export interface EnumDecl<
   Name extends string = string,

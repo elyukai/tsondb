@@ -1,28 +1,28 @@
-import { Lazy } from "../../../../shared/utils/lazy.js"
-import { sortObjectKeysAlphabetically } from "../../../../shared/utils/object.js"
-import { parallelizeErrors } from "../../../../shared/utils/validation.js"
-import { wrapErrorsIfAny } from "../../../utils/error.js"
+import { Lazy } from "../../../../shared/utils/lazy.ts"
+import { sortObjectKeysAlphabetically } from "../../../../shared/utils/object.ts"
+import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
+import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { entity, json, key as keyColor } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
-import type { EntityDecl } from "../../declarations/EntityDecl.js"
-import type { GetReferences, Node, Serializer } from "../../Node.js"
-import { NodeKind } from "../../Node.js"
-import type { Validator } from "../../validation/type.js"
+import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
+import type { EntityDecl } from "../../declarations/EntityDecl.ts"
+import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import { NodeKind } from "../../Node.ts"
+import type { Validator } from "../../validation/type.ts"
 import type {
   MemberDecl,
   ObjectType,
   SerializedMemberDecl,
   SerializedObjectType,
-} from "../generic/ObjectType.js"
+} from "../generic/ObjectType.ts"
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
   resolveTypeArgumentsInObjectType,
   serializeObjectType,
   validateObjectType,
-} from "../generic/ObjectType.js"
-import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
-import { formatValue, removeParentKey, setParent } from "../Type.js"
+} from "../generic/ObjectType.ts"
+import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.ts"
+import { formatValue, removeParentKey, setParent } from "../Type.ts"
 
 type TConstraint = Record<string, MemberDecl>
 

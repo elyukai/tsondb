@@ -1,5 +1,5 @@
-import type { Validators } from "../Node.js"
-import type { Type } from "../types/Type.js"
+import type { Validators } from "../Node.ts"
+import type { Type } from "../types/Type.ts"
 
 export type ValidatorHelpers = Validators
 

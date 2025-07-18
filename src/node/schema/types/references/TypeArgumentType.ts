@@ -1,10 +1,10 @@
-import type { GetReferences, Node, Serializer } from "../../Node.js"
-import { NodeKind } from "../../Node.js"
-import type { SerializedTypeParameter, TypeParameter } from "../../TypeParameter.js"
-import { serializeTypeParameter } from "../../TypeParameter.js"
-import type { Validator } from "../../validation/type.js"
-import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
-import { removeParentKey } from "../Type.js"
+import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import { NodeKind } from "../../Node.ts"
+import type { SerializedTypeParameter, TypeParameter } from "../../TypeParameter.ts"
+import { serializeTypeParameter } from "../../TypeParameter.ts"
+import type { Validator } from "../../validation/type.ts"
+import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.ts"
+import { removeParentKey } from "../Type.ts"
 
 type TConstraint = TypeParameter
 

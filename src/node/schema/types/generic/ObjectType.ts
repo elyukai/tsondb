@@ -1,22 +1,22 @@
-import { sortObjectKeys } from "../../../../shared/utils/object.js"
-import { parallelizeErrors } from "../../../../shared/utils/validation.js"
-import type { ObjectConstraints } from "../../../../shared/validation/object.js"
-import { validateObjectConstraints } from "../../../../shared/validation/object.js"
-import { wrapErrorsIfAny } from "../../../utils/error.js"
+import { sortObjectKeys } from "../../../../shared/utils/object.ts"
+import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
+import type { ObjectConstraints } from "../../../../shared/validation/object.ts"
+import { validateObjectConstraints } from "../../../../shared/validation/object.ts"
+import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key as keyColor } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
-import { getNestedDeclarations } from "../../declarations/Declaration.js"
-import type { GetReferences, Node, Serializer } from "../../Node.js"
-import { NodeKind } from "../../Node.js"
-import { validateOption } from "../../validation/options.js"
-import type { Validator } from "../../validation/type.js"
+import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
+import { getNestedDeclarations } from "../../declarations/Declaration.ts"
+import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import { NodeKind } from "../../Node.ts"
+import { validateOption } from "../../validation/options.ts"
+import type { Validator } from "../../validation/type.ts"
 import type {
   BaseType,
   SerializedBaseType,
   SerializedType,
   StructureFormatter,
   Type,
-} from "../Type.js"
+} from "../Type.ts"
 import {
   formatValue,
   getReferencesForType,
@@ -25,7 +25,7 @@ import {
   serializeType,
   setParent,
   validate,
-} from "../Type.js"
+} from "../Type.ts"
 
 type TConstraint = Record<string, MemberDecl>
 

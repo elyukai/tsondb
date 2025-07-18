@@ -4,7 +4,7 @@ import {
   validateMultipleOf,
   validateNumberConstraints,
   validateRangeBound,
-} from "../../../src/shared/validation/number.js"
+} from "../../../src/shared/validation/number.ts"
 
 describe("validateNumberConstraints", () => {
   it("combines checks for bounds and multiple of", () => {

@@ -1,17 +1,17 @@
-import { assertExhaustive } from "../../../shared/utils/typeSafety.js"
-import type { BaseNode, GetReferences, Node, Serializer } from "../Node.js"
-import { NodeKind } from "../Node.js"
-import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.js"
-import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.js"
-import type { EnumCaseDecl, SerializedEnumCaseDecl } from "../types/generic/EnumType.js"
-import { getNestedDeclarationsInEnumType } from "../types/generic/EnumType.js"
-import { getNestedDeclarationsInObjectType } from "../types/generic/ObjectType.js"
-import { getNestedDeclarationsInIncludeIdentifierType } from "../types/references/IncludeIdentifierType.js"
-import { getNestedDeclarationsInNestedEntityMapType } from "../types/references/NestedEntityMapType.js"
-import { getNestedDeclarationsInReferenceIdentifierType } from "../types/references/ReferenceIdentifierType.js"
-import { walkTypeNodeTree, type SerializedType, type Type } from "../types/Type.js"
-import type { ValidatorHelpers } from "../validation/type.js"
-import type { EntityDecl, SerializedEntityDecl } from "./EntityDecl.js"
+import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
+import type { BaseNode, GetReferences, Node, Serializer } from "../Node.ts"
+import { NodeKind } from "../Node.ts"
+import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.ts"
+import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.ts"
+import type { EnumCaseDecl, SerializedEnumCaseDecl } from "../types/generic/EnumType.ts"
+import { getNestedDeclarationsInEnumType } from "../types/generic/EnumType.ts"
+import { getNestedDeclarationsInObjectType } from "../types/generic/ObjectType.ts"
+import { getNestedDeclarationsInIncludeIdentifierType } from "../types/references/IncludeIdentifierType.ts"
+import { getNestedDeclarationsInNestedEntityMapType } from "../types/references/NestedEntityMapType.ts"
+import { getNestedDeclarationsInReferenceIdentifierType } from "../types/references/ReferenceIdentifierType.ts"
+import { walkTypeNodeTree, type SerializedType, type Type } from "../types/Type.ts"
+import type { ValidatorHelpers } from "../validation/type.ts"
+import type { EntityDecl, SerializedEntityDecl } from "./EntityDecl.ts"
 import {
   getNestedDeclarationsInEntityDecl,
   getReferencesForEntityDecl,
@@ -19,8 +19,8 @@ import {
   resolveTypeArgumentsInEntityDecl,
   serializeEntityDecl,
   validateEntityDecl,
-} from "./EntityDecl.js"
-import type { EnumDecl, SerializedEnumDecl } from "./EnumDecl.js"
+} from "./EntityDecl.ts"
+import type { EnumDecl, SerializedEnumDecl } from "./EnumDecl.ts"
 import {
   getNestedDeclarationsInEnumDecl,
   getReferencesForEnumDecl,
@@ -28,8 +28,8 @@ import {
   resolveTypeArgumentsInEnumDecl,
   serializeEnumDecl,
   validateEnumDecl,
-} from "./EnumDecl.js"
-import type { SerializedTypeAliasDecl, TypeAliasDecl } from "./TypeAliasDecl.js"
+} from "./EnumDecl.ts"
+import type { SerializedTypeAliasDecl, TypeAliasDecl } from "./TypeAliasDecl.ts"
 import {
   getNestedDeclarationsInTypeAliasDecl,
   getReferencesForTypeAliasDecl,
@@ -37,7 +37,7 @@ import {
   resolveTypeArgumentsInTypeAliasDecl,
   serializeTypeAliasDecl,
   validateTypeAliasDecl,
-} from "./TypeAliasDecl.js"
+} from "./TypeAliasDecl.ts"
 
 export type TypeArguments<Params extends TypeParameter[]> = {
   [K in keyof Params]: Params[K] extends TypeParameter<string, infer T> ? T : Type

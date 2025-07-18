@@ -1,6 +1,6 @@
 import { deepEqual, throws } from "assert/strict"
 import { describe, it } from "node:test"
-import { difference, insertAt, removeAt, unique } from "../../../src/shared/utils/array.js"
+import { difference, insertAt, removeAt, unique } from "../../../src/shared/utils/array.ts"
 
 describe("removeAt", () => {
   it("removes an element at the given index", () => {

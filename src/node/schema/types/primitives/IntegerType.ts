@@ -1,12 +1,12 @@
-import type { RangeBound } from "../../../../shared/validation/number.js"
-import { validateNumberConstraints } from "../../../../shared/validation/number.js"
+import type { RangeBound } from "../../../../shared/validation/number.ts"
+import { validateNumberConstraints } from "../../../../shared/validation/number.ts"
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.js"
-import { NodeKind } from "../../Node.js"
-import { validateOption } from "../../validation/options.js"
-import type { Validator } from "../../validation/type.js"
-import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.js"
-import { removeParentKey } from "../Type.js"
+import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import { NodeKind } from "../../Node.ts"
+import { validateOption } from "../../validation/options.ts"
+import type { Validator } from "../../validation/type.ts"
+import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.ts"
+import { removeParentKey } from "../Type.ts"
 
 export interface IntegerType extends BaseType {
   kind: NodeKind["IntegerType"]

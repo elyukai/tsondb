@@ -1,5 +1,5 @@
-import { gt, gte, lt, lte } from "../utils/compare.js"
-import { parallelizeErrors } from "../utils/validation.js"
+import { gt, gte, lt, lte } from "../utils/compare.ts"
+import { parallelizeErrors } from "../utils/validation.ts"
 
 export interface NumberConstraints {
   minimum?: RangeBound

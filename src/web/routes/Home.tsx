@@ -1,10 +1,10 @@
 import type { FunctionalComponent } from "preact"
 import type { SerializedEntityDecl } from "../../node/schema/index.ts"
 import type { GetAllDeclarationsResponseBody } from "../../shared/api.ts"
-import { toTitleCase } from "../../shared/utils/string.js"
-import { getAllEntities } from "../api.js"
-import { Layout } from "../components/Layout.js"
-import { useMappedAPIResource } from "../hooks/useMappedAPIResource.js"
+import { toTitleCase } from "../../shared/utils/string.ts"
+import { getAllEntities } from "../api.ts"
+import { Layout } from "../components/Layout.ts"
+import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
 import { Markdown } from "../utils/Markdown.tsx"
 
 const mapEntities = (data: GetAllDeclarationsResponseBody<SerializedEntityDecl>) =>

@@ -1,6 +1,6 @@
 import { deepEqual } from "node:assert/strict"
 import { describe, it } from "node:test"
-import { validateObjectConstraints } from "../../../src/shared/validation/object.js"
+import { validateObjectConstraints } from "../../../src/shared/validation/object.ts"
 
 describe("validateObjectConstraints", () => {
   it("combines checks for bounds and additional properties", () => {

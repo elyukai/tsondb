@@ -1,14 +1,14 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedObjectType } from "../../../node/schema/types/generic/ObjectType.js"
-import { sortObjectKeys } from "../../../shared/utils/object.js"
-import { toTitleCase } from "../../../shared/utils/string.js"
-import { validateObjectConstraints } from "../../../shared/validation/object.js"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
+import type { SerializedObjectType } from "../../../node/schema/types/generic/ObjectType.ts"
+import { sortObjectKeys } from "../../../shared/utils/object.ts"
+import { toTitleCase } from "../../../shared/utils/string.ts"
+import { validateObjectConstraints } from "../../../shared/validation/object.ts"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
+import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { Markdown } from "../../utils/Markdown.tsx"
-import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
-import { TypeInput } from "./TypeInput.js"
-import { ValidationErrors } from "./utils/ValidationErrors.js"
+import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
+import { TypeInput } from "./TypeInput.ts"
+import { ValidationErrors } from "./utils/ValidationErrors.ts"
 
 type Props = {
   type: SerializedObjectType

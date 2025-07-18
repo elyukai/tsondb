@@ -6,25 +6,24 @@
   "author": "Lukas Obermann",
   "type": "module",
   "files": [
-    "lib/**/*.d.ts",
-    "lib/**/*.js",
+    "dist/src/**/*.{d.ts,js}",
     "public"
   ],
   "bin": {
-    "tsondb": "lib/bin/tsondb.js"
+    "tsondb": "dist/src/bin/tsondb.js"
   },
-  "main": "lib/index.js",
+  "main": "dist/src/index.js",
   "exports": {
-    ".": "./lib/index.js",
-    "./renderer/jsonschema": "./lib/node/renderers/jsonschema/index.js",
-    "./renderer/ts": "./lib/node/renderers/ts/index.js",
-    "./schema": "./lib/node/Schema.js",
-    "./schema/def": "./lib/node/schema/index.js"
+    ".": "./dist/src/index.js",
+    "./renderer/jsonschema": "./dist/src/node/renderers/jsonschema/index.js",
+    "./renderer/ts": "./dist/src/node/renderers/ts/index.js",
+    "./schema": "./dist/src/node/Schema.js",
+    "./schema/def": "./dist/src/node/schema/index.js"
   },
   "scripts": {
     "build": "tsc -b",
     "watch": "tsc -b -w",
-    "test": "node --import tsx --test",
+    "test": "node --test",
     "lint": "eslint",
     "check-format": "prettier \"{src,test}/**/*.{ts,tsx}\" --check",
     "format": "prettier \"{src,test}/**/*.{ts,tsx}\" --write",
@@ -42,7 +41,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.3.0",
     "prettier": "^3.6.2",
-    "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.36.0"
   },

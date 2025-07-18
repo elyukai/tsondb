@@ -1,6 +1,6 @@
 import { deepEqual } from "node:assert/strict"
 import { describe, it } from "node:test"
-import { validateLocaleIdentifier } from "../../../src/shared/validation/identifier.js"
+import { validateLocaleIdentifier } from "../../../src/shared/validation/identifier.ts"
 
 describe("validateLocaleIdentifier", () => {
   it("returns an empty array if the locale identifier is valid", () => {

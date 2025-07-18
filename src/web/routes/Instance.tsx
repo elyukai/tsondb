@@ -1,20 +1,20 @@
 import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute } from "preact-iso"
 import { useEffect, useMemo, useState } from "preact/hooks"
-import { deepEqual } from "../../shared/utils/compare.js"
-import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.js"
-import type { InstanceContainer } from "../../shared/utils/instances.js"
+import { deepEqual } from "../../shared/utils/compare.ts"
+import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
+import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import {
   deleteInstanceByEntityNameAndId,
   getInstanceByEntityNameAndId,
   updateInstanceByEntityNameAndId,
-} from "../api.js"
-import { Layout } from "../components/Layout.js"
-import { TypeInput } from "../components/typeInputs/TypeInput.js"
-import { useEntityFromRoute } from "../hooks/useEntityFromRoute.js"
-import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.js"
-import { useGetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.js"
-import { NotFound } from "./NotFound.js"
+} from "../api.ts"
+import { Layout } from "../components/Layout.ts"
+import { TypeInput } from "../components/typeInputs/TypeInput.ts"
+import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
+import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
+import { useGetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
+import { NotFound } from "./NotFound.ts"
 
 export const Instance: FunctionalComponent = () => {
   const {

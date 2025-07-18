@@ -1,115 +1,115 @@
-import { assertExhaustive } from "../../../shared/utils/typeSafety.js"
-import type { Decl } from "../declarations/Declaration.js"
-import { isDecl } from "../declarations/Declaration.js"
-import type { BaseNode, GetReferences, Serializer } from "../Node.js"
-import { NodeKind } from "../Node.js"
-import type { Validator } from "../validation/type.js"
-import type { ArrayType, SerializedArrayType } from "./generic/ArrayType.js"
+import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
+import type { Decl } from "../declarations/Declaration.ts"
+import { isDecl } from "../declarations/Declaration.ts"
+import type { BaseNode, GetReferences, Serializer } from "../Node.ts"
+import { NodeKind } from "../Node.ts"
+import type { Validator } from "../validation/type.ts"
+import type { ArrayType, SerializedArrayType } from "./generic/ArrayType.ts"
 import {
   formatArrayValue,
   getReferencesForArrayType,
   resolveTypeArgumentsInArrayType,
   serializeArrayType,
   validateArrayType,
-} from "./generic/ArrayType.js"
-import type { EnumType, SerializedEnumType } from "./generic/EnumType.js"
+} from "./generic/ArrayType.ts"
+import type { EnumType, SerializedEnumType } from "./generic/EnumType.ts"
 import {
   formatEnumType,
   getReferencesForEnumType,
   resolveTypeArgumentsInEnumType,
   serializeEnumType,
   validateEnumType,
-} from "./generic/EnumType.js"
+} from "./generic/EnumType.ts"
 import type {
   MemberDecl,
   ObjectType,
   SerializedMemberDecl,
   SerializedObjectType,
-} from "./generic/ObjectType.js"
+} from "./generic/ObjectType.ts"
 import {
   formatObjectValue,
   getReferencesForObjectType,
   resolveTypeArgumentsInObjectType,
   serializeObjectType,
   validateObjectType,
-} from "./generic/ObjectType.js"
-import type { BooleanType, SerializedBooleanType } from "./primitives/BooleanType.js"
+} from "./generic/ObjectType.ts"
+import type { BooleanType, SerializedBooleanType } from "./primitives/BooleanType.ts"
 import {
   formatBooleanValue,
   getReferencesForBooleanType,
   serializeBooleanType,
   validateBooleanType,
-} from "./primitives/BooleanType.js"
-import type { DateType, SerializedDateType } from "./primitives/DateType.js"
+} from "./primitives/BooleanType.ts"
+import type { DateType, SerializedDateType } from "./primitives/DateType.ts"
 import {
   formatDateValue,
   getReferencesForDateType,
   serializeDateType,
   validateDateType,
-} from "./primitives/DateType.js"
-import type { FloatType, SerializedFloatType } from "./primitives/FloatType.js"
+} from "./primitives/DateType.ts"
+import type { FloatType, SerializedFloatType } from "./primitives/FloatType.ts"
 import {
   formatFloatValue,
   getReferencesForFloatType,
   serializeFloatType,
   validateFloatType,
-} from "./primitives/FloatType.js"
-import type { IntegerType, SerializedIntegerType } from "./primitives/IntegerType.js"
+} from "./primitives/FloatType.ts"
+import type { IntegerType, SerializedIntegerType } from "./primitives/IntegerType.ts"
 import {
   formatIntegerValue,
   getReferencesForIntegerType,
   serializeIntegerType,
   validateIntegerType,
-} from "./primitives/IntegerType.js"
-import type { PrimitiveType, SerializedPrimitiveType } from "./primitives/PrimitiveType.js"
-import type { SerializedStringType, StringType } from "./primitives/StringType.js"
+} from "./primitives/IntegerType.ts"
+import type { PrimitiveType, SerializedPrimitiveType } from "./primitives/PrimitiveType.ts"
+import type { SerializedStringType, StringType } from "./primitives/StringType.ts"
 import {
   formatStringValue,
   getReferencesForStringType,
   serializeStringType,
   validateStringType,
-} from "./primitives/StringType.js"
+} from "./primitives/StringType.ts"
 import type {
   IncludeIdentifierType,
   SerializedIncludeIdentifierType,
-} from "./references/IncludeIdentifierType.js"
+} from "./references/IncludeIdentifierType.ts"
 import {
   formatIncludeIdentifierValue,
   getReferencesForIncludeIdentifierType,
   resolveTypeArgumentsInIncludeIdentifierType,
   serializeIncludeIdentifierType,
   validateIncludeIdentifierType,
-} from "./references/IncludeIdentifierType.js"
+} from "./references/IncludeIdentifierType.ts"
 import type {
   NestedEntityMapType,
   SerializedNestedEntityMapType,
-} from "./references/NestedEntityMapType.js"
+} from "./references/NestedEntityMapType.ts"
 import {
   formatNestedEntityMapValue,
   getReferencesForNestedEntityMapType,
   resolveTypeArgumentsInNestedEntityMapType,
   serializeNestedEntityMapType,
   validateNestedEntityMapType,
-} from "./references/NestedEntityMapType.js"
+} from "./references/NestedEntityMapType.ts"
 import type {
   ReferenceIdentifierType,
   SerializedReferenceIdentifierType,
-} from "./references/ReferenceIdentifierType.js"
+} from "./references/ReferenceIdentifierType.ts"
 import {
   formatReferenceIdentifierValue,
   getReferencesForReferenceIdentifierType,
   resolveTypeArgumentsInReferenceIdentifierType,
   serializeReferenceIdentifierType,
   validateReferenceIdentifierType,
-} from "./references/ReferenceIdentifierType.js"
-import type { SerializedTypeArgumentType, TypeArgumentType } from "./references/TypeArgumentType.js"
+} from "./references/ReferenceIdentifierType.ts"
+import type { SerializedTypeArgumentType, TypeArgumentType } from "./references/TypeArgumentType.ts"
 import {
   formatTypeArgumentValue,
   getReferencesForTypeArgumentType,
   resolveTypeArgumentsInTypeArgumentType,
   serializeTypeArgumentType,
   validateTypeArgumentType,
-} from "./references/TypeArgumentType.js"
+} from "./references/TypeArgumentType.ts"
 
 export interface BaseType extends BaseNode {
   /**

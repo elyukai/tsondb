@@ -1,8 +1,8 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedReferenceIdentifierType } from "../../../node/schema/types/references/ReferenceIdentifierType.js"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import { Select } from "../Select.js"
-import { ValidationErrors } from "./utils/ValidationErrors.js"
+import type { SerializedReferenceIdentifierType } from "../../../node/schema/types/references/ReferenceIdentifierType.ts"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
+import { Select } from "../Select.ts"
+import { ValidationErrors } from "./utils/ValidationErrors.ts"
 
 type Props = {
   type: SerializedReferenceIdentifierType

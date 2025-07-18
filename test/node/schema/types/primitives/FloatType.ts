@@ -9,7 +9,8 @@ import {
   serializeFloatType,
   StringType,
   validateFloatType,
-} from "../../../../../src/node/schema/index.js"
+} from "../../../../../src/node/schema/index.ts"
+import { json } from "../../../../../src/node/utils/errorFormatting.ts"
 
 describe("constructor", () => {
   it("should create a new Float type", () => {

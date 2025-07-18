@@ -1,8 +1,8 @@
 import Debug from "debug"
 import express from "express"
-import type { GetAllInstancesResponseBody } from "../../../shared/api.js"
-import { getDisplayNameFromEntityInstance } from "../../../shared/utils/displayName.js"
-import { serializeEntityDecl } from "../../schema/declarations/EntityDecl.js"
+import type { GetAllInstancesResponseBody } from "../../../shared/api.ts"
+import { getDisplayNameFromEntityInstance } from "../../../shared/utils/displayName.ts"
+import { serializeEntityDecl } from "../../schema/declarations/EntityDecl.ts"
 
 const debug = Debug("tsondb:server:api:instances")
 

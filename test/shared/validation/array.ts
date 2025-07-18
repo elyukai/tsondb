@@ -1,6 +1,6 @@
 import { deepEqual } from "node:assert/strict"
 import { describe, it } from "node:test"
-import { validateArrayConstraints } from "../../../src/shared/validation/array.js"
+import { validateArrayConstraints } from "../../../src/shared/validation/array.ts"
 
 describe("validateArrayConstraints", () => {
   it("combines checks for bounds and uniqueness", () => {

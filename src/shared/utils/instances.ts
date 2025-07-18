@@ -1,6 +1,6 @@
-import type { SerializedEntityDecl } from "../../node/schema/index.js"
-import { getDisplayNameFromEntityInstance } from "./displayName.js"
-import type { GitFileStatus } from "./git.js"
+import type { SerializedEntityDecl } from "../../node/schema/index.ts"
+import { getDisplayNameFromEntityInstance } from "./displayName.ts"
+import type { GitFileStatus } from "./git.ts"
 
 export interface InstanceContainer {
   fileName: string

@@ -1,4 +1,4 @@
-import { assertExhaustive } from "./typeSafety.js"
+import { assertExhaustive } from "./typeSafety.ts"
 
 /**
  * A lazy value that is only evaluated when it is needed.

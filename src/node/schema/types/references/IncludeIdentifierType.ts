@@ -2,23 +2,23 @@ import type {
   GetNestedDeclarations,
   SerializedTypeArguments,
   TypeArguments,
-} from "../../declarations/Declaration.js"
+} from "../../declarations/Declaration.ts"
 import {
   getNestedDeclarations,
   getReferencesForDecl,
   resolveTypeArgumentsInDecl,
   validateDecl,
-} from "../../declarations/Declaration.js"
-import type { EnumDecl } from "../../declarations/EnumDecl.js"
-import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
-import type { GetReferences, Node, Serializer } from "../../Node.js"
-import { NodeKind } from "../../Node.js"
-import type { SerializedTypeParameter, TypeParameter } from "../../TypeParameter.js"
-import type { Validator } from "../../validation/type.js"
-import type { EnumCaseDecl } from "../generic/EnumType.js"
-import { formatEnumType } from "../generic/EnumType.js"
-import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.js"
-import { formatValue, removeParentKey, resolveTypeArgumentsInType, serializeType } from "../Type.js"
+} from "../../declarations/Declaration.ts"
+import type { EnumDecl } from "../../declarations/EnumDecl.ts"
+import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.ts"
+import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import { NodeKind } from "../../Node.ts"
+import type { SerializedTypeParameter, TypeParameter } from "../../TypeParameter.ts"
+import type { Validator } from "../../validation/type.ts"
+import type { EnumCaseDecl } from "../generic/EnumType.ts"
+import { formatEnumType } from "../generic/EnumType.ts"
+import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.ts"
+import { formatValue, removeParentKey, resolveTypeArgumentsInType, serializeType } from "../Type.ts"
 
 type TConstraint<Params extends TypeParameter[]> =
   | TypeAliasDecl<string, Type, Params>

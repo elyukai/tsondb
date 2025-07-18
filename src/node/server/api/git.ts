@@ -6,12 +6,12 @@ import type {
   CreateCommitRequestBody,
   GetAllGitBranchesResponseBody,
   GitStatusResponseBody,
-} from "../../../shared/api.js"
-import { hasFileChanges } from "../../../shared/utils/git.js"
-import { getInstanceContainerOverview } from "../../../shared/utils/instances.js"
-import { serializeEntityDecl } from "../../schema/index.js"
-import { attachGitStatusToInstancesByEntityName } from "../../utils/instances.js"
-import { reinit } from "../init.js"
+} from "../../../shared/api.ts"
+import { hasFileChanges } from "../../../shared/utils/git.ts"
+import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
+import { serializeEntityDecl } from "../../schema/index.ts"
+import { attachGitStatusToInstancesByEntityName } from "../../utils/instances.ts"
+import { reinit } from "../init.ts"
 
 const debug = Debug("tsondb:server:api:git")
 

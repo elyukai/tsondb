@@ -1,8 +1,8 @@
 import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
-import type { SerializedIntegerType } from "../../../node/schema/types/primitives/IntegerType.js"
-import { validateNumberConstraints } from "../../../shared/validation/number.js"
-import { ValidationErrors } from "./utils/ValidationErrors.js"
+import type { SerializedIntegerType } from "../../../node/schema/types/primitives/IntegerType.ts"
+import { validateNumberConstraints } from "../../../shared/validation/number.ts"
+import { ValidationErrors } from "./utils/ValidationErrors.ts"
 
 type Props = {
   type: SerializedIntegerType

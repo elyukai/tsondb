@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "preact/hooks"
-import type { GetAllInstancesResponseBody } from "../../shared/api.js"
-import { getAllInstances } from "../api.js"
+import type { GetAllInstancesResponseBody } from "../../shared/api.ts"
+import { getAllInstances } from "../api.ts"
 
 export type InstanceNamesByEntity = GetAllInstancesResponseBody["instances"]
 

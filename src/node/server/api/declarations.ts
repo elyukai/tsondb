@@ -8,15 +8,15 @@ import type {
   GetDeclarationResponseBody,
   GetInstanceOfEntityResponseBody,
   UpdateInstanceOfEntityResponseBody,
-} from "../../../shared/api.js"
+} from "../../../shared/api.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
-import { isOk } from "../../../shared/utils/result.js"
-import type { Decl } from "../../schema/declarations/Declaration.js"
-import { serializeDecl } from "../../schema/declarations/Declaration.js"
-import { isEntityDecl, serializeEntityDecl } from "../../schema/declarations/EntityDecl.js"
-import { isEnumDecl } from "../../schema/declarations/EnumDecl.js"
-import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.js"
-import { createInstance, deleteInstance, updateInstance } from "./instanceOperations.js"
+import { isOk } from "../../../shared/utils/result.ts"
+import type { Decl } from "../../schema/declarations/Declaration.ts"
+import { serializeDecl } from "../../schema/declarations/Declaration.ts"
+import { isEntityDecl, serializeEntityDecl } from "../../schema/declarations/EntityDecl.ts"
+import { isEnumDecl } from "../../schema/declarations/EnumDecl.ts"
+import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
+import { createInstance, deleteInstance, updateInstance } from "./instanceOperations.ts"
 
 const debug = Debug("tsondb:server:api:declarations")
 

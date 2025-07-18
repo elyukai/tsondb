@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { assertExhaustive } from "../../../src/shared/utils/typeSafety.js"
+import { assertExhaustive } from "../../../src/shared/utils/typeSafety.ts"
 
 describe("assertExhaustive", () => {
   it("should throw an error with the message 'The switch is not exhaustive.'", () => {

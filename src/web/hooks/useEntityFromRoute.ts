@@ -1,7 +1,7 @@
 import { useRoute } from "preact-iso"
 import { useEffect, useMemo, useState } from "preact/hooks"
-import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.js"
-import { getEntityByName } from "../api.js"
+import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.ts"
+import { getEntityByName } from "../api.ts"
 
 export const useEntityFromRoute = ():
   | { entity: SerializedEntityDecl; isLocaleEntity: boolean }

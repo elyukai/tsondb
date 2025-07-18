@@ -2,12 +2,12 @@ import Debug from "debug"
 import { mkdir, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, extname, join, relative } from "node:path"
 import { fileURLToPath } from "node:url"
-import { commonPrefix } from "../../../shared/utils/string.js"
-import type { Schema } from "../../Schema.js"
-import { groupDeclarationsBySourceUrl, resolveTypeArgumentsInDecls } from "../../schema/index.js"
-import type { Output } from "../Output.js"
-import type { JsonSchemaRendererOptions } from "./render.js"
-import { render } from "./render.js"
+import { commonPrefix } from "../../../shared/utils/string.ts"
+import type { Schema } from "../../Schema.ts"
+import { groupDeclarationsBySourceUrl, resolveTypeArgumentsInDecls } from "../../schema/index.ts"
+import type { Output } from "../Output.ts"
+import type { JsonSchemaRendererOptions } from "./render.ts"
+import { render } from "./render.ts"
 
 const debug = Debug("tsondb:renderer:jsonschema")
 

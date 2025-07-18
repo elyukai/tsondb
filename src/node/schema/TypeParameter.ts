@@ -1,7 +1,7 @@
-import type { Serializer } from "./Node.js"
-import { NodeKind } from "./Node.js"
-import type { SerializedBaseType, SerializedType, Type } from "./types/Type.js"
-import { removeParentKey, serializeType } from "./types/Type.js"
+import type { Serializer } from "./Node.ts"
+import { NodeKind } from "./Node.ts"
+import type { SerializedBaseType, SerializedType, Type } from "./types/Type.ts"
+import { removeParentKey, serializeType } from "./types/Type.ts"
 
 export interface TypeParameter<N extends string = string, T extends Type = Type> {
   kind: NodeKind["GenericParameter"]

@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedTypeArgumentType } from "../../../node/schema/types/references/TypeArgumentType.js"
+import type { SerializedTypeArgumentType } from "../../../node/schema/types/references/TypeArgumentType.ts"
 
 type Props = {
   type: SerializedTypeArgumentType

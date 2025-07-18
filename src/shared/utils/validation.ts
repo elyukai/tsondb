@@ -1,4 +1,4 @@
-import { gte, lte } from "./compare.js"
+import { gte, lte } from "./compare.ts"
 
 export const parallelizeErrors = (errors: (Error | undefined)[]): Error[] =>
   errors.filter(error => error !== undefined)

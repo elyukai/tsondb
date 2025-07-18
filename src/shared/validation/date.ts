@@ -1,4 +1,4 @@
-import { parallelizeErrors } from "../utils/validation.js"
+import { parallelizeErrors } from "../utils/validation.ts"
 
 export interface DateConstraints {
   time?: boolean

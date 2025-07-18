@@ -1,16 +1,16 @@
 import { deepEqual } from "node:assert/strict"
 import { describe, it } from "node:test"
-import { render } from "../../../../src/node/renderers/jsonschema/render.js"
+import { render } from "../../../../src/node/renderers/jsonschema/render.ts"
 import {
   GenTypeAliasDecl,
   TypeAliasDecl,
-} from "../../../../src/node/schema/declarations/TypeAliasDecl.js"
-import { resolveTypeArgumentsInDecls } from "../../../../src/node/schema/index.js"
-import { Param } from "../../../../src/node/schema/TypeParameter.js"
-import { Array } from "../../../../src/node/schema/types/generic/ArrayType.js"
-import { String } from "../../../../src/node/schema/types/primitives/StringType.js"
-import { GenIncludeIdentifierType } from "../../../../src/node/schema/types/references/IncludeIdentifierType.js"
-import { TypeArgumentType } from "../../../../src/node/schema/types/references/TypeArgumentType.js"
+} from "../../../../src/node/schema/declarations/TypeAliasDecl.ts"
+import { resolveTypeArgumentsInDecls } from "../../../../src/node/schema/index.ts"
+import { Param } from "../../../../src/node/schema/TypeParameter.ts"
+import { Array } from "../../../../src/node/schema/types/generic/ArrayType.ts"
+import { String } from "../../../../src/node/schema/types/primitives/StringType.ts"
+import { GenIncludeIdentifierType } from "../../../../src/node/schema/types/references/IncludeIdentifierType.ts"
+import { TypeArgumentType } from "../../../../src/node/schema/types/references/TypeArgumentType.ts"
 
 describe("render declarations", () => {
   it("should render generic type aliases", () => {

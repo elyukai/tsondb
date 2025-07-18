@@ -1,9 +1,9 @@
-import { enumOfObject } from "../../shared/utils/enum.js"
-import type { InstancesByEntityName } from "../../shared/utils/instances.js"
-import { assertExhaustive } from "../../shared/utils/typeSafety.js"
+import { enumOfObject } from "../../shared/utils/enum.ts"
+import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
+import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import { entity, json } from "../utils/errorFormatting.ts"
-import type { Decl } from "./declarations/Declaration.js"
-import type { Type } from "./types/Type.js"
+import type { Decl } from "./declarations/Declaration.ts"
+import type { Type } from "./types/Type.ts"
 
 export interface NodeKind {
   EntityDecl: "EntityDecl"

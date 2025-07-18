@@ -1,4 +1,4 @@
-import { parallelizeErrors, validateLengthRangeBound } from "../utils/validation.js"
+import { parallelizeErrors, validateLengthRangeBound } from "../utils/validation.ts"
 
 export interface ArrayConstraints {
   minItems?: number

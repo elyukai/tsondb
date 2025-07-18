@@ -4,7 +4,7 @@ import {
   mergeObjects,
   sortObjectKeys,
   sortObjectKeysAlphabetically,
-} from "../../../src/shared/utils/object.js"
+} from "../../../src/shared/utils/object.ts"
 
 describe("sortObjectKeys", () => {
   it("should return an object with keys sorted in the order provided", () => {

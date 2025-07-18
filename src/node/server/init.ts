@@ -1,15 +1,15 @@
 import { simpleGit } from "simple-git"
-import type { InstancesByEntityName } from "../../shared/utils/instances.js"
+import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import type { Schema } from "../Schema.ts"
-import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
-import { isEntityDecl } from "../schema/declarations/EntityDecl.js"
-import { resolveTypeArgumentsInDecls } from "../schema/index.js"
+import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
+import { isEntityDecl } from "../schema/declarations/EntityDecl.ts"
+import { resolveTypeArgumentsInDecls } from "../schema/index.ts"
 import {
   attachGitStatusToInstancesByEntityName,
   getInstancesByEntityName,
-} from "../utils/instances.js"
-import { getReferencesToInstances } from "../utils/references.js"
-import type { TSONDBRequestLocals } from "./index.js"
+} from "../utils/instances.ts"
+import { getReferencesToInstances } from "../utils/references.ts"
+import type { TSONDBRequestLocals } from "./index.ts"
 
 const getGit = async (dataRootPath: string) => {
   const git = simpleGit({ baseDir: dataRootPath })

@@ -1,6 +1,6 @@
 import { deepEqual } from "node:assert/strict"
 import { describe, it } from "node:test"
-import { validateDateConstraints } from "../../../src/shared/validation/date.js"
+import { validateDateConstraints } from "../../../src/shared/validation/date.ts"
 
 describe("validateDateConstraints", () => {
   it("checks the pattern of the date string without time by default or if explicitly disabled", () => {

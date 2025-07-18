@@ -1,7 +1,7 @@
-import { difference, removeAt } from "../../shared/utils/array.js"
-import type { InstanceContainer } from "../../shared/utils/instances.js"
-import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
-import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.js"
+import { difference, removeAt } from "../../shared/utils/array.ts"
+import type { InstanceContainer } from "../../shared/utils/instances.ts"
+import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
+import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.ts"
 
 export type ReferencesToInstances = {
   [instanceId: string]: string[]

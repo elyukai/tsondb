@@ -1,7 +1,7 @@
 import express from "express"
-import { declarationsApi } from "./declarations.js"
-import { gitApi } from "./git.js"
-import { instancesApi } from "./instances.js"
+import { declarationsApi } from "./declarations.ts"
+import { gitApi } from "./git.ts"
+import { instancesApi } from "./instances.ts"
 
 export const api = express.Router()
 

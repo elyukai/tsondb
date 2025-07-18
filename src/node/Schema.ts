@@ -1,15 +1,15 @@
-import type { Decl } from "./schema/declarations/Declaration.js"
+import type { Decl } from "./schema/declarations/Declaration.ts"
 import {
   getNestedDeclarations,
   getParameterNames,
   walkNodeTree,
-} from "./schema/declarations/Declaration.js"
-import type { EntityDecl } from "./schema/declarations/EntityDecl.js"
-import { isEntityDecl } from "./schema/declarations/EntityDecl.js"
-import { isStringType } from "./schema/types/primitives/StringType.js"
+} from "./schema/declarations/Declaration.ts"
+import type { EntityDecl } from "./schema/declarations/EntityDecl.ts"
+import { isEntityDecl } from "./schema/declarations/EntityDecl.ts"
+import { isStringType } from "./schema/types/primitives/StringType.ts"
 import { isIncludeIdentifierType } from "./schema/types/references/IncludeIdentifierType.ts"
-import { isNestedEntityMapType } from "./schema/types/references/NestedEntityMapType.js"
-import { findTypeAtPath } from "./schema/types/Type.js"
+import { isNestedEntityMapType } from "./schema/types/references/NestedEntityMapType.ts"
+import { findTypeAtPath } from "./schema/types/Type.ts"
 
 export interface Schema {
   declarations: readonly Decl[]

@@ -1,8 +1,8 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedIncludeIdentifierType } from "../../../node/schema/index.js"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
-import { TypeInput } from "./TypeInput.js"
+import type { SerializedIncludeIdentifierType } from "../../../node/schema/index.ts"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
+import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
+import { TypeInput } from "./TypeInput.ts"
 
 type Props = {
   type: SerializedIncludeIdentifierType

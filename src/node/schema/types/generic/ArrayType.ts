@@ -1,20 +1,20 @@
-import { parallelizeErrors } from "../../../../shared/utils/validation.js"
-import { validateArrayConstraints } from "../../../../shared/validation/array.js"
-import { wrapErrorsIfAny } from "../../../utils/error.js"
+import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
+import { validateArrayConstraints } from "../../../../shared/validation/array.ts"
+import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
-import { getNestedDeclarations } from "../../declarations/Declaration.js"
-import type { GetReferences, Node, Serializer } from "../../Node.js"
-import { NodeKind } from "../../Node.js"
-import { validateOption } from "../../validation/options.js"
-import type { Validator } from "../../validation/type.js"
+import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
+import { getNestedDeclarations } from "../../declarations/Declaration.ts"
+import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import { NodeKind } from "../../Node.ts"
+import { validateOption } from "../../validation/options.ts"
+import type { Validator } from "../../validation/type.ts"
 import type {
   BaseType,
   SerializedBaseType,
   SerializedType,
   StructureFormatter,
   Type,
-} from "../Type.js"
+} from "../Type.ts"
 import {
   formatValue,
   getReferencesForType,
@@ -23,7 +23,7 @@ import {
   serializeType,
   setParent,
   validate,
-} from "../Type.js"
+} from "../Type.ts"
 
 export interface ArrayType<T extends Type = Type> extends BaseType {
   kind: NodeKind["ArrayType"]

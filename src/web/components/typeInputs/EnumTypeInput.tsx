@@ -1,13 +1,13 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedEnumType } from "../../../node/schema/types/generic/EnumType.js"
-import { discriminatorKey } from "../../../shared/enum.js"
-import { toTitleCase } from "../../../shared/utils/string.js"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
-import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
-import { Select } from "../Select.js"
-import { TypeInput } from "./TypeInput.js"
-import { MismatchingTypeError } from "./utils/MismatchingTypeError.js"
+import type { SerializedEnumType } from "../../../node/schema/types/generic/EnumType.ts"
+import { discriminatorKey } from "../../../shared/enum.ts"
+import { toTitleCase } from "../../../shared/utils/string.ts"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
+import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
+import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
+import { Select } from "../Select.ts"
+import { TypeInput } from "./TypeInput.ts"
+import { MismatchingTypeError } from "./utils/MismatchingTypeError.ts"
 
 type Props = {
   type: SerializedEnumType

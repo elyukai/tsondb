@@ -3,7 +3,7 @@ import { describe, it } from "node:test"
 import {
   parallelizeErrors,
   validateLengthRangeBound,
-} from "../../../src/shared/utils/validation.js"
+} from "../../../src/shared/utils/validation.ts"
 
 describe("parallelizeErrors", () => {
   it("flattens possible errors into actual errors", () => {

@@ -1,6 +1,6 @@
-import type { SerializedType } from "../../node/schema/types/Type.js"
-import { assertExhaustive } from "../../shared/utils/typeSafety.js"
-import type { GetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.js"
+import type { SerializedType } from "../../node/schema/types/Type.ts"
+import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
+import type { GetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
 
 export const createTypeSkeleton = (
   getDeclFromDeclName: GetDeclFromDeclName,

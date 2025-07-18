@@ -12,7 +12,7 @@ import {
   type Ok,
   reduce,
   type Result,
-} from "../../../src/shared/utils/result.js"
+} from "../../../src/shared/utils/result.ts"
 
 describe("ok", () => {
   it("creates a new ok result", () => {

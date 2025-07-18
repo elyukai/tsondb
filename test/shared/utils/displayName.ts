@@ -6,8 +6,8 @@ import {
   Required,
   serializeEntityDecl,
   StringType,
-} from "../../../src/node/schema/index.js"
-import { getDisplayNameFromEntityInstance } from "../../../src/shared/utils/displayName.js"
+} from "../../../src/node/schema/index.ts"
+import { getDisplayNameFromEntityInstance } from "../../../src/shared/utils/displayName.ts"
 
 describe("getDisplayNameFromEntityInstance", () => {
   const entity = serializeEntityDecl(

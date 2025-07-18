@@ -1,12 +1,12 @@
 import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
-import type { SerializedNestedEntityMapType } from "../../../node/schema/types/references/NestedEntityMapType.js"
-import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.js"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
-import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
-import { Select } from "../Select.js"
-import { TypeInput } from "./TypeInput.js"
+import type { SerializedNestedEntityMapType } from "../../../node/schema/types/references/NestedEntityMapType.ts"
+import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.ts"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
+import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
+import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
+import { Select } from "../Select.ts"
+import { TypeInput } from "./TypeInput.ts"
 
 type Props = {
   type: SerializedNestedEntityMapType

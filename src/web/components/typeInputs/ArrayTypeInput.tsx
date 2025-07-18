@@ -1,12 +1,12 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedArrayType } from "../../../node/schema/types/generic/ArrayType.js"
-import { removeAt } from "../../../shared/utils/array.js"
-import { validateArrayConstraints } from "../../../shared/validation/array.js"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.js"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.js"
-import { createTypeSkeleton } from "../../utils/typeSkeleton.js"
-import { TypeInput } from "./TypeInput.js"
-import { ValidationErrors } from "./utils/ValidationErrors.js"
+import type { SerializedArrayType } from "../../../node/schema/types/generic/ArrayType.ts"
+import { removeAt } from "../../../shared/utils/array.ts"
+import { validateArrayConstraints } from "../../../shared/validation/array.ts"
+import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
+import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
+import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
+import { TypeInput } from "./TypeInput.ts"
+import { ValidationErrors } from "./utils/ValidationErrors.ts"
 
 type Props = {
   type: SerializedArrayType

@@ -1,4 +1,4 @@
-import type { SerializedEntityDecl } from "../node/schema/declarations/EntityDecl.js"
+import type { SerializedEntityDecl } from "../node/schema/declarations/EntityDecl.ts"
 import type {
   CreateBranchRequestBody,
   CreateCommitRequestBody,
@@ -12,7 +12,7 @@ import type {
   GetInstanceOfEntityResponseBody,
   GitStatusResponseBody,
   UpdateInstanceOfEntityResponseBody,
-} from "../shared/api.js"
+} from "../shared/api.ts"
 
 export const getAllDeclarations = async (
   kind?: "Entity" | "Enum" | "TypeAlias",

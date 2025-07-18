@@ -2,17 +2,17 @@ import type { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
 import { useEffect } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
-import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.js"
+import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.ts"
 import {
   deleteInstanceByEntityNameAndId,
   getEntityByName,
   getInstancesByEntityName,
-} from "../api.js"
-import { Layout } from "../components/Layout.js"
-import { useAPIResource } from "../hooks/useAPIResource.js"
-import { useMappedAPIResource } from "../hooks/useMappedAPIResource.js"
+} from "../api.ts"
+import { Layout } from "../components/Layout.ts"
+import { useAPIResource } from "../hooks/useAPIResource.ts"
+import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
 import { Markdown } from "../utils/Markdown.tsx"
-import { NotFound } from "./NotFound.js"
+import { NotFound } from "./NotFound.ts"
 
 const mapInstances = (data: GetAllInstancesOfEntityResponseBody) => data.instances
 

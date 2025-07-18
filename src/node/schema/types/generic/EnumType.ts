@@ -1,17 +1,17 @@
-import { discriminatorKey } from "../../../../shared/enum.js"
+import { discriminatorKey } from "../../../../shared/enum.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.js"
-import { getNestedDeclarations } from "../../declarations/Declaration.js"
-import type { GetReferences, Node, Serializer } from "../../Node.js"
-import { NodeKind } from "../../Node.js"
-import type { Validator } from "../../validation/type.js"
+import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
+import { getNestedDeclarations } from "../../declarations/Declaration.ts"
+import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import { NodeKind } from "../../Node.ts"
+import type { Validator } from "../../validation/type.ts"
 import type {
   BaseType,
   SerializedBaseType,
   SerializedType,
   StructureFormatter,
   Type,
-} from "../Type.js"
+} from "../Type.ts"
 import {
   formatValue,
   getReferencesForType,
@@ -19,7 +19,7 @@ import {
   resolveTypeArgumentsInType,
   serializeType,
   validate,
-} from "../Type.js"
+} from "../Type.ts"
 
 export interface EnumType<T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>>
   extends BaseType {

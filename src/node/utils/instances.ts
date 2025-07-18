@@ -1,10 +1,10 @@
 import { readdir, readFile } from "node:fs/promises"
 import { basename, extname, join } from "node:path"
 import type { StatusResult } from "simple-git"
-import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.js"
-import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
+import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.ts"
+import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { formatValue } from "../schema/index.ts"
-import { getGitFileStatusFromStatusResult } from "./git.js"
+import { getGitFileStatusFromStatusResult } from "./git.ts"
 
 export const getInstancesByEntityName = async (
   dataRoot: string,

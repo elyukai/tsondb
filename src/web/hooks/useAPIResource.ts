@@ -1,4 +1,4 @@
-import { useMappedAPIResource } from "./useMappedAPIResource.js"
+import { useMappedAPIResource } from "./useMappedAPIResource.ts"
 
 const identity = <T>(data: T): T => data
 

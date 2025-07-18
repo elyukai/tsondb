@@ -1,22 +1,22 @@
-import { Lazy } from "../../../shared/utils/lazy.js"
-import type { Leaves } from "../../../shared/utils/object.js"
-import type { GetReferences, Node, Serializer } from "../Node.js"
-import { NodeKind } from "../Node.js"
-import type { MemberDecl, ObjectType, SerializedObjectType } from "../types/generic/ObjectType.js"
+import { Lazy } from "../../../shared/utils/lazy.ts"
+import type { Leaves } from "../../../shared/utils/object.ts"
+import type { GetReferences, Node, Serializer } from "../Node.ts"
+import { NodeKind } from "../Node.ts"
+import type { MemberDecl, ObjectType, SerializedObjectType } from "../types/generic/ObjectType.ts"
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
   Required,
   resolveTypeArgumentsInObjectType,
   serializeObjectType,
-} from "../types/generic/ObjectType.js"
-import { StringType } from "../types/primitives/StringType.js"
-import type { AsType, SerializedAsType } from "../types/Type.js"
-import { setParent, validate } from "../types/Type.js"
-import type { ValidatorHelpers } from "../validation/type.js"
-import type { BaseDecl, GetNestedDeclarations, SerializedBaseDecl } from "./Declaration.js"
-import { validateDeclName } from "./Declaration.js"
-import { TypeAliasDecl } from "./TypeAliasDecl.js"
+} from "../types/generic/ObjectType.ts"
+import { StringType } from "../types/primitives/StringType.ts"
+import type { AsType, SerializedAsType } from "../types/Type.ts"
+import { setParent, validate } from "../types/Type.ts"
+import type { ValidatorHelpers } from "../validation/type.ts"
+import type { BaseDecl, GetNestedDeclarations, SerializedBaseDecl } from "./Declaration.ts"
+import { validateDeclName } from "./Declaration.ts"
+import { TypeAliasDecl } from "./TypeAliasDecl.ts"
 
 export interface EntityDecl<Name extends string = string, T extends ObjectType = ObjectType>
   extends BaseDecl<Name, []> {
