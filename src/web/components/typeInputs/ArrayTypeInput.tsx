@@ -5,8 +5,8 @@ import { validateArrayConstraints } from "../../../shared/validation/array.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
-import { TypeInput } from "./TypeInput.ts"
-import { ValidationErrors } from "./utils/ValidationErrors.ts"
+import { TypeInput } from "./TypeInput.tsx"
+import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = {
   type: SerializedArrayType

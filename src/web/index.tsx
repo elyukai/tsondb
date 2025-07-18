@@ -1,11 +1,11 @@
 import type { FunctionComponent } from "preact"
 import { render } from "preact"
 import { LocationProvider, Route, Router } from "preact-iso"
-import { CreateInstance } from "./routes/CreateInstance.ts"
-import { Entity } from "./routes/Entity.ts"
-import { Home } from "./routes/Home.ts"
-import { Instance } from "./routes/Instance.ts"
-import { NotFound } from "./routes/NotFound.ts"
+import { CreateInstance } from "./routes/CreateInstance.tsx"
+import { Entity } from "./routes/Entity.tsx"
+import { Home } from "./routes/Home.tsx"
+import { Instance } from "./routes/Instance.tsx"
+import { NotFound } from "./routes/NotFound.tsx"
 
 const App: FunctionComponent = () => (
   <LocationProvider>

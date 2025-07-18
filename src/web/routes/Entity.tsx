@@ -12,7 +12,7 @@ import { Layout } from "../components/Layout.ts"
 import { useAPIResource } from "../hooks/useAPIResource.ts"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
 import { Markdown } from "../utils/Markdown.tsx"
-import { NotFound } from "./NotFound.ts"
+import { NotFound } from "./NotFound.tsx"
 
 const mapInstances = (data: GetAllInstancesOfEntityResponseBody) => data.instances
 

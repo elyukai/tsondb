@@ -3,7 +3,7 @@ import type { SerializedEntityDecl } from "../../node/schema/index.ts"
 import type { GetAllDeclarationsResponseBody } from "../../shared/api.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
 import { getAllEntities } from "../api.ts"
-import { Layout } from "../components/Layout.ts"
+import { Layout } from "../components/Layout.tsx"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
 import { Markdown } from "../utils/Markdown.tsx"
 

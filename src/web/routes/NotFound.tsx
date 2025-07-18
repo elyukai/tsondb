@@ -1,5 +1,5 @@
 import type { FunctionalComponent } from "preact"
-import { Layout } from "../components/Layout.ts"
+import { Layout } from "../components/Layout.tsx"
 
 export const NotFound: FunctionalComponent = () => {
   return (

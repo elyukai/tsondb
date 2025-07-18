@@ -5,9 +5,9 @@ import { toTitleCase } from "../../../shared/utils/string.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
-import { Select } from "../Select.ts"
-import { TypeInput } from "./TypeInput.ts"
-import { MismatchingTypeError } from "./utils/MismatchingTypeError.ts"
+import { Select } from "../Select.tsx"
+import { TypeInput } from "./TypeInput.tsx"
+import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
 type Props = {
   type: SerializedEnumType

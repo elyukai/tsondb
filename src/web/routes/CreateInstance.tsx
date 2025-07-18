@@ -7,12 +7,12 @@ import { validateLocaleIdentifier } from "../../shared/validation/identifier.ts"
 import { createInstanceByEntityNameAndId } from "../api.ts"
 import { Layout } from "../components/Layout.ts"
 import { TypeInput } from "../components/typeInputs/TypeInput.ts"
-import { ValidationErrors } from "../components/typeInputs/utils/ValidationErrors.ts"
+import { ValidationErrors } from "../components/typeInputs/utils/ValidationErrors.tsx"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
 import { useGetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../utils/typeSkeleton.ts"
-import { NotFound } from "./NotFound.ts"
+import { NotFound } from "./NotFound.tsx"
 
 export const CreateInstance: FunctionalComponent = () => {
   const {

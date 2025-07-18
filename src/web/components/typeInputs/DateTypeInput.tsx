@@ -1,7 +1,7 @@
 import type { FunctionComponent } from "preact"
 import type { SerializedDateType } from "../../../node/schema/types/primitives/DateType.ts"
 import { validateDateConstraints } from "../../../shared/validation/date.ts"
-import { ValidationErrors } from "./utils/ValidationErrors.ts"
+import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = {
   type: SerializedDateType

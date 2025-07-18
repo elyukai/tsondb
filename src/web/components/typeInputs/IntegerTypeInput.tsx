@@ -2,7 +2,7 @@ import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
 import type { SerializedIntegerType } from "../../../node/schema/types/primitives/IntegerType.ts"
 import { validateNumberConstraints } from "../../../shared/validation/number.ts"
-import { ValidationErrors } from "./utils/ValidationErrors.ts"
+import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = {
   type: SerializedIntegerType

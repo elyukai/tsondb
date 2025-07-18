@@ -5,8 +5,8 @@ import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
-import { Select } from "../Select.ts"
-import { TypeInput } from "./TypeInput.ts"
+import { Select } from "../Select.tsx"
+import { TypeInput } from "./TypeInput.tsx"
 
 type Props = {
   type: SerializedNestedEntityMapType

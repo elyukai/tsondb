@@ -9,12 +9,12 @@ import {
   getInstanceByEntityNameAndId,
   updateInstanceByEntityNameAndId,
 } from "../api.ts"
-import { Layout } from "../components/Layout.ts"
-import { TypeInput } from "../components/typeInputs/TypeInput.ts"
+import { Layout } from "../components/Layout.tsx"
+import { TypeInput } from "../components/typeInputs/TypeInput.tsx"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
 import { useGetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
-import { NotFound } from "./NotFound.ts"
+import { NotFound } from "./NotFound.tsx"
 
 export const Instance: FunctionalComponent = () => {
   const {

@@ -1,5 +1,5 @@
 import type { ComponentChildren, FunctionComponent } from "preact"
-import { Git } from "./Git.ts"
+import { Git } from "./Git.tsx"
 
 type Props = {
   breadcrumbs: { url: string; label: string }[]
