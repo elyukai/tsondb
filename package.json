@@ -25,8 +25,8 @@
     "watch": "tsc -b -w",
     "test": "node --test",
     "lint": "eslint",
-    "check-format": "prettier \"{src,test}/**/*.{ts,tsx}\" --check",
     "format": "prettier \"{src,test}/**/*.{ts,tsx}\" --write",
+    "format:check": "prettier \"{src,test}/**/*.{ts,tsx}\" --check",
     "release": "commit-and-tag-version",
     "release:sign": "commit-and-tag-version --sign --signoff"
   },
