@@ -125,7 +125,7 @@ describe("combine", () => {
     const combined = combine(
       result1,
       result2,
-      (v1, v2) => `${v1} ${v2.toString()}`,
+      (v1, v2) => `${v1} ${v2}`,
       (e1, e2) => `${e1} ${e2}`,
     )
     assert.deepEqual(combined, error("Error"))
@@ -137,7 +137,7 @@ describe("combine", () => {
     const combined = combine(
       result1,
       result2,
-      (v1, v2) => `${v1} ${v2.toString()}`,
+      (v1, v2) => `${v1} ${v2}`,
       (e1, e2) => `${e1} ${e2}`,
     )
     assert.deepEqual(combined, error("Error"))
@@ -149,7 +149,7 @@ describe("combine", () => {
     const combined = combine(
       result1,
       result2,
-      (v1, v2) => `${v1} ${v2.toString()}`,
+      (v1, v2) => `${v1} ${v2}`,
       (e1, e2) => `${e1} ${e2}`,
     )
     assert.deepEqual(combined, error("Error1 Error2"))
