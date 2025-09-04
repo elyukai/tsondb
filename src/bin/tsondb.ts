@@ -17,6 +17,18 @@ const passedArguments = parseArguments({
   commands: {
     validate: {
       name: "validate",
+      options: {
+        checkReferentialIntegrity: {
+          name: "check-referential-integrity",
+          type: Boolean,
+        },
+        entities: {
+          name: "entities",
+          alias: "e",
+          multiple: true,
+          type: String,
+        },
+      },
     },
     generate: {
       name: "generate",
@@ -90,7 +102,10 @@ switch (passedArguments.command.name) {
     break
   case "validate":
     debug(`running command: validate`)
-    await validate(config.schema, config.dataRootPath)
+    await validate(config.schema, config.dataRootPath, {
+      checkReferentialIntegrity: passedArguments.command.options?.checkReferentialIntegrity,
+      checkOnlyEntities: passedArguments.command.options?.entities,
+    })
     break
   case "format":
     debug(`running command: format`)

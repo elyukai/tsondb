@@ -145,23 +145,28 @@ export interface Validators {
   checkReferentialIntegrity: (identifier: IdentifierToCheck) => Error[]
 }
 
-export const createValidators = (instancesByEntityName: InstancesByEntityName): Validators => ({
-  checkReferentialIntegrity: ({ name, value }) =>
-    instancesByEntityName[name]?.some(
-      instance =>
-        typeof instance.content === "object" &&
-        instance.content !== null &&
-        !Array.isArray(instance.content) &&
-        instance.id === value,
-    )
-      ? []
-      : [
-          ReferenceError(
-            `Invalid reference to instance of entity ${entity(`"${name}"`)} with identifier ${json(
-              value,
-            )}`,
-          ),
-        ],
+export const createValidators = (
+  instancesByEntityName: InstancesByEntityName,
+  checkReferentialIntegrity: boolean = true,
+): Validators => ({
+  checkReferentialIntegrity: checkReferentialIntegrity
+    ? ({ name, value }) =>
+        instancesByEntityName[name]?.some(
+          instance =>
+            typeof instance.content === "object" &&
+            instance.content !== null &&
+            !Array.isArray(instance.content) &&
+            instance.id === value,
+        )
+          ? []
+          : [
+              ReferenceError(
+                `Invalid reference to instance of entity ${entity(`"${name}"`)} with identifier ${json(
+                  value,
+                )}`,
+              ),
+            ]
+    : () => [],
 })
 
 export type Serializer<T, U> = (node: T) => U

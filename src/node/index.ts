@@ -31,18 +31,34 @@ export const generateOutputs = async (schema: Schema, outputs: Output[]): Promis
   }
 }
 
+type ValidationOptions = {
+  checkReferentialIntegrity: boolean
+  checkOnlyEntities: string[]
+}
+
 const _validate = (
   dataRootPath: string,
   entities: EntityDecl[],
   instancesByEntityName: InstancesByEntityName,
+  options: Partial<ValidationOptions> = {},
 ): void => {
-  const errors = entities
+  const { checkReferentialIntegrity = false, checkOnlyEntities = [] } = options
+
+  const errors = (
+    checkOnlyEntities.length > 0
+      ? entities.filter(entity => checkOnlyEntities.includes(entity.name))
+      : entities
+  )
     .flatMap(entity =>
       parallelizeErrors(
         instancesByEntityName[entity.name]?.map(instance =>
           wrapErrorsIfAny(
             `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, instance.fileName))}"`)}`,
-            validateEntityDecl(createValidators(instancesByEntityName), entity, instance.content),
+            validateEntityDecl(
+              createValidators(instancesByEntityName, checkReferentialIntegrity),
+              entity,
+              instance.content,
+            ),
           ),
         ) ?? [],
       ),
@@ -59,23 +75,28 @@ const _validate = (
   }
 }
 
-export const validate = async (schema: Schema, dataRootPath: string) => {
+export const validate = async (
+  schema: Schema,
+  dataRootPath: string,
+  options?: Partial<ValidationOptions>,
+) => {
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-  _validate(dataRootPath, entities, instancesByEntityName)
+  _validate(dataRootPath, entities, instancesByEntityName, options)
 }
 
 export const generateAndValidate = async (
   schema: Schema,
   outputs: Output[],
   dataRootPath: string,
+  validationOptions?: Partial<ValidationOptions>,
 ) => {
   await generateOutputs(schema, outputs)
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-  _validate(dataRootPath, entities, instancesByEntityName)
+  _validate(dataRootPath, entities, instancesByEntityName, validationOptions)
 }
 
 export const serve = async (
@@ -94,12 +115,13 @@ export const generateValidateAndServe = async (
   outputs: Output[],
   dataRootPath: string,
   serverOptions?: Partial<ServerOptions>,
+  validationOptions?: Partial<ValidationOptions>,
 ) => {
   await generateOutputs(schema, outputs)
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-  _validate(dataRootPath, entities, instancesByEntityName)
+  _validate(dataRootPath, entities, instancesByEntityName, validationOptions)
   await createServer(schema, dataRootPath, instancesByEntityName, serverOptions)
 }
 
