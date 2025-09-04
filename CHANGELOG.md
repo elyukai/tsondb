@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.6](https://github.com/elyukai/tsondb/compare/v0.5.5...v0.5.6) (2025-09-04)
+
+
+### Features
+
+* **cli:** add options to switch off referential integrity checks and only check specific entities ([d007089](https://github.com/elyukai/tsondb/commit/d0070892e18b9ca7453c2caec71af422d84ce1d8))
+* display validation errors no matter if debug logs are enables and format them with color ([a3213c6](https://github.com/elyukai/tsondb/commit/a3213c6d181656eb2cd71f79666707c93196a00b))
+
+
+### Bug Fixes
+
+* type-only imports ([a02f865](https://github.com/elyukai/tsondb/commit/a02f8656d5a04ca10b313fd26b527afa6e52cced))
+
 ## [0.5.5](https://github.com/elyukai/tsondb/compare/v0.5.4...v0.5.5) (2025-07-16)
 
 
