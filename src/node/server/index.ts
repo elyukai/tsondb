@@ -58,11 +58,11 @@ export const createServer = async (
 
   const app = express()
 
-  app.use(express.static(join(import.meta.dirname, "../../../public")))
+  app.use(express.static(join(import.meta.dirname, "../../../../public")))
   app.use("/js/node_modules/preact", staticNodeModule("preact"))
   app.use("/js/node_modules/preact-iso", staticNodeModule("preact-iso"))
-  app.use("/js/client", express.static(join(import.meta.dirname, "../../../lib/web")))
-  app.use("/js/shared", express.static(join(import.meta.dirname, "../../../lib/shared")))
+  app.use("/js/client", express.static(join(import.meta.dirname, "../../../../dist/src/web")))
+  app.use("/js/shared", express.static(join(import.meta.dirname, "../../../../dist/src/shared")))
   app.use(express.json())
 
   const requestLocals: TSONDBRequestLocals = await init(
