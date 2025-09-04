@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.8](https://github.com/elyukai/tsondb/compare/v0.5.7...v0.5.8) (2025-09-04)
+
+
+### Bug Fixes
+
+* adjust static file delivery for changed folder structure ([8edb899](https://github.com/elyukai/tsondb/commit/8edb8998f18005d7d0ac92fb87101201f3ec30a3))
+
 ## [0.5.7](https://github.com/elyukai/tsondb/compare/v0.5.6...v0.5.7) (2025-09-04)
 
 ## [0.5.6](https://github.com/elyukai/tsondb/compare/v0.5.5...v0.5.6) (2025-09-04)
