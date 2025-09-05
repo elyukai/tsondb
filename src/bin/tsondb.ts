@@ -102,6 +102,15 @@ switch (passedArguments.command.name) {
     break
   case "validate":
     debug(`running command: validate`)
+    if (passedArguments.command.options?.checkReferentialIntegrity !== undefined) {
+      debug(
+        `check referential integrity: ${passedArguments.command.options.checkReferentialIntegrity ? "yes" : "no"}`,
+      )
+    }
+    if (passedArguments.command.options?.entities !== undefined) {
+      const entities: string[] = passedArguments.command.options.entities
+      debug(`only check the following entities: ${entities.join(", ")}`)
+    }
     await validate(config.schema, config.dataRootPath, {
       checkReferentialIntegrity: passedArguments.command.options?.checkReferentialIntegrity,
       checkOnlyEntities: passedArguments.command.options?.entities,
