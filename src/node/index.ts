@@ -44,6 +44,12 @@ const _validate = (
 ): void => {
   const { checkReferentialIntegrity = false, checkOnlyEntities = [] } = options
 
+  for (const onlyEntity of checkOnlyEntities) {
+    if (!entities.find(entity => entity.name === onlyEntity)) {
+      throw new Error(`Entity "${onlyEntity}" not found in schema`)
+    }
+  }
+
   const errors = (
     checkOnlyEntities.length > 0
       ? entities.filter(entity => checkOnlyEntities.includes(entity.name))
