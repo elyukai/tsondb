@@ -1,4 +1,6 @@
-* {
+*,
+*::after,
+*::before {
   box-sizing: border-box;
 }
 
@@ -227,7 +229,8 @@ button.destructive:disabled {
 
 input,
 textarea,
-select {
+select,
+.textarea-grow-wrap::after {
   background: var(--background);
   color: var(--color);
   font-family: var(--font-sans);
@@ -245,6 +248,28 @@ textarea[aria-invalid="true"],
 select[aria-invalid="true"] {
   border-color: var(--error-color);
   color: var(--error-color);
+}
+
+/* https://css-tricks.com/the-cleanest-trick-for-autogrowing-textareas/ */
+
+.textarea-grow-wrap {
+  display: grid;
+}
+
+.textarea-grow-wrap::after {
+  content: attr(data-value) " ";
+  white-space: pre-wrap;
+  visibility: hidden;
+}
+
+.textarea-grow-wrap > textarea {
+  resize: none;
+  overflow: hidden;
+}
+
+.textarea-grow-wrap > textarea,
+.textarea-grow-wrap::after {
+  grid-area: 1 / 1 / 2 / 2;
 }
 
 input[type="checkbox"] {
@@ -272,11 +297,6 @@ input[type="checkbox"]:checked::before {
   border-color: var(--background);
   transform: rotate(-45deg);
   margin: calc(-0.2rem - 1px) 0 0 calc(-0.275rem - 1px);
-}
-
-textarea {
-  min-height: 5rem;
-  resize: vertical;
 }
 
 .select-wrapper {
@@ -464,8 +484,15 @@ form > .field--container {
 
 .field--string {
   display: flex;
+  flex-direction: column;
   gap: 1rem;
-  align-items: start;
+}
+
+@container (min-width: 40rem) {
+  .field--string {
+    flex-direction: row;
+    align-items: start;
+  }
 }
 
 .field--string .editor {
@@ -488,6 +515,10 @@ form > .field--container {
 
 .field--string .preview > :last-child {
   margin-bottom: 0;
+}
+
+.container-item {
+  container-type: inline-size;
 }
 
 .container-item-header {

@@ -20,15 +20,17 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChang
       {isMarkdown ? (
         <>
           <div className="editor">
-            <textarea
-              value={value}
-              minLength={minLength}
-              maxLength={maxLength}
-              onInput={event => {
-                onChange(event.currentTarget.value)
-              }}
-              aria-invalid={errors.length > 0}
-            />
+            <div class="textarea-grow-wrap" data-value={value}>
+              <textarea
+                value={value}
+                minLength={minLength}
+                maxLength={maxLength}
+                onInput={event => {
+                  onChange(event.currentTarget.value)
+                }}
+                aria-invalid={errors.length > 0}
+              />
+            </div>
             <ValidationErrors errors={errors} />
           </div>
           <div className="preview">
