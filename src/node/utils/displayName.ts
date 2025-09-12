@@ -10,10 +10,6 @@ export const getDisplayNameFromEntityInstance = (
   locales: string[] = [],
   useCustomizer = true,
 ): string => {
-  if (entity.displayName === null) {
-    return defaultName
-  }
-
   if (useCustomizer && entity.displayNameCustomizer) {
     return entity.displayNameCustomizer(
       instance as { [x: string]: unknown },
