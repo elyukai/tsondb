@@ -55,16 +55,26 @@ export const CreateInstance: FunctionalComponent = () => {
     if (name) {
       createInstanceByEntityNameAndId(entity.name, instance, isLocaleEntity ? customId : undefined)
         .then(createdInstance => {
-          if (name === "saveandaddanother") {
-            setInstance(createTypeSkeleton(getDeclFromDeclName, entity.type))
-            setCustomId("")
-            alert(
-              `Instance of entity ${entity.name} created successfully with identifier ${createdInstance.instance.id}. You can add another instance now.`,
-            )
-          } else {
-            route(
-              `/entities/${entity.name}?created=${encodeURIComponent(createdInstance.instance.id)}`,
-            )
+          switch (name) {
+            case "saveandcontinue": {
+              route(`/entities/${entity.name}/instances/${createdInstance.instance.id}`)
+              break
+            }
+            case "saveandaddanother": {
+              setInstance(createTypeSkeleton(getDeclFromDeclName, entity.type))
+              setCustomId("")
+              alert(
+                `Instance of entity ${entity.name} created successfully with identifier ${createdInstance.instance.id}. You can add another instance now.`,
+              )
+              break
+            }
+            case "save":
+            default: {
+              route(
+                `/entities/${entity.name}?created=${encodeURIComponent(createdInstance.instance.id)}`,
+              )
+              break
+            }
           }
         })
         .catch((error: unknown) => {
@@ -124,6 +134,9 @@ export const CreateInstance: FunctionalComponent = () => {
         <div className="btns">
           <button type="submit" class="primary" name="save">
             Save
+          </button>
+          <button type="submit" class="primary" name="saveandcontinue">
+            Save and Continue
           </button>
           <button type="submit" class="primary" name="saveandaddanother">
             Save and Add Another
