@@ -57,9 +57,9 @@ export const Instance: FunctionalComponent = () => {
     }
   }, [id, name])
 
-  const handleSubmit = (event: Event) => {
+  const handleSubmit = (event: SubmitEvent) => {
     event.preventDefault()
-    if (name && id && instance) {
+    if (event.submitter?.getAttribute("name") === "save" && name && id && instance) {
       updateInstanceByEntityNameAndId(name, id, instance.content)
         .then(updatedInstance => {
           setInstance(updatedInstance.instance)
@@ -150,7 +150,7 @@ export const Instance: FunctionalComponent = () => {
           onChange={handleOnChange}
         />
         <div class="form-footer btns">
-          <button type="submit" class="primary">
+          <button type="submit" name="save" class="primary">
             Save
           </button>
         </div>
