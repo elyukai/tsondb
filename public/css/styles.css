@@ -349,6 +349,19 @@ select {
   margin-top: 2.3rem;
 }
 
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.list-header form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .entities,
 .instances {
   list-style-type: " ";

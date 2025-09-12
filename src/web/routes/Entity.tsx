@@ -23,6 +23,7 @@ export const Entity: FunctionalComponent = () => {
     query: { created },
   } = useRoute()
 
+  const [searchText, setSearchText] = useState("")
   const [entity] = useAPIResource(getEntityByName, name ?? "")
   const [instances, reloadInstances] = useMappedAPIResource(
     getInstancesByEntityName,
@@ -56,6 +57,16 @@ export const Entity: FunctionalComponent = () => {
     )
   }
 
+  const lowerSearchText = searchText.toLowerCase()
+  const filteredInstances =
+    searchText.length === 0
+      ? instances
+      : instances.filter(
+          instance =>
+            instance.id.includes(searchText) ||
+            instance.displayName.toLowerCase().includes(lowerSearchText),
+        )
+
   return (
     <Layout breadcrumbs={[{ url: "/", label: "Home" }]}>
       <div class="header-with-btns">
@@ -67,11 +78,32 @@ export const Entity: FunctionalComponent = () => {
       {entity.declaration.comment && (
         <Markdown class="description" string={entity.declaration.comment} />
       )}
-      <p>
-        {instances.length} instance{instances.length === 1 ? "" : "s"}
-      </p>
-      <ul class="instances">
-        {instances.map(instance => {
+      <div className="list-header">
+        <p class="instance-count">
+          {searchText === "" ? "" : `${filteredInstances.length.toString()} of `}
+          {instances.length} instance{instances.length === 1 ? "" : "s"}
+        </p>
+        <form
+          action=""
+          rel="search"
+          onSubmit={e => {
+            e.preventDefault()
+          }}
+        >
+          <label htmlFor="instance-search" class="visually-hidden">
+            Search
+          </label>
+          <input
+            type="text"
+            id="instance-search"
+            value={searchText}
+            onInput={event => {
+              setSearchText(event.currentTarget.value)
+            }}
+          />
+        </form>
+      </div>
+        {filteredInstances.map(instance => {
           const gitStatusForDisplay = getGitStatusForDisplay(instance.gitStatus)
           return (
             <li
