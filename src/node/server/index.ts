@@ -79,6 +79,19 @@ export const createServer = async (
 
   app.use("/api", api)
 
+  const importMap = JSON.stringify(
+    {
+      imports: {
+        preact: "/js/node_modules/preact/dist/preact.module.js",
+        "preact/hooks": "/js/node_modules/preact/hooks/dist/hooks.module.js",
+        "preact/jsx-runtime": "/js/node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
+        "preact-iso": "/js/node_modules/preact-iso/src/index.js",
+      },
+    },
+    null,
+    2,
+  )
+
   app.get(/^\/.*/, (_req, res) => {
     res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -87,16 +100,7 @@ export const createServer = async (
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TSONDB</title>
   <link rel="stylesheet" href="/css/styles.css">
-  <script type="importmap">
-    {
-      "imports": {
-        "preact": "/js/node_modules/preact/dist/preact.module.js",
-        "preact/hooks": "/js/node_modules/preact/hooks/dist/hooks.module.js",
-        "preact/jsx-runtime": "/js/node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
-        "preact-iso": "/js/node_modules/preact-iso/src/index.js"
-      }
-    }
-  </script>
+  <script type="importmap">${importMap}</script>
 </head>
 <body>
   <div id="app"></div>
