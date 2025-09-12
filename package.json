@@ -17,7 +17,7 @@
     ".": "./dist/src/index.js",
     "./renderer/jsonschema": "./dist/src/node/renderers/jsonschema/index.js",
     "./renderer/ts": "./dist/src/node/renderers/ts/index.js",
-    "./schema": "./dist/src/node/Schema.js",
+    "./schema": "./dist/src/node/schema/Schema.js",
     "./schema/def": "./dist/src/node/schema/index.js"
   },
   "scripts": {

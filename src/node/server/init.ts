@@ -1,9 +1,9 @@
 import { simpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
-import type { Schema } from "../Schema.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { resolveTypeArgumentsInDecls } from "../schema/index.ts"
+import type { Schema } from "../schema/Schema.ts"
 import {
   attachGitStatusToInstancesByEntityName,
   getInstancesByEntityName,

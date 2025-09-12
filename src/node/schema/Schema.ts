@@ -1,15 +1,15 @@
-import type { Decl } from "./schema/declarations/Declaration.ts"
+import type { Decl } from "./declarations/Declaration.ts"
 import {
   getNestedDeclarations,
   getParameterNames,
   walkNodeTree,
-} from "./schema/declarations/Declaration.ts"
-import type { EntityDecl } from "./schema/declarations/EntityDecl.ts"
-import { isEntityDecl } from "./schema/declarations/EntityDecl.ts"
-import { isStringType } from "./schema/types/primitives/StringType.ts"
-import { isIncludeIdentifierType } from "./schema/types/references/IncludeIdentifierType.ts"
-import { isNestedEntityMapType } from "./schema/types/references/NestedEntityMapType.ts"
-import { findTypeAtPath } from "./schema/types/Type.ts"
+} from "./declarations/Declaration.ts"
+import type { EntityDecl } from "./declarations/EntityDecl.ts"
+import { isEntityDecl } from "./declarations/EntityDecl.ts"
+import { isStringType } from "./types/primitives/StringType.ts"
+import { isIncludeIdentifierType } from "./types/references/IncludeIdentifierType.ts"
+import { isNestedEntityMapType } from "./types/references/NestedEntityMapType.ts"
+import { findTypeAtPath } from "./types/Type.ts"
 
 export interface Schema {
   declarations: readonly Decl[]
@@ -49,7 +49,9 @@ const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) =
     if (isEntityDecl(decl) && decl.displayName !== null) {
       const displayName = decl.displayName ?? "name"
 
-      if (typeof displayName === "object") {
+      if (typeof displayName === "function") {
+        continue
+      } else if (typeof displayName === "object") {
         const pathToLocaleMap = displayName.pathToLocaleMap ?? "translations"
         const pathInLocaleMap = displayName.pathInLocaleMap ?? "name"
 

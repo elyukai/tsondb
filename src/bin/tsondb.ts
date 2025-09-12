@@ -7,9 +7,7 @@ import { cwd } from "node:process"
 import { pathToFileURL } from "node:url"
 import { parseArguments } from "simple-cli-args"
 import { format, generateOutputs, serve, validate } from "../node/index.ts"
-import type { Output } from "../node/renderers/Output.ts"
-import type { Schema } from "../node/Schema.ts"
-import type { ServerOptions } from "../node/server/index.ts"
+import type { Config } from "../shared/config.ts"
 
 const debug = Debug("tsondb:cli")
 
@@ -51,13 +49,6 @@ const possibleConfigNames = [
   "tsondb.config.js",
 ]
 
-export type Config = {
-  serverOptions?: ServerOptions
-  schema: Schema
-  outputs: Output[]
-  dataRootPath: string
-}
-
 const config: Config | undefined = await (async () => {
   for (const configName of possibleConfigNames) {
     const fullPath = join(cwd(), configName)
@@ -72,7 +63,7 @@ const config: Config | undefined = await (async () => {
     const foundConfigModule = (await import(pathToFileURL(fullPath).toString())) as object
     if ("default" in foundConfigModule) {
       debug(`config file ${fullPath} found with config`)
-      return foundConfigModule.default as Config | undefined
+      return foundConfigModule.default as Config
     } else {
       debug(`config file ${fullPath} found, but no default export present`)
     }
