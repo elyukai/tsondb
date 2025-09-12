@@ -1,7 +1,6 @@
 import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute } from "preact-iso"
-import { useEffect, useMemo, useState } from "preact/hooks"
-import { deepEqual } from "../../shared/utils/compare.ts"
+import { useCallback, useEffect, useState } from "preact/hooks"
 import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import {
@@ -21,18 +20,13 @@ export const Instance: FunctionalComponent = () => {
     params: { name, id },
   } = useRoute()
 
-  const getDeclFromDeclName = useGetDeclFromDeclName()
+  const [getDeclFromDeclName, declsLoaded] = useGetDeclFromDeclName()
   const entityFromRoute = useEntityFromRoute()
   const [instanceNamesByEntity] = useInstanceNamesByEntity()
   const [instance, setInstance] = useState<InstanceContainer>()
   const [originalInstance, setOriginalInstance] = useState<InstanceContainer>()
 
   const { route } = useLocation()
-
-  const hasChanges = useMemo(
-    () => !deepEqual(instance?.content, originalInstance?.content),
-    [instance?.content, originalInstance?.content],
-  )
 
   useEffect(() => {
     if (name && id) {
@@ -63,11 +57,21 @@ export const Instance: FunctionalComponent = () => {
     }
   }
 
+  const handleOnChange = useCallback((value: unknown) => {
+    setInstance(container => container && { ...container, content: value })
+  }, [])
+
   if (!name || !id) {
     return <NotFound />
   }
 
-  if (!entityFromRoute || !instance || !originalInstance) {
+  if (
+    !entityFromRoute ||
+    !instance ||
+    !originalInstance ||
+    !instanceNamesByEntity ||
+    !declsLoaded
+  ) {
     return (
       <Layout
         breadcrumbs={[
@@ -127,13 +131,10 @@ export const Instance: FunctionalComponent = () => {
           value={instance.content}
           instanceNamesByEntity={instanceNamesByEntity}
           getDeclFromDeclName={getDeclFromDeclName}
-          onChange={value => {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            setInstance(container => ({ ...container!, content: value }))
-          }}
+          onChange={handleOnChange}
         />
         <div class="form-footer btns">
-          <button type="submit" disabled={!hasChanges} class="primary">
+          <button type="submit" class="primary">
             Save
           </button>
         </div>

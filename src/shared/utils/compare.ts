@@ -19,12 +19,18 @@ export const deepEqual = <T>(a: T, b: T): boolean => {
 
   if (typeof a === "object" && typeof b === "object" && a !== null && b !== null) {
     const keys = Object.keys(a)
+
     if (keys.length !== Object.keys(b).length) {
       return false
     }
-    return keys.every(
-      key => key in b && deepEqual(a[key as keyof typeof a], b[key as keyof typeof b]),
-    )
+
+    for (const key of keys) {
+      if (!(key in b) || !deepEqual(a[key as keyof typeof a], b[key as keyof typeof b])) {
+        return false
+      }
+    }
+
+    return true
   }
 
   return false

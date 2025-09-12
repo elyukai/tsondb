@@ -6,8 +6,8 @@ import { getAllDeclarations } from "../api.ts"
 
 export type GetDeclFromDeclName = (name: string) => SerializedSecondaryDecl | undefined
 
-export const useGetDeclFromDeclName = (): GetDeclFromDeclName => {
-  const [secondaryDeclarations, setSecondaryDeclarations] = useState<SerializedSecondaryDecl[]>([])
+export const useGetDeclFromDeclName = (): [GetDeclFromDeclName, loaded: boolean] => {
+  const [secondaryDeclarations, setSecondaryDeclarations] = useState<SerializedSecondaryDecl[]>()
 
   useEffect(() => {
     getAllDeclarations()
@@ -29,9 +29,9 @@ export const useGetDeclFromDeclName = (): GetDeclFromDeclName => {
   }, [])
 
   const getDeclFromDeclName = useCallback(
-    (name: string) => secondaryDeclarations.find(decl => decl.name === name),
+    (name: string) => secondaryDeclarations?.find(decl => decl.name === name),
     [secondaryDeclarations],
   )
 
-  return getDeclFromDeclName
+  return [getDeclFromDeclName, secondaryDeclarations !== undefined]
 }

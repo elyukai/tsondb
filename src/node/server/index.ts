@@ -89,6 +89,7 @@ export const createServer = async (
       imports: {
         preact: "/js/node_modules/preact/dist/preact.module.js",
         "preact/hooks": "/js/node_modules/preact/hooks/dist/hooks.module.js",
+        "preact/compat": "/js/node_modules/preact/compat/dist/compat.module.js",
         "preact/jsx-runtime": "/js/node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
         "preact-iso": "/js/node_modules/preact-iso/src/index.js",
       },

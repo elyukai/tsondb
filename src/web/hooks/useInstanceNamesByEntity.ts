@@ -6,10 +6,9 @@ export type InstanceNamesByEntity = GetAllInstancesResponseBody["instances"]
 
 export const useInstanceNamesByEntity = (
   locales: string[] = [],
-): [InstanceNamesByEntity, () => void] => {
-  const [instanceNamesByEntity, setInstanceNamesByEntity] = useState<
-    GetAllInstancesResponseBody["instances"]
-  >({})
+): [InstanceNamesByEntity | undefined, () => void] => {
+  const [instanceNamesByEntity, setInstanceNamesByEntity] =
+    useState<GetAllInstancesResponseBody["instances"]>()
 
   const updateInstanceNamesByEntity = useCallback(() => {
     getAllInstances(locales)

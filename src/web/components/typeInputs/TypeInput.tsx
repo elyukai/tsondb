@@ -1,5 +1,7 @@
 import type { FunctionComponent } from "preact"
+import { memo } from "preact/compat"
 import type { SerializedType } from "../../../node/schema/types/Type.ts"
+import { deepEqual } from "../../../shared/utils/compare.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
@@ -25,7 +27,7 @@ type Props = {
   onChange: (value: unknown) => void
 }
 
-export const TypeInput: FunctionComponent<Props> = ({
+const TypeInput: FunctionComponent<Props> = ({
   type,
   value,
   instanceNamesByEntity,
@@ -156,3 +158,9 @@ export const TypeInput: FunctionComponent<Props> = ({
       return assertExhaustive(type)
   }
 }
+
+const MemoizedTypeInput = memo(TypeInput, (prevProps, nextProps) =>
+  deepEqual(prevProps.value, nextProps.value),
+)
+
+export { MemoizedTypeInput as TypeInput }

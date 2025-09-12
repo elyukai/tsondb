@@ -19,7 +19,7 @@ export const CreateInstance: FunctionalComponent = () => {
     params: { name },
   } = useRoute()
 
-  const getDeclFromDeclName = useGetDeclFromDeclName()
+  const [getDeclFromDeclName, declsLoaded] = useGetDeclFromDeclName()
   const entityFromRoute = useEntityFromRoute()
   const [instanceNamesByEntity] = useInstanceNamesByEntity()
 
@@ -38,7 +38,7 @@ export const CreateInstance: FunctionalComponent = () => {
     return <NotFound />
   }
 
-  if (!entityFromRoute) {
+  if (!entityFromRoute || !instanceNamesByEntity || !declsLoaded) {
     return (
       <div>
         <h1>{name}</h1>
