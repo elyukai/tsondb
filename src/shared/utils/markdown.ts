@@ -104,7 +104,7 @@ const listRule: BlockRule = {
 }
 
 const paragraphRule: BlockRule = {
-  pattern: /^((?:[^\n]+?)(?:\n[^\n]+?)*)(?:\n{2,}|$)/,
+  pattern: /^((?:[^\n]+?)(?:\n[^\n]+?)*)(?:\n{2,}|\s*$)/,
   map: result => ({ kind: "paragraph", content: parseInlineMarkdown(result[1] ?? "") }),
 }
 
