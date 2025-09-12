@@ -44,7 +44,13 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChang
             value={value}
             minLength={minLength}
             maxLength={maxLength}
-            pattern={pattern}
+            pattern={
+              pattern === undefined
+                ? undefined
+                : pattern.startsWith("^(?:") && pattern.endsWith(")$")
+                  ? pattern.slice(4, -2)
+                  : `.*${pattern}.*`
+            }
             onInput={event => {
               onChange(event.currentTarget.value)
             }}
