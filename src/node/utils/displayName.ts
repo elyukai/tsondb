@@ -5,9 +5,9 @@ import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/d
 export const getDisplayNameFromEntityInstance = (
   entity: EntityDecl,
   instance: unknown,
-  defaultName: string,
   getInstanceById: GetInstanceById,
   locales: string[] = [],
+  defaultName: string = "",
   useCustomizer = true,
 ): string => {
   if (useCustomizer && entity.displayNameCustomizer) {
@@ -16,9 +16,9 @@ export const getDisplayNameFromEntityInstance = (
       getDisplayNameFromEntityInstance(
         entity,
         instance,
-        defaultName,
         getInstanceById,
         locales,
+        defaultName,
         false,
       ),
       id => getInstanceById(id)?.instance.content,
@@ -29,9 +29,9 @@ export const getDisplayNameFromEntityInstance = (
           return getDisplayNameFromEntityInstance(
             entity,
             instance.content,
-            id,
             getInstanceById,
             locales,
+            id,
           )
         } else {
           return undefined

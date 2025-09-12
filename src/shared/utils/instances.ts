@@ -29,7 +29,6 @@ export const getInstanceContainerOverview = (
     displayName: getDisplayNameFromEntityInstance(
       entity,
       instanceContainer.content,
-      instanceContainer.id,
       getInstanceById,
       locales,
     ),

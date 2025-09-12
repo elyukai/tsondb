@@ -29,7 +29,6 @@ instancesApi.get("/", (req, res) => {
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               req.entitiesByName[entityName]!,
               instance.content,
-              instance.id,
               req.getInstanceById,
               locales,
             ),
