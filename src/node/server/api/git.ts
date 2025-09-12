@@ -9,7 +9,6 @@ import type {
 } from "../../../shared/api.ts"
 import { hasFileChanges } from "../../../shared/utils/git.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
-import { serializeEntityDecl } from "../../schema/index.ts"
 import { attachGitStatusToInstancesByEntityName } from "../../utils/instances.ts"
 import { reinit } from "../init.ts"
 
@@ -49,8 +48,9 @@ gitApi.get("/status", async (req, res) => {
           .map(instance =>
             getInstanceContainerOverview(
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              serializeEntityDecl(req.entitiesByName[entityName]!),
+              req.entitiesByName[entityName]!,
               instance,
+              req.getInstanceById,
               req.locales,
             ),
           ),

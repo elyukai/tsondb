@@ -1,5 +1,6 @@
-import type { SerializedEntityDecl } from "../../node/schema/index.ts"
-import { getDisplayNameFromEntityInstance } from "./displayName.ts"
+import type { EntityDecl } from "../../node/schema/index.ts"
+import type { GetInstanceById } from "../../node/server/index.ts"
+import { getDisplayNameFromEntityInstance } from "../../node/utils/displayName.ts"
 import type { GitFileStatus } from "./git.ts"
 
 export interface InstanceContainer {
@@ -17,8 +18,9 @@ export interface InstanceContainerOverview {
 }
 
 export const getInstanceContainerOverview = (
-  entity: SerializedEntityDecl,
+  entity: EntityDecl,
   instanceContainer: InstanceContainer,
+  getInstanceById: GetInstanceById,
   locales?: string[],
 ): InstanceContainerOverview => {
   const { content: _, ...rest } = instanceContainer
@@ -28,6 +30,7 @@ export const getInstanceContainerOverview = (
       entity,
       instanceContainer.content,
       instanceContainer.id,
+      getInstanceById,
       locales,
     ),
   }

@@ -1,8 +1,7 @@
 import Debug from "debug"
 import express from "express"
 import type { GetAllInstancesResponseBody } from "../../../shared/api.ts"
-import { getDisplayNameFromEntityInstance } from "../../../shared/utils/displayName.ts"
-import { serializeEntityDecl } from "../../schema/declarations/EntityDecl.ts"
+import { getDisplayNameFromEntityInstance } from "../../utils/displayName.ts"
 
 const debug = Debug("tsondb:server:api:instances")
 
@@ -28,9 +27,10 @@ instancesApi.get("/", (req, res) => {
             id: instance.id,
             name: getDisplayNameFromEntityInstance(
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              serializeEntityDecl(req.entitiesByName[entityName]!),
+              req.entitiesByName[entityName]!,
               instance.content,
               instance.id,
+              req.getInstanceById,
               locales,
             ),
           })),

@@ -2,7 +2,7 @@ import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute } from "preact-iso"
 import { useEffect, useMemo, useState } from "preact/hooks"
 import { deepEqual } from "../../shared/utils/compare.ts"
-import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
+import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import {
   deleteInstanceByEntityNameAndId,
@@ -82,7 +82,7 @@ export const Instance: FunctionalComponent = () => {
   }
 
   const defaultName = id
-  const instanceName = getDisplayNameFromEntityInstance(
+  const instanceName = getSerializedDisplayNameFromEntityInstance(
     entityFromRoute.entity,
     instance.content,
     defaultName,

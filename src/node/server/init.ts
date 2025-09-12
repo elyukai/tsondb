@@ -9,7 +9,7 @@ import {
   getInstancesByEntityName,
 } from "../utils/instances.ts"
 import { getReferencesToInstances } from "../utils/references.ts"
-import type { TSONDBRequestLocals } from "./index.ts"
+import type { GetInstanceById, TSONDBRequestLocals } from "./index.ts"
 
 const getGit = async (dataRootPath: string) => {
   const git = simpleGit({ baseDir: dataRootPath })
@@ -48,6 +48,17 @@ export const init = async (
     attachGitStatusToInstancesByEntityName(instancesByEntityName, dataRootPath, gitRoot, gitStatus)
   }
 
+  const getInstanceById: GetInstanceById = id => {
+    for (const entityName in instancesByEntityNameInMemory) {
+      const instance = instancesByEntityNameInMemory[entityName]?.find(i => i.id === id)
+      if (instance && entitiesByName[entityName]) {
+        return { entity: entitiesByName[entityName], instance }
+      }
+    }
+
+    return undefined
+  }
+
   const requestLocals: TSONDBRequestLocals = {
     git: git,
     gitRoot: gitRoot,
@@ -57,6 +68,7 @@ export const init = async (
     instancesByEntityName: instancesByEntityNameInMemory,
     entitiesByName: entitiesByName,
     localeEntity: schema.localeEntity,
+    getInstanceById,
     referencesToInstances,
     locales: ["de-DE", "en-US"], // TODO: Make this configurable
   }

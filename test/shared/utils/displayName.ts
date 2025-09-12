@@ -7,7 +7,7 @@ import {
   serializeEntityDecl,
   StringType,
 } from "../../../src/node/schema/index.ts"
-import { getDisplayNameFromEntityInstance } from "../../../src/shared/utils/displayName.ts"
+import { getSerializedDisplayNameFromEntityInstance } from "../../../src/shared/utils/displayName.ts"
 
 describe("getDisplayNameFromEntityInstance", () => {
   const entity = serializeEntityDecl(
@@ -39,14 +39,14 @@ describe("getDisplayNameFromEntityInstance", () => {
 
   it("returns the default name if the default display name path is empty", () => {
     equal(
-      getDisplayNameFromEntityInstance(entity, {}, "Default Name", ["de-DE", "en-US"]),
+      getSerializedDisplayNameFromEntityInstance(entity, {}, "Default Name", ["de-DE", "en-US"]),
       "Default Name",
     )
   })
 
   it("returns the value of the property if the default display name path is set", () => {
     equal(
-      getDisplayNameFromEntityInstance(
+      getSerializedDisplayNameFromEntityInstance(
         entity,
         {
           name: "John Doe",
@@ -60,14 +60,17 @@ describe("getDisplayNameFromEntityInstance", () => {
 
   it("returns the default name if the default translatable display name path is empty", () => {
     equal(
-      getDisplayNameFromEntityInstance(translatableEntity, {}, "Default Name", ["de-DE", "en-US"]),
+      getSerializedDisplayNameFromEntityInstance(translatableEntity, {}, "Default Name", [
+        "de-DE",
+        "en-US",
+      ]),
       "Default Name",
     )
   })
 
   it("returns the default name if there are no available locales and the default translatable display name path is set", () => {
     equal(
-      getDisplayNameFromEntityInstance(
+      getSerializedDisplayNameFromEntityInstance(
         translatableEntity,
         { translations: { "de-DE": "Gast", "en-US": "Guest" } },
         "Default Name",
@@ -79,7 +82,7 @@ describe("getDisplayNameFromEntityInstance", () => {
 
   it("returns the first name that is available in a specified locale in the order the locales are specified if the default translatable display name path is set", () => {
     equal(
-      getDisplayNameFromEntityInstance(
+      getSerializedDisplayNameFromEntityInstance(
         translatableEntity,
         { translations: { "de-DE": { name: "Gast" }, "en-US": { name: "Guest" } } },
         "Default Name",
@@ -88,7 +91,7 @@ describe("getDisplayNameFromEntityInstance", () => {
       "Gast",
     )
     equal(
-      getDisplayNameFromEntityInstance(
+      getSerializedDisplayNameFromEntityInstance(
         translatableEntity,
         { translations: { "en-US": { name: "Guest" } } },
         "Default Name",

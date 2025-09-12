@@ -13,7 +13,7 @@ import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts
 import { isOk } from "../../../shared/utils/result.ts"
 import type { Decl } from "../../schema/declarations/Declaration.ts"
 import { serializeDecl } from "../../schema/declarations/Declaration.ts"
-import { isEntityDecl, serializeEntityDecl } from "../../schema/declarations/EntityDecl.ts"
+import { isEntityDecl } from "../../schema/declarations/EntityDecl.ts"
 import { isEnumDecl } from "../../schema/declarations/EnumDecl.ts"
 import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
 import { createInstance, deleteInstance, updateInstance } from "./instanceOperations.ts"
@@ -85,13 +85,11 @@ declarationsApi.get("/:name/instances", (req, res) => {
     return
   }
 
-  const serializedEntityDecl = serializeEntityDecl(decl)
-
   const body: GetAllInstancesOfEntityResponseBody = {
     instances:
       req.instancesByEntityName[req.params.name]
         ?.map(instanceContainer =>
-          getInstanceContainerOverview(serializedEntityDecl, instanceContainer, req.locales),
+          getInstanceContainerOverview(decl, instanceContainer, req.getInstanceById, req.locales),
         )
         .toSorted((a, b) => a.displayName.localeCompare(b.displayName)) ?? [],
     isLocaleEntity: decl === req.localeEntity,

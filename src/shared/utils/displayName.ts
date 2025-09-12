@@ -13,7 +13,7 @@ const getValueAtPath = (value: unknown, path: string): unknown => {
   return current
 }
 
-export const getDisplayNameFromEntityInstance = (
+export const getSerializedDisplayNameFromEntityInstance = (
   entity: SerializedEntityDecl,
   instance: unknown,
   defaultName: string,

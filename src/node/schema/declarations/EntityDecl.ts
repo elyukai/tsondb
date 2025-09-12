@@ -18,6 +18,55 @@ import type { BaseDecl, GetNestedDeclarations, SerializedBaseDecl } from "./Decl
 import { validateDeclName } from "./Declaration.ts"
 import { TypeAliasDecl } from "./TypeAliasDecl.ts"
 
+export type GenericDisplayNameFn = (
+  instance: unknown,
+  instanceDisplayName: string,
+  getInstanceById: (id: string) => unknown,
+  getDisplayNameForInstanceId: (id: string) => string | undefined,
+  locales: string[] | undefined,
+) => string
+
+export type GenericEntityDisplayName =
+  | string
+  | { pathToLocaleMap?: string; pathInLocaleMap?: string }
+  | null
+
+export type DisplayNameFn<T extends ObjectType = ObjectType> = (
+  instance: AsType<T>,
+  instanceDisplayName: string,
+  getInstanceById: (id: string) => unknown,
+  getDisplayNameForInstanceId: (id: string) => string | undefined,
+  locales: string[] | undefined,
+) => string
+
+export type EntityDisplayName<T extends ObjectType> =
+  | Leaves<AsType<T>>
+  | {
+      /**
+       * @default "translations"
+       */
+      pathToLocaleMap?: Leaves<AsType<T>>
+      /**
+       * @default "name"
+       */
+      pathInLocaleMap?: string
+    }
+  | null
+
+export type SerializedEntityDisplayName<T extends SerializedObjectType> =
+  | Leaves<SerializedAsType<T>>
+  | {
+      /**
+       * @default "translations"
+       */
+      pathToLocaleMap?: Leaves<SerializedAsType<T>>
+      /**
+       * @default "name"
+       */
+      pathInLocaleMap?: string
+    }
+  | null
+
 export interface EntityDecl<Name extends string = string, T extends ObjectType = ObjectType>
   extends BaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
@@ -26,19 +75,8 @@ export interface EntityDecl<Name extends string = string, T extends ObjectType =
   /**
    * @default "name"
    */
-  displayName?:
-    | Leaves<AsType<T>>
-    | {
-        /**
-         * @default "translations"
-         */
-        pathToLocaleMap?: Leaves<AsType<T>>
-        /**
-         * @default "name"
-         */
-        pathInLocaleMap?: string
-      }
-    | null
+  displayName?: EntityDisplayName<T>
+  displayNameCustomizer?: DisplayNameFn<T>
   isDeprecated?: boolean
 }
 
@@ -52,19 +90,7 @@ export interface SerializedEntityDecl<
   /**
    * @default "name"
    */
-  displayName?:
-    | Leaves<SerializedAsType<T>>
-    | {
-        /**
-         * @default "translations"
-         */
-        pathToLocaleMap?: Leaves<SerializedAsType<T>>
-        /**
-         * @default "name"
-         */
-        pathInLocaleMap?: string
-      }
-    | null
+  displayName?: SerializedEntityDisplayName<T>
   isDeprecated?: boolean
 }
 
@@ -78,19 +104,8 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
     /**
      * @default "name"
      */
-    displayName?:
-      | Leaves<AsType<T>>
-      | {
-          /**
-           * @default "translations"
-           */
-          pathToLocaleMap?: Leaves<AsType<T>>
-          /**
-           * @default "name"
-           */
-          pathInLocaleMap?: string
-        }
-      | null
+    displayName?: EntityDisplayName<T>
+    displayNameCustomizer?: DisplayNameFn<T>
     isDeprecated?: boolean
   },
 ): EntityDecl<Name, T> => {
@@ -168,6 +183,7 @@ export const createEntityIdentifierTypeAsDecl = <Name extends string>(decl: Enti
 export const serializeEntityDecl: Serializer<EntityDecl, SerializedEntityDecl> = type => ({
   ...type,
   type: serializeObjectType(type.type.value),
+  displayName: typeof type.displayName === "function" ? null : type.displayName,
 })
 
 export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value) =>

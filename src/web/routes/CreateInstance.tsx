@@ -1,7 +1,7 @@
 import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute } from "preact-iso"
 import { useEffect, useState } from "preact/hooks"
-import { getDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
+import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
 import { validateLocaleIdentifier } from "../../shared/validation/identifier.ts"
 import { createInstanceByEntityNameAndId } from "../api.ts"
@@ -76,7 +76,7 @@ export const CreateInstance: FunctionalComponent = () => {
   }
 
   const defaultName = customId || `New ${toTitleCase(entity.name)}`
-  const instanceName = getDisplayNameFromEntityInstance(entity, instance, defaultName)
+  const instanceName = getSerializedDisplayNameFromEntityInstance(entity, instance, defaultName)
   const idErrors = isLocaleEntity ? validateLocaleIdentifier(customId) : []
 
   return (
