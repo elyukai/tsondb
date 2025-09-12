@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.9](https://github.com/elyukai/tsondb/compare/v0.5.8...v0.5.9) (2025-09-12)
+
+
+### Features
+
+* add "save and continue" button to instance creation page ([01cf70c](https://github.com/elyukai/tsondb/commit/01cf70c59f0f877bff8fcc2f12ff7c8848e76d94)), closes [#22](https://github.com/elyukai/tsondb/issues/22)
+* add debug output for validation options ([7592796](https://github.com/elyukai/tsondb/commit/759279605ca2e884d6286210348416412808fe1e))
+* auto-sizing textarea for markdown input ([22a8217](https://github.com/elyukai/tsondb/commit/22a821741e646015a7940b89b6a510804fcdf6a0))
+* check that all entity names used for restricting the validation are correct ([9a905a5](https://github.com/elyukai/tsondb/commit/9a905a5afd870684c636ac494810b739b5020541))
+* display name customizer function for entity declarations ([d65643a](https://github.com/elyukai/tsondb/commit/d65643a1ef76d80a008c2e9b896162ab9f62b304))
+* display page names in window title and use plural for entities ([3d16202](https://github.com/elyukai/tsondb/commit/3d162023239029d9770e113de35bf3a47276a2a1))
+* search in entity list ([359c8d8](https://github.com/elyukai/tsondb/commit/359c8d88feb1152ab6f4dae85c1b4e7892d47f88))
+* search in instance lists ([ff67543](https://github.com/elyukai/tsondb/commit/ff6754305b016c87b794bb84eb49c4b0528b3de8))
+* sticky instance form footer ([37fc7f4](https://github.com/elyukai/tsondb/commit/37fc7f41aed3121a58536b9fd3107a7ed4698af9)), closes [#24](https://github.com/elyukai/tsondb/issues/24)
+* use empty string as default name ([252f2ac](https://github.com/elyukai/tsondb/commit/252f2ac6c800690406d75344ffd6d8b73f2e72b7))
+
+
+### Bug Fixes
+
+* allow displayNameCustomizer to be used even when displayName is set to null ([8ba2004](https://github.com/elyukai/tsondb/commit/8ba2004353b745f94c41e021c324a1e7568f15bd))
+* markdown stops being formatted at all when there is a new line at the end of the markdown string ([f6c5a14](https://github.com/elyukai/tsondb/commit/f6c5a14a49216a4180ecf33316818c489f7889b5)), closes [#23](https://github.com/elyukai/tsondb/issues/23)
+* pattern should only be applied to a part of the string unless clearly specified ([7fa00f3](https://github.com/elyukai/tsondb/commit/7fa00f365a0d26e551e86257b2337f1a9cc59311)), closes [elyukai/optolith-data#658](https://github.com/elyukai/optolith-data/issues/658)
+* sort numbers in display names by their full number ([c12aea5](https://github.com/elyukai/tsondb/commit/c12aea5e3115658969b8eb4ba908c43922c527cc))
+
 ## [0.5.8](https://github.com/elyukai/tsondb/compare/v0.5.7...v0.5.8) (2025-09-04)
 
 
