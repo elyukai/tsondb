@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.10](https://github.com/elyukai/tsondb/compare/v0.5.9...v0.5.10) (2025-09-12)
+
+
+### Features
+
+* label add and remove buttons after the property or element they remove ([b0264fa](https://github.com/elyukai/tsondb/commit/b0264fa592eab8d426f51cb4e6bbb28408dab68b))
+* unify entries styling and improve layout on small screens ([fedc4c0](https://github.com/elyukai/tsondb/commit/fedc4c046747feebb80580f501e0bcf3f820943c))
+
+
+### Bug Fixes
+
+* any button click tries to save an instance ([09e50e1](https://github.com/elyukai/tsondb/commit/09e50e13681f7aa9d8463905a52ed488de75a8d8)), closes [elyukai/optolith-data#656](https://github.com/elyukai/optolith-data/issues/656)
+
 ## [0.5.9](https://github.com/elyukai/tsondb/compare/v0.5.8...v0.5.9) (2025-09-12)
 
 
