@@ -19,7 +19,7 @@ export const ReferenceIdentifierTypeInput: FunctionComponent<Props> = ({
 }) => {
   const instances = (instanceNamesByEntity[type.entity] ?? [])
     .slice()
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
   return (
     <div class="field">
       <Select

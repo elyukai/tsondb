@@ -28,7 +28,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
   const secondaryInstances = (instanceNamesByEntity[type.secondaryEntity] ?? [])
     .slice()
     .filter(instance => !existingKeys.includes(instance.id))
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
 
   return (
     <div class="field field--container field--nestedentitymap">

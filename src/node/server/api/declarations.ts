@@ -91,7 +91,9 @@ declarationsApi.get("/:name/instances", (req, res) => {
         ?.map(instanceContainer =>
           getInstanceContainerOverview(decl, instanceContainer, req.getInstanceById, req.locales),
         )
-        .toSorted((a, b) => a.displayName.localeCompare(b.displayName)) ?? [],
+        .toSorted((a, b) =>
+          a.displayName.localeCompare(b.displayName, undefined, { numeric: true }),
+        ) ?? [],
     isLocaleEntity: decl === req.localeEntity,
   }
 
