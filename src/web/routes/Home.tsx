@@ -1,5 +1,5 @@
 import type { FunctionalComponent } from "preact"
-import { useEffect } from "preact/hooks"
+import { useEffect, useState } from "preact/hooks"
 import type { SerializedEntityDecl } from "../../node/schema/index.ts"
 import type { GetAllDeclarationsResponseBody } from "../../shared/api.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
@@ -18,13 +18,47 @@ export const Home: FunctionalComponent = () => {
     document.title = "Entities — TSONDB"
   }, [])
 
+  const [searchText, setSearchText] = useState("")
+
+  const lowerSearchText = searchText.toLowerCase().replaceAll(" ", "")
+  const filteredEntities =
+    searchText.length === 0
+      ? entities
+      : entities?.filter(
+          entity =>
+            entity.declaration.name.toLowerCase().includes(lowerSearchText) ||
+            entity.declaration.namePlural.toLowerCase().includes(lowerSearchText),
+        )
+
   return (
     <Layout breadcrumbs={[{ url: "/", label: "Home" }]}>
       <h1>Entities</h1>
-      <ul class="entities">
-        {(entities ?? []).map(entity => (
-          <li key={entity.declaration.name} class="entity-item">
-            <div className="title">
+      <div className="list-header">
+        <p class="instance-count">
+          {searchText === "" ? "" : `${(filteredEntities?.length ?? 0).toString()} of `}
+          {entities?.length ?? 0} entit{entities?.length === 1 ? "y" : "ies"}
+        </p>
+        <form
+          action=""
+          rel="search"
+          onSubmit={e => {
+            e.preventDefault()
+          }}
+        >
+          <label htmlFor="entity-search" class="visually-hidden">
+            Search
+          </label>
+          <input
+            type="text"
+            id="entity-search"
+            value={searchText}
+            onInput={event => {
+              setSearchText(event.currentTarget.value)
+            }}
+          />
+        </form>
+      </div>
+        {(filteredEntities ?? []).map(entity => (
               <h2>{toTitleCase(entity.declaration.namePlural)}</h2>
               {entity.declaration.comment && (
                 <Markdown class="description" string={entity.declaration.comment} />
