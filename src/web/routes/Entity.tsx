@@ -3,6 +3,7 @@ import { useRoute } from "preact-iso"
 import { useEffect } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
 import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.ts"
+import { toTitleCase } from "../../shared/utils/string.ts"
 import {
   deleteInstanceByEntityNameAndId,
   getEntityByName,
@@ -30,6 +31,10 @@ export const Entity: FunctionalComponent = () => {
   )
 
   useEffect(() => {
+    document.title = toTitleCase(entity?.declaration.namePlural ?? name ?? "") + " — TSONDB"
+  }, [entity?.declaration.namePlural, name])
+
+  useEffect(() => {
     if (created) {
       const instanceElement = document.getElementById(`instance-${created}`)
       if (instanceElement) {
@@ -45,7 +50,7 @@ export const Entity: FunctionalComponent = () => {
   if (!entity || !instances) {
     return (
       <div>
-        <h1>{name}</h1>
+        <h1>{toTitleCase(entity?.declaration.namePlural ?? name)}</h1>
         <p className="loading">Loading …</p>
       </div>
     )
@@ -54,7 +59,7 @@ export const Entity: FunctionalComponent = () => {
   return (
     <Layout breadcrumbs={[{ url: "/", label: "Home" }]}>
       <div class="header-with-btns">
-        <h1>{name}</h1>
+        <h1>{toTitleCase(entity.declaration.namePlural)}</h1>
         <a class="btn btn--primary" href={`/entities/${entity.declaration.name}/instances/create`}>
           Add
         </a>

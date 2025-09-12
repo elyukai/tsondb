@@ -34,6 +34,12 @@ export const CreateInstance: FunctionalComponent = () => {
 
   const { route } = useLocation()
 
+  useEffect(() => {
+    const entityName = entityFromRoute?.entity.name ?? name
+    document.title =
+      entityName === undefined ? "Not found" : "New " + toTitleCase(entityName) + " — TSONDB"
+  }, [entityFromRoute?.entity.name, name])
+
   if (!name) {
     return <NotFound />
   }

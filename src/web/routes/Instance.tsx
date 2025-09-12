@@ -3,6 +3,7 @@ import { useLocation, useRoute } from "preact-iso"
 import { useCallback, useEffect, useState } from "preact/hooks"
 import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
+import { toTitleCase } from "../../shared/utils/string.ts"
 import {
   deleteInstanceByEntityNameAndId,
   getInstanceByEntityNameAndId,
@@ -27,6 +28,21 @@ export const Instance: FunctionalComponent = () => {
   const [originalInstance, setOriginalInstance] = useState<InstanceContainer>()
 
   const { route } = useLocation()
+
+  useEffect(() => {
+    if (entityFromRoute && instance && id) {
+      const defaultName = id
+      const instanceName = getSerializedDisplayNameFromEntityInstance(
+        entityFromRoute.entity,
+        instance.content,
+        defaultName,
+      )
+      const entityName = entityFromRoute.entity.name
+      document.title = instanceName + " — " + toTitleCase(entityName) + " — TSONDB"
+    } else {
+      document.title = "Not found — TSONDB"
+    }
+  }, [entityFromRoute, id, instance])
 
   useEffect(() => {
     if (name && id) {

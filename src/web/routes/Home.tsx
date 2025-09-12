@@ -1,4 +1,5 @@
 import type { FunctionalComponent } from "preact"
+import { useEffect } from "preact/hooks"
 import type { SerializedEntityDecl } from "../../node/schema/index.ts"
 import type { GetAllDeclarationsResponseBody } from "../../shared/api.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
@@ -13,6 +14,10 @@ const mapEntities = (data: GetAllDeclarationsResponseBody<SerializedEntityDecl>)
 export const Home: FunctionalComponent = () => {
   const [entities] = useMappedAPIResource(getAllEntities, mapEntities)
 
+  useEffect(() => {
+    document.title = "Entities — TSONDB"
+  }, [])
+
   return (
     <Layout breadcrumbs={[{ url: "/", label: "Home" }]}>
       <h1>Entities</h1>
@@ -20,7 +25,7 @@ export const Home: FunctionalComponent = () => {
         {(entities ?? []).map(entity => (
           <li key={entity.declaration.name} class="entity-item">
             <div className="title">
-              <h2>{toTitleCase(entity.declaration.name)}</h2>
+              <h2>{toTitleCase(entity.declaration.namePlural)}</h2>
               {entity.declaration.comment && (
                 <Markdown class="description" string={entity.declaration.comment} />
               )}
