@@ -132,9 +132,11 @@ export const Instance: FunctionalComponent = () => {
             setInstance(container => ({ ...container!, content: value }))
           }}
         />
-        <button type="submit" disabled={!hasChanges} class="primary">
-          Save
-        </button>
+        <div class="form-footer btns">
+          <button type="submit" disabled={!hasChanges} class="primary">
+            Save
+          </button>
+        </div>
       </form>
     </Layout>
   )

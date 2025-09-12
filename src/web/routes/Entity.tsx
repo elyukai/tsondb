@@ -88,7 +88,7 @@ export const Entity: FunctionalComponent = () => {
                   {gitStatusForDisplay}
                 </p>
               )}
-              <div className="btns">
+              <div class="btns">
                 <a
                   href={`/entities/${entity.declaration.name}/instances/${instance.id}`}
                   class="btn"

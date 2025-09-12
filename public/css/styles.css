@@ -5,10 +5,12 @@
 }
 
 :root {
-  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+  --font-sans:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --background: white;
   --markdown-background: #e1e3e7;
@@ -584,6 +586,17 @@ button[type="submit"] {
   list-style-type: disc;
   padding-left: 1.5rem;
   margin: 0.35rem 0 0;
+}
+
+main:has(.form-footer) {
+  margin-bottom: -1.5rem;
+}
+
+.form-footer {
+  position: sticky;
+  bottom: 0;
+  padding-bottom: 1.5rem;
+  background: var(--background);
 }
 
 .git-status {

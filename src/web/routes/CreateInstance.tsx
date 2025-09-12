@@ -131,7 +131,7 @@ export const CreateInstance: FunctionalComponent = () => {
             setInstance(value)
           }}
         />
-        <div className="btns">
+        <div class="form-footer btns">
           <button type="submit" class="primary" name="save">
             Save
           </button>
