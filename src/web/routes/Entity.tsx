@@ -1,6 +1,6 @@
 import type { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
-import { useEffect } from "preact/hooks"
+import { useEffect, useState } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
 import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
@@ -103,51 +103,54 @@ export const Entity: FunctionalComponent = () => {
           />
         </form>
       </div>
+      <ul class="entries entries--instances">
         {filteredInstances.map(instance => {
           const gitStatusForDisplay = getGitStatusForDisplay(instance.gitStatus)
           return (
             <li
               key={instance.id}
               id={`instance-${instance.id}`}
-              class={`instance-item ${created === instance.id ? "instance-item--created" : ""} ${
+              class={`entries-item ${created === instance.id ? "entries-item--created" : ""} ${
                 gitStatusForDisplay === undefined ? "" : `git-status--${gitStatusForDisplay}`
               }`}
             >
-              <h2>{instance.displayName}</h2>
-              <p aria-hidden class="id">
+              <h2 class="entries-item__title">{instance.displayName}</h2>
+              <p aria-hidden class="entries-item__subtitle entries-item__subtitle--id">
                 {instance.id}
               </p>
-              {gitStatusForDisplay !== undefined && (
-                <p
-                  class={`git-status git-status--${gitStatusForDisplay}`}
-                  title={getLabelForGitStatus(gitStatusForDisplay)}
-                >
-                  {gitStatusForDisplay}
-                </p>
-              )}
-              <div class="btns">
-                <a
-                  href={`/entities/${entity.declaration.name}/instances/${instance.id}`}
-                  class="btn"
-                >
-                  Edit
-                </a>
-                <button
-                  class="destructive"
-                  onClick={() => {
-                    if (confirm("Are you sure you want to delete this instance?")) {
-                      deleteInstanceByEntityNameAndId(entity.declaration.name, instance.id)
-                        .then(() => reloadInstances())
-                        .catch((error: unknown) => {
-                          if (error instanceof Error) {
-                            alert("Error deleting instance:\n\n" + error.toString())
-                          }
-                        })
-                    }
-                  }}
-                >
-                  Delete
-                </button>
+              <div class="entries-item__side">
+                {gitStatusForDisplay !== undefined && (
+                  <p
+                    class={`git-status git-status--${gitStatusForDisplay}`}
+                    title={getLabelForGitStatus(gitStatusForDisplay)}
+                  >
+                    {gitStatusForDisplay}
+                  </p>
+                )}
+                <div class="btns">
+                  <a
+                    href={`/entities/${entity.declaration.name}/instances/${instance.id}`}
+                    class="btn"
+                  >
+                    Edit
+                  </a>
+                  <button
+                    class="destructive"
+                    onClick={() => {
+                      if (confirm("Are you sure you want to delete this instance?")) {
+                        deleteInstanceByEntityNameAndId(entity.declaration.name, instance.id)
+                          .then(() => reloadInstances())
+                          .catch((error: unknown) => {
+                            if (error instanceof Error) {
+                              alert("Error deleting instance:\n\n" + error.toString())
+                            }
+                          })
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </li>
           )

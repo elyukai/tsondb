@@ -58,19 +58,24 @@ export const Home: FunctionalComponent = () => {
           />
         </form>
       </div>
+      <ul class="entries entries--entities">
         {(filteredEntities ?? []).map(entity => (
+          <li key={entity.declaration.name} class="entries-item">
+            <div class="entries-item__title">
               <h2>{toTitleCase(entity.declaration.namePlural)}</h2>
               {entity.declaration.comment && (
                 <Markdown class="description" string={entity.declaration.comment} />
               )}
             </div>
-            <p class="meta">
+            <p class="entries-item__subtitle">
               {entity.instanceCount} instance{entity.instanceCount === 1 ? "" : "s"}
             </p>
-            <div className="btns">
-              <a href={`/entities/${entity.declaration.name}`} class="btn">
-                View
-              </a>
+            <div class="entries-item__side">
+              <div class="btns">
+                <a href={`/entities/${entity.declaration.name}`} class="btn">
+                  View
+                </a>
+              </div>
             </div>
           </li>
         ))}
