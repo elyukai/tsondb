@@ -43,7 +43,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                     }}
                     disabled={type.minItems !== undefined && value.length <= type.minItems}
                   >
-                    Delete Item
+                    Delete Item #{i + 1}
                   </button>
                 </div>
               )}
@@ -68,7 +68,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
             }}
             disabled={type.maxItems !== undefined && value.length >= type.maxItems}
           >
-            Add Item
+            Add Item #{value.length + 1}
           </button>
         </div>
       )}

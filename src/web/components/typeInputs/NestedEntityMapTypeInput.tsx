@@ -2,6 +2,7 @@ import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
 import type { SerializedNestedEntityMapType } from "../../../node/schema/types/references/NestedEntityMapType.ts"
 import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.ts"
+import { toTitleCase } from "../../../shared/utils/string.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
@@ -34,44 +35,45 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
     <div class="field field--container field--nestedentitymap">
       {existingKeys.length > 0 && (
         <ul>
-          {Object.entries(value).map(([key, item]) => (
-            <li class="container-item dict-item" key={key}>
-              <div className="container-item-header">
-                <div className="container-item-title">
-                  <span>
-                    <strong>
-                      {instanceNamesByEntity[type.secondaryEntity]?.find(
-                        instance => instance.id === key,
-                      )?.name ?? key}
-                    </strong>{" "}
-                    <span className="id">{key}</span>
-                  </span>
+          {Object.entries(value).map(([key, item]) => {
+            const name =
+              instanceNamesByEntity[type.secondaryEntity]?.find(instance => instance.id === key)
+                ?.name ?? key
+
+            return (
+              <li class="container-item dict-item" key={key}>
+                <div className="container-item-header">
+                  <div className="container-item-title">
+                    <span>
+                      <strong>{name}</strong> <span className="id">{key}</span>
+                    </span>
+                  </div>
+                  <div className="btns">
+                    <button
+                      class="destructive"
+                      onClick={() => {
+                        const newObj = { ...value }
+                        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+                        delete newObj[key]
+                        onChange(newObj)
+                      }}
+                    >
+                      Delete {name}
+                    </button>
+                  </div>
                 </div>
-                <div className="btns">
-                  <button
-                    class="destructive"
-                    onClick={() => {
-                      const newObj = { ...value }
-                      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                      delete newObj[key]
-                      onChange(newObj)
-                    }}
-                  >
-                    Delete Key
-                  </button>
-                </div>
-              </div>
-              <TypeInput
-                type={type.type}
-                value={item}
-                instanceNamesByEntity={instanceNamesByEntity}
-                getDeclFromDeclName={getDeclFromDeclName}
-                onChange={newItem => {
-                  onChange(sortObjectKeysAlphabetically({ ...value, [key]: newItem }))
-                }}
-              />
-            </li>
-          ))}
+                <TypeInput
+                  type={type.type}
+                  value={item}
+                  instanceNamesByEntity={instanceNamesByEntity}
+                  getDeclFromDeclName={getDeclFromDeclName}
+                  onChange={newItem => {
+                    onChange(sortObjectKeysAlphabetically({ ...value, [key]: newItem }))
+                  }}
+                />
+              </li>
+            )
+          })}
         </ul>
       )}
       <div class="add-item-container">
@@ -109,7 +111,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
           }}
           disabled={newKey === ""}
         >
-          Add Key
+          Add {newKey === "" ? "Key" : toTitleCase(newKey)}
         </button>
       </div>
     </div>

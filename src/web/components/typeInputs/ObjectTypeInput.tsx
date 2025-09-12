@@ -53,7 +53,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = ({
                     )
                   }}
                 >
-                  Add Property
+                  Add {toTitleCase(key)}
                 </button>
               ) : (
                 <button
@@ -65,7 +65,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = ({
                     onChange(newObj)
                   }}
                 >
-                  Remove Property
+                  Remove {toTitleCase(key)}
                 </button>
               )}
             </div>
