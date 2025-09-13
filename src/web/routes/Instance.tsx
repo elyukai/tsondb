@@ -14,6 +14,7 @@ import { TypeInput } from "../components/typeInputs/TypeInput.tsx"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
 import { useGetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
+import { homeTitle } from "./Home.tsx"
 import { NotFound } from "./NotFound.tsx"
 
 export const Instance: FunctionalComponent = () => {
@@ -91,7 +92,7 @@ export const Instance: FunctionalComponent = () => {
     return (
       <Layout
         breadcrumbs={[
-          { url: "/", label: "Home" },
+          { url: "/", label: homeTitle },
           { url: `/entities/${name}`, label: name },
         ]}
       >
@@ -111,7 +112,7 @@ export const Instance: FunctionalComponent = () => {
   return (
     <Layout
       breadcrumbs={[
-        { url: "/", label: "Home" },
+        { url: "/", label: homeTitle },
         { url: `/entities/${name}`, label: entityFromRoute.entity.name },
       ]}
     >

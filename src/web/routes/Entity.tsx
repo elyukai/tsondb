@@ -13,6 +13,7 @@ import { Layout } from "../components/Layout.ts"
 import { useAPIResource } from "../hooks/useAPIResource.ts"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
 import { Markdown } from "../utils/Markdown.tsx"
+import { homeTitle } from "./Home.tsx"
 import { NotFound } from "./NotFound.tsx"
 
 const mapInstances = (data: GetAllInstancesOfEntityResponseBody) => data.instances
@@ -68,7 +69,7 @@ export const Entity: FunctionalComponent = () => {
         )
 
   return (
-    <Layout breadcrumbs={[{ url: "/", label: "Home" }]}>
+    <Layout breadcrumbs={[{ url: "/", label: homeTitle }]}>
       <div class="header-with-btns">
         <h1>{toTitleCase(entity.declaration.namePlural)}</h1>
         <a class="btn btn--primary" href={`/entities/${entity.declaration.name}/instances/create`}>

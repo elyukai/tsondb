@@ -11,11 +11,13 @@ import { Markdown } from "../utils/Markdown.tsx"
 const mapEntities = (data: GetAllDeclarationsResponseBody<SerializedEntityDecl>) =>
   data.declarations.sort((a, b) => a.declaration.name.localeCompare(b.declaration.name))
 
+export const homeTitle = "Entities"
+
 export const Home: FunctionalComponent = () => {
   const [entities] = useMappedAPIResource(getAllEntities, mapEntities)
 
   useEffect(() => {
-    document.title = "Entities — TSONDB"
+    document.title = homeTitle + " — TSONDB"
   }, [])
 
   const [searchText, setSearchText] = useState("")
@@ -32,7 +34,7 @@ export const Home: FunctionalComponent = () => {
 
   return (
     <Layout breadcrumbs={[]}>
-      <h1>Entities</h1>
+      <h1>{homeTitle}</h1>
       <div className="list-header">
         <p class="instance-count">
           {searchText === "" ? "" : `${(filteredEntities?.length ?? 0).toString()} of `}

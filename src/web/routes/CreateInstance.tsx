@@ -12,6 +12,7 @@ import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
 import { useGetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../utils/typeSkeleton.ts"
+import { homeTitle } from "./Home.tsx"
 import { NotFound } from "./NotFound.tsx"
 
 export const CreateInstance: FunctionalComponent = () => {
@@ -98,7 +99,7 @@ export const CreateInstance: FunctionalComponent = () => {
   return (
     <Layout
       breadcrumbs={[
-        { url: "/", label: "Home" },
+        { url: "/", label: homeTitle },
         { url: `/entities/${entity.name}`, label: entity.name },
       ]}
     >
