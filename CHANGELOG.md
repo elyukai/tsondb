@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.14](https://github.com/elyukai/tsondb/compare/v0.5.13...v0.5.14) (2025-09-13)
+
+
+### Bug Fixes
+
+* include enum key in error hierarchy ([bdf06e1](https://github.com/elyukai/tsondb/commit/bdf06e10c6381d591975d5dcf64c1058d8d63f82))
+
 ## [0.5.13](https://github.com/elyukai/tsondb/compare/v0.5.12...v0.5.13) (2025-09-13)
 
 
