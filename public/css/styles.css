@@ -110,6 +110,10 @@ header {
   grid-area: header;
 }
 
+header nav {
+  min-height: 1.4rem;
+}
+
 header nav ol {
   list-style-type: " ";
   display: flex;

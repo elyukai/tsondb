@@ -31,7 +31,7 @@ export const Home: FunctionalComponent = () => {
         )
 
   return (
-    <Layout breadcrumbs={[{ url: "/", label: "Home" }]}>
+    <Layout breadcrumbs={[]}>
       <h1>Entities</h1>
       <div className="list-header">
         <p class="instance-count">
