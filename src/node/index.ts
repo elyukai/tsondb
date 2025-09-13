@@ -41,7 +41,7 @@ const _validate = (
   instancesByEntityName: InstancesByEntityName,
   options: Partial<ValidationOptions> = {},
 ): void => {
-  const { checkReferentialIntegrity = false, checkOnlyEntities = [] } = options
+  const { checkReferentialIntegrity = true, checkOnlyEntities = [] } = options
 
   for (const onlyEntity of checkOnlyEntities) {
     if (!entities.find(entity => entity.name === onlyEntity)) {
