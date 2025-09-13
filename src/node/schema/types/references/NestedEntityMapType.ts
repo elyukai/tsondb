@@ -99,13 +99,13 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
   value,
 ) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`expected an object, but got ${json(value)}`)]
+    return [TypeError(`expected an object, but got ${json(value, helpers.useStyling)}`)]
   }
 
   return parallelizeErrors(
     Object.keys(value).map(key =>
       wrapErrorsIfAny(
-        `at nested entity map ${entity(`"${type.name}"`)} at key ${keyColor(`"${key}"`)}`,
+        `at nested entity map ${entity(`"${type.name}"`, helpers.useStyling)} at key ${keyColor(`"${key}"`, helpers.useStyling)}`,
         validateObjectType(helpers, type.type.value, value[key as keyof typeof value]).concat(
           helpers.checkReferentialIntegrity({
             name: type.secondaryEntity.name,

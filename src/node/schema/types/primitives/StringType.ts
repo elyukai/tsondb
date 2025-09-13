@@ -35,9 +35,9 @@ export { StringType as String }
 
 export const isStringType = (node: Node): node is StringType => node.kind === NodeKind.StringType
 
-export const validateStringType: Validator<StringType> = (_helpers, type, value) => {
+export const validateStringType: Validator<StringType> = (helpers, type, value) => {
   if (typeof value !== "string") {
-    return [TypeError(`expected a string, but got ${json(value)}`)]
+    return [TypeError(`expected a string, but got ${json(value, helpers.useStyling)}`)]
   }
 
   return validateStringConstraints(type, value)

@@ -42,9 +42,9 @@ export { IntegerType as Integer }
 
 export const isIntegerType = (node: Node): node is IntegerType => node.kind === NodeKind.IntegerType
 
-export const validateIntegerType: Validator<IntegerType> = (_helpers, type, value) => {
+export const validateIntegerType: Validator<IntegerType> = (helpers, type, value) => {
   if (typeof value !== "number" || !Number.isInteger(value)) {
-    return [TypeError(`expected an integer, but got ${json(value)}`)]
+    return [TypeError(`expected an integer, but got ${json(value, helpers.useStyling)}`)]
   }
 
   return validateNumberConstraints(type, value)

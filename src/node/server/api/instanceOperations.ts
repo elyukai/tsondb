@@ -26,7 +26,7 @@ export const createInstance = async (
   }
 
   const validationErrors = validateEntityDecl(
-    createValidators(locals.instancesByEntityName),
+    createValidators(locals.instancesByEntityName, false),
     entity,
     instance,
   )
@@ -111,7 +111,7 @@ export const updateInstance = async (
   }
 
   const validationErrors = validateEntityDecl(
-    createValidators(locals.instancesByEntityName),
+    createValidators(locals.instancesByEntityName, false),
     entity,
     instance,
   )

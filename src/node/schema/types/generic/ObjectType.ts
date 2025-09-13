@@ -100,7 +100,7 @@ export const getNestedDeclarationsInObjectType: GetNestedDeclarations<ObjectType
 
 export const validateObjectType: Validator<ObjectType> = (helpers, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`expected an object, but got ${json(value)}`)]
+    return [TypeError(`expected an object, but got ${json(value, helpers.useStyling)}`)]
   }
 
   const expectedKeys = Object.keys(type.properties)
@@ -112,10 +112,10 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
       const prop = type.properties[key]!
 
       if (prop.isRequired && !(key in value)) {
-        return TypeError(`missing required property ${keyColor(`"${key}"`)}`)
+        return TypeError(`missing required property ${keyColor(`"${key}"`, helpers.useStyling)}`)
       } else if (prop.isRequired || (value as Record<string, unknown>)[key] !== undefined) {
         return wrapErrorsIfAny(
-          `at object key ${keyColor(`"${key}"`)}`,
+          `at object key ${keyColor(`"${key}"`, helpers.useStyling)}`,
           validate(helpers, prop.type, (value as Record<string, unknown>)[key]),
         )
       }

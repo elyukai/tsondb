@@ -60,7 +60,7 @@ const _validate = (
           wrapErrorsIfAny(
             `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, instance.fileName))}"`)}`,
             validateEntityDecl(
-              createValidators(instancesByEntityName, checkReferentialIntegrity),
+              createValidators(instancesByEntityName, true, checkReferentialIntegrity),
               entity,
               instance.content,
             ),

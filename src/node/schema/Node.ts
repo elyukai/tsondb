@@ -142,13 +142,16 @@ export const flatMapAuxiliaryDecls = (
 export type IdentifierToCheck = { name: string; value: unknown }
 
 export interface Validators {
+  useStyling: boolean
   checkReferentialIntegrity: (identifier: IdentifierToCheck) => Error[]
 }
 
 export const createValidators = (
   instancesByEntityName: InstancesByEntityName,
+  useStyling: boolean,
   checkReferentialIntegrity: boolean = true,
 ): Validators => ({
+  useStyling,
   checkReferentialIntegrity: checkReferentialIntegrity
     ? ({ name, value }) =>
         instancesByEntityName[name]?.some(
@@ -161,8 +164,9 @@ export const createValidators = (
           ? []
           : [
               ReferenceError(
-                `Invalid reference to instance of entity ${entity(`"${name}"`)} with identifier ${json(
+                `Invalid reference to instance of entity ${entity(`"${name}"`, useStyling)} with identifier ${json(
                   value,
+                  useStyling,
                 )}`,
               ),
             ]

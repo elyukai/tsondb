@@ -82,13 +82,16 @@ export const getNestedDeclarationsInArrayType: GetNestedDeclarations<ArrayType> 
 
 export const validateArrayType: Validator<ArrayType> = (helpers, type, value) => {
   if (!Array.isArray(value)) {
-    return [TypeError(`expected an array, but got ${json(value)}`)]
+    return [TypeError(`expected an array, but got ${json(value, helpers.useStyling)}`)]
   }
 
   return parallelizeErrors([
     ...validateArrayConstraints(type, value),
     ...value.map((item, index) =>
-      wrapErrorsIfAny(`at index ${key(index.toString())}`, validate(helpers, type.items, item)),
+      wrapErrorsIfAny(
+        `at index ${key(index.toString(), helpers.useStyling)}`,
+        validate(helpers, type.items, item),
+      ),
     ),
   ])
 }

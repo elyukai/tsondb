@@ -66,7 +66,7 @@ export const getNestedDeclarationsInEnumType: GetNestedDeclarations<EnumType> = 
 
 export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`expected an object, but got ${json(value)}`)]
+    return [TypeError(`expected an object, but got ${json(value, helpers.useStyling)}`)]
   }
 
   const actualKeys = Object.keys(value)
@@ -74,7 +74,7 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
   if (!(discriminatorKey in value) || typeof value[discriminatorKey] !== "string") {
     return [
       TypeError(
-        `missing required discriminator value at key ${key(`"${discriminatorKey}"`)} of type string`,
+        `missing required discriminator value at key ${key(`"${discriminatorKey}"`, helpers.useStyling)} of type string`,
       ),
     ]
   }
@@ -84,7 +84,7 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
   if (!(caseName in type.values)) {
     return [
       TypeError(
-        `discriminator ${key(`"${caseName}"`)} is not a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
+        `discriminator ${key(`"${caseName}"`, helpers.useStyling)} is not a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
       ),
     ]
   }
@@ -94,7 +94,7 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
       ? []
       : [
           TypeError(
-            `key ${key(`"${actualKey}"`)} is not the discriminator key ${key(`"${caseName}"`)} or a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
+            `key ${key(`"${actualKey}"`, helpers.useStyling)} is not the discriminator key ${key(`"${caseName}"`, helpers.useStyling)} or a valid enum case, possible cases are: ${Object.keys(type.values).join(", ")}`,
           ),
         ],
   )
@@ -107,7 +107,11 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
 
   if (associatedType != null) {
     if (!(caseName in value)) {
-      return [TypeError(`missing required associated value for case ${key(`"${caseName}"`)}`)]
+      return [
+        TypeError(
+          `missing required associated value for case ${key(`"${caseName}"`, helpers.useStyling)}`,
+        ),
+      ]
     }
 
     return validate(helpers, associatedType, (value as Record<typeof caseName, unknown>)[caseName])

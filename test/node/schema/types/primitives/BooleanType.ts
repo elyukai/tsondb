@@ -32,12 +32,21 @@ describe("predicate", () => {
 describe("validateBooleanType", () => {
   it("returns if the value is a valid BooleanType", () => {
     deepEqual(
-      validateBooleanType({ checkReferentialIntegrity: () => [] }, BooleanType(), false),
+      validateBooleanType(
+        { checkReferentialIntegrity: () => [], useStyling: true },
+        BooleanType(),
+        false,
+      ),
       [],
     )
-    deepEqual(validateBooleanType({ checkReferentialIntegrity: () => [] }, BooleanType(), "true"), [
-      TypeError(`expected a boolean value, but got ${json("true")}`),
-    ])
+    deepEqual(
+      validateBooleanType(
+        { checkReferentialIntegrity: () => [], useStyling: true },
+        BooleanType(),
+        "true",
+      ),
+      [TypeError(`expected a boolean value, but got ${json("true", true)}`)],
+    )
   })
 })
 

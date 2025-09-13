@@ -24,9 +24,9 @@ export { DateType as Date }
 
 export const isDateType = (node: Node): node is DateType => node.kind === NodeKind.DateType
 
-export const validateDateType: Validator<DateType> = (_helpers, type, value) => {
+export const validateDateType: Validator<DateType> = (helpers, type, value) => {
   if (typeof value !== "string") {
-    return [TypeError(`expected a string, but got ${json(value)}`)]
+    return [TypeError(`expected a string, but got ${json(value, helpers.useStyling)}`)]
   }
 
   return validateDateConstraints(type, value)

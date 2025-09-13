@@ -32,10 +32,22 @@ describe("predicate", () => {
 
 describe("validateFloatType", () => {
   it("returns if the value is a valid FloatType", () => {
-    deepEqual(validateFloatType({ checkReferentialIntegrity: () => [] }, FloatType(), 1.0), [])
-    deepEqual(validateFloatType({ checkReferentialIntegrity: () => [] }, FloatType(), "true"), [
-      TypeError(`expected a floating-point number, but got ${json("true")}`),
-    ])
+    deepEqual(
+      validateFloatType(
+        { checkReferentialIntegrity: () => [], useStyling: true },
+        FloatType(),
+        1.0,
+      ),
+      [],
+    )
+    deepEqual(
+      validateFloatType(
+        { checkReferentialIntegrity: () => [], useStyling: true },
+        FloatType(),
+        "true",
+      ),
+      [TypeError(`expected a floating-point number, but got ${json("true", true)}`)],
+    )
   })
 })
 

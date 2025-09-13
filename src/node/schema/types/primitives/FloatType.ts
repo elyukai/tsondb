@@ -36,9 +36,11 @@ export { FloatType as Float }
 
 export const isFloatType = (node: Node): node is FloatType => node.kind === NodeKind.FloatType
 
-export const validateFloatType: Validator<FloatType> = (_helpers, type, value) => {
+export const validateFloatType: Validator<FloatType> = (helpers, type, value) => {
   if (typeof value !== "number") {
-    return [TypeError(`expected a floating-point number, but got ${json(value)}`)]
+    return [
+      TypeError(`expected a floating-point number, but got ${json(value, helpers.useStyling)}`),
+    ]
   }
 
   return validateNumberConstraints(type, value)
