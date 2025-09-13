@@ -1,7 +1,6 @@
 import type { FunctionComponent } from "preact"
 import { memo } from "preact/compat"
 import type { SerializedType } from "../../../node/schema/types/Type.ts"
-import { deepEqual } from "../../../shared/utils/compare.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
@@ -17,10 +16,10 @@ import { NestedEntityMapTypeInput } from "./NestedEntityMapTypeInput.tsx"
 import { ObjectTypeInput } from "./ObjectTypeInput.tsx"
 import { ReferenceIdentifierTypeInput } from "./ReferenceIdentifierTypeInput.tsx"
 import { StringTypeInput } from "./StringTypeInput.tsx"
-import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
 type Props = {
   type: SerializedType
+  path: string | undefined
   value: unknown
   instanceNamesByEntity: InstanceNamesByEntity
   getDeclFromDeclName: GetDeclFromDeclName
@@ -29,98 +28,72 @@ type Props = {
 
 const TypeInput: FunctionComponent<Props> = ({
   type,
+  path,
   value,
   instanceNamesByEntity,
   getDeclFromDeclName,
   onChange,
 }) => {
+  // console.log("rendering node at path ", path ?? "<root>")
+
   switch (type.kind) {
     case "BooleanType":
-      if (typeof value === "boolean") {
-        return <BooleanTypeInput type={type} value={value} onChange={onChange} />
-      } else {
-        return <MismatchingTypeError expected="boolean" actual={value} />
-      }
+      return <BooleanTypeInput type={type} value={value} onChange={onChange} />
 
     case "DateType":
-      if (typeof value === "string") {
-        return <DateTypeInput type={type} value={value} onChange={onChange} />
-      } else {
-        return <MismatchingTypeError expected="date string" actual={value} />
-      }
+      return <DateTypeInput type={type} value={value} onChange={onChange} />
 
     case "FloatType":
-      if (typeof value === "number") {
-        return <FloatTypeInput type={type} value={value} onChange={onChange} />
-      } else {
-        return <MismatchingTypeError expected="float" actual={value} />
-      }
+      return <FloatTypeInput type={type} value={value} onChange={onChange} />
 
     case "IntegerType":
-      if (typeof value === "number" && Number.isInteger(value)) {
-        return <IntegerTypeInput type={type} value={value} onChange={onChange} />
-      } else {
-        return <MismatchingTypeError expected="integer" actual={value} />
-      }
+      return <IntegerTypeInput type={type} value={value} onChange={onChange} />
 
     case "StringType":
-      if (typeof value === "string") {
-        return <StringTypeInput type={type} value={value} onChange={onChange} />
-      } else {
-        return <MismatchingTypeError expected="string" actual={value} />
-      }
+      return <StringTypeInput type={type} value={value} onChange={onChange} />
 
     case "ArrayType":
-      if (Array.isArray(value)) {
-        return (
-          <ArrayTypeInput
-            type={type}
-            value={value}
-            instanceNamesByEntity={instanceNamesByEntity}
-            getDeclFromDeclName={getDeclFromDeclName}
-            onChange={onChange}
-          />
-        )
-      } else {
-        return <MismatchingTypeError expected="array" actual={value} />
-      }
+      return (
+        <ArrayTypeInput
+          type={type}
+          path={path}
+          value={value}
+          instanceNamesByEntity={instanceNamesByEntity}
+          getDeclFromDeclName={getDeclFromDeclName}
+          onChange={onChange}
+        />
+      )
 
     case "ObjectType":
-      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-        return (
-          <ObjectTypeInput
-            type={type}
-            value={value as Record<string, unknown>}
-            instanceNamesByEntity={instanceNamesByEntity}
-            getDeclFromDeclName={getDeclFromDeclName}
-            onChange={onChange}
-          />
-        )
-      } else {
-        return <MismatchingTypeError expected="object" actual={value} />
-      }
+      return (
+        <ObjectTypeInput
+          type={type}
+          path={path}
+          value={value}
+          instanceNamesByEntity={instanceNamesByEntity}
+          getDeclFromDeclName={getDeclFromDeclName}
+          onChange={onChange}
+        />
+      )
 
     case "TypeArgumentType":
       return <TypeArgumentTypeInput type={type} />
 
     case "ReferenceIdentifierType":
-      if (typeof value === "string") {
-        return (
-          <ReferenceIdentifierTypeInput
-            type={type}
-            value={value}
-            instanceNamesByEntity={instanceNamesByEntity}
-            onChange={onChange}
-          />
-        )
-      } else {
-        return <MismatchingTypeError expected="string identifier" actual={value} />
-      }
+      return (
+        <ReferenceIdentifierTypeInput
+          type={type}
+          value={value}
+          instanceNamesByEntity={instanceNamesByEntity}
+          onChange={onChange}
+        />
+      )
 
     case "IncludeIdentifierType":
       return (
         <IncludeIdentifierTypeInput
           type={type}
+          path={path}
           value={value}
           instanceNamesByEntity={instanceNamesByEntity}
           getDeclFromDeclName={getDeclFromDeclName}
@@ -129,24 +102,22 @@ const TypeInput: FunctionComponent<Props> = ({
       )
 
     case "NestedEntityMapType":
-      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-        return (
-          <NestedEntityMapTypeInput
-            type={type}
-            value={value as Record<string, unknown>}
-            instanceNamesByEntity={instanceNamesByEntity}
-            getDeclFromDeclName={getDeclFromDeclName}
-            onChange={onChange}
-          />
-        )
-      } else {
-        return <MismatchingTypeError expected="entity map" actual={value} />
-      }
+      return (
+        <NestedEntityMapTypeInput
+          type={type}
+          path={path}
+          value={value as Record<string, unknown>}
+          instanceNamesByEntity={instanceNamesByEntity}
+          getDeclFromDeclName={getDeclFromDeclName}
+          onChange={onChange}
+        />
+      )
 
     case "EnumType":
       return (
         <EnumTypeInput
           type={type}
+          path={path}
           value={value}
           instanceNamesByEntity={instanceNamesByEntity}
           getDeclFromDeclName={getDeclFromDeclName}
@@ -159,8 +130,10 @@ const TypeInput: FunctionComponent<Props> = ({
   }
 }
 
-const MemoizedTypeInput = memo(TypeInput, (prevProps, nextProps) =>
-  deepEqual(prevProps.value, nextProps.value),
+const MemoizedTypeInput = memo(
+  TypeInput,
+  (prevProps, nextProps) =>
+    prevProps.value === nextProps.value && prevProps.onChange === nextProps.onChange,
 )
 
 export { MemoizedTypeInput as TypeInput }

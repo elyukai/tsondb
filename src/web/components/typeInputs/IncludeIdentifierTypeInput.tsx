@@ -6,6 +6,7 @@ import { TypeInput } from "./TypeInput.tsx"
 
 type Props = {
   type: SerializedIncludeIdentifierType
+  path: string | undefined
   value: unknown
   instanceNamesByEntity: InstanceNamesByEntity
   getDeclFromDeclName: GetDeclFromDeclName
@@ -14,6 +15,7 @@ type Props = {
 
 export const IncludeIdentifierTypeInput: FunctionComponent<Props> = ({
   type,
+  path,
   value,
   instanceNamesByEntity,
   getDeclFromDeclName,
@@ -32,6 +34,7 @@ export const IncludeIdentifierTypeInput: FunctionComponent<Props> = ({
   return (
     <TypeInput
       type={decl.type}
+      path={path}
       value={value}
       instanceNamesByEntity={instanceNamesByEntity}
       getDeclFromDeclName={getDeclFromDeclName}

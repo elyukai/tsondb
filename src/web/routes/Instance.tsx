@@ -14,6 +14,7 @@ import { TypeInput } from "../components/typeInputs/TypeInput.tsx"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
 import { useGetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
+import { printJson } from "../utils/debug.ts"
 import { NotFound } from "./NotFound.tsx"
 
 export const Instance: FunctionalComponent = () => {
@@ -30,7 +31,7 @@ export const Instance: FunctionalComponent = () => {
   const { route } = useLocation()
 
   useEffect(() => {
-    if (entityFromRoute && instance && id) {
+    if (entityFromRoute?.entity && instance?.content && id) {
       const defaultName = id
       const instanceName = getSerializedDisplayNameFromEntityInstance(
         entityFromRoute.entity,
@@ -42,7 +43,7 @@ export const Instance: FunctionalComponent = () => {
     } else {
       document.title = "Not found — TSONDB"
     }
-  }, [entityFromRoute, id, instance])
+  }, [entityFromRoute?.entity, id, instance?.content])
 
   useEffect(() => {
     if (name && id) {
@@ -141,10 +142,25 @@ export const Instance: FunctionalComponent = () => {
           Delete
         </button>
       </div>
+      <div class="debug-compare" style={{ display: "flex", gap: "1rem", width: "100%" }}>
+        <div style={{ flex: "1 1 0", position: "relative" }}>
+          <p>Original</p>
+          <pre style={{ overflowX: "scroll", width: "40rem", maxWidth: "100%" }}>
+            <code dangerouslySetInnerHTML={{ __html: printJson(originalInstance.content) }} />
+          </pre>
+        </div>
+        <div style={{ flex: "1 1 0", position: "relative" }}>
+          <p>Current</p>
+          <pre style={{ overflowX: "scroll", width: "40rem", maxWidth: "100%" }}>
+            <code dangerouslySetInnerHTML={{ __html: printJson(instance.content) }} />
+          </pre>
+        </div>
+      </div>
       <form onSubmit={handleSubmit}>
         <TypeInput
           type={entityFromRoute.entity.type}
           value={instance.content}
+          path={undefined}
           instanceNamesByEntity={instanceNamesByEntity}
           getDeclFromDeclName={getDeclFromDeclName}
           onChange={handleOnChange}

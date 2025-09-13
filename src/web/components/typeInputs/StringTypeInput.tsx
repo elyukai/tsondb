@@ -2,15 +2,20 @@ import type { FunctionComponent } from "preact"
 import type { SerializedStringType } from "../../../node/schema/types/primitives/StringType.ts"
 import { validateStringConstraints } from "../../../shared/validation/string.ts"
 import { Markdown } from "../../utils/Markdown.tsx"
+import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = {
   type: SerializedStringType
-  value: string
+  value: unknown
   onChange: (value: string) => void
 }
 
 export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChange }) => {
+  if (typeof value !== "string") {
+    return <MismatchingTypeError expected="string" actual={value} />
+  }
+
   const { minLength, maxLength, pattern, isMarkdown } = type
 
   const errors = validateStringConstraints(type, value)

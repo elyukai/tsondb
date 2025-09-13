@@ -6,11 +6,13 @@ import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { TypeInput } from "./TypeInput.tsx"
+import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = {
   type: SerializedArrayType
-  value: unknown[]
+  path: string | undefined
+  value: unknown
   instanceNamesByEntity: InstanceNamesByEntity
   getDeclFromDeclName: GetDeclFromDeclName
   onChange: (value: unknown[]) => void
@@ -18,11 +20,16 @@ type Props = {
 
 export const ArrayTypeInput: FunctionComponent<Props> = ({
   type,
+  path,
   value,
   instanceNamesByEntity,
   getDeclFromDeclName,
   onChange,
 }) => {
+  if (!(Array.isArray as (arg: unknown) => arg is unknown[])(value)) {
+    return <MismatchingTypeError expected="array" actual={value} />
+  }
+
   const errors = validateArrayConstraints(type, value)
 
   const isTuple = typeof type.minItems === "number" && type.minItems === type.maxItems
@@ -49,6 +56,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
               )}
               <TypeInput
                 type={type.items}
+                path={path === undefined ? `[${i.toString()}]` : `${path}[${i.toString()}]`}
                 value={item}
                 instanceNamesByEntity={instanceNamesByEntity}
                 getDeclFromDeclName={getDeclFromDeclName}

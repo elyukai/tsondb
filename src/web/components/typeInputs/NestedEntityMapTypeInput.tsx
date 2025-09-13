@@ -8,10 +8,12 @@ import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.t
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { Select } from "../Select.tsx"
 import { TypeInput } from "./TypeInput.tsx"
+import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
 type Props = {
   type: SerializedNestedEntityMapType
-  value: Record<string, unknown>
+  path: string | undefined
+  value: unknown
   instanceNamesByEntity: InstanceNamesByEntity
   getDeclFromDeclName: GetDeclFromDeclName
   onChange: (value: Record<string, unknown>) => void
@@ -19,12 +21,18 @@ type Props = {
 
 export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
   type,
+  path,
   value,
   instanceNamesByEntity,
   getDeclFromDeclName,
   onChange,
 }) => {
   const [newKey, setNewKey] = useState("")
+
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return <MismatchingTypeError expected="object" actual={value} />
+  }
+
   const existingKeys = Object.keys(value)
   const secondaryInstances = (instanceNamesByEntity[type.secondaryEntity] ?? [])
     .slice()
@@ -35,7 +43,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
     <div class="field field--container field--nestedentitymap">
       {existingKeys.length > 0 && (
         <ul>
-          {Object.entries(value).map(([key, item]) => {
+          {(Object.entries(value) as [string, unknown][]).map(([key, item]) => {
             const name =
               instanceNamesByEntity[type.secondaryEntity]?.find(instance => instance.id === key)
                 ?.name ?? key
@@ -54,7 +62,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
                       onClick={() => {
                         const newObj = { ...value }
                         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                        delete newObj[key]
+                        delete newObj[key as keyof typeof newObj]
                         onChange(newObj)
                       }}
                     >
@@ -64,6 +72,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
                 </div>
                 <TypeInput
                   type={type.type}
+                  path={path === undefined ? key : `${path}.${key}`}
                   value={item}
                   instanceNamesByEntity={instanceNamesByEntity}
                   getDeclFromDeclName={getDeclFromDeclName}

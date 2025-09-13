@@ -2,16 +2,21 @@ import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
 import type { SerializedFloatType } from "../../../node/schema/types/primitives/FloatType.ts"
 import { validateNumberConstraints } from "../../../shared/validation/number.ts"
+import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = {
   type: SerializedFloatType
-  value: number
+  value: unknown
   onChange: (value: number) => void
 }
 
 export const FloatTypeInput: FunctionComponent<Props> = ({ type, value, onChange }) => {
-  const [stringValue, setStringValue] = useState(value.toString())
+  const [stringValue, setStringValue] = useState(typeof value === "number" ? value.toString() : "")
+
+  if (typeof value !== "number") {
+    return <MismatchingTypeError expected="float" actual={value} />
+  }
 
   const errors = validateNumberConstraints(type, value)
 

@@ -1,15 +1,20 @@
 import type { FunctionComponent } from "preact"
 import type { SerializedDateType } from "../../../node/schema/types/primitives/DateType.ts"
 import { validateDateConstraints } from "../../../shared/validation/date.ts"
+import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = {
   type: SerializedDateType
-  value: string
+  value: unknown
   onChange: (value: string) => void
 }
 
 export const DateTypeInput: FunctionComponent<Props> = ({ type, value, onChange }) => {
+  if (typeof value !== "string") {
+    return <MismatchingTypeError expected="date string" actual={value} />
+  }
+
   const errors = validateDateConstraints(type, value)
 
   return (

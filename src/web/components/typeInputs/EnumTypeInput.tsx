@@ -11,6 +11,7 @@ import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
 type Props = {
   type: SerializedEnumType
+  path: string | undefined
   value: unknown
   instanceNamesByEntity: InstanceNamesByEntity
   getDeclFromDeclName: GetDeclFromDeclName
@@ -19,6 +20,7 @@ type Props = {
 
 export const EnumTypeInput: FunctionComponent<Props> = ({
   type,
+  path,
   value,
   instanceNamesByEntity,
   getDeclFromDeclName,
@@ -66,6 +68,7 @@ export const EnumTypeInput: FunctionComponent<Props> = ({
         <div className="associated-type">
           <TypeInput
             type={caseMember.type}
+            path={path === undefined ? `{${activeEnumCase}}` : `${path}.{${activeEnumCase}}`}
             value={(value as Record<string, unknown>)[activeEnumCase]}
             instanceNamesByEntity={instanceNamesByEntity}
             getDeclFromDeclName={getDeclFromDeclName}

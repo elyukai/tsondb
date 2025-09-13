@@ -129,6 +129,7 @@ export const CreateInstance: FunctionalComponent = () => {
       <form onSubmit={handleSubmit}>
         <TypeInput
           type={entity.type}
+          path={undefined}
           value={instance}
           instanceNamesByEntity={instanceNamesByEntity}
           getDeclFromDeclName={getDeclFromDeclName}
