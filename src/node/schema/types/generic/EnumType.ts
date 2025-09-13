@@ -118,7 +118,7 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
 
     return parallelizeErrors([
       wrapErrorsIfAny(
-        `at enum key ${key(`"${caseName}"`, helpers.useStyling)}`,
+        `at enum case ${key(`"${caseName}"`, helpers.useStyling)}`,
         validate(helpers, associatedType, (value as Record<typeof caseName, unknown>)[caseName]),
       ),
     ])
