@@ -1,4 +1,6 @@
 import { discriminatorKey } from "../../../../shared/enum.ts"
+import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
+import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
 import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
 import { getNestedDeclarations } from "../../declarations/Declaration.ts"
@@ -114,7 +116,12 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
       ]
     }
 
-    return validate(helpers, associatedType, (value as Record<typeof caseName, unknown>)[caseName])
+    return parallelizeErrors([
+      wrapErrorsIfAny(
+        `at enum key ${key(`"${caseName}"`, helpers.useStyling)}`,
+        validate(helpers, associatedType, (value as Record<typeof caseName, unknown>)[caseName]),
+      ),
+    ])
   }
 
   return []
