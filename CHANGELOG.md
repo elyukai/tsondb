@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.11](https://github.com/elyukai/tsondb/compare/v0.5.10...v0.5.11) (2025-09-13)
+
+
+### Features
+
+* improve checkmark visibility ([5e10f6c](https://github.com/elyukai/tsondb/commit/5e10f6ca565775a39ff078c19a2655c0288209ff))
+
+
+### Bug Fixes
+
+* form components updating old state, resulting in data loss of previous changes ([3a77615](https://github.com/elyukai/tsondb/commit/3a776153d196e4e91933193162305e14ebd825b0))
+
 ## [0.5.10](https://github.com/elyukai/tsondb/compare/v0.5.9...v0.5.10) (2025-09-12)
 
 
