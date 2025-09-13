@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.13](https://github.com/elyukai/tsondb/compare/v0.5.12...v0.5.13) (2025-09-13)
+
+
+### Features
+
+* consistent home page title in titles and breadcrumbs ([16d3c50](https://github.com/elyukai/tsondb/commit/16d3c506f4274374796d7c1f917046572adc3b5f))
+* only use console text styling for cli api, not for web errors ([50da12f](https://github.com/elyukai/tsondb/commit/50da12ff040cd019bdc8e6c4a3f419a52916b5fa))
+* remove duplicate home breadcrumb from home page without layout shift ([b5cb4d7](https://github.com/elyukai/tsondb/commit/b5cb4d755cc93cb0df5c8a0f9743d96216ff5e18))
+
+
+### Bug Fixes
+
+* check referential integrity by default ([eda625d](https://github.com/elyukai/tsondb/commit/eda625d9a2145cca41bf0fe53badbf7e79e9bee1))
+* remove debug output on instance pages ([3ad5449](https://github.com/elyukai/tsondb/commit/3ad54490da3869de3ff1ed859e0a607c91f21029))
+
 ## [0.5.12](https://github.com/elyukai/tsondb/compare/v0.5.11...v0.5.12) (2025-09-13)
 
 ## [0.5.11](https://github.com/elyukai/tsondb/compare/v0.5.10...v0.5.11) (2025-09-13)
