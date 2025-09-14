@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.15](https://github.com/elyukai/tsondb/compare/v0.5.14...v0.5.15) (2025-09-14)
+
+
+### Bug Fixes
+
+* only try getting references in enum type if the case has an associated type ([28e6aa7](https://github.com/elyukai/tsondb/commit/28e6aa78a8091c14500d18642ec9ca02d9d49e8e))
+* reword error in enum key to error in enum case ([6695dbf](https://github.com/elyukai/tsondb/commit/6695dbfda74ff104240eff96b4fe72830aca96cf))
+
 ## [0.5.14](https://github.com/elyukai/tsondb/compare/v0.5.13...v0.5.14) (2025-09-13)
 
 
