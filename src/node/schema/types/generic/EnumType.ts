@@ -181,21 +181,26 @@ export const serializeEnumType: Serializer<EnumType, SerializedEnumType> = type 
   ),
 })
 
-export const getReferencesForEnumType: GetReferences<EnumType> = (type, value) =>
-  typeof value === "object" &&
-  value !== null &&
-  !Array.isArray(value) &&
-  discriminatorKey in value &&
-  typeof value[discriminatorKey] === "string" &&
-  value[discriminatorKey] in type.values &&
-  type.values[value[discriminatorKey]]?.type == null &&
-  value[discriminatorKey] in value
-    ? getReferencesForType(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        type.values[value[discriminatorKey]]!.type!,
-        (value as Record<string, unknown>)[value[discriminatorKey]],
-      )
+export const getReferencesForEnumType: GetReferences<EnumType> = (type, value) => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    !(discriminatorKey in value)
+  ) {
+    return []
+  }
+
+  const enumCase = value[discriminatorKey]
+
+  return typeof enumCase === "string" &&
+    enumCase in type.values &&
+    type.values[enumCase] !== undefined &&
+    type.values[enumCase].type !== null &&
+    enumCase in value
+    ? getReferencesForType(type.values[enumCase].type, (value as Record<string, unknown>)[enumCase])
     : []
+}
 
 export const formatEnumType: StructureFormatter<EnumType> = (type, value) => {
   if (
