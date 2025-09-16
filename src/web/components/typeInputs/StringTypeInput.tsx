@@ -24,7 +24,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChang
     <div class="field field--string">
       {isMarkdown ? (
         <>
-          <div className="editor">
+          <div class="editor editor--markdown">
             <div class="textarea-grow-wrap" data-value={value}>
               <textarea
                 value={value}
@@ -35,15 +35,26 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChang
                 }}
                 aria-invalid={errors.length > 0}
               />
+              <p class="help">
+                This textarea supports{" "}
+                <a
+                  href="https://www.markdownguide.org/getting-started/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Markdown
+                </a>
+                .
+              </p>
             </div>
             <ValidationErrors errors={errors} />
           </div>
-          <div className="preview">
+          <div class="preview">
             <Markdown string={value} />
           </div>
         </>
       ) : (
-        <div className="editor">
+        <div class="editor">
           <input
             type="text"
             value={value}

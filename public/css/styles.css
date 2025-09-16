@@ -555,6 +555,16 @@ form > .field--container {
   flex: 1 1 0;
 }
 
+.editor--markdown :is(textarea, input) {
+  font-family: var(--font-mono);
+}
+
+.help {
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+  margin: 0.25rem 0 0;
+}
+
 .field--string .preview {
   padding: 1rem;
   background: var(--markdown-background);
