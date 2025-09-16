@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.16](https://github.com/elyukai/tsondb/compare/v0.5.15...v0.5.16) (2025-09-16)
+
+
+### Features
+
+* add more debug messages to identify long-running operations ([3c4c423](https://github.com/elyukai/tsondb/commit/3c4c42383ffaf53ace66c8c31292d5acf2561657))
+* syntax highlighting for supported markdown features ([31acca9](https://github.com/elyukai/tsondb/commit/31acca93eae4a62f62aefe2851e28084dd4364c7))
+* use monospace font for markdown textarea and add help text ([515b57d](https://github.com/elyukai/tsondb/commit/515b57d04ac0635baed02d9f5e14276a00e9d3e5))
+
+
+### Bug Fixes
+
+* markdown textarea autosizing did not fully work due to mismatched font ([4e30d5b](https://github.com/elyukai/tsondb/commit/4e30d5b0ec5a94d9491c9735a731d5c307fe46c3))
+
 ## [0.5.15](https://github.com/elyukai/tsondb/compare/v0.5.14...v0.5.15) (2025-09-14)
 
 
