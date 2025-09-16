@@ -1,4 +1,5 @@
 import Debug from "debug"
+import { resolve } from "node:path"
 import { difference, removeAt } from "../../shared/utils/array.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
@@ -49,26 +50,38 @@ const removeReferences = (
 ): ReferencesToInstances =>
   references.reduce((acc1, reference) => removeReference(acc1, reference, instanceId), acc)
 
-export const getReferencesToInstances = (
+export const getReferencesToInstances = async (
   instancesByEntityName: Record<string, InstanceContainer[]>,
   entitiesByName: Record<string, EntityDecl>,
 ) => {
   debug("collecting references ...")
-  return Object.entries(instancesByEntityName).reduce(
-    (acc: ReferencesToInstances, [entityName, instances]) => {
-      const entity = entitiesByName[entityName]
-      if (entity) {
-        const refs = instances.reduce((acc1, instance) => {
-          const references = getReferencesForEntityDecl(entity, instance.content)
-          return addReferences(acc1, references, instance.id)
-        }, acc)
-        debug("collected references for entity %s in %d instances", entityName, instances.length)
-        return refs
-      }
-      return acc
-    },
-    {},
+  const pool = new WorkerPool<InstanceContainer[], ReferencesToInstances>(
+    6,
+    resolve(import.meta.filename, "./referencesWorker.js"),
   )
+  return (
+    await Promise.all(
+      Object.entries(instancesByEntityName).map(
+        ([entityName, instances]) =>
+          new Promise((resolve, reject) => {
+            pool.runTask(instances, (error, result) => {
+              error !== null ? reject(error) : resolve(result)
+            })
+          }),
+      ),
+    )
+  ).reduce((acc: ReferencesToInstances, [entityName, instances]) => {
+    const entity = entitiesByName[entityName]
+    if (entity) {
+      const refs = instances.reduce((acc1, instance) => {
+        const references = getReferencesForEntityDecl(entity, instance.content)
+        return addReferences(acc1, references, instance.id)
+      }, acc)
+      debug("collected references for entity %s in %d instances", entityName, instances.length)
+      return refs
+    }
+    return acc
+  }, {})
 }
 
 export const updateReferencesToInstances = (
