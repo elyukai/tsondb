@@ -69,6 +69,15 @@ import {
   serializeStringType,
   validateStringType,
 } from "./primitives/StringType.ts"
+import {
+  formatChildEntitiesValue,
+  getReferencesForChildEntitiesType,
+  resolveTypeArgumentsInChildEntitiesType,
+  serializeChildEntitiesType,
+  validateChildEntitiesType,
+  type ChildEntitiesType,
+  type SerializedChildEntitiesType,
+} from "./references/ChildEntitiesType.ts"
 import type {
   IncludeIdentifierType,
   SerializedIncludeIdentifierType,
@@ -129,6 +138,7 @@ export type Type =
   | IncludeIdentifierType
   | NestedEntityMapType
   | EnumType
+  | ChildEntitiesType
 
 export type SerializedType =
   | SerializedPrimitiveType
@@ -139,6 +149,7 @@ export type SerializedType =
   | SerializedIncludeIdentifierType
   | SerializedNestedEntityMapType
   | SerializedEnumType
+  | SerializedChildEntitiesType
 
 export const validate: Validator<Type> = (helpers, type, value) => {
   switch (type.kind) {
@@ -166,6 +177,8 @@ export const validate: Validator<Type> = (helpers, type, value) => {
       return validateNestedEntityMapType(helpers, type, value)
     case NodeKind.EnumType:
       return validateEnumType(helpers, type, value)
+    case NodeKind.ChildEntitiesType:
+      return validateChildEntitiesType(helpers, type, value)
     default:
       return assertExhaustive(type)
   }
@@ -193,6 +206,8 @@ export const resolveTypeArgumentsInType = (args: Record<string, Type>, type: Typ
       return resolveTypeArgumentsInNestedEntityMapType(args, type)
     case NodeKind.EnumType:
       return resolveTypeArgumentsInEnumType(args, type)
+    case NodeKind.ChildEntitiesType:
+      return resolveTypeArgumentsInChildEntitiesType(args, type)
     default:
       return assertExhaustive(type)
   }
@@ -223,7 +238,8 @@ export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): 
     case NodeKind.IntegerType:
     case NodeKind.StringType:
     case NodeKind.TypeArgumentType:
-    case NodeKind.ReferenceIdentifierType: {
+    case NodeKind.ReferenceIdentifierType:
+    case NodeKind.ChildEntitiesType: {
       callbackFn(type)
       return
     }
@@ -275,7 +291,9 @@ export type AsType<T extends Type> =
                       ? unknown
                       : T extends ReferenceIdentifierType
                         ? unknown
-                        : never
+                        : T extends ChildEntitiesType
+                          ? unknown
+                          : never
 
 export type SerializedAsType<T extends SerializedType> =
   T extends SerializedArrayType<infer I>
@@ -304,7 +322,9 @@ export type SerializedAsType<T extends SerializedType> =
                       ? unknown
                       : T extends SerializedReferenceIdentifierType
                         ? unknown
-                        : never
+                        : T extends SerializedChildEntitiesType
+                          ? unknown
+                          : never
 
 export type AsNode<T> = T extends (infer I)[]
   ? ArrayType<AsNode<I>>
@@ -397,6 +417,8 @@ export const serializeType: Serializer<Type, SerializedType> = type => {
       return serializeNestedEntityMapType(type)
     case NodeKind.EnumType:
       return serializeEnumType(type)
+    case NodeKind.ChildEntitiesType:
+      return serializeChildEntitiesType(type)
     default:
       return assertExhaustive(type)
   }
@@ -428,6 +450,8 @@ export const getReferencesForType: GetReferences<Type> = (type, value) => {
       return getReferencesForNestedEntityMapType(type, value)
     case NodeKind.EnumType:
       return getReferencesForEnumType(type, value)
+    case NodeKind.ChildEntitiesType:
+      return getReferencesForChildEntitiesType(type, value)
     default:
       return assertExhaustive(type)
   }
@@ -464,6 +488,8 @@ export const formatValue: StructureFormatter<Type> = (type, value) => {
       return formatReferenceIdentifierValue(type, value)
     case NodeKind.EnumType:
       return formatEnumType(type, value)
+    case NodeKind.ChildEntitiesType:
+      return formatChildEntitiesValue(type, value)
     default:
       return assertExhaustive(type)
   }

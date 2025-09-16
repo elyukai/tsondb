@@ -24,6 +24,7 @@ export interface NodeKind {
   IncludeIdentifierType: "IncludeIdentifierType"
   NestedEntityMapType: "NestedEntityMapType"
   EnumType: "EnumType"
+  ChildEntitiesType: "ChildEntitiesType"
 }
 
 export const NodeKind: NodeKind = enumOfObject({
@@ -45,6 +46,7 @@ export const NodeKind: NodeKind = enumOfObject({
   IncludeIdentifierType: null,
   NestedEntityMapType: null,
   EnumType: null,
+  ChildEntitiesType: null,
 })
 
 export interface BaseNode {
@@ -99,6 +101,7 @@ export const flatMapAuxiliaryDecls = (
       case NodeKind.ReferenceIdentifierType:
       case NodeKind.IncludeIdentifierType:
       case NodeKind.NestedEntityMapType:
+      case NodeKind.ChildEntitiesType:
         return callbackFn(node, decls)
 
       case NodeKind.EnumType: {

@@ -6,6 +6,7 @@ import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.ts"
 import type { EnumCaseDecl, SerializedEnumCaseDecl } from "../types/generic/EnumType.ts"
 import { getNestedDeclarationsInEnumType } from "../types/generic/EnumType.ts"
 import { getNestedDeclarationsInObjectType } from "../types/generic/ObjectType.ts"
+import { getNestedDeclarationsInChildEntitiesType } from "../types/references/ChildEntitiesType.ts"
 import { getNestedDeclarationsInIncludeIdentifierType } from "../types/references/IncludeIdentifierType.ts"
 import { getNestedDeclarationsInNestedEntityMapType } from "../types/references/NestedEntityMapType.ts"
 import { getNestedDeclarationsInReferenceIdentifierType } from "../types/references/ReferenceIdentifierType.ts"
@@ -103,6 +104,8 @@ export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node) =
       return getNestedDeclarationsInNestedEntityMapType(addedDecls, node)
     case NodeKind.EnumType:
       return getNestedDeclarationsInEnumType(addedDecls, node)
+    case NodeKind.ChildEntitiesType:
+      return getNestedDeclarationsInChildEntitiesType(addedDecls, node)
     default:
       return assertExhaustive(node)
   }

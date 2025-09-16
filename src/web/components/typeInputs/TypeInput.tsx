@@ -6,6 +6,7 @@ import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { ArrayTypeInput } from "./ArrayTypeInput.tsx"
 import { BooleanTypeInput } from "./BooleanTypeInput.tsx"
+import { ChildEntitiesTypeInput } from "./ChildEntitiesTypeInput.tsx"
 import { DateTypeInput } from "./DateTypeInput.tsx"
 import { EnumTypeInput } from "./EnumTypeInput.tsx"
 import { FloatTypeInput } from "./FloatTypeInput.tsx"
@@ -118,6 +119,17 @@ const TypeInput: FunctionComponent<Props> = ({
         <EnumTypeInput
           type={type}
           path={path}
+          value={value}
+          instanceNamesByEntity={instanceNamesByEntity}
+          getDeclFromDeclName={getDeclFromDeclName}
+          onChange={onChange}
+        />
+      )
+
+    case "ChildEntitiesType":
+      return (
+        <ChildEntitiesTypeInput
+          type={type}
           value={value}
           instanceNamesByEntity={instanceNamesByEntity}
           getDeclFromDeclName={getDeclFromDeclName}

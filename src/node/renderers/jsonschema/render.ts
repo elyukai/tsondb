@@ -12,17 +12,18 @@ import {
 import type { EnumDecl } from "../../schema/declarations/EnumDecl.ts"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.ts"
-import type { ArrayType } from "../../schema/types/generic/ArrayType.ts"
+import { ArrayType } from "../../schema/types/generic/ArrayType.ts"
 import type { EnumType } from "../../schema/types/generic/EnumType.ts"
 import type { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.ts"
 import type { BooleanType } from "../../schema/types/primitives/BooleanType.ts"
 import type { DateType } from "../../schema/types/primitives/DateType.ts"
 import type { FloatType, IntegerType } from "../../schema/types/primitives/NumericType.ts"
 import type { StringType } from "../../schema/types/primitives/StringType.ts"
+import type { ChildEntitiesType } from "../../schema/types/references/ChildEntitiesType.ts"
 import type { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.ts"
 import type { NestedEntityMapType } from "../../schema/types/references/NestedEntityMapType.ts"
 import { isNestedEntityMapType } from "../../schema/types/references/NestedEntityMapType.ts"
-import type { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.ts"
+import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.ts"
 import type { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.ts"
 import type { Type } from "../../schema/types/Type.ts"
 import { getParentDecl } from "../../schema/types/Type.ts"
@@ -154,6 +155,9 @@ const renderEnumType: RenderFn<EnumType> = (options, type) => ({
   })),
 })
 
+const renderChildEntitiesType: RenderFn<ChildEntitiesType> = (options, type) =>
+  renderType(options, ArrayType(ReferenceIdentifierType(type.entity), { uniqueItems: true }))
+
 const renderType: RenderFn<Type> = (options, type) => {
   switch (type.kind) {
     case NodeKind.ArrayType:
@@ -180,6 +184,8 @@ const renderType: RenderFn<Type> = (options, type) => {
       return renderNestedEntityMapType(options, type)
     case NodeKind.EnumType:
       return renderEnumType(options, type)
+    case NodeKind.ChildEntitiesType:
+      return renderChildEntitiesType(options, type)
     default:
       return assertExhaustive(type, "Unknown type")
   }
