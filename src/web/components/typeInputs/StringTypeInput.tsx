@@ -2,6 +2,7 @@ import type { FunctionComponent } from "preact"
 import type { SerializedStringType } from "../../../node/schema/types/primitives/StringType.ts"
 import { validateStringConstraints } from "../../../shared/validation/string.ts"
 import { Markdown } from "../../utils/Markdown.tsx"
+import { MarkdownHighlighting } from "../../utils/MarkdownHighlighting.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
@@ -25,7 +26,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChang
       {isMarkdown ? (
         <>
           <div class="editor editor--markdown">
-            <div class="textarea-grow-wrap" data-value={value}>
+            <div class="textarea-grow-wrap">
               <textarea
                 value={value}
                 minLength={minLength}
@@ -46,6 +47,10 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChang
                 </a>
                 .
               </p>
+              <MarkdownHighlighting
+                class="textarea-grow-wrap__mirror editor-highlighting"
+                string={value}
+              />
             </div>
             <ValidationErrors errors={errors} />
           </div>

@@ -4,32 +4,72 @@ type InlineRule = {
   map: (
     result: RegExpExecArray,
     parseInside: (text: string) => InlineMarkdownNode[],
+    forSyntaxHighlighting: boolean,
   ) => InlineMarkdownNode
 }
 
 const codeRule: InlineRule = {
   pattern: /`(.*?)`/,
-  map: result => ({ kind: "code", content: result[1] ?? "" }),
+  map: (result, _parseInside, forSyntaxHighlighting) => ({
+    kind: "code",
+    content: forSyntaxHighlighting ? `\`${result[1] ?? ""}\`` : (result[1] ?? ""),
+  }),
 }
 
 const boldWithItalicRule: InlineRule = {
   pattern: /\*\*(.*?\*.+?\*.*?)\*\*/,
-  map: (result, parseInside) => ({ kind: "bold", content: parseInside(result[1] ?? "") }),
+  map: (result, parseInside, forSyntaxHighlighting) => ({
+    kind: "bold",
+    content: forSyntaxHighlighting
+      ? [
+          { kind: "text", content: "**" },
+          ...parseInside(result[1] ?? ""),
+          { kind: "text", content: "**" },
+        ]
+      : parseInside(result[1] ?? ""),
+  }),
 }
 
 const italicWithBoldRule: InlineRule = {
   pattern: /\*(.*?\*\*.+?\*\*.*?)\*/,
-  map: (result, parseInside) => ({ kind: "italic", content: parseInside(result[1] ?? "") }),
+  map: (result, parseInside, forSyntaxHighlighting) => ({
+    kind: "italic",
+    content: forSyntaxHighlighting
+      ? [
+          { kind: "text", content: "*" },
+          ...parseInside(result[1] ?? ""),
+          { kind: "text", content: "*" },
+        ]
+      : parseInside(result[1] ?? ""),
+  }),
 }
 
 const boldRule: InlineRule = {
   pattern: /\*\*(.+?)\*\*/,
-  map: (result, parseInside) => ({ kind: "bold", content: parseInside(result[1] ?? "") }),
+  map: (result, parseInside, forSyntaxHighlighting) => ({
+    kind: "bold",
+    content: forSyntaxHighlighting
+      ? [
+          { kind: "text", content: "**" },
+          ...parseInside(result[1] ?? ""),
+          { kind: "text", content: "**" },
+        ]
+      : parseInside(result[1] ?? ""),
+  }),
 }
 
 const italicRule: InlineRule = {
   pattern: /\*(.+?)\*/,
-  map: (result, parseInside) => ({ kind: "italic", content: parseInside(result[1] ?? "") }),
+  map: (result, parseInside, forSyntaxHighlighting) => ({
+    kind: "italic",
+    content: forSyntaxHighlighting
+      ? [
+          { kind: "text", content: "*" },
+          ...parseInside(result[1] ?? ""),
+          { kind: "text", content: "*" },
+        ]
+      : parseInside(result[1] ?? ""),
+  }),
 }
 
 const inlineRules: InlineRule[] = [
@@ -56,7 +96,11 @@ export type InlineMarkdownNode =
     }
   | TextNode
 
-const parseForInlineRules = (rules: InlineRule[], text: string): InlineMarkdownNode[] => {
+const parseForInlineRules = (
+  rules: InlineRule[],
+  text: string,
+  forSyntaxHighlighting: boolean,
+): InlineMarkdownNode[] => {
   if (text.length === 0) {
     return []
   }
@@ -73,39 +117,64 @@ const parseForInlineRules = (rules: InlineRule[], text: string): InlineMarkdownN
     const before = text.slice(0, index)
     const after = text.slice(index + res[0].length)
     return [
-      ...(before.length > 0 ? parseForInlineRules(rules.slice(1), before) : []),
-      activeRule.map(res, text => parseForInlineRules(rules.slice(1), text)),
-      ...(after.length > 0 ? parseForInlineRules(rules, after) : []),
+      ...(before.length > 0
+        ? parseForInlineRules(rules.slice(1), before, forSyntaxHighlighting)
+        : []),
+      activeRule.map(
+        res,
+        text => parseForInlineRules(rules.slice(1), text, forSyntaxHighlighting),
+        forSyntaxHighlighting,
+      ),
+      ...(after.length > 0 ? parseForInlineRules(rules, after, forSyntaxHighlighting) : []),
     ]
   } else {
-    return parseForInlineRules(rules.slice(1), text)
+    return parseForInlineRules(rules.slice(1), text, forSyntaxHighlighting)
   }
 }
 
-const parseInlineMarkdown = (text: string): InlineMarkdownNode[] =>
-  parseForInlineRules(inlineRules, text)
+const parseInlineMarkdown = (text: string, forSyntaxHighlighting: boolean): InlineMarkdownNode[] =>
+  parseForInlineRules(inlineRules, text, forSyntaxHighlighting)
 
 type BlockRule = {
   pattern: RegExp
   predicate?: (result: RegExpExecArray) => boolean
   map: (result: RegExpExecArray) => BlockMarkdownNode
+  mapHighlighting: (result: RegExpExecArray) => BlockSyntaxMarkdownNode[]
 }
 
 const listRule: BlockRule = {
-  pattern: /^((?:(?:\d+\.|[-*]) [^\n]+?)(?:\n(?:\d+\.|[-*]) [^\n]+?)*)(?:\n{2,}|$)/,
+  pattern: /^((?:(?:\d+\.|[-*]) [^\n]+?)(?:\n(?:\d+\.|[-*]) [^\n]+?)*)(\n{2,}|$)/,
   map: result => ({
     kind: "list",
     ordered: /^\d+\. /.test(result[0]),
     content: (result[1] ?? "").split("\n").map(item => ({
       kind: "listitem",
-      content: parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, "")),
+      content: parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, ""), false),
     })),
   }),
+  mapHighlighting: result => [
+    ...(result[1] ?? "").split("\n").flatMap((item, index, array): BlockSyntaxMarkdownNode[] => [
+      {
+        kind: "listitemmarker",
+        content: /^(\d+\. |[-*] )/.exec(item)?.[1] ?? "",
+      },
+      ...parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, ""), true),
+      ...(index < array.length - 1 ? [{ kind: "text" as const, content: "\n" }] : []),
+    ]),
+    { kind: "text", content: result[2] ?? "" },
+  ],
 }
 
 const paragraphRule: BlockRule = {
-  pattern: /^((?:[^\n]+?)(?:\n[^\n]+?)*)(?:\n{2,}|\s*$)/,
-  map: result => ({ kind: "paragraph", content: parseInlineMarkdown(result[1] ?? "") }),
+  pattern: /^((?:[^\n]+?)(?:\n[^\n]+?)*)(\n{2,}|\s*$)/,
+  map: result => ({
+    kind: "paragraph",
+    content: parseInlineMarkdown(result[1] ?? "", false),
+  }),
+  mapHighlighting: result => [
+    ...parseInlineMarkdown(result[1] ?? "", true),
+    { kind: "text", content: result[2] ?? "" },
+  ],
 }
 
 const blockRules: BlockRule[] = [listRule, paragraphRule]
@@ -123,7 +192,13 @@ export type BlockMarkdownNode =
         content: InlineMarkdownNode[]
       }[]
     }
-  | TextNode
+
+export type BlockSyntaxMarkdownNode =
+  | InlineMarkdownNode
+  | {
+      kind: "listitemmarker"
+      content: string
+    }
 
 const parseForBlockRules = (
   rules: BlockRule[],
@@ -151,5 +226,37 @@ const parseForBlockRules = (
   }
 }
 
+const parseForBlockRulesSyntaxHighlighting = (
+  rules: BlockRule[],
+  text: string,
+  remainingRules: BlockRule[] = rules,
+): BlockSyntaxMarkdownNode[] => {
+  if (text.length === 0) {
+    return []
+  }
+
+  const activeRule = remainingRules[0]
+
+  if (activeRule === undefined) {
+    return [{ kind: "text", content: text }]
+  }
+
+  const res = activeRule.pattern.exec(text)
+
+  if (res && (activeRule.predicate?.(res) ?? true)) {
+    const { index } = res
+    const after = text.slice(index + res[0].length)
+    return [
+      ...activeRule.mapHighlighting(res),
+      ...(after.length > 0 ? parseForBlockRulesSyntaxHighlighting(rules, after) : []),
+    ]
+  } else {
+    return parseForBlockRulesSyntaxHighlighting(rules, text, remainingRules.slice(1))
+  }
+}
+
 export const parseBlockMarkdown = (text: string): BlockMarkdownNode[] =>
   parseForBlockRules(blockRules, text)
+
+export const parseBlockMarkdownForSyntaxHighlighting = (text: string): BlockSyntaxMarkdownNode[] =>
+  parseForBlockRulesSyntaxHighlighting(blockRules, text)
