@@ -1,5 +1,6 @@
 import type {
   GetNestedDeclarations,
+  IncludableDeclP,
   SerializedTypeArguments,
   TypeArguments,
 } from "../../declarations/Declaration.ts"
@@ -68,6 +69,11 @@ export { IncludeIdentifierType as IncludeIdentifier }
 export const isIncludeIdentifierType = (node: Node): node is IncludeIdentifierType =>
   node.kind === NodeKind.IncludeIdentifierType
 
+export const isNoGenericIncludeIdentifierType = (
+  node: IncludeIdentifierType,
+): node is IncludeIdentifierType<[], IncludableDeclP<[]>> =>
+  node.args.length === 0 && node.reference.parameters.length === 0
+
 export const getNestedDeclarationsInIncludeIdentifierType: GetNestedDeclarations<
   IncludeIdentifierType
 > = (addedDecls, type) =>
@@ -84,16 +90,16 @@ export const validateIncludeIdentifierType: Validator<IncludeIdentifierType> = (
   value,
 ) => validateDecl(helpers, type.reference, type.args, value)
 
-export const resolveTypeArgumentsInIncludeIdentifierType = (
+export const resolveTypeArgumentsInIncludeIdentifierType = <T extends IncludeIdentifierType>(
   args: Record<string, Type>,
-  type: IncludeIdentifierType,
-): Type =>
-  type.args.length === 0
+  type: T,
+) =>
+  (isNoGenericIncludeIdentifierType(type)
     ? type
     : resolveTypeArgumentsInDecl(
         type.reference,
         type.args.map(arg => resolveTypeArgumentsInType(args, arg)),
-      ).type.value
+      ).type.value) as T extends IncludeIdentifierType<[], IncludableDeclP<[]>> ? T : Type
 
 export const serializeIncludeIdentifierType: Serializer<
   IncludeIdentifierType,

@@ -67,6 +67,10 @@ export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
   | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
   | TypeAliasDecl<string, Type, Params>
 
+export type IncludableDeclP<Params extends TypeParameter[] = TypeParameter[]> =
+  | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
+  | TypeAliasDecl<string, Type, Params>
+
 export type SerializedDeclP<Params extends SerializedTypeParameter[] = SerializedTypeParameter[]> =
   | SerializedEntityDecl
   | SerializedEnumDecl<string, Record<string, SerializedEnumCaseDecl>, Params>
