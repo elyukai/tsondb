@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.17](https://github.com/elyukai/tsondb/compare/v0.5.16...v0.5.17) (2025-09-16)
+
+
+### Features
+
+* allow type aliases of object types to be used as a type for a nested entity map ([58919c0](https://github.com/elyukai/tsondb/commit/58919c0211258b33c8a8cc6dd10e79b3036a57ca))
+
 ## [0.5.16](https://github.com/elyukai/tsondb/compare/v0.5.15...v0.5.16) (2025-09-16)
 
 
