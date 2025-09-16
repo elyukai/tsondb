@@ -13,7 +13,7 @@ import { createServer } from "./server/index.ts"
 import { countErrors, getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
 import { formatInstance, getInstancesByEntityName } from "./utils/instances.ts"
 
-const debug = Debug("tsondb:schema")
+const debug = Debug("tsondb:jsapi")
 
 const prepareFolders = async (dataRootPath: string, entities: EntityDecl[]) => {
   await mkdir(dataRootPath, { recursive: true })
@@ -111,7 +111,9 @@ export const serve = async (
 ) => {
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
+  debug("prepared folders")
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
+  debug("loaded instances")
   await createServer(schema, dataRootPath, instancesByEntityName, serverOptions)
 }
 
