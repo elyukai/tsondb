@@ -24,6 +24,7 @@ export const Instance: FunctionalComponent = () => {
 
   const [getDeclFromDeclName, declsLoaded] = useGetDeclFromDeclName()
   const entityFromRoute = useEntityFromRoute()
+  const { declaration: entity } = entityFromRoute ?? {}
   const [instanceNamesByEntity] = useInstanceNamesByEntity()
   const [instance, setInstance] = useState<InstanceContainer>()
   const [originalInstance, setOriginalInstance] = useState<InstanceContainer>()
@@ -31,19 +32,19 @@ export const Instance: FunctionalComponent = () => {
   const { route } = useLocation()
 
   useEffect(() => {
-    if (entityFromRoute?.entity && instance?.content && id) {
+    if (entity && instance?.content && id) {
       const defaultName = id
       const instanceName = getSerializedDisplayNameFromEntityInstance(
-        entityFromRoute.entity,
+        entity,
         instance.content,
         defaultName,
       )
-      const entityName = entityFromRoute.entity.name
+      const entityName = entity.name
       document.title = instanceName + " — " + toTitleCase(entityName) + " — TSONDB"
     } else {
       document.title = "Not found — TSONDB"
     }
-  }, [entityFromRoute?.entity, id, instance?.content])
+  }, [entity, id, instance?.content])
 
   useEffect(() => {
     if (name && id) {
@@ -82,18 +83,15 @@ export const Instance: FunctionalComponent = () => {
     return <NotFound />
   }
 
-  if (
-    !entityFromRoute ||
-    !instance ||
-    !originalInstance ||
-    !instanceNamesByEntity ||
-    !declsLoaded
-  ) {
+  if (!entity || !instance || !originalInstance || !instanceNamesByEntity || !declsLoaded) {
     return (
       <Layout
         breadcrumbs={[
           { url: "/", label: homeTitle },
-          { url: `/entities/${name}`, label: name },
+          {
+            url: `/entities/${name}`,
+            label: entity ? toTitleCase(entity.namePlural) : name,
+          },
         ]}
       >
         <h1>{id}</h1>
@@ -104,7 +102,7 @@ export const Instance: FunctionalComponent = () => {
 
   const defaultName = id
   const instanceName = getSerializedDisplayNameFromEntityInstance(
-    entityFromRoute.entity,
+    entity,
     instance.content,
     defaultName,
   )
@@ -113,7 +111,7 @@ export const Instance: FunctionalComponent = () => {
     <Layout
       breadcrumbs={[
         { url: "/", label: homeTitle },
-        { url: `/entities/${name}`, label: entityFromRoute.entity.name },
+        { url: `/entities/${name}`, label: toTitleCase(entity.namePlural) },
       ]}
     >
       <div class="header-with-btns">
@@ -127,7 +125,7 @@ export const Instance: FunctionalComponent = () => {
           class="destructive"
           onClick={() => {
             if (confirm("Are you sure you want to delete this instance?")) {
-              deleteInstanceByEntityNameAndId(entityFromRoute.entity.name, instance.id)
+              deleteInstanceByEntityNameAndId(entity.name, instance.id)
                 .then(() => {
                   route(`/entities/${name}`)
                 })
@@ -144,7 +142,7 @@ export const Instance: FunctionalComponent = () => {
       </div>
       <form onSubmit={handleSubmit}>
         <TypeInput
-          type={entityFromRoute.entity.type}
+          type={entity.type}
           value={instance.content}
           path={undefined}
           instanceNamesByEntity={instanceNamesByEntity}

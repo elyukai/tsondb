@@ -29,17 +29,17 @@ export const CreateInstance: FunctionalComponent = () => {
 
   useEffect(() => {
     if (entityFromRoute) {
-      setInstance(createTypeSkeleton(getDeclFromDeclName, entityFromRoute.entity.type))
+      setInstance(createTypeSkeleton(getDeclFromDeclName, entityFromRoute.declaration.type))
     }
   }, [getDeclFromDeclName, entityFromRoute])
 
   const { route } = useLocation()
 
   useEffect(() => {
-    const entityName = entityFromRoute?.entity.name ?? name
+    const entityName = entityFromRoute?.declaration.name ?? name
     document.title =
       entityName === undefined ? "Not found" : "New " + toTitleCase(entityName) + " — TSONDB"
-  }, [entityFromRoute?.entity.name, name])
+  }, [entityFromRoute?.declaration.name, name])
 
   if (!name) {
     return <NotFound />
@@ -54,7 +54,7 @@ export const CreateInstance: FunctionalComponent = () => {
     )
   }
 
-  const { entity, isLocaleEntity } = entityFromRoute
+  const { declaration: entity, isLocaleEntity } = entityFromRoute
 
   const handleSubmit = (event: SubmitEvent) => {
     event.preventDefault()
@@ -100,7 +100,7 @@ export const CreateInstance: FunctionalComponent = () => {
     <Layout
       breadcrumbs={[
         { url: "/", label: homeTitle },
-        { url: `/entities/${entity.name}`, label: entity.name },
+        { url: `/entities/${entity.name}`, label: toTitleCase(entity.namePlural) },
       ]}
     >
       <div class="header-with-btns">
