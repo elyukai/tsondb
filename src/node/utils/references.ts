@@ -1,8 +1,15 @@
+import Debug from "debug"
 import { difference, removeAt } from "../../shared/utils/array.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.ts"
+import { WorkerPool } from "./workers.ts"
 
+const debug = Debug("tsondb:utils:references")
+
+/**
+ * A mapping from instance IDs to the list of instance IDs that reference them.
+ */
 export type ReferencesToInstances = {
   [instanceId: string]: string[]
 }
@@ -45,20 +52,24 @@ const removeReferences = (
 export const getReferencesToInstances = (
   instancesByEntityName: Record<string, InstanceContainer[]>,
   entitiesByName: Record<string, EntityDecl>,
-) =>
-  Object.entries(instancesByEntityName).reduce(
+) => {
+  debug("collecting references ...")
+  return Object.entries(instancesByEntityName).reduce(
     (acc: ReferencesToInstances, [entityName, instances]) => {
       const entity = entitiesByName[entityName]
       if (entity) {
-        return instances.reduce((acc1, instance) => {
+        const refs = instances.reduce((acc1, instance) => {
           const references = getReferencesForEntityDecl(entity, instance.content)
           return addReferences(acc1, references, instance.id)
         }, acc)
+        debug("collected references for entity %s in %d instances", entityName, instances.length)
+        return refs
       }
       return acc
     },
     {},
   )
+}
 
 export const updateReferencesToInstances = (
   entitiesByName: Record<string, EntityDecl>,

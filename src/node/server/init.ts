@@ -1,3 +1,4 @@
+import Debug from "debug"
 import { simpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
@@ -10,6 +11,8 @@ import {
 } from "../utils/instances.ts"
 import { getReferencesToInstances } from "../utils/references.ts"
 import type { GetInstanceById, TSONDBRequestLocals } from "./index.ts"
+
+const debug = Debug("tsondb:server:init")
 
 const getGit = async (dataRootPath: string) => {
   const git = simpleGit({ baseDir: dataRootPath })
@@ -34,7 +37,10 @@ export const init = async (
   const { git, root: gitRoot, status: gitStatus } = await getGit(dataRootPath)
 
   const declarations = resolveTypeArgumentsInDecls(schema.declarations)
+  debug("resolved type arguments in declarations")
+
   const entities = declarations.filter(isEntityDecl)
+  debug("found %d entities in declarations", entities.length)
 
   const entitiesByName = Object.fromEntries(
     entities.map(entity => [entity.name, entity]),
@@ -43,9 +49,11 @@ export const init = async (
   const instancesByEntityNameInMemory = Object.assign({}, instancesByEntityName)
 
   const referencesToInstances = getReferencesToInstances(instancesByEntityName, entitiesByName)
+  debug("created references cache")
 
   if (gitStatus) {
     attachGitStatusToInstancesByEntityName(instancesByEntityName, dataRootPath, gitRoot, gitStatus)
+    debug("retrieved git status to instances")
   }
 
   const getInstanceById: GetInstanceById = id => {

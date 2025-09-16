@@ -11,24 +11,26 @@ export const getInstancesByEntityName = async (
   entities: readonly EntityDecl[],
 ): Promise<InstancesByEntityName> =>
   Object.fromEntries(
-    await Promise.all(
-      entities.map(async entity => {
-        const entityDir = join(dataRoot, entity.name)
-        const instanceFileNames = await readdir(entityDir)
-        const instances = await Promise.all(
-          instanceFileNames.map(
-            async (instanceFileName): Promise<InstanceContainer> => ({
-              fileName: instanceFileName,
-              id: basename(instanceFileName, extname(instanceFileName)),
-              content: JSON.parse(
-                await readFile(join(entityDir, instanceFileName), "utf-8"),
-              ) as unknown,
-            }),
-          ),
-        )
-        return [entity.name, instances] as const
-      }),
-    ),
+    (
+      await Promise.all(
+        entities.map(async entity => {
+          const entityDir = join(dataRoot, entity.name)
+          const instanceFileNames = await readdir(entityDir)
+          const instances = await Promise.all(
+            instanceFileNames.map(
+              async (instanceFileName): Promise<InstanceContainer> => ({
+                fileName: instanceFileName,
+                id: basename(instanceFileName, extname(instanceFileName)),
+                content: JSON.parse(
+                  await readFile(join(entityDir, instanceFileName), "utf-8"),
+                ) as unknown,
+              }),
+            ),
+          )
+          return [entity.name, instances] as const
+        }),
+      )
+    ).toSorted(([a], [b]) => a.localeCompare(b)),
   )
 
 export const attachGitStatusToInstancesByEntityName = (
