@@ -555,7 +555,9 @@ form > .field--container {
   flex: 1 1 0;
 }
 
-.editor--markdown :is(textarea, input) {
+.editor--markdown textarea,
+.editor--markdown input,
+.editor--markdown .textarea-grow-wrap::after {
   font-family: var(--font-mono);
 }
 
