@@ -176,4 +176,21 @@ This is the final paragraph.`),
       ],
     )
   })
+
+  it("should evaluate a link Markdown formatting to a link syntax node", () => {
+    deepEqual<BlockMarkdownNode[]>(parseBlockMarkdown("This is a [link](https://example.com)!"), [
+      {
+        kind: "paragraph",
+        content: [
+          { kind: "text", content: "This is a " },
+          {
+            kind: "link",
+            href: "https://example.com",
+            content: [{ kind: "text", content: "link" }],
+          },
+          { kind: "text", content: "!" },
+        ],
+      },
+    ])
+  })
 })

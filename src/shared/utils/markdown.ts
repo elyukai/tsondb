@@ -72,8 +72,24 @@ const italicRule: InlineRule = {
   }),
 }
 
+const linkRule: InlineRule = {
+  pattern: /\[(.+?)\]\((.*?[^\\])\)/,
+  map: (result, parseInside, forSyntaxHighlighting) => ({
+    kind: "link",
+    href: result[2] ?? "",
+    content: forSyntaxHighlighting
+      ? [
+          { kind: "text", content: "[" },
+          ...parseInside(result[1] ?? ""),
+          { kind: "text", content: `](${result[2] ?? ""})` },
+        ]
+      : parseInside(result[1] ?? ""),
+  }),
+}
+
 const inlineRules: InlineRule[] = [
   codeRule,
+  linkRule,
   boldWithItalicRule,
   italicWithBoldRule,
   boldRule,
@@ -93,6 +109,11 @@ export type InlineMarkdownNode =
   | {
       kind: "code"
       content: string
+    }
+  | {
+      kind: "link"
+      href: string
+      content: InlineMarkdownNode[]
     }
   | TextNode
 

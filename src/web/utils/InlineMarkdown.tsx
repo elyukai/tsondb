@@ -25,6 +25,14 @@ export const InlineMarkdown: FunctionalComponent<Props> = ({ node }) => {
           ))}
         </em>
       )
+    case "link":
+      return (
+        <a href={node.href}>
+          {node.content.map((inline, i) => (
+            <InlineMarkdown node={inline} key={i} />
+          ))}
+        </a>
+      )
     case "text":
       return node.content
   }
