@@ -239,7 +239,7 @@ const tableRule: BlockRule = {
     ...(result[5]
       ?.split("\n")
       .slice(1)
-      .flatMap((tr, i, array): BlockSyntaxMarkdownNode[] => [
+      .flatMap((tr): BlockSyntaxMarkdownNode[] => [
         {
           kind: "text",
           content: "\n",
