@@ -193,4 +193,39 @@ This is the final paragraph.`),
       },
     ])
   })
+
+  it("parses a table", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`Here is a table:
+
+| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |
+
+This was a table.
+`),
+      [
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "Here is a table:" }],
+        },
+        {
+          kind: "table",
+          header: [
+            [{ kind: "text", content: "Header 1" }],
+            [{ kind: "text", content: "Header 2" }],
+          ],
+          rows: [
+            [[{ kind: "text", content: "Cell 1" }], [{ kind: "text", content: "Cell 2" }]],
+            [[{ kind: "text", content: "Cell 3" }], [{ kind: "text", content: "Cell 4" }]],
+          ],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This was a table." }],
+        },
+      ],
+    )
+  })
 })

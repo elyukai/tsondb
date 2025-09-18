@@ -42,6 +42,35 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({ node }) => {
           </ul>
         )
       }
+    case "table":
+      return (
+        <table>
+          <thead>
+            <tr>
+              {node.header.map((th, hi) => (
+                <th key={hi}>
+                  {th.map((inline, hii) => (
+                    <InlineMarkdown key={hii} node={inline} />
+                  ))}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {node.rows.map((tr, ri) => (
+              <tr key={ri}>
+                {tr.map((tc, ci) => (
+                  <td key={ci}>
+                    {tc.map((inline, cii) => (
+                      <InlineMarkdown key={cii} node={inline} />
+                    ))}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
     default:
       return null
   }

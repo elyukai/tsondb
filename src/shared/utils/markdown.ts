@@ -198,7 +198,72 @@ const paragraphRule: BlockRule = {
   ],
 }
 
-const blockRules: BlockRule[] = [listRule, paragraphRule]
+const removeSurroundingPipes = (text: string) => text.replace(/^\|/, "").replace(/\|$/, "")
+
+const tableRule: BlockRule = {
+  pattern:
+    /^(\| *)?(.+?(?: *(?<!\\)\| *.+?)+)( *\|)?\n((?:\| *)?(?:-{3,}|:-{2,}|-{2,}:|:-+:)(?: *\| *(?:-{3,}|:-{2,}|-{2,}:|:-+:))*(?: *\|)?)((?:\n\|? *.+?(?: *(?<!\\)\| *.+?)* *(?<!\\)\|?)+)(\n{2,}|$)/,
+  map: result => ({
+    kind: "table",
+    header: result[2]?.split("|").map(th => parseInlineMarkdown(th.trim(), false)) ?? [],
+    rows:
+      result[5]
+        ?.split("\n")
+        .slice(1)
+        .map(tr =>
+          removeSurroundingPipes(tr)
+            .split("|")
+            .map(tc => parseInlineMarkdown(tc.trim(), false)),
+        ) ?? [],
+  }),
+  mapHighlighting: result => [
+    {
+      kind: "tablemarker",
+      content: result[1] ?? "",
+    },
+    ...(result[2]?.split("|").flatMap((th, i): BlockSyntaxMarkdownNode[] =>
+      i === 0
+        ? parseInlineMarkdown(th, true)
+        : [
+            {
+              kind: "tablemarker" as const,
+              content: "|",
+            },
+            ...parseInlineMarkdown(th, true),
+          ],
+    ) ?? []),
+    {
+      kind: "tablemarker",
+      content: (result[3] ?? "") + "\n" + (result[4] ?? ""),
+    },
+    ...(result[5]
+      ?.split("\n")
+      .slice(1)
+      .flatMap((tr, i, array): BlockSyntaxMarkdownNode[] => [
+        {
+          kind: "text",
+          content: "\n",
+        },
+        ...tr.split("|").flatMap((tc, i): BlockSyntaxMarkdownNode[] =>
+          i === 0
+            ? parseInlineMarkdown(tc, true)
+            : [
+                {
+                  kind: "tablemarker" as const,
+                  content: "|",
+                },
+                ...parseInlineMarkdown(tc, true),
+              ],
+        ),
+      ]) ?? []),
+    {
+      kind: "text",
+      content: result[6] ?? "",
+    },
+  ],
+}
+
+const blockRules: BlockRule[] = [tableRule, listRule, paragraphRule]
 
 export type BlockMarkdownNode =
   | {
@@ -213,11 +278,20 @@ export type BlockMarkdownNode =
         content: InlineMarkdownNode[]
       }[]
     }
+  | {
+      kind: "table"
+      header: InlineMarkdownNode[][]
+      rows: InlineMarkdownNode[][][]
+    }
 
 export type BlockSyntaxMarkdownNode =
   | InlineMarkdownNode
   | {
       kind: "listitemmarker"
+      content: string
+    }
+  | {
+      kind: "tablemarker"
       content: string
     }
 

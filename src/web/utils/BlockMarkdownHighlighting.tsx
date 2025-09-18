@@ -10,6 +10,8 @@ export const BlockMarkdownHighlighting: FunctionalComponent<Props> = ({ node }) 
   switch (node.kind) {
     case "listitemmarker":
       return <span class="list-item-marker">{node.content}</span>
+    case "tablemarker":
+      return <span class="table-marker">{node.content}</span>
     default:
       return <InlineMarkdown node={node} />
   }
