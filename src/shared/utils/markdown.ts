@@ -292,31 +292,21 @@ export type BlockSyntaxMarkdownNode =
       content: string
     }
 
-const parseForBlockRules = (
+const parseActiveBlockRule = (rule: BlockRule, res: RegExpExecArray): BlockMarkdownNode[] => [
+  rule.map(res),
+]
+
+const parseActiveBlockSyntaxRule = (
+  rule: BlockRule,
+  res: RegExpExecArray,
+): BlockSyntaxMarkdownNode[] => rule.mapHighlighting(res)
+
+const parseForBlockRules = <R>(
   rules: BlockRule[],
   text: string,
+  ruleParser: (rule: BlockRule, res: RegExpExecArray) => R[],
   remainingRules: BlockRule[] = rules,
-): BlockMarkdownNode[] => {
-  if (text.length === 0 || remainingRules[0] === undefined) {
-    return []
-  }
-
-  const activeRule = remainingRules[0]
-  const res = activeRule.pattern.exec(text)
-  if (res && (activeRule.predicate?.(res) ?? true)) {
-    const { index } = res
-    const after = text.slice(index + res[0].length)
-    return [activeRule.map(res), ...(after.length > 0 ? parseForBlockRules(rules, after) : [])]
-  } else {
-    return parseForBlockRules(rules, text, remainingRules.slice(1))
-  }
-}
-
-const parseForBlockRulesSyntaxHighlighting = (
-  rules: BlockRule[],
-  text: string,
-  remainingRules: BlockRule[] = rules,
-): BlockSyntaxMarkdownNode[] => {
+): R[] => {
   if (text.length === 0 || remainingRules[0] === undefined) {
     return []
   }
@@ -327,16 +317,16 @@ const parseForBlockRulesSyntaxHighlighting = (
     const { index } = res
     const after = text.slice(index + res[0].length)
     return [
-      ...activeRule.mapHighlighting(res),
-      ...(after.length > 0 ? parseForBlockRulesSyntaxHighlighting(rules, after) : []),
+      ...ruleParser(activeRule, res),
+      ...(after.length > 0 ? parseForBlockRules(rules, after, ruleParser) : []),
     ]
   } else {
-    return parseForBlockRulesSyntaxHighlighting(rules, text, remainingRules.slice(1))
+    return parseForBlockRules(rules, text, ruleParser, remainingRules.slice(1))
   }
 }
 
 export const parseBlockMarkdown = (text: string): BlockMarkdownNode[] =>
-  parseForBlockRules(blockRules, text)
+  parseForBlockRules(blockRules, text, parseActiveBlockRule)
 
 export const parseBlockMarkdownForSyntaxHighlighting = (text: string): BlockSyntaxMarkdownNode[] =>
-  parseForBlockRulesSyntaxHighlighting(blockRules, text)
+  parseForBlockRules(blockRules, text, parseActiveBlockSyntaxRule)
