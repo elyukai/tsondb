@@ -1,3 +1,4 @@
+import Debug from "debug"
 import type { Decl } from "./declarations/Declaration.ts"
 import {
   getNestedDeclarations,
@@ -10,6 +11,8 @@ import { isStringType } from "./types/primitives/StringType.ts"
 import { isIncludeIdentifierType } from "./types/references/IncludeIdentifierType.ts"
 import { isNestedEntityMapType } from "./types/references/NestedEntityMapType.ts"
 import { findTypeAtPath } from "./types/Type.ts"
+
+const debug = Debug("tsondb:schema")
 
 export interface Schema {
   declarations: readonly Decl[]
@@ -108,14 +111,20 @@ const addDeclarations = (existingDecls: Decl[], declsToAdd: Decl[], nested: bool
   }, existingDecls)
 
 export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema => {
+  debug("creating schema from %d declarations", declarations.length)
+  debug("collecting nested declarations ...")
   const allDecls = addDeclarations(
     [],
     localeEntity ? declarations.concat(localeEntity) : declarations,
     true,
   )
 
+  debug("checking name shadowing ...")
   checkParameterNamesShadowing(allDecls)
+  debug("checking entity display name paths ...")
   checkEntityDisplayNamePaths(allDecls, localeEntity)
+
+  debug("created schema, no integrity violations found")
 
   return {
     declarations: allDecls,
