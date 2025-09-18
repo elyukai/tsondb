@@ -90,6 +90,20 @@ const textNode = (content: string): TextNode => ({
   content: content,
 })
 
+const parseEscapedCharacters = (text: string) => text.replace(/\\([*_`[\]()\\])/g, "$1")
+
+const textRule: InlineRule = {
+  pattern: /.+/,
+  map: result => ({
+    kind: "text",
+    content: parseEscapedCharacters(result[0]),
+  }),
+  mapHighlighting: result => ({
+    kind: "text",
+    content: result[0],
+  }),
+}
+
 const inlineRules: InlineRule[] = [
   codeRule,
   linkRule,
@@ -97,6 +111,7 @@ const inlineRules: InlineRule[] = [
   italicWithBoldRule,
   boldRule,
   italicRule,
+  textRule,
 ]
 
 type TextNode = {
@@ -125,15 +140,11 @@ const parseForInlineRules = (
   text: string,
   forSyntaxHighlighting: boolean,
 ): InlineMarkdownNode[] => {
-  if (text.length === 0) {
+  if (text.length === 0 || rules[0] === undefined) {
     return []
   }
 
   const activeRule = rules[0]
-
-  if (activeRule === undefined) {
-    return [{ kind: "text", content: text }]
-  }
 
   const res = activeRule.pattern.exec(text)
   if (res && (activeRule.predicate?.(res) ?? true)) {
@@ -286,18 +297,12 @@ const parseForBlockRules = (
   text: string,
   remainingRules: BlockRule[] = rules,
 ): BlockMarkdownNode[] => {
-  if (text.length === 0) {
+  if (text.length === 0 || remainingRules[0] === undefined) {
     return []
   }
 
   const activeRule = remainingRules[0]
-
-  if (activeRule === undefined) {
-    return [{ kind: "paragraph", content: [{ kind: "text", content: text }] }]
-  }
-
   const res = activeRule.pattern.exec(text)
-
   if (res && (activeRule.predicate?.(res) ?? true)) {
     const { index } = res
     const after = text.slice(index + res[0].length)
@@ -312,18 +317,12 @@ const parseForBlockRulesSyntaxHighlighting = (
   text: string,
   remainingRules: BlockRule[] = rules,
 ): BlockSyntaxMarkdownNode[] => {
-  if (text.length === 0) {
+  if (text.length === 0 || remainingRules[0] === undefined) {
     return []
   }
 
   const activeRule = remainingRules[0]
-
-  if (activeRule === undefined) {
-    return [{ kind: "text", content: text }]
-  }
-
   const res = activeRule.pattern.exec(text)
-
   if (res && (activeRule.predicate?.(res) ?? true)) {
     const { index } = res
     const after = text.slice(index + res[0].length)
