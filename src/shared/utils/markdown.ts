@@ -4,86 +4,104 @@ type InlineRule = {
   map: (
     result: RegExpExecArray,
     parseInside: (text: string) => InlineMarkdownNode[],
-    forSyntaxHighlighting: boolean,
+  ) => InlineMarkdownNode
+  mapHighlighting: (
+    result: RegExpExecArray,
+    parseInside: (text: string) => InlineMarkdownNode[],
   ) => InlineMarkdownNode
 }
 
 const codeRule: InlineRule = {
   pattern: /`(.*?)`/,
-  map: (result, _parseInside, forSyntaxHighlighting) => ({
+  map: result => ({
     kind: "code",
-    content: forSyntaxHighlighting ? `\`${result[1] ?? ""}\`` : (result[1] ?? ""),
+    content: result[1] ?? "",
+  }),
+  mapHighlighting: result => ({
+    kind: "code",
+    content: `\`${result[1] ?? ""}\``,
   }),
 }
 
 const boldWithItalicRule: InlineRule = {
   pattern: /(?<!\\)\*\*((.*?[^\\*])?\*(?!\*).*?[^\\*]\*.*?)(?<!\\)\*\*/,
-  map: (result, parseInside, forSyntaxHighlighting) => ({
+  map: (result, parseInside) => ({
     kind: "bold",
-    content: forSyntaxHighlighting
-      ? [
-          { kind: "text", content: "**" },
-          ...parseInside(result[1] ?? ""),
-          { kind: "text", content: "**" },
-        ]
-      : parseInside(result[1] ?? ""),
+    content: parseInside(result[1] ?? ""),
+  }),
+  mapHighlighting: (result, parseInside) => ({
+    kind: "bold",
+    content: [
+      { kind: "text", content: "**" },
+      ...parseInside(result[1] ?? ""),
+      { kind: "text", content: "**" },
+    ],
   }),
 }
 
 const italicWithBoldRule: InlineRule = {
   pattern: /(?<![\\*])\*(?=\*\*|[^*])(.*?\*\*.*?\*\*.*?)(?<=[^\\*]|[^\\]\*\*)\*(?!\*)/,
-  map: (result, parseInside, forSyntaxHighlighting) => ({
+  map: (result, parseInside) => ({
     kind: "italic",
-    content: forSyntaxHighlighting
-      ? [
-          { kind: "text", content: "*" },
-          ...parseInside(result[1] ?? ""),
-          { kind: "text", content: "*" },
-        ]
-      : parseInside(result[1] ?? ""),
+    content: parseInside(result[1] ?? ""),
+  }),
+  mapHighlighting: (result, parseInside) => ({
+    kind: "italic",
+    content: [
+      { kind: "text", content: "*" },
+      ...parseInside(result[1] ?? ""),
+      { kind: "text", content: "*" },
+    ],
   }),
 }
 
 const boldRule: InlineRule = {
   pattern: /(?<!\\)\*\*(.*?[^\\*])\*\*/,
-  map: (result, parseInside, forSyntaxHighlighting) => ({
+  map: (result, parseInside) => ({
     kind: "bold",
-    content: forSyntaxHighlighting
-      ? [
-          { kind: "text", content: "**" },
-          ...parseInside(result[1] ?? ""),
-          { kind: "text", content: "**" },
-        ]
-      : parseInside(result[1] ?? ""),
+    content: parseInside(result[1] ?? ""),
+  }),
+  mapHighlighting: (result, parseInside) => ({
+    kind: "bold",
+    content: [
+      { kind: "text", content: "**" },
+      ...parseInside(result[1] ?? ""),
+      { kind: "text", content: "**" },
+    ],
   }),
 }
 
 const italicRule: InlineRule = {
   pattern: /(?<!\\)\*(.*?[^\\*])\*/,
-  map: (result, parseInside, forSyntaxHighlighting) => ({
+  map: (result, parseInside) => ({
     kind: "italic",
-    content: forSyntaxHighlighting
-      ? [
-          { kind: "text", content: "*" },
-          ...parseInside(result[1] ?? ""),
-          { kind: "text", content: "*" },
-        ]
-      : parseInside(result[1] ?? ""),
+    content: parseInside(result[1] ?? ""),
+  }),
+  mapHighlighting: (result, parseInside) => ({
+    kind: "italic",
+    content: [
+      { kind: "text", content: "*" },
+      ...parseInside(result[1] ?? ""),
+      { kind: "text", content: "*" },
+    ],
   }),
 }
 
 const linkRule: InlineRule = {
   pattern: /(?<!\\)\[(.*?[^\\])\]\((.*?[^\\])\)/,
-  map: (result, parseInside, forSyntaxHighlighting) => ({
+  map: (result, parseInside) => ({
     kind: "link",
     href: result[2] ?? "",
-    content: forSyntaxHighlighting
-      ? [
-          { kind: "text", content: "[" },
-          ...parseInside(result[1] ?? ""),
-          { kind: "text", content: `](${result[2] ?? ""})` },
-        ]
-      : parseInside(result[1] ?? ""),
+    content: parseInside(result[1] ?? ""),
+  }),
+  mapHighlighting: (result, parseInside) => ({
+    kind: "link",
+    href: result[2] ?? "",
+    content: [
+      { kind: "text", content: "[" },
+      ...parseInside(result[1] ?? ""),
+      { kind: "text", content: `](${result[2] ?? ""})` },
+    ],
   }),
 }
 
@@ -141,10 +159,8 @@ const parseForInlineRules = (
       ...(before.length > 0
         ? parseForInlineRules(rules.slice(1), before, forSyntaxHighlighting)
         : []),
-      activeRule.map(
-        res,
-        text => parseForInlineRules(rules.slice(1), text, forSyntaxHighlighting),
-        forSyntaxHighlighting,
+      (forSyntaxHighlighting ? activeRule.mapHighlighting : activeRule.map)(res, text =>
+        parseForInlineRules(rules.slice(1), text, forSyntaxHighlighting),
       ),
       ...(after.length > 0 ? parseForInlineRules(rules, after, forSyntaxHighlighting) : []),
     ]
