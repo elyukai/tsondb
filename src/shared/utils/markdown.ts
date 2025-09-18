@@ -17,7 +17,7 @@ const codeRule: InlineRule = {
 }
 
 const boldWithItalicRule: InlineRule = {
-  pattern: /\*\*(.*?\*.+?\*.*?)\*\*/,
+  pattern: /(?<!\\)\*\*((.*?[^\\*])?\*(?!\*).*?[^\\*]\*.*?)(?<!\\)\*\*/,
   map: (result, parseInside, forSyntaxHighlighting) => ({
     kind: "bold",
     content: forSyntaxHighlighting
@@ -31,7 +31,7 @@ const boldWithItalicRule: InlineRule = {
 }
 
 const italicWithBoldRule: InlineRule = {
-  pattern: /\*(.*?\*\*.+?\*\*.*?)\*/,
+  pattern: /(?<![\\*])\*(?=\*\*|[^*])(.*?\*\*.*?\*\*.*?)(?<=[^\\*]|[^\\]\*\*)\*(?!\*)/,
   map: (result, parseInside, forSyntaxHighlighting) => ({
     kind: "italic",
     content: forSyntaxHighlighting
@@ -45,7 +45,7 @@ const italicWithBoldRule: InlineRule = {
 }
 
 const boldRule: InlineRule = {
-  pattern: /\*\*(.+?)\*\*/,
+  pattern: /(?<!\\)\*\*(.*?[^\\*])\*\*/,
   map: (result, parseInside, forSyntaxHighlighting) => ({
     kind: "bold",
     content: forSyntaxHighlighting
@@ -59,7 +59,7 @@ const boldRule: InlineRule = {
 }
 
 const italicRule: InlineRule = {
-  pattern: /\*(.+?)\*/,
+  pattern: /(?<!\\)\*(.*?[^\\*])\*/,
   map: (result, parseInside, forSyntaxHighlighting) => ({
     kind: "italic",
     content: forSyntaxHighlighting
@@ -73,7 +73,7 @@ const italicRule: InlineRule = {
 }
 
 const linkRule: InlineRule = {
-  pattern: /\[(.+?)\]\((.*?[^\\])\)/,
+  pattern: /(?<!\\)\[(.*?[^\\])\]\((.*?[^\\])\)/,
   map: (result, parseInside, forSyntaxHighlighting) => ({
     kind: "link",
     href: result[2] ?? "",
