@@ -31,11 +31,7 @@ const boldWithItalicRule: InlineRule = {
   }),
   mapHighlighting: (result, parseInside) => ({
     kind: "bold",
-    content: [
-      { kind: "text", content: "**" },
-      ...parseInside(result[1] ?? ""),
-      { kind: "text", content: "**" },
-    ],
+    content: [textNode("**"), ...parseInside(result[1] ?? ""), textNode("**")],
   }),
 }
 
@@ -47,11 +43,7 @@ const italicWithBoldRule: InlineRule = {
   }),
   mapHighlighting: (result, parseInside) => ({
     kind: "italic",
-    content: [
-      { kind: "text", content: "*" },
-      ...parseInside(result[1] ?? ""),
-      { kind: "text", content: "*" },
-    ],
+    content: [textNode("*"), ...parseInside(result[1] ?? ""), textNode("*")],
   }),
 }
 
@@ -63,11 +55,7 @@ const boldRule: InlineRule = {
   }),
   mapHighlighting: (result, parseInside) => ({
     kind: "bold",
-    content: [
-      { kind: "text", content: "**" },
-      ...parseInside(result[1] ?? ""),
-      { kind: "text", content: "**" },
-    ],
+    content: [textNode("**"), ...parseInside(result[1] ?? ""), textNode("**")],
   }),
 }
 
@@ -79,11 +67,7 @@ const italicRule: InlineRule = {
   }),
   mapHighlighting: (result, parseInside) => ({
     kind: "italic",
-    content: [
-      { kind: "text", content: "*" },
-      ...parseInside(result[1] ?? ""),
-      { kind: "text", content: "*" },
-    ],
+    content: [textNode("*"), ...parseInside(result[1] ?? ""), textNode("*")],
   }),
 }
 
@@ -97,13 +81,14 @@ const linkRule: InlineRule = {
   mapHighlighting: (result, parseInside) => ({
     kind: "link",
     href: result[2] ?? "",
-    content: [
-      { kind: "text", content: "[" },
-      ...parseInside(result[1] ?? ""),
-      { kind: "text", content: `](${result[2] ?? ""})` },
-    ],
+    content: [textNode("["), ...parseInside(result[1] ?? ""), textNode(`](${result[2] ?? ""})`)],
   }),
 }
+
+const textNode = (content: string): TextNode => ({
+  kind: "text",
+  content: content,
+})
 
 const inlineRules: InlineRule[] = [
   codeRule,
@@ -196,9 +181,9 @@ const listRule: BlockRule = {
         content: /^(\d+\. |[-*] )/.exec(item)?.[1] ?? "",
       },
       ...parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, ""), true),
-      ...(index < array.length - 1 ? [{ kind: "text" as const, content: "\n" }] : []),
+      ...(index < array.length - 1 ? [textNode("\n")] : []),
     ]),
-    { kind: "text", content: result[2] ?? "" },
+    textNode(result[2] ?? ""),
   ],
 }
 
@@ -210,11 +195,16 @@ const paragraphRule: BlockRule = {
   }),
   mapHighlighting: result => [
     ...parseInlineMarkdown(result[1] ?? "", true),
-    { kind: "text", content: result[2] ?? "" },
+    textNode(result[2] ?? ""),
   ],
 }
 
 const removeSurroundingPipes = (text: string) => text.replace(/^\|/, "").replace(/\|$/, "")
+
+const tableMarker = (text: string): BlockSyntaxMarkdownNode => ({
+  kind: "tablemarker",
+  content: text,
+})
 
 const tableRule: BlockRule = {
   pattern:
@@ -233,49 +223,29 @@ const tableRule: BlockRule = {
         ) ?? [],
   }),
   mapHighlighting: result => [
-    {
-      kind: "tablemarker",
-      content: result[1] ?? "",
-    },
-    ...(result[2]?.split("|").flatMap((th, i): BlockSyntaxMarkdownNode[] =>
-      i === 0
-        ? parseInlineMarkdown(th, true)
-        : [
-            {
-              kind: "tablemarker" as const,
-              content: "|",
-            },
-            ...parseInlineMarkdown(th, true),
-          ],
-    ) ?? []),
-    {
-      kind: "tablemarker",
-      content: (result[3] ?? "") + "\n" + (result[4] ?? ""),
-    },
+    tableMarker(result[1] ?? ""),
+    ...(result[2]
+      ?.split("|")
+      .flatMap((th, i): BlockSyntaxMarkdownNode[] =>
+        i === 0
+          ? parseInlineMarkdown(th, true)
+          : [tableMarker("|"), ...parseInlineMarkdown(th, true)],
+      ) ?? []),
+    tableMarker((result[3] ?? "") + "\n" + (result[4] ?? "")),
     ...(result[5]
       ?.split("\n")
       .slice(1)
       .flatMap((tr): BlockSyntaxMarkdownNode[] => [
-        {
-          kind: "text",
-          content: "\n",
-        },
-        ...tr.split("|").flatMap((tc, i): BlockSyntaxMarkdownNode[] =>
-          i === 0
-            ? parseInlineMarkdown(tc, true)
-            : [
-                {
-                  kind: "tablemarker" as const,
-                  content: "|",
-                },
-                ...parseInlineMarkdown(tc, true),
-              ],
-        ),
+        textNode("\n"),
+        ...tr
+          .split("|")
+          .flatMap((tc, i): BlockSyntaxMarkdownNode[] =>
+            i === 0
+              ? parseInlineMarkdown(tc, true)
+              : [tableMarker("|"), ...parseInlineMarkdown(tc, true)],
+          ),
       ]) ?? []),
-    {
-      kind: "text",
-      content: result[6] ?? "",
-    },
+    textNode(result[6] ?? ""),
   ],
 }
 
