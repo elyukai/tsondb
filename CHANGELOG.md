@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.19](https://github.com/elyukai/tsondb/compare/v0.5.18...v0.5.19) (2025-09-18)
+
+
+### Bug Fixes
+
+* resolve escaped characters in markdown for display ([e39e7b2](https://github.com/elyukai/tsondb/commit/e39e7b236413cc437fad95882bb833188b3627f3))
+
 ## [0.5.18](https://github.com/elyukai/tsondb/compare/v0.5.17...v0.5.18) (2025-09-18)
 
 
