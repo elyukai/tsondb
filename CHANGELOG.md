@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.18](https://github.com/elyukai/tsondb/compare/v0.5.17...v0.5.18) (2025-09-18)
+
+
+### Features
+
+* add debug logs to schema creation ([ab38473](https://github.com/elyukai/tsondb/commit/ab3847311447895220739fc6a993fcb0ebed3010))
+* improve markdown parsing reliability ([1f2309a](https://github.com/elyukai/tsondb/commit/1f2309a8830df38abcce00789f1c13e1211fb73e))
+* support links in markdown ([9b1aaf5](https://github.com/elyukai/tsondb/commit/9b1aaf59e98f4e2c73d0917c4e76cf48b678d5a1))
+* support tables in markdown ([e737322](https://github.com/elyukai/tsondb/commit/e73732237a5ba0b52e968b4d9dfa8baa35952a2f)), closes [#26](https://github.com/elyukai/tsondb/issues/26)
+
 ## [0.5.17](https://github.com/elyukai/tsondb/compare/v0.5.16...v0.5.17) (2025-09-16)
 
 
