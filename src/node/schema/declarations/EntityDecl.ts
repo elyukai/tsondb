@@ -1,3 +1,5 @@
+import { isUniqueOnWithResult } from "../../../shared/utils/array.ts"
+import { deepEqual } from "../../../shared/utils/compare.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { Leaves } from "../../../shared/utils/object.ts"
 import type { GetReferences, Node, Serializer } from "../Node.ts"
@@ -78,6 +80,7 @@ export interface EntityDecl<Name extends string = string, T extends ObjectType =
   displayName?: EntityDisplayName<T>
   displayNameCustomizer?: DisplayNameFn<T>
   isDeprecated?: boolean
+  unique?: (keyof T["properties"] | (keyof T["properties"])[])[]
 }
 
 export interface SerializedEntityDecl<
@@ -92,6 +95,7 @@ export interface SerializedEntityDecl<
    */
   displayName?: SerializedEntityDisplayName<T>
   isDeprecated?: boolean
+  unique?: (keyof T["properties"] | (keyof T["properties"])[])[]
 }
 
 export const EntityDecl = <Name extends string, T extends ObjectType>(
@@ -107,6 +111,7 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
     displayName?: EntityDisplayName<T>
     displayNameCustomizer?: DisplayNameFn<T>
     isDeprecated?: boolean
+    unique?: (keyof T["properties"] | (keyof T["properties"])[])[]
   },
 ): EntityDecl<Name, T> => {
   validateDeclName(options.name)
@@ -125,7 +130,7 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
           )
         }
       })
-      return setParent(type, decl)
+      return setParent(type, decl as unknown as EntityDecl)
     }),
   }
 
@@ -188,3 +193,68 @@ export const serializeEntityDecl: Serializer<EntityDecl, SerializedEntityDecl> =
 
 export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value) =>
   getReferencesForObjectType(decl.type.value, value)
+
+export const checkEntityInstancesUniquenessConstraint = <T extends ObjectType>(
+  decl: EntityDecl<string, T>,
+  instances: unknown[],
+): [firstIndex: number, secondIndex: number, error: TypeError][] =>
+  decl.unique?.flatMap(
+    (uniqueKeyOrKeys): [firstIndex: number, secondIndex: number, error: TypeError][] => {
+      const uniqueKeys = Array.isArray(uniqueKeyOrKeys) ? uniqueKeyOrKeys : [uniqueKeyOrKeys]
+
+      const uniquenessViolations = isUniqueOnWithResult(
+        instances,
+        instance =>
+          uniqueKeys.map(
+            (key): unknown => (instance as Record<keyof T["properties"], unknown>)[key],
+          ),
+        deepEqual,
+      )
+
+      return uniquenessViolations.map(([firstIndex, secondIndex]) => [
+        firstIndex,
+        secondIndex,
+        new TypeError(
+          Array.isArray(uniqueKeyOrKeys)
+            ? `entity "${decl.name}" must be unique in the combination of fields [${uniqueKeys.join(
+                ", ",
+              )}]. Duplicate combination found: ${uniqueKeys.map(key => String(key) + ": " + JSON.stringify((instances[firstIndex] as Record<keyof T["properties"], unknown>)[key])).join(", ")}.`
+            : `entity "${decl.name}" must be unique in field "${String(uniqueKeyOrKeys)}". Duplicate value found: ${JSON.stringify((instances[firstIndex] as Record<keyof T["properties"], unknown>)[uniqueKeyOrKeys])}.`,
+        ),
+      ])
+    },
+  ) ?? []
+
+export const checkEntityUniquenessConstraintForSingleInstance = <T extends ObjectType>(
+  decl: EntityDecl<string, T>,
+  instances: unknown[],
+  instance: unknown,
+): [index: number, error: TypeError][] =>
+  decl.unique
+    ?.map((uniqueKeyOrKeys): [index: number, error: TypeError] | undefined => {
+      const uniqueKeys = Array.isArray(uniqueKeyOrKeys) ? uniqueKeyOrKeys : [uniqueKeyOrKeys]
+
+      const mapFn = (instance: unknown) =>
+        uniqueKeys.map((key): unknown => (instance as Record<keyof T["properties"], unknown>)[key])
+
+      const mappedInstance = mapFn(instance)
+      const existingIndex = instances
+        .map(mapFn)
+        .findIndex(other => deepEqual(other, mappedInstance))
+
+      if (existingIndex === -1) {
+        return undefined
+      }
+
+      return [
+        existingIndex,
+        new TypeError(
+          Array.isArray(uniqueKeyOrKeys)
+            ? `entity "${decl.name}" must be unique in the combination of fields [${uniqueKeys.join(
+                ", ",
+              )}]. Duplicate combination found: ${uniqueKeys.map(key => String(key) + ": " + JSON.stringify((instance as Record<keyof T["properties"], unknown>)[key])).join(", ")}.`
+            : `entity "${decl.name}" must be unique in field "${String(uniqueKeyOrKeys)}". Duplicate value found: ${JSON.stringify((instance as Record<keyof T["properties"], unknown>)[uniqueKeyOrKeys])}.`,
+        ),
+      ]
+    })
+    .filter(x => x !== undefined) ?? []

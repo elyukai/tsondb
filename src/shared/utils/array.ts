@@ -55,3 +55,28 @@ export interface ArrayDiffResult<T> {
 
 export const unique = <T>(arr: T[], equalityCheck: (a: T, b: T) => boolean = (a, b) => a === b) =>
   arr.filter((item, index) => arr.findIndex(other => equalityCheck(item, other)) === index)
+
+export const isUnique = <T>(arr: T[], equalityCheck: (a: T, b: T) => boolean = (a, b) => a === b) =>
+  arr.every((item, index) => arr.findIndex(other => equalityCheck(item, other)) === index)
+
+export const isUniqueOn = <T, U>(
+  arr: T[],
+  mapFn: (item: T) => U,
+  equalityCheck: (a: U, b: U) => boolean = (a, b) => a === b,
+) =>
+  arr
+    .map(mapFn)
+    .every(
+      (item, index, mappedArr) =>
+        mappedArr.findIndex(other => equalityCheck(item, other)) === index,
+    )
+
+export const isUniqueOnWithResult = <T, U>(
+  arr: T[],
+  mapFn: (item: T) => U,
+  equalityCheck: (a: U, b: U) => boolean = (a, b) => a === b,
+) =>
+  arr.map(mapFn).reduce<[number, number][]>((acc, item, index, mappedArr) => {
+    const existingIndex = mappedArr.findIndex(other => equalityCheck(item, other))
+    return existingIndex === index ? acc : acc.concat([[existingIndex, index]])
+  }, [])
