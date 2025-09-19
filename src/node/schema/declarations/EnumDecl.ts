@@ -1,5 +1,5 @@
 import { Lazy } from "../../../shared/utils/lazy.ts"
-import type { GetReferences, Node, Serializer } from "../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.ts"
 import { serializeTypeParameter } from "../TypeParameter.ts"
@@ -12,7 +12,9 @@ import {
   EnumType,
   getNestedDeclarationsInEnumType,
   getReferencesForEnumType,
+  getReferencesForSerializedEnumType,
   resolveTypeArgumentsInEnumType,
+  resolveTypeArgumentsInSerializedEnumType,
   serializeEnumType,
   validateEnumType,
 } from "../types/generic/EnumType.ts"
@@ -22,9 +24,15 @@ import type {
   BaseDecl,
   GetNestedDeclarations,
   SerializedBaseDecl,
+  SerializedDecl,
+  SerializedTypeArguments,
   TypeArguments,
 } from "./Declaration.ts"
-import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
+import {
+  getSerializedTypeArgumentsRecord,
+  getTypeArgumentsRecord,
+  validateDeclName,
+} from "./Declaration.ts"
 
 export interface EnumDecl<
   Name extends string = string,
@@ -126,6 +134,19 @@ export const resolveTypeArgumentsInEnumDecl = <Params extends TypeParameter[]>(
   })
 }
 
+export const resolveTypeArgumentsInSerializedEnumDecl = <Params extends SerializedTypeParameter[]>(
+  decl: SerializedEnumDecl<string, Record<string, SerializedEnumCaseDecl>, Params>,
+  args: SerializedTypeArguments<Params>,
+  decls: Record<string, SerializedDecl>,
+): SerializedEnumDecl<string, Record<string, SerializedEnumCaseDecl>, []> => {
+  const resolvedArgs = getSerializedTypeArgumentsRecord(decl, args)
+  return {
+    ...decl,
+    parameters: [],
+    type: resolveTypeArgumentsInSerializedEnumType(resolvedArgs, decl.type, decls),
+  }
+}
+
 export const serializeEnumDecl: Serializer<EnumDecl, SerializedEnumDecl> = decl => ({
   ...decl,
   type: serializeEnumType(decl.type.value),
@@ -134,3 +155,9 @@ export const serializeEnumDecl: Serializer<EnumDecl, SerializedEnumDecl> = decl 
 
 export const getReferencesForEnumDecl: GetReferences<EnumDecl> = (decl, value) =>
   getReferencesForEnumType(decl.type.value, value)
+
+export const getReferencesForSerializedEnumDecl: GetReferencesSerialized<SerializedEnumDecl> = (
+  decl,
+  value,
+  decls,
+) => getReferencesForSerializedEnumType(decl.type, value, decls)

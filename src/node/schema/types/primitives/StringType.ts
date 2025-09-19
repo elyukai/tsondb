@@ -1,7 +1,7 @@
 import type { StringConstraints } from "../../../../shared/validation/string.ts"
 import { validateStringConstraints } from "../../../../shared/validation/string.ts"
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { Validator } from "../../validation/type.ts"
 import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.ts"
@@ -50,5 +50,10 @@ export const serializeStringType: Serializer<StringType, SerializedStringType> =
   })
 
 export const getReferencesForStringType: GetReferences<StringType> = (_type, _value) => []
+
+export const getReferencesForSerializedStringType: GetReferencesSerialized<SerializedStringType> = (
+  _type,
+  _value,
+) => []
 
 export const formatStringValue: StructureFormatter<StringType> = (_type, value) => value

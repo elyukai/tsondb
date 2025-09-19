@@ -1,11 +1,13 @@
 import { Lazy } from "../../../shared/utils/lazy.ts"
-import type { GetReferences, Node, Serializer } from "../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.ts"
 import { serializeTypeParameter } from "../TypeParameter.ts"
 import type { SerializedType, Type } from "../types/Type.ts"
 import {
+  getReferencesForSerializedType,
   getReferencesForType,
+  resolveTypeArgumentsInSerializedType,
   resolveTypeArgumentsInType,
   serializeType,
   setParent,
@@ -16,9 +18,16 @@ import type {
   BaseDecl,
   GetNestedDeclarations,
   SerializedBaseDecl,
+  SerializedDecl,
+  SerializedTypeArguments,
   TypeArguments,
 } from "./Declaration.ts"
-import { getNestedDeclarations, getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
+import {
+  getNestedDeclarations,
+  getSerializedTypeArgumentsRecord,
+  getTypeArgumentsRecord,
+  validateDeclName,
+} from "./Declaration.ts"
 
 export interface TypeAliasDecl<
   Name extends string = string,
@@ -121,6 +130,22 @@ export const resolveTypeArgumentsInTypeAliasDecl = <Params extends TypeParameter
     type: () => resolveTypeArgumentsInType(getTypeArgumentsRecord(decl, args), decl.type.value),
   })
 
+export const resolveTypeArgumentsInSerializedTypeAliasDecl = <
+  Params extends SerializedTypeParameter[],
+>(
+  decl: SerializedTypeAliasDecl<string, SerializedType, Params>,
+  args: SerializedTypeArguments<Params>,
+  decls: Record<string, SerializedDecl>,
+): SerializedTypeAliasDecl<string, SerializedType, []> => ({
+  ...decl,
+  parameters: [],
+  type: resolveTypeArgumentsInSerializedType(
+    getSerializedTypeArgumentsRecord(decl, args),
+    decl.type,
+    decls,
+  ),
+})
+
 export const serializeTypeAliasDecl: Serializer<TypeAliasDecl, SerializedTypeAliasDecl> = type => ({
   ...type,
   type: serializeType(type.type.value),
@@ -129,3 +154,7 @@ export const serializeTypeAliasDecl: Serializer<TypeAliasDecl, SerializedTypeAli
 
 export const getReferencesForTypeAliasDecl: GetReferences<TypeAliasDecl> = (decl, value) =>
   getReferencesForType(decl.type.value, value)
+
+export const getReferencesForSerializedTypeAliasDecl: GetReferencesSerialized<
+  SerializedTypeAliasDecl
+> = (decl, value, decls) => getReferencesForSerializedType(decl.type, value, decls)

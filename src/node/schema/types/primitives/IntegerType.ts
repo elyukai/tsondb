@@ -1,7 +1,7 @@
 import type { RangeBound } from "../../../../shared/validation/number.ts"
 import { validateNumberConstraints } from "../../../../shared/validation/number.ts"
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import { validateOption } from "../../validation/options.ts"
 import type { Validator } from "../../validation/type.ts"
@@ -54,5 +54,9 @@ export const serializeIntegerType: Serializer<IntegerType, SerializedIntegerType
   removeParentKey(type)
 
 export const getReferencesForIntegerType: GetReferences<IntegerType> = (_type, _value) => []
+
+export const getReferencesForSerializedIntegerType: GetReferencesSerialized<
+  SerializedIntegerType
+> = (_type, _value) => []
 
 export const formatIntegerValue: StructureFormatter<IntegerType> = (_type, value) => value

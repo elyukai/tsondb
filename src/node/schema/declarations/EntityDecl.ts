@@ -1,20 +1,33 @@
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { Leaves } from "../../../shared/utils/object.ts"
-import type { GetReferences, Node, Serializer } from "../Node.ts"
+import type {
+  GetReferences,
+  GetReferencesSerialized,
+  Node,
+  SerializedNode,
+  Serializer,
+} from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { MemberDecl, ObjectType, SerializedObjectType } from "../types/generic/ObjectType.ts"
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
+  getReferencesForSerializedObjectType,
   Required,
   resolveTypeArgumentsInObjectType,
+  resolveTypeArgumentsInSerializedObjectType,
   serializeObjectType,
 } from "../types/generic/ObjectType.ts"
 import { StringType } from "../types/primitives/StringType.ts"
 import type { AsType, SerializedAsType } from "../types/Type.ts"
 import { setParent, validate } from "../types/Type.ts"
 import type { ValidatorHelpers } from "../validation/type.ts"
-import type { BaseDecl, GetNestedDeclarations, SerializedBaseDecl } from "./Declaration.ts"
+import type {
+  BaseDecl,
+  GetNestedDeclarations,
+  SerializedBaseDecl,
+  SerializedDecl,
+} from "./Declaration.ts"
 import { validateDeclName } from "./Declaration.ts"
 import { TypeAliasDecl } from "./TypeAliasDecl.ts"
 
@@ -136,6 +149,9 @@ export { EntityDecl as Entity }
 
 export const isEntityDecl = (node: Node): node is EntityDecl => node.kind === NodeKind.EntityDecl
 
+export const isSerializedEntityDecl = (node: SerializedNode): node is SerializedEntityDecl =>
+  node.kind === NodeKind.EntityDecl
+
 export const getNestedDeclarationsInEntityDecl: GetNestedDeclarations<EntityDecl> = (
   isDeclAdded,
   decl,
@@ -152,6 +168,14 @@ export const resolveTypeArgumentsInEntityDecl = (decl: EntityDecl): EntityDecl =
     ...decl,
     type: () => resolveTypeArgumentsInObjectType({}, decl.type.value),
   })
+
+export const resolveTypeArgumentsInSerializedEntityDecl = (
+  decl: SerializedEntityDecl,
+  decls: Record<string, SerializedDecl>,
+): SerializedEntityDecl => ({
+  ...decl,
+  type: resolveTypeArgumentsInSerializedObjectType({}, decl.type, decls),
+})
 
 const createEntityIdentifierComment = () =>
   "The entity’s identifier. A UUID or a locale code if it is registered as the locale entity."
@@ -188,3 +212,9 @@ export const serializeEntityDecl: Serializer<EntityDecl, SerializedEntityDecl> =
 
 export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value) =>
   getReferencesForObjectType(decl.type.value, value)
+
+export const getReferencesForSerializedEntityDecl: GetReferencesSerialized<SerializedEntityDecl> = (
+  decl,
+  value,
+  decls,
+) => getReferencesForSerializedObjectType(decl.type, value, decls)

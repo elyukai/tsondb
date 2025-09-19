@@ -2,9 +2,9 @@ import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { validateArrayConstraints } from "../../../../shared/validation/array.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
+import type { GetNestedDeclarations, SerializedDecl } from "../../declarations/Declaration.ts"
 import { getNestedDeclarations } from "../../declarations/Declaration.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import { validateOption } from "../../validation/options.ts"
 import type { Validator } from "../../validation/type.ts"
@@ -17,8 +17,10 @@ import type {
 } from "../Type.ts"
 import {
   formatValue,
+  getReferencesForSerializedType,
   getReferencesForType,
   removeParentKey,
+  resolveTypeArgumentsInSerializedType,
   resolveTypeArgumentsInType,
   serializeType,
   setParent,
@@ -104,6 +106,15 @@ export const resolveTypeArgumentsInArrayType = (
     ...type,
   })
 
+export const resolveTypeArgumentsInSerializedArrayType = (
+  args: Record<string, SerializedType>,
+  type: SerializedArrayType,
+  decls: Record<string, SerializedDecl>,
+): SerializedArrayType => ({
+  ...type,
+  items: resolveTypeArgumentsInSerializedType(args, type.items, decls),
+})
+
 export const serializeArrayType: Serializer<ArrayType, SerializedArrayType> = type => ({
   ...removeParentKey(type),
   items: serializeType(type.items),
@@ -111,6 +122,15 @@ export const serializeArrayType: Serializer<ArrayType, SerializedArrayType> = ty
 
 export const getReferencesForArrayType: GetReferences<ArrayType> = (type, value) =>
   Array.isArray(value) ? value.flatMap(item => getReferencesForType(type.items, item)) : []
+
+export const getReferencesForSerializedArrayType: GetReferencesSerialized<SerializedArrayType> = (
+  type,
+  value,
+  decls,
+) =>
+  Array.isArray(value)
+    ? value.flatMap(item => getReferencesForSerializedType(type.items, item, decls))
+    : []
 
 export const formatArrayValue: StructureFormatter<ArrayType> = (type, value) =>
   Array.isArray(value) ? value.map(item => formatValue(type.items, item)) : value

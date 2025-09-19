@@ -1,9 +1,9 @@
 import Debug from "debug"
 import { simpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
-import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
+import type { EntityDecl, SerializedEntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.ts"
-import { resolveTypeArgumentsInDecls } from "../schema/index.ts"
+import { resolveTypeArgumentsInDecls, serializeDecl } from "../schema/index.ts"
 import type { Schema } from "../schema/Schema.ts"
 import {
   attachGitStatusToInstancesByEntityName,
@@ -46,9 +46,16 @@ export const init = async (
     entities.map(entity => [entity.name, entity]),
   ) as Record<string, EntityDecl>
 
+  const serializedDeclarationsByName = Object.fromEntries(
+    declarations.map(decl => [decl.name, serializeDecl(decl)]),
+  ) as Record<string, SerializedEntityDecl>
+
   const instancesByEntityNameInMemory = Object.assign({}, instancesByEntityName)
 
-  const referencesToInstances = getReferencesToInstances(instancesByEntityName, entitiesByName)
+  const referencesToInstances = await getReferencesToInstances(
+    instancesByEntityName,
+    serializedDeclarationsByName,
+  )
   debug("created references cache")
 
   if (gitStatus) {
@@ -75,6 +82,7 @@ export const init = async (
     entities: entities,
     instancesByEntityName: instancesByEntityNameInMemory,
     entitiesByName: entitiesByName,
+    serializedDeclarationsByName,
     localeEntity: schema.localeEntity,
     getInstanceById,
     referencesToInstances,
@@ -89,7 +97,7 @@ export const reinit = async (locals: TSONDBRequestLocals) => {
   const instancesByEntityName = await getInstancesByEntityName(locals.dataRoot, locals.entities)
   const referencesToInstances = getReferencesToInstances(
     instancesByEntityName,
-    locals.entitiesByName,
+    locals.serializedDeclarationsByName,
   )
   if (locals.gitRoot && gitStatus) {
     attachGitStatusToInstancesByEntityName(

@@ -3,9 +3,9 @@ import { sortObjectKeysAlphabetically } from "../../../../shared/utils/object.ts
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { entity, json, key as keyColor } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
+import type { GetNestedDeclarations, SerializedDecl } from "../../declarations/Declaration.ts"
 import type { EntityDecl } from "../../declarations/EntityDecl.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { Validator } from "../../validation/type.ts"
 import type {
@@ -17,11 +17,19 @@ import type {
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
+  getReferencesForSerializedObjectType,
   resolveTypeArgumentsInObjectType,
+  resolveTypeArgumentsInSerializedObjectType,
   serializeObjectType,
   validateObjectType,
 } from "../generic/ObjectType.ts"
-import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.ts"
+import type {
+  BaseType,
+  SerializedBaseType,
+  SerializedType,
+  StructureFormatter,
+  Type,
+} from "../Type.ts"
 import { formatValue, removeParentKey, setParent } from "../Type.ts"
 
 type TConstraint = Record<string, MemberDecl>
@@ -126,6 +134,15 @@ export const resolveTypeArgumentsInNestedEntityMapType = (
     type: () => resolveTypeArgumentsInObjectType(args, type.type.value),
   })
 
+export const resolveTypeArgumentsInSerializedNestedEntityMapType = (
+  args: Record<string, SerializedType>,
+  type: SerializedNestedEntityMapType,
+  decls: Record<string, SerializedDecl>,
+): SerializedNestedEntityMapType => ({
+  ...type,
+  type: resolveTypeArgumentsInSerializedObjectType(args, type.type, decls),
+})
+
 export const serializeNestedEntityMapType: Serializer<
   NestedEntityMapType,
   SerializedNestedEntityMapType
@@ -142,6 +159,15 @@ export const getReferencesForNestedEntityMapType: GetReferences<NestedEntityMapT
   typeof value === "object" && value !== null && !Array.isArray(value)
     ? Object.values(value)
         .flatMap(item => getReferencesForObjectType(type.type.value, item))
+        .concat(Object.keys(value))
+    : []
+
+export const getReferencesForSerializedNestedEntityMapType: GetReferencesSerialized<
+  SerializedNestedEntityMapType
+> = (type, value, decls) =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+    ? Object.values(value)
+        .flatMap(item => getReferencesForSerializedObjectType(type.type, item, decls))
         .concat(Object.keys(value))
     : []
 

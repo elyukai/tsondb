@@ -1,13 +1,14 @@
 import { AsyncResource } from "node:async_hooks"
-import { EventEmitter } from "node:stream"
+import { EventEmitter } from "node:events"
 import { Worker } from "node:worker_threads"
+import { error, ok, type Result } from "../../shared/utils/result.ts"
 
 // from https://nodejs.org/api/async_context.html#using-asyncresource-for-a-worker-thread-pool
 
 const kTaskInfo = Symbol("kTaskInfo")
 const kWorkerFreedEvent = Symbol("kWorkerFreedEvent")
 
-type TaskInfoCallback<R> = (error: Error | null, result: R | null) => void
+type TaskInfoCallback<R> = (result: Result<R, Error>) => void
 
 class WorkerPoolTaskInfo<R> extends AsyncResource {
   public callback: TaskInfoCallback<R>
@@ -17,26 +18,33 @@ class WorkerPoolTaskInfo<R> extends AsyncResource {
     this.callback = callback
   }
 
-  done(err: Error | null, result: R | null) {
-    this.runInAsyncScope(this.callback, null, err, result)
+  done(result: Result<R, Error>) {
+    this.runInAsyncScope(this.callback, null, result)
     this.emitDestroy() // `TaskInfo`s are used only once.
   }
 }
 
 type EnhancedWorker<R> = Worker & { [kTaskInfo]?: WorkerPoolTaskInfo<R> | null }
 
-export class WorkerPool<T, R> extends EventEmitter {
+export class WorkerPool<T, R, I = undefined> extends EventEmitter {
   private scriptPath: string
   private workers: EnhancedWorker<R>[]
   private freeWorkers: EnhancedWorker<R>[]
   private tasks: { task: T; callback: TaskInfoCallback<R> }[]
+  private initialData: I
 
-  constructor(numThreads: number, scriptPath: string) {
+  constructor(
+    ...args: I extends undefined
+      ? [numThreads: number, scriptPath: string, initialData?: I]
+      : [numThreads: number, scriptPath: string, initialData: I]
+  ) {
+    const [numThreads, scriptPath, initialData] = args
     super()
     this.scriptPath = scriptPath
     this.workers = []
     this.freeWorkers = []
     this.tasks = []
+    this.initialData = initialData as I
 
     for (let i = 0; i < numThreads; i++) {
       this.addNewWorker()
@@ -54,13 +62,15 @@ export class WorkerPool<T, R> extends EventEmitter {
   }
 
   addNewWorker() {
-    const worker = new Worker(this.scriptPath) as EnhancedWorker<R>
+    const worker = new Worker(this.scriptPath, {
+      workerData: this.initialData,
+    }) as EnhancedWorker<R>
 
     worker.on("message", (result: R) => {
       // In case of success: Call the callback that was passed to `runTask`,
       // remove the `TaskInfo` associated with the Worker, and mark it as free
       // again.
-      worker[kTaskInfo]?.done(null, result)
+      worker[kTaskInfo]?.done(ok(result))
       worker[kTaskInfo] = null
       this.freeWorkers.push(worker)
       this.emit(kWorkerFreedEvent)
@@ -69,7 +79,7 @@ export class WorkerPool<T, R> extends EventEmitter {
     worker.on("error", err => {
       // In case of an uncaught exception: Call the callback that was passed to
       // `runTask` with the error.
-      if (worker[kTaskInfo]) worker[kTaskInfo].done(err, null)
+      if (worker[kTaskInfo]) worker[kTaskInfo].done(error(err))
       else this.emit("error", err)
       // Remove the worker from the list and start a new Worker to replace the
       // current one.

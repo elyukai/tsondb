@@ -1,5 +1,5 @@
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
-import type { BaseNode, GetReferences, Node, Serializer } from "../Node.ts"
+import type { BaseNode, GetReferences, GetReferencesSerialized, Node, Serializer } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.ts"
 import { getNestedDeclarationsInArrayType } from "../types/generic/ArrayType.ts"
@@ -15,8 +15,10 @@ import type { EntityDecl, SerializedEntityDecl } from "./EntityDecl.ts"
 import {
   getNestedDeclarationsInEntityDecl,
   getReferencesForEntityDecl,
+  getReferencesForSerializedEntityDecl,
   isEntityDecl,
   resolveTypeArgumentsInEntityDecl,
+  resolveTypeArgumentsInSerializedEntityDecl,
   serializeEntityDecl,
   validateEntityDecl,
 } from "./EntityDecl.ts"
@@ -24,16 +26,20 @@ import type { EnumDecl, SerializedEnumDecl } from "./EnumDecl.ts"
 import {
   getNestedDeclarationsInEnumDecl,
   getReferencesForEnumDecl,
+  getReferencesForSerializedEnumDecl,
   isEnumDecl,
   resolveTypeArgumentsInEnumDecl,
+  resolveTypeArgumentsInSerializedEnumDecl,
   serializeEnumDecl,
   validateEnumDecl,
 } from "./EnumDecl.ts"
 import type { SerializedTypeAliasDecl, TypeAliasDecl } from "./TypeAliasDecl.ts"
 import {
   getNestedDeclarationsInTypeAliasDecl,
+  getReferencesForSerializedTypeAliasDecl,
   getReferencesForTypeAliasDecl,
   isTypeAliasDecl,
+  resolveTypeArgumentsInSerializedTypeAliasDecl,
   resolveTypeArgumentsInTypeAliasDecl,
   serializeTypeAliasDecl,
   validateTypeAliasDecl,
@@ -53,6 +59,15 @@ export const getTypeArgumentsRecord = <Params extends TypeParameter[]>(
   decl: DeclP<Params>,
   args: TypeArguments<Params>,
 ): Record<string, Type> =>
+  Object.fromEntries(
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    args.slice(0, decl.parameters.length).map((arg, i) => [decl.parameters[i]!.name, arg] as const),
+  )
+
+export const getSerializedTypeArgumentsRecord = <Params extends SerializedTypeParameter[]>(
+  decl: SerializedDeclP<Params>,
+  args: SerializedTypeArguments<Params>,
+): Record<string, SerializedType> =>
   Object.fromEntries(
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     args.slice(0, decl.parameters.length).map((arg, i) => [decl.parameters[i]!.name, arg] as const),
@@ -177,6 +192,26 @@ export const resolveTypeArgumentsInDecl = <Params extends TypeParameter[]>(
   }
 }
 
+export const resolveTypeArgumentsInSerializedDecl = <Params extends SerializedTypeParameter[]>(
+  declName: string,
+  args: SerializedTypeArguments<Params>,
+  decls: Record<string, SerializedDecl>,
+): SerializedDeclP<[]> => {
+  const decl = decls[declName]
+  switch (decl?.kind) {
+    case NodeKind.EntityDecl:
+      return resolveTypeArgumentsInSerializedEntityDecl(decl, decls)
+    case NodeKind.EnumDecl:
+      return resolveTypeArgumentsInSerializedEnumDecl(decl, args, decls)
+    case NodeKind.TypeAliasDecl:
+      return resolveTypeArgumentsInSerializedTypeAliasDecl(decl, args, decls)
+    case undefined:
+      throw new Error(`the entity "${declName}" cannot be resolved`)
+    default:
+      return assertExhaustive(decl)
+  }
+}
+
 export const isDeclWithoutTypeParameters = (decl: Decl): decl is DeclP<[]> =>
   decl.parameters.length === 0
 
@@ -226,6 +261,23 @@ export const getReferencesForDecl: GetReferences<Decl> = (decl, value) => {
       return getReferencesForEnumDecl(decl, value)
     case NodeKind.TypeAliasDecl:
       return getReferencesForTypeAliasDecl(decl, value)
+    default:
+      return assertExhaustive(decl)
+  }
+}
+
+export const getReferencesForSerializedDecl: GetReferencesSerialized<SerializedDecl> = (
+  decl,
+  value,
+  decls,
+) => {
+  switch (decl.kind) {
+    case NodeKind.EntityDecl:
+      return getReferencesForSerializedEntityDecl(decl, value, decls)
+    case NodeKind.EnumDecl:
+      return getReferencesForSerializedEnumDecl(decl, value, decls)
+    case NodeKind.TypeAliasDecl:
+      return getReferencesForSerializedTypeAliasDecl(decl, value, decls)
     default:
       return assertExhaustive(decl)
   }

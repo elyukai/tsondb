@@ -1,9 +1,15 @@
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { SerializedTypeParameter, TypeParameter } from "../../TypeParameter.ts"
 import { serializeTypeParameter } from "../../TypeParameter.ts"
 import type { Validator } from "../../validation/type.ts"
-import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.ts"
+import type {
+  BaseType,
+  SerializedBaseType,
+  SerializedType,
+  StructureFormatter,
+  Type,
+} from "../Type.ts"
 import { removeParentKey } from "../Type.ts"
 
 type TConstraint = TypeParameter
@@ -45,6 +51,14 @@ export const resolveTypeArgumentsInTypeArgumentType = <
   type: TypeArgumentType<T>,
 ): Args[T["name"]] => args[type.argument.name] as Args[T["name"]]
 
+export const resolveTypeArgumentsInSerializedTypeArgumentType = <
+  T extends TSerializedConstraint,
+  Args extends Record<string, SerializedType>,
+>(
+  args: Args,
+  type: SerializedTypeArgumentType<T>,
+): Args[T["name"]] => args[type.argument.name] as Args[T["name"]]
+
 export const serializeTypeArgumentType: Serializer<
   TypeArgumentType,
   SerializedTypeArgumentType
@@ -57,5 +71,9 @@ export const getReferencesForTypeArgumentType: GetReferences<TypeArgumentType> =
   _type,
   _value,
 ) => []
+
+export const getReferencesForSerializedTypeArgumentType: GetReferencesSerialized<
+  SerializedTypeArgumentType
+> = (_type, _value) => []
 
 export const formatTypeArgumentValue: StructureFormatter<TypeArgumentType> = (_type, value) => value

@@ -2,9 +2,9 @@ import { discriminatorKey } from "../../../../shared/enum.ts"
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
+import type { GetNestedDeclarations, SerializedDecl } from "../../declarations/Declaration.ts"
 import { getNestedDeclarations } from "../../declarations/Declaration.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { Validator } from "../../validation/type.ts"
 import type {
@@ -16,8 +16,10 @@ import type {
 } from "../Type.ts"
 import {
   formatValue,
+  getReferencesForSerializedType,
   getReferencesForType,
   removeParentKey,
+  resolveTypeArgumentsInSerializedType,
   resolveTypeArgumentsInType,
   serializeType,
   validate,
@@ -143,6 +145,23 @@ export const resolveTypeArgumentsInEnumType = (
     ),
   )
 
+export const resolveTypeArgumentsInSerializedEnumType = (
+  args: Record<string, SerializedType>,
+  type: SerializedEnumType,
+  decls: Record<string, SerializedDecl>,
+): SerializedEnumType => ({
+  ...type,
+  values: Object.fromEntries(
+    Object.entries(type.values).map(([key, { type, ...caseMember }]) => [
+      key,
+      {
+        ...caseMember,
+        type: type === null ? null : resolveTypeArgumentsInSerializedType(args, type, decls),
+      },
+    ]),
+  ),
+})
+
 export interface EnumCaseDecl<T extends Type | null = Type | null> {
   kind: NodeKind["EnumCaseDecl"]
   type: T
@@ -199,6 +218,35 @@ export const getReferencesForEnumType: GetReferences<EnumType> = (type, value) =
     type.values[enumCase].type !== null &&
     enumCase in value
     ? getReferencesForType(type.values[enumCase].type, (value as Record<string, unknown>)[enumCase])
+    : []
+}
+
+export const getReferencesForSerializedEnumType: GetReferencesSerialized<SerializedEnumType> = (
+  type,
+  value,
+  decls,
+) => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    !(discriminatorKey in value)
+  ) {
+    return []
+  }
+
+  const enumCase = value[discriminatorKey]
+
+  return typeof enumCase === "string" &&
+    enumCase in type.values &&
+    type.values[enumCase] !== undefined &&
+    type.values[enumCase].type !== null &&
+    enumCase in value
+    ? getReferencesForSerializedType(
+        type.values[enumCase].type,
+        (value as Record<string, unknown>)[enumCase],
+        decls,
+      )
     : []
 }
 

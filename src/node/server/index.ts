@@ -5,7 +5,7 @@ import { dirname, join } from "node:path"
 import type { SimpleGit } from "simple-git"
 import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.ts"
 import type { Decl } from "../schema/declarations/Declaration.ts"
-import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
+import type { EntityDecl, SerializedEntityDecl } from "../schema/declarations/EntityDecl.ts"
 import type { Schema } from "../schema/Schema.ts"
 import type { ReferencesToInstances } from "../utils/references.ts"
 import { api } from "./api/index.ts"
@@ -29,6 +29,7 @@ export interface TSONDBRequestLocals {
   entities: readonly EntityDecl[]
   instancesByEntityName: InstancesByEntityName
   entitiesByName: Record<string, EntityDecl>
+  serializedDeclarationsByName: Record<string, SerializedEntityDecl>
   localeEntity?: EntityDecl
   referencesToInstances: ReferencesToInstances
   locales: string[]

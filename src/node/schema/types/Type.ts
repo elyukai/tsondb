@@ -1,14 +1,16 @@
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
-import type { Decl } from "../declarations/Declaration.ts"
+import type { Decl, SerializedDecl } from "../declarations/Declaration.ts"
 import { isDecl } from "../declarations/Declaration.ts"
-import type { BaseNode, GetReferences, Serializer } from "../Node.ts"
+import type { BaseNode, GetReferences, GetReferencesSerialized, Serializer } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { Validator } from "../validation/type.ts"
 import type { ArrayType, SerializedArrayType } from "./generic/ArrayType.ts"
 import {
   formatArrayValue,
   getReferencesForArrayType,
+  getReferencesForSerializedArrayType,
   resolveTypeArgumentsInArrayType,
+  resolveTypeArgumentsInSerializedArrayType,
   serializeArrayType,
   validateArrayType,
 } from "./generic/ArrayType.ts"
@@ -16,7 +18,9 @@ import type { EnumType, SerializedEnumType } from "./generic/EnumType.ts"
 import {
   formatEnumType,
   getReferencesForEnumType,
+  getReferencesForSerializedEnumType,
   resolveTypeArgumentsInEnumType,
+  resolveTypeArgumentsInSerializedEnumType,
   serializeEnumType,
   validateEnumType,
 } from "./generic/EnumType.ts"
@@ -29,7 +33,9 @@ import type {
 import {
   formatObjectValue,
   getReferencesForObjectType,
+  getReferencesForSerializedObjectType,
   resolveTypeArgumentsInObjectType,
+  resolveTypeArgumentsInSerializedObjectType,
   serializeObjectType,
   validateObjectType,
 } from "./generic/ObjectType.ts"
@@ -37,6 +43,7 @@ import type { BooleanType, SerializedBooleanType } from "./primitives/BooleanTyp
 import {
   formatBooleanValue,
   getReferencesForBooleanType,
+  getReferencesForSerializedBooleanType,
   serializeBooleanType,
   validateBooleanType,
 } from "./primitives/BooleanType.ts"
@@ -44,6 +51,7 @@ import type { DateType, SerializedDateType } from "./primitives/DateType.ts"
 import {
   formatDateValue,
   getReferencesForDateType,
+  getReferencesForSerializedDateType,
   serializeDateType,
   validateDateType,
 } from "./primitives/DateType.ts"
@@ -51,6 +59,7 @@ import type { FloatType, SerializedFloatType } from "./primitives/FloatType.ts"
 import {
   formatFloatValue,
   getReferencesForFloatType,
+  getReferencesForSerializedFloatType,
   serializeFloatType,
   validateFloatType,
 } from "./primitives/FloatType.ts"
@@ -58,6 +67,7 @@ import type { IntegerType, SerializedIntegerType } from "./primitives/IntegerTyp
 import {
   formatIntegerValue,
   getReferencesForIntegerType,
+  getReferencesForSerializedIntegerType,
   serializeIntegerType,
   validateIntegerType,
 } from "./primitives/IntegerType.ts"
@@ -65,6 +75,7 @@ import type { PrimitiveType, SerializedPrimitiveType } from "./primitives/Primit
 import type { SerializedStringType, StringType } from "./primitives/StringType.ts"
 import {
   formatStringValue,
+  getReferencesForSerializedStringType,
   getReferencesForStringType,
   serializeStringType,
   validateStringType,
@@ -76,7 +87,9 @@ import type {
 import {
   formatIncludeIdentifierValue,
   getReferencesForIncludeIdentifierType,
+  getReferencesForSerializedIncludeIdentifierType,
   resolveTypeArgumentsInIncludeIdentifierType,
+  resolveTypeArgumentsInSerializedIncludeIdentifierType,
   serializeIncludeIdentifierType,
   validateIncludeIdentifierType,
 } from "./references/IncludeIdentifierType.ts"
@@ -87,7 +100,9 @@ import type {
 import {
   formatNestedEntityMapValue,
   getReferencesForNestedEntityMapType,
+  getReferencesForSerializedNestedEntityMapType,
   resolveTypeArgumentsInNestedEntityMapType,
+  resolveTypeArgumentsInSerializedNestedEntityMapType,
   serializeNestedEntityMapType,
   validateNestedEntityMapType,
 } from "./references/NestedEntityMapType.ts"
@@ -98,14 +113,18 @@ import type {
 import {
   formatReferenceIdentifierValue,
   getReferencesForReferenceIdentifierType,
+  getReferencesForSerializedReferenceIdentifierType,
   resolveTypeArgumentsInReferenceIdentifierType,
+  resolveTypeArgumentsInSerializedReferenceIdentifierType,
   serializeReferenceIdentifierType,
   validateReferenceIdentifierType,
 } from "./references/ReferenceIdentifierType.ts"
 import type { SerializedTypeArgumentType, TypeArgumentType } from "./references/TypeArgumentType.ts"
 import {
   formatTypeArgumentValue,
+  getReferencesForSerializedTypeArgumentType,
   getReferencesForTypeArgumentType,
+  resolveTypeArgumentsInSerializedTypeArgumentType,
   resolveTypeArgumentsInTypeArgumentType,
   serializeTypeArgumentType,
   validateTypeArgumentType,
@@ -193,6 +212,37 @@ export const resolveTypeArgumentsInType = (args: Record<string, Type>, type: Typ
       return resolveTypeArgumentsInNestedEntityMapType(args, type)
     case NodeKind.EnumType:
       return resolveTypeArgumentsInEnumType(args, type)
+    default:
+      return assertExhaustive(type)
+  }
+}
+
+export const resolveTypeArgumentsInSerializedType = (
+  args: Record<string, SerializedType>,
+  type: SerializedType,
+  decls: Record<string, SerializedDecl>,
+): SerializedType => {
+  switch (type.kind) {
+    case NodeKind.ArrayType:
+      return resolveTypeArgumentsInSerializedArrayType(args, type, decls)
+    case NodeKind.ObjectType:
+      return resolveTypeArgumentsInSerializedObjectType(args, type, decls)
+    case NodeKind.BooleanType:
+    case NodeKind.DateType:
+    case NodeKind.FloatType:
+    case NodeKind.IntegerType:
+    case NodeKind.StringType:
+      return type
+    case NodeKind.TypeArgumentType:
+      return resolveTypeArgumentsInSerializedTypeArgumentType(args, type)
+    case NodeKind.ReferenceIdentifierType:
+      return resolveTypeArgumentsInSerializedReferenceIdentifierType(args, type)
+    case NodeKind.IncludeIdentifierType:
+      return resolveTypeArgumentsInSerializedIncludeIdentifierType(args, type, decls)
+    case NodeKind.NestedEntityMapType:
+      return resolveTypeArgumentsInSerializedNestedEntityMapType(args, type, decls)
+    case NodeKind.EnumType:
+      return resolveTypeArgumentsInSerializedEnumType(args, type, decls)
     default:
       return assertExhaustive(type)
   }
@@ -428,6 +478,41 @@ export const getReferencesForType: GetReferences<Type> = (type, value) => {
       return getReferencesForNestedEntityMapType(type, value)
     case NodeKind.EnumType:
       return getReferencesForEnumType(type, value)
+    default:
+      return assertExhaustive(type)
+  }
+}
+
+export const getReferencesForSerializedType: GetReferencesSerialized<SerializedType> = (
+  type,
+  value,
+  decls,
+) => {
+  switch (type.kind) {
+    case NodeKind.ArrayType:
+      return getReferencesForSerializedArrayType(type, value, decls)
+    case NodeKind.ObjectType:
+      return getReferencesForSerializedObjectType(type, value, decls)
+    case NodeKind.BooleanType:
+      return getReferencesForSerializedBooleanType(type, value, decls)
+    case NodeKind.DateType:
+      return getReferencesForSerializedDateType(type, value, decls)
+    case NodeKind.FloatType:
+      return getReferencesForSerializedFloatType(type, value, decls)
+    case NodeKind.IntegerType:
+      return getReferencesForSerializedIntegerType(type, value, decls)
+    case NodeKind.StringType:
+      return getReferencesForSerializedStringType(type, value, decls)
+    case NodeKind.TypeArgumentType:
+      return getReferencesForSerializedTypeArgumentType(type, value, decls)
+    case NodeKind.ReferenceIdentifierType:
+      return getReferencesForSerializedReferenceIdentifierType(type, value, decls)
+    case NodeKind.IncludeIdentifierType:
+      return getReferencesForSerializedIncludeIdentifierType(type, value, decls)
+    case NodeKind.NestedEntityMapType:
+      return getReferencesForSerializedNestedEntityMapType(type, value, decls)
+    case NodeKind.EnumType:
+      return getReferencesForSerializedEnumType(type, value, decls)
     default:
       return assertExhaustive(type)
   }

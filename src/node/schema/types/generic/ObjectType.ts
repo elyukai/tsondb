@@ -4,9 +4,9 @@ import type { ObjectConstraints } from "../../../../shared/validation/object.ts"
 import { validateObjectConstraints } from "../../../../shared/validation/object.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key as keyColor } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
+import type { GetNestedDeclarations, SerializedDecl } from "../../declarations/Declaration.ts"
 import { getNestedDeclarations } from "../../declarations/Declaration.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import { validateOption } from "../../validation/options.ts"
 import type { Validator } from "../../validation/type.ts"
@@ -19,8 +19,10 @@ import type {
 } from "../Type.ts"
 import {
   formatValue,
+  getReferencesForSerializedType,
   getReferencesForType,
   removeParentKey,
+  resolveTypeArgumentsInSerializedType,
   resolveTypeArgumentsInType,
   serializeType,
   setParent,
@@ -141,6 +143,23 @@ export const resolveTypeArgumentsInObjectType = (
     },
   )
 
+export const resolveTypeArgumentsInSerializedObjectType = (
+  args: Record<string, SerializedType>,
+  type: SerializedObjectType,
+  decls: Record<string, SerializedDecl>,
+): SerializedObjectType => ({
+  ...type,
+  properties: Object.fromEntries(
+    Object.entries(type.properties).map(
+      ([key, config]) =>
+        [
+          key,
+          { ...config, type: resolveTypeArgumentsInSerializedType(args, config.type, decls) },
+        ] as const,
+    ),
+  ),
+})
+
 export interface MemberDecl<T extends Type = Type, R extends boolean = boolean> {
   kind: NodeKind["MemberDecl"]
   isRequired: R
@@ -201,8 +220,20 @@ export const serializeObjectType: Serializer<ObjectType, SerializedObjectType> =
 export const getReferencesForObjectType: GetReferences<ObjectType> = (type, value) =>
   typeof value === "object" && value !== null
     ? Object.entries(value).flatMap(([key, propValue]) =>
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        key in type.properties ? getReferencesForType(type.properties[key]!.type, propValue) : [],
+        type.properties[key] ? getReferencesForType(type.properties[key].type, propValue) : [],
+      )
+    : []
+
+export const getReferencesForSerializedObjectType: GetReferencesSerialized<SerializedObjectType> = (
+  type,
+  value,
+  decls,
+) =>
+  typeof value === "object" && value !== null
+    ? Object.entries(value).flatMap(([key, propValue]) =>
+        type.properties[key]
+          ? getReferencesForSerializedType(type.properties[key].type, propValue, decls)
+          : [],
       )
     : []
 

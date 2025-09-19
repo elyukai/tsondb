@@ -1,7 +1,7 @@
 import type { DateConstraints } from "../../../../shared/validation/date.ts"
 import { validateDateConstraints } from "../../../../shared/validation/date.ts"
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { Validator } from "../../validation/type.ts"
 import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.ts"
@@ -36,5 +36,10 @@ export const serializeDateType: Serializer<DateType, SerializedDateType> = type 
   removeParentKey(type)
 
 export const getReferencesForDateType: GetReferences<DateType> = (_type, _value) => []
+
+export const getReferencesForSerializedDateType: GetReferencesSerialized<SerializedDateType> = (
+  _type,
+  _value,
+) => []
 
 export const formatDateValue: StructureFormatter<DateType> = (_type, value) => value

@@ -2,8 +2,8 @@ import { enumOfObject } from "../../shared/utils/enum.ts"
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import { entity, json } from "../utils/errorFormatting.ts"
-import type { Decl } from "./declarations/Declaration.ts"
-import type { Type } from "./types/Type.ts"
+import type { Decl, SerializedDecl } from "./declarations/Declaration.ts"
+import type { SerializedType, Type } from "./types/Type.ts"
 
 export interface NodeKind {
   EntityDecl: "EntityDecl"
@@ -52,6 +52,8 @@ export interface BaseNode {
 }
 
 export type Node = Decl | Type
+
+export type SerializedNode = SerializedDecl | SerializedType
 
 export const flatMapAuxiliaryDecls = (
   callbackFn: (node: Node, existingDecls: Decl[]) => (Decl | undefined)[] | Decl | undefined,
@@ -176,3 +178,9 @@ export const createValidators = (
 export type Serializer<T, U> = (node: T) => U
 
 export type GetReferences<T extends Node> = (node: T, value: unknown) => string[]
+
+export type GetReferencesSerialized<T extends SerializedNode> = (
+  node: T,
+  value: unknown,
+  declarations: Record<string, SerializedDecl>,
+) => string[]

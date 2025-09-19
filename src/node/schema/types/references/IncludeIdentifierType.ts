@@ -1,24 +1,39 @@
 import type {
   GetNestedDeclarations,
+  SerializedDecl,
   SerializedTypeArguments,
   TypeArguments,
 } from "../../declarations/Declaration.ts"
 import {
   getNestedDeclarations,
   getReferencesForDecl,
+  getReferencesForSerializedDecl,
   resolveTypeArgumentsInDecl,
+  resolveTypeArgumentsInSerializedDecl,
   validateDecl,
 } from "../../declarations/Declaration.ts"
 import type { EnumDecl } from "../../declarations/EnumDecl.ts"
 import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { SerializedTypeParameter, TypeParameter } from "../../TypeParameter.ts"
 import type { Validator } from "../../validation/type.ts"
 import type { EnumCaseDecl } from "../generic/EnumType.ts"
 import { formatEnumType } from "../generic/EnumType.ts"
-import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.ts"
-import { formatValue, removeParentKey, resolveTypeArgumentsInType, serializeType } from "../Type.ts"
+import type {
+  BaseType,
+  SerializedBaseType,
+  SerializedType,
+  StructureFormatter,
+  Type,
+} from "../Type.ts"
+import {
+  formatValue,
+  removeParentKey,
+  resolveTypeArgumentsInSerializedType,
+  resolveTypeArgumentsInType,
+  serializeType,
+} from "../Type.ts"
 
 type TConstraint<Params extends TypeParameter[]> =
   | TypeAliasDecl<string, Type, Params>
@@ -95,6 +110,19 @@ export const resolveTypeArgumentsInIncludeIdentifierType = (
         type.args.map(arg => resolveTypeArgumentsInType(args, arg)),
       ).type.value
 
+export const resolveTypeArgumentsInSerializedIncludeIdentifierType = (
+  args: Record<string, SerializedType>,
+  type: SerializedIncludeIdentifierType,
+  decls: Record<string, SerializedDecl>,
+): SerializedType =>
+  type.args.length === 0
+    ? type
+    : resolveTypeArgumentsInSerializedDecl(
+        type.reference,
+        type.args.map(arg => resolveTypeArgumentsInSerializedType(args, arg, decls)),
+        decls,
+      ).type
+
 export const serializeIncludeIdentifierType: Serializer<
   IncludeIdentifierType,
   SerializedIncludeIdentifierType
@@ -108,6 +136,15 @@ export const getReferencesForIncludeIdentifierType: GetReferences<IncludeIdentif
   type,
   value,
 ) => getReferencesForDecl(resolveTypeArgumentsInDecl(type.reference, type.args), value)
+
+export const getReferencesForSerializedIncludeIdentifierType: GetReferencesSerialized<
+  SerializedIncludeIdentifierType
+> = (type, value, decls) =>
+  getReferencesForSerializedDecl(
+    resolveTypeArgumentsInSerializedDecl(type.reference, type.args, decls),
+    value,
+    decls,
+  )
 
 export const formatIncludeIdentifierValue: StructureFormatter<IncludeIdentifierType> = (
   type,

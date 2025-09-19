@@ -1,7 +1,7 @@
 import type { RangeBound } from "../../../../shared/validation/number.ts"
 import { validateNumberConstraints } from "../../../../shared/validation/number.ts"
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { Validator } from "../../validation/type.ts"
 import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.ts"
@@ -50,5 +50,10 @@ export const serializeFloatType: Serializer<FloatType, SerializedFloatType> = ty
   removeParentKey(type)
 
 export const getReferencesForFloatType: GetReferences<FloatType> = (_type, _value) => []
+
+export const getReferencesForSerializedFloatType: GetReferencesSerialized<SerializedFloatType> = (
+  _type,
+  _value,
+) => []
 
 export const formatFloatValue: StructureFormatter<FloatType> = (_type, value) => value
