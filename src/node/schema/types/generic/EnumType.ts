@@ -3,6 +3,7 @@ import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
 import type {
+  Copier,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -11,6 +12,7 @@ import type {
   Validator,
 } from "../../Node.ts"
 import {
+  copyType,
   getNestedDeclarations,
   getReferences,
   NodeKind,
@@ -31,7 +33,15 @@ export const EnumType = <T extends Record<string, EnumCaseDecl> = Record<string,
   values: T,
 ): EnumType<T> => ({
   kind: NodeKind.EnumType,
-  values,
+  values: Object.fromEntries(
+    Object.entries(values).map(([key, caseDef]) => [
+      key,
+      {
+        ...caseDef,
+        type: caseDef.type === null ? null : copyType(caseDef.type),
+      },
+    ]),
+  ) as T,
 })
 
 export const isEnumType: Predicate<EnumType> = node => node.kind === NodeKind.EnumType
@@ -198,3 +208,16 @@ export const formatEnumType: StructureFormatter<EnumType> = (type, value) => {
 
   return value
 }
+
+export const copyEnumTypeNode: Copier<EnumType> = <N extends EnumType>(type: N): N => ({
+  ...type,
+  values: Object.fromEntries(
+    Object.entries(type.values).map(([key, caseDef]) => [
+      key,
+      {
+        ...caseDef,
+        type: caseDef.type === null ? null : copyType(caseDef.type),
+      },
+    ]),
+  ),
+})

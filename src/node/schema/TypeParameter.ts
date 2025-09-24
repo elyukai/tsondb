@@ -1,10 +1,11 @@
 import type {
+  Copier,
   GetNestedDeclarations,
   GetReferences,
   Serializer,
   TypeArgumentsResolver,
 } from "./Node.ts"
-import { getNestedDeclarations, NodeKind, serializeNode } from "./Node.ts"
+import { copyType, getNestedDeclarations, NodeKind, serializeNode } from "./Node.ts"
 import type { Type } from "./types/Type.ts"
 
 export interface TypeParameter<N extends string = string, T extends Type = Type> {
@@ -38,3 +39,8 @@ export const serializeTypeParameter: Serializer<TypeParameter> = type => ({
 })
 
 export const getReferencesForTypeParameter: GetReferences<TypeParameter> = () => []
+
+export const copyTypeParameterNode: Copier<TypeParameter> = param => ({
+  ...param,
+  constraint: param.constraint ? copyType(param.constraint) : undefined,
+})

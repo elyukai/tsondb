@@ -2,6 +2,7 @@ import type { NumberConstraints, RangeBound } from "../../../../shared/validatio
 import { validateNumberConstraints } from "../../../../shared/validation/number.ts"
 import { json } from "../../../utils/errorFormatting.ts"
 import type {
+  Copier,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -52,3 +53,5 @@ export const serializeIntegerType: Serializer<IntegerType> = type => type
 export const getReferencesForIntegerType: GetReferences<IntegerType> = () => []
 
 export const formatIntegerValue: StructureFormatter<IntegerType> = (_type, value) => value
+
+export const copyIntegerTypeNode: Copier<IntegerType> = type => ({ ...type })

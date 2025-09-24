@@ -51,6 +51,7 @@ import {
   type TypeParameter,
 } from "./TypeParameter.ts"
 import {
+  copyArrayTypeNode,
   getNestedDeclarationsInArrayType,
   getReferencesForArrayType,
   resolveTypeArgumentsInArrayType,
@@ -59,6 +60,7 @@ import {
   type ArrayType,
 } from "./types/generic/ArrayType.ts"
 import {
+  copyEnumTypeNode,
   getNestedDeclarationsInEnumType,
   getReferencesForEnumType,
   resolveTypeArgumentsInEnumType,
@@ -68,6 +70,7 @@ import {
   type EnumType,
 } from "./types/generic/EnumType.ts"
 import {
+  copyObjectTypeNode,
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
   resolveTypeArgumentsInObjectType,
@@ -77,6 +80,7 @@ import {
   type ObjectType,
 } from "./types/generic/ObjectType.ts"
 import {
+  copyBooleanTypeNode,
   getNestedDeclarationsInBooleanType,
   getReferencesForBooleanType,
   resolveTypeArgumentsInBooleanType,
@@ -85,6 +89,7 @@ import {
   type BooleanType,
 } from "./types/primitives/BooleanType.ts"
 import {
+  copyDateTypeNode,
   getNestedDeclarationsInDateType,
   getReferencesForDateType,
   resolveTypeArgumentsInDateType,
@@ -93,6 +98,7 @@ import {
   type DateType,
 } from "./types/primitives/DateType.ts"
 import {
+  copyFloatTypeNode,
   getNestedDeclarationsInFloatType,
   getReferencesForFloatType,
   resolveTypeArgumentsInFloatType,
@@ -101,6 +107,7 @@ import {
   type FloatType,
 } from "./types/primitives/FloatType.ts"
 import {
+  copyIntegerTypeNode,
   getNestedDeclarationsInIntegerType,
   getReferencesForIntegerType,
   resolveTypeArgumentsInIntegerType,
@@ -109,6 +116,7 @@ import {
   type IntegerType,
 } from "./types/primitives/IntegerType.ts"
 import {
+  copyStringTypeNode,
   getNestedDeclarationsInStringType,
   getReferencesForStringType,
   resolveTypeArgumentsInStringType,
@@ -117,6 +125,7 @@ import {
   type StringType,
 } from "./types/primitives/StringType.ts"
 import {
+  copyIncludeIdentifierTypeNode,
   getNestedDeclarationsInIncludeIdentifierType,
   getReferencesForIncludeIdentifierType,
   resolveTypeArgumentsInIncludeIdentifierType,
@@ -125,6 +134,7 @@ import {
   type IncludeIdentifierType,
 } from "./types/references/IncludeIdentifierType.ts"
 import {
+  copyNestedEntityMapTypeNode,
   getNestedDeclarationsInNestedEntityMapType,
   getReferencesForNestedEntityMapType,
   resolveTypeArgumentsInNestedEntityMapType,
@@ -133,6 +143,7 @@ import {
   type NestedEntityMapType,
 } from "./types/references/NestedEntityMapType.ts"
 import {
+  copyReferenceIdentifierTypeNode,
   getNestedDeclarationsInReferenceIdentifierType,
   getReferencesForReferenceIdentifierType,
   resolveTypeArgumentsInReferenceIdentifierType,
@@ -141,6 +152,7 @@ import {
   type ReferenceIdentifierType,
 } from "./types/references/ReferenceIdentifierType.ts"
 import {
+  copyTypeArgumentTypeNode,
   getNestedDeclarationsInTypeArgumentType,
   getReferencesForTypeArgumentType,
   resolveTypeArgumentsInTypeArgumentType,
@@ -590,6 +602,39 @@ export const getReferences: GetReferences = (node, value) => {
       return getReferencesForEnumType(node, value)
     case NodeKind.TypeParameter:
       return getReferencesForTypeParameter(node, value)
+    default:
+      return assertExhaustive(node)
+  }
+}
+
+export type Copier<T = Type> = <N extends T>(node: N) => N
+
+export const copyType: Copier = <N extends Type>(node: N): N => {
+  switch (node.kind) {
+    case NodeKind.ArrayType:
+      return copyArrayTypeNode(node) as N
+    case NodeKind.ObjectType:
+      return copyObjectTypeNode(node) as N
+    case NodeKind.BooleanType:
+      return copyBooleanTypeNode(node) as N
+    case NodeKind.DateType:
+      return copyDateTypeNode(node) as N
+    case NodeKind.FloatType:
+      return copyFloatTypeNode(node) as N
+    case NodeKind.IntegerType:
+      return copyIntegerTypeNode(node) as N
+    case NodeKind.StringType:
+      return copyStringTypeNode(node) as N
+    case NodeKind.TypeArgumentType:
+      return copyTypeArgumentTypeNode(node) as N
+    case NodeKind.ReferenceIdentifierType:
+      return copyReferenceIdentifierTypeNode(node) as N
+    case NodeKind.IncludeIdentifierType:
+      return copyIncludeIdentifierTypeNode(node) as N
+    case NodeKind.NestedEntityMapType:
+      return copyNestedEntityMapTypeNode(node) as N
+    case NodeKind.EnumType:
+      return copyEnumTypeNode(node) as N
     default:
       return assertExhaustive(node)
   }

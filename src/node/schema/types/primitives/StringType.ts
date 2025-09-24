@@ -2,6 +2,7 @@ import type { StringConstraints } from "../../../../shared/validation/string.ts"
 import { validateStringConstraints } from "../../../../shared/validation/string.ts"
 import { json } from "../../../utils/errorFormatting.ts"
 import type {
+  Copier,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -55,3 +56,5 @@ export const serializeStringType: Serializer<StringType> = type => ({
 export const getReferencesForStringType: GetReferences<StringType> = () => []
 
 export const formatStringValue: StructureFormatter<StringType> = (_type, value) => value
+
+export const copyStringTypeNode: Copier<StringType> = type => ({ ...type })

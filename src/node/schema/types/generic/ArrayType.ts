@@ -3,6 +3,7 @@ import { validateArrayConstraints } from "../../../../shared/validation/array.ts
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
 import type {
+  Copier,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -11,6 +12,7 @@ import type {
   Validator,
 } from "../../Node.ts"
 import {
+  copyType,
   getNestedDeclarations,
   getReferences,
   NodeKind,
@@ -93,3 +95,8 @@ export const getReferencesForArrayType: GetReferences<ArrayType> = (type, value)
 
 export const formatArrayValue: StructureFormatter<ArrayType> = (type, value) =>
   Array.isArray(value) ? value.map(item => formatValue(type.items, item)) : value
+
+export const copyArrayTypeNode: Copier<ArrayType> = <N extends ArrayType>(type: N): N => ({
+  ...type,
+  items: copyType(type.items),
+})

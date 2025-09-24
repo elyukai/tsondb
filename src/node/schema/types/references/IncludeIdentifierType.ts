@@ -3,6 +3,7 @@ import { getTypeArgumentsRecord } from "../../declarations/Declaration.ts"
 import type { EnumDecl } from "../../declarations/EnumDecl.ts"
 import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.ts"
 import type {
+  Copier,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -11,6 +12,7 @@ import type {
   Validator,
 } from "../../Node.ts"
 import {
+  copyType,
   getNestedDeclarations,
   getReferences,
   NodeKind,
@@ -46,7 +48,7 @@ export const GenIncludeIdentifierType = <
 ): IncludeIdentifierType<Params, T> => ({
   kind: NodeKind.IncludeIdentifierType,
   reference,
-  args,
+  args: args.map(arg => copyType(arg)) as TypeArguments<Params>,
 })
 
 export { GenIncludeIdentifierType as GenIncludeIdentifier }
@@ -129,3 +131,9 @@ export const formatIncludeIdentifierValue: StructureFormatter<IncludeIdentifierT
       return value
   }
 }
+
+export const copyIncludeIdentifierTypeNode: Copier<IncludeIdentifierType> = type => ({
+  ...type,
+  reference: type.reference,
+  args: type.args.map(arg => copyType(arg)),
+})

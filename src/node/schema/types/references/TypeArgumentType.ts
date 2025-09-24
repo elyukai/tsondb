@@ -1,4 +1,5 @@
 import type {
+  Copier,
   GetNestedDeclarations,
   GetReferences,
   Node,
@@ -63,3 +64,5 @@ export const getReferencesForTypeArgumentType: GetReferences<TypeArgumentType> =
 ) => []
 
 export const formatTypeArgumentValue: StructureFormatter<TypeArgumentType> = (_type, value) => value
+
+export const copyTypeArgumentTypeNode: Copier<TypeArgumentType> = type => ({ ...type })

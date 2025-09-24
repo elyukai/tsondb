@@ -7,6 +7,7 @@ import {} from "../../declarations/Declaration.ts"
 import type { EntityDecl } from "../../declarations/EntityDecl.ts"
 import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.ts"
 import type {
+  Copier,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -14,7 +15,13 @@ import type {
   TypeArgumentsResolver,
   Validator,
 } from "../../Node.ts"
-import { getNestedDeclarations, NodeKind, resolveTypeArguments, validateType } from "../../Node.ts"
+import {
+  copyType,
+  getNestedDeclarations,
+  NodeKind,
+  resolveTypeArguments,
+  validateType,
+} from "../../Node.ts"
 import type { MemberDecl, ObjectType } from "../generic/ObjectType.ts"
 import {
   getReferencesForObjectType,
@@ -56,7 +63,7 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
     kind: NodeKind.NestedEntityMapType,
-    type: Lazy.of(() => options.type),
+    type: Lazy.of(() => copyType(options.type)),
   }
 
   return nestedEntityMapType
@@ -73,7 +80,7 @@ const _NestedEntityMapType = <Name extends string, T extends TConstraint>(option
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
     kind: NodeKind.NestedEntityMapType,
-    type: Lazy.of(() => options.type()),
+    type: Lazy.of(() => copyType(options.type())),
   }
 
   return nestedEntityMapType
@@ -154,3 +161,16 @@ export const formatNestedEntityMapValue: StructureFormatter<NestedEntityMapType>
         )
       : value
     : formatIncludeIdentifierValue(type.type.value, value)
+
+export const copyNestedEntityMapTypeNode: Copier<NestedEntityMapType> = <
+  N extends NestedEntityMapType,
+>(
+  type: N,
+): N => {
+  const nestedEntityMapType: N = {
+    ...type,
+    type: Lazy.of(() => type.type.value),
+  }
+
+  return nestedEntityMapType
+}

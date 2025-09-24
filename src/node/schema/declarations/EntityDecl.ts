@@ -8,7 +8,7 @@ import type {
   TypeArgumentsResolver,
   Validator,
 } from "../Node.ts"
-import { NodeKind, resolveTypeArguments, validateType } from "../Node.ts"
+import { copyType, NodeKind, resolveTypeArguments, validateType } from "../Node.ts"
 import type { MemberDecl, ObjectType } from "../types/generic/ObjectType.ts"
 import {
   getNestedDeclarationsInObjectType,
@@ -93,7 +93,7 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
     sourceUrl,
     parameters: [],
     type: Lazy.of(() => {
-      const type = options.type()
+      const type = copyType(options.type())
       Object.keys(type.properties).forEach(key => {
         if (key === "id") {
           throw new TypeError(

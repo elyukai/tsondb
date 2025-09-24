@@ -5,6 +5,7 @@ import { validateObjectConstraints } from "../../../../shared/validation/object.
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key as keyColor } from "../../../utils/errorFormatting.ts"
 import type {
+  Copier,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -13,6 +14,7 @@ import type {
   Validator,
 } from "../../Node.ts"
 import {
+  copyType,
   getNestedDeclarations,
   getReferences,
   NodeKind,
@@ -56,7 +58,12 @@ export const ObjectType = <T extends TConstraint>(
       "maxProperties",
       option => Number.isInteger(option) && option >= 0,
     ),
-    properties,
+    properties: Object.fromEntries(
+      Object.entries(properties).map(([key, prop]) => [
+        key,
+        { ...prop, type: copyType(prop.type) },
+      ]),
+    ) as T,
   }
 
   Object.keys(properties).forEach(key => {
@@ -189,3 +196,16 @@ export const formatObjectValue: StructureFormatter<ObjectType> = (type, value) =
         Object.keys(type.properties),
       )
     : value
+
+export const copyObjectTypeNode: Copier<ObjectType> = <N extends ObjectType>(type: N): N => ({
+  ...type,
+  properties: Object.fromEntries(
+    Object.entries(type.properties).map(([key, prop]) => [
+      key,
+      {
+        ...prop,
+        type: copyType(prop.type),
+      },
+    ]),
+  ),
+})
