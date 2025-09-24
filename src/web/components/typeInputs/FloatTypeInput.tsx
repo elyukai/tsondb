@@ -1,6 +1,6 @@
 import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
-import type { SerializedFloatType } from "../../../node/schema/types/primitives/FloatType.ts"
+import type { SerializedFloatType } from "../../../shared/schema/types/FloatType.ts"
 import { validateNumberConstraints } from "../../../shared/validation/number.ts"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"

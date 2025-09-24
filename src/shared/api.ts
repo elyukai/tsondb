@@ -1,4 +1,4 @@
-import type { SerializedDecl } from "../node/schema/declarations/Declaration.ts"
+import type { SerializedDecl } from "./schema/declarations/Declaration.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "./utils/instances.ts"
 
 export interface GetAllDeclarationsResponseBody<D extends SerializedDecl = SerializedDecl> {

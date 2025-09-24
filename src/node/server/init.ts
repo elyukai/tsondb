@@ -1,9 +1,9 @@
 import Debug from "debug"
 import { simpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
-import type { EntityDecl, SerializedEntityDecl } from "../schema/declarations/EntityDecl.ts"
+import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.ts"
-import { resolveTypeArgumentsInDecls, serializeDecl } from "../schema/index.ts"
+import { resolveTypeArgumentsInDecls, serializeNode } from "../schema/index.ts"
 import type { Schema } from "../schema/Schema.ts"
 import {
   attachGitStatusToInstancesByEntityName,
@@ -47,8 +47,8 @@ export const init = async (
   ) as Record<string, EntityDecl>
 
   const serializedDeclarationsByName = Object.fromEntries(
-    declarations.map(decl => [decl.name, serializeDecl(decl)]),
-  ) as Record<string, SerializedEntityDecl>
+    declarations.map(decl => [decl.name, serializeNode(decl)]),
+  )
 
   const instancesByEntityNameInMemory = Object.assign({}, instancesByEntityName)
 

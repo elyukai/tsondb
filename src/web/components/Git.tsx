@@ -1,8 +1,9 @@
 import type { FunctionComponent } from "preact"
+import { useLocation } from "preact-iso"
 import type { TargetedEvent } from "preact/compat"
 import { useEffect, useState } from "preact/hooks"
-import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.ts"
 import type { GitStatusResponseBody } from "../../shared/api.ts"
+import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import type { GitFileStatus } from "../../shared/utils/git.ts"
 import {
   getGitStatusForDisplay,
@@ -111,6 +112,8 @@ export const Git: FunctionComponent = () => {
       setCurrentBranch(branchesData.currentBranch)
     })
 
+  const location = useLocation()
+
   useEffect(() => {
     getAllEntities()
       .then(async data => {
@@ -123,7 +126,7 @@ export const Git: FunctionComponent = () => {
           console.error("Error fetching entities:", error.toString())
         }
       })
-  }, [])
+  }, [location.path])
 
   const stage = (entityName: string, instance: InstanceContainerOverview) => {
     stageFileOfEntity(entityName, instance.id)

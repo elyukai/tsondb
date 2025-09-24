@@ -12,10 +12,10 @@ import type {
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
 import { isOk } from "../../../shared/utils/result.ts"
 import type { Decl } from "../../schema/declarations/Declaration.ts"
-import { serializeDecl } from "../../schema/declarations/Declaration.ts"
 import { isEntityDecl } from "../../schema/declarations/EntityDecl.ts"
 import { isEnumDecl } from "../../schema/declarations/EnumDecl.ts"
 import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
+import { serializeNode } from "../../schema/index.ts"
 import { createInstance, deleteInstance, updateInstance } from "./instanceOperations.ts"
 
 const debug = Debug("tsondb:server:api:declarations")
@@ -46,7 +46,7 @@ declarationsApi.get("/", (req, res) => {
 
   const body: GetAllDeclarationsResponseBody = {
     declarations: filteredEntities.map(decl => ({
-      declaration: serializeDecl(decl),
+      declaration: serializeNode(decl),
       instanceCount: req.instancesByEntityName[decl.name]?.length ?? 0,
     })),
     localeEntity: req.localeEntity?.name,
@@ -64,7 +64,7 @@ declarationsApi.get("/:name", (req, res) => {
   }
 
   const body: GetDeclarationResponseBody = {
-    declaration: serializeDecl(decl),
+    declaration: serializeNode(decl),
     instanceCount: req.instancesByEntityName[decl.name]?.length ?? 0,
     isLocaleEntity: decl === req.localeEntity,
   }

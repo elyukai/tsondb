@@ -1,37 +1,17 @@
 import { useRoute } from "preact-iso"
-import { useEffect, useMemo, useState } from "preact/hooks"
-import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.ts"
-import { getEntityByName } from "../api.ts"
+import { useContext, useMemo } from "preact/hooks"
+import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
+import { EntitiesContext } from "../context/entities.ts"
 
 export const useEntityFromRoute = ():
-  | { entity: SerializedEntityDecl; isLocaleEntity: boolean }
+  | { declaration: SerializedEntityDecl; isLocaleEntity: boolean }
   | undefined => {
   const {
     params: { name },
   } = useRoute()
 
-  const [entityData, setEntityData] = useState<{
-    declaration: SerializedEntityDecl
-    isLocaleEntity: boolean
-  }>()
-
-  useEffect(() => {
-    if (name) {
-      getEntityByName(name)
-        .then(data => {
-          setEntityData(data)
-        })
-        .catch((error: unknown) => {
-          console.error("Error fetching data:", error)
-        })
-    }
-  }, [name])
-
-  const entityObj = useMemo(
-    () =>
-      entityData && { entity: entityData.declaration, isLocaleEntity: entityData.isLocaleEntity },
-    [entityData],
-  )
+  const entities = useContext(EntitiesContext)
+  const entityObj = useMemo(() => entities.find(e => e.declaration.name === name), [entities, name])
 
   return entityObj
 }

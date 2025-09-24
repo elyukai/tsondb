@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "preact/hooks"
-import type { SerializedSecondaryDecl } from "../../node/schema/declarations/Declaration.ts"
-import type { SerializedEnumDecl } from "../../node/schema/declarations/EnumDecl.ts"
-import type { SerializedTypeAliasDecl } from "../../node/schema/declarations/TypeAliasDecl.ts"
+import type { SerializedSecondaryDecl } from "../../shared/schema/declarations/Declaration.ts"
+import type { SerializedEnumDecl } from "../../shared/schema/declarations/EnumDecl.ts"
+import type { SerializedTypeAliasDecl } from "../../shared/schema/declarations/TypeAliasDecl.ts"
 import { getAllDeclarations } from "../api.ts"
 
 export type GetDeclFromDeclName = (name: string) => SerializedSecondaryDecl | undefined

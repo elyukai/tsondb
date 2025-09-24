@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedObjectType } from "../../../node/schema/types/generic/ObjectType.ts"
+import type { SerializedObjectType } from "../../../shared/schema/types/ObjectType.ts"
 import { sortObjectKeys } from "../../../shared/utils/object.ts"
 import { toTitleCase } from "../../../shared/utils/string.ts"
 import { validateObjectConstraints } from "../../../shared/validation/object.ts"

@@ -49,6 +49,8 @@ const _validate = (
     }
   }
 
+  const validationHelpers = createValidators(instancesByEntityName, true, checkReferentialIntegrity)
+
   const errors = (
     checkOnlyEntities.length > 0
       ? entities.filter(entity => checkOnlyEntities.includes(entity.name))
@@ -59,11 +61,7 @@ const _validate = (
         instancesByEntityName[entity.name]?.map(instance =>
           wrapErrorsIfAny(
             `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, instance.fileName))}"`)}`,
-            validateEntityDecl(
-              createValidators(instancesByEntityName, true, checkReferentialIntegrity),
-              entity,
-              instance.content,
-            ),
+            validateEntityDecl(validationHelpers, entity, instance.content),
           ),
         ) ?? [],
       ),

@@ -48,6 +48,10 @@
   --git-status-renamed-color: rgb(20, 97, 148);
   --git-status-renamed-background: rgba(20, 97, 148, 0.15);
   --shadow-color: rgba(160, 163, 165, 0.5);
+  --highlight-color-bold: rgb(205, 123, 43);
+  --highlight-color-italic: rgb(41, 155, 96);
+  --highlight-color-list-item-marker: rgb(195, 58, 237);
+  --highlight-color-table-marker: rgb(237, 58, 118);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -76,6 +80,10 @@
     --button-color-disabled: hsl(260, 6%, 54%);
     --highlight-color: #f2d600;
     --highlight-background: #333300;
+    --highlight-color-bold: rgb(236, 170, 105);
+    --highlight-color-italic: rgb(130, 230, 178);
+    --highlight-color-list-item-marker: rgb(220, 133, 245);
+    --highlight-color-table-marker: rgb(244, 135, 171);
   }
 }
 
@@ -236,7 +244,7 @@ button.destructive:disabled {
 input,
 textarea,
 select,
-.textarea-grow-wrap::after {
+.textarea-grow-wrap__mirror {
   background: var(--background);
   color: var(--color);
   font-family: var(--font-sans);
@@ -262,10 +270,9 @@ select[aria-invalid="true"] {
   display: grid;
 }
 
-.textarea-grow-wrap::after {
-  content: attr(data-value) " ";
+.textarea-grow-wrap .textarea-grow-wrap__mirror {
   white-space: pre-wrap;
-  visibility: hidden;
+  z-index: -1;
 }
 
 .textarea-grow-wrap > textarea {
@@ -274,7 +281,7 @@ select[aria-invalid="true"] {
 }
 
 .textarea-grow-wrap > textarea,
-.textarea-grow-wrap::after {
+.textarea-grow-wrap__mirror {
   grid-area: 1 / 1 / 2 / 2;
 }
 
@@ -555,6 +562,40 @@ form > .field--container {
   flex: 1 1 0;
 }
 
+.editor--markdown textarea,
+.editor--markdown input,
+.editor--markdown .textarea-grow-wrap__mirror {
+  font-family: var(--font-mono);
+}
+
+.editor--markdown textarea {
+  color: transparent;
+  background: transparent;
+  caret-color: var(--color);
+}
+
+.editor-highlighting strong {
+  color: var(--highlight-color-bold);
+}
+
+.editor-highlighting em {
+  color: var(--highlight-color-italic);
+}
+
+.editor-highlighting .list-item-marker {
+  color: var(--highlight-color-list-item-marker);
+}
+
+.editor-highlighting .table-marker {
+  color: var(--highlight-color-table-marker);
+}
+
+.help {
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+  margin: 0.25rem 0 0;
+}
+
 .field--string .preview {
   padding: 1rem;
   background: var(--markdown-background);
@@ -571,6 +612,28 @@ form > .field--container {
 
 .field--string .preview > :last-child {
   margin-bottom: 0;
+}
+
+.field--string .preview table {
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.field--string .preview table :is(th, td) {
+  vertical-align: top;
+  padding: 0.25rem 0.5rem;
+}
+
+.field--string .preview table :is(th, td):first-child {
+  padding-left: 0;
+}
+
+.field--string .preview table :is(th, td):last-child {
+  padding-right: 0;
+}
+
+.field--string .preview table tbody tr {
+  border-top: 1px solid var(--tertiary-color);
 }
 
 .container-item {

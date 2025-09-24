@@ -1,40 +1,32 @@
-import type { RangeBound } from "../../../../shared/validation/number.ts"
+import type { NumberConstraints } from "../../../../shared/validation/number.ts"
 import { validateNumberConstraints } from "../../../../shared/validation/number.ts"
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
+import type {
+  GetNestedDeclarations,
+  GetReferences,
+  Predicate,
+  Serializer,
+  TypeArgumentsResolver,
+  Validator,
+} from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
-import type { Validator } from "../../validation/type.ts"
-import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.ts"
-import { removeParentKey } from "../Type.ts"
+import type { BaseType, StructureFormatter } from "../Type.ts"
 
-export interface FloatType extends BaseType {
+export interface FloatType extends BaseType, NumberConstraints {
   kind: NodeKind["FloatType"]
-  minimum?: RangeBound
-  maximum?: RangeBound
-  multipleOf?: number
 }
 
-export interface SerializedFloatType extends SerializedBaseType {
-  kind: NodeKind["FloatType"]
-  minimum?: RangeBound
-  maximum?: RangeBound
-  multipleOf?: number
-}
-
-export const FloatType = (
-  options: {
-    minimum?: RangeBound
-    maximum?: RangeBound
-    multipleOf?: number
-  } = {},
-): FloatType => ({
+export const FloatType = (options: NumberConstraints = {}): FloatType => ({
   ...options,
   kind: NodeKind.FloatType,
 })
 
 export { FloatType as Float }
 
-export const isFloatType = (node: Node): node is FloatType => node.kind === NodeKind.FloatType
+export const isFloatType: Predicate<FloatType> = node => node.kind === NodeKind.FloatType
+
+export const getNestedDeclarationsInFloatType: GetNestedDeclarations<FloatType> = addedDecls =>
+  addedDecls
 
 export const validateFloatType: Validator<FloatType> = (helpers, type, value) => {
   if (typeof value !== "number") {
@@ -46,14 +38,11 @@ export const validateFloatType: Validator<FloatType> = (helpers, type, value) =>
   return validateNumberConstraints(type, value)
 }
 
-export const serializeFloatType: Serializer<FloatType, SerializedFloatType> = type =>
-  removeParentKey(type)
+export const resolveTypeArgumentsInFloatType: TypeArgumentsResolver<FloatType> = (_args, type) =>
+  type
 
-export const getReferencesForFloatType: GetReferences<FloatType> = (_type, _value) => []
+export const serializeFloatType: Serializer<FloatType> = type => type
 
-export const getReferencesForSerializedFloatType: GetReferencesSerialized<SerializedFloatType> = (
-  _type,
-  _value,
-) => []
+export const getReferencesForFloatType: GetReferences<FloatType> = () => []
 
 export const formatFloatValue: StructureFormatter<FloatType> = (_type, value) => value

@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedBooleanType } from "../../../node/schema/types/primitives/BooleanType.ts"
+import type { SerializedBooleanType } from "../../../shared/schema/types/BooleanType.ts"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
 type Props = {

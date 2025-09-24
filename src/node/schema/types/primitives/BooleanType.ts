@@ -1,15 +1,10 @@
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
+import type { GetNestedDeclarations, TypeArgumentsResolver } from "../../index.ts"
+import type { GetReferences, Predicate, Serializer, Validator } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
-import type { Validator } from "../../validation/type.ts"
-import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.ts"
-import { removeParentKey } from "../Type.ts"
+import type { BaseType, StructureFormatter } from "../Type.ts"
 
 export interface BooleanType extends BaseType {
-  kind: NodeKind["BooleanType"]
-}
-
-export interface SerializedBooleanType extends SerializedBaseType {
   kind: NodeKind["BooleanType"]
 }
 
@@ -19,7 +14,10 @@ export const BooleanType = (): BooleanType => ({
 
 export { BooleanType as Boolean }
 
-export const isBooleanType = (node: Node): node is BooleanType => node.kind === NodeKind.BooleanType
+export const isBooleanType: Predicate<BooleanType> = node => node.kind === NodeKind.BooleanType
+
+export const getNestedDeclarationsInBooleanType: GetNestedDeclarations<BooleanType> = addedDecls =>
+  addedDecls
 
 export const validateBooleanType: Validator<BooleanType> = (helpers, _type, value) => {
   if (typeof value !== "boolean") {
@@ -29,13 +27,13 @@ export const validateBooleanType: Validator<BooleanType> = (helpers, _type, valu
   return []
 }
 
-export const serializeBooleanType: Serializer<BooleanType, SerializedBooleanType> = type =>
-  removeParentKey(type)
+export const resolveTypeArgumentsInBooleanType: TypeArgumentsResolver<BooleanType> = (
+  _args,
+  type,
+) => type
 
-export const getReferencesForBooleanType: GetReferences<BooleanType> = (_type, _value) => []
+export const serializeBooleanType: Serializer<BooleanType> = type => type
 
-export const getReferencesForSerializedBooleanType: GetReferencesSerialized<
-  SerializedBooleanType
-> = (_type, _value) => []
+export const getReferencesForBooleanType: GetReferences<BooleanType> = () => []
 
 export const formatBooleanValue: StructureFormatter<BooleanType> = (_type, value) => value

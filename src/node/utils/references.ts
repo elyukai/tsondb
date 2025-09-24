@@ -1,11 +1,11 @@
 import Debug from "debug"
 import { resolve } from "node:path"
+import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import { difference, removeAt } from "../../shared/utils/array.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import { isOk } from "../../shared/utils/result.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.ts"
-import { type SerializedDecl } from "../schema/index.ts"
 import type { ReferencesWorkerTask } from "./referencesWorker.ts"
 import { WorkerPool } from "./workers.ts"
 

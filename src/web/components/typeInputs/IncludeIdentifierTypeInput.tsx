@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedIncludeIdentifierType } from "../../../node/schema/index.ts"
+import type { SerializedIncludeIdentifierType } from "../../../shared/schema/types/IncludeIdentifierType.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { TypeInput } from "./TypeInput.tsx"

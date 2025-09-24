@@ -1,33 +1,25 @@
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { Leaves } from "../../../shared/utils/object.ts"
 import type {
+  GetNestedDeclarations,
   GetReferences,
-  GetReferencesSerialized,
-  Node,
-  SerializedNode,
+  Predicate,
   Serializer,
+  TypeArgumentsResolver,
+  Validator,
 } from "../Node.ts"
-import { NodeKind } from "../Node.ts"
-import type { MemberDecl, ObjectType, SerializedObjectType } from "../types/generic/ObjectType.ts"
+import { NodeKind, resolveTypeArguments, validateType } from "../Node.ts"
+import type { MemberDecl, ObjectType } from "../types/generic/ObjectType.ts"
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
   getReferencesForSerializedObjectType,
   Required,
-  resolveTypeArgumentsInObjectType,
-  resolveTypeArgumentsInSerializedObjectType,
   serializeObjectType,
 } from "../types/generic/ObjectType.ts"
 import { StringType } from "../types/primitives/StringType.ts"
-import type { AsType, SerializedAsType } from "../types/Type.ts"
-import { setParent, validate } from "../types/Type.ts"
-import type { ValidatorHelpers } from "../validation/type.ts"
-import type {
-  BaseDecl,
-  GetNestedDeclarations,
-  SerializedBaseDecl,
-  SerializedDecl,
-} from "./Declaration.ts"
+import type { AsType } from "../types/Type.ts"
+import type { BaseDecl } from "./Declaration.ts"
 import { validateDeclName } from "./Declaration.ts"
 import { TypeAliasDecl } from "./TypeAliasDecl.ts"
 
@@ -66,20 +58,6 @@ export type EntityDisplayName<T extends ObjectType> =
     }
   | null
 
-export type SerializedEntityDisplayName<T extends SerializedObjectType> =
-  | Leaves<SerializedAsType<T>>
-  | {
-      /**
-       * @default "translations"
-       */
-      pathToLocaleMap?: Leaves<SerializedAsType<T>>
-      /**
-       * @default "name"
-       */
-      pathInLocaleMap?: string
-    }
-  | null
-
 export interface EntityDecl<Name extends string = string, T extends ObjectType = ObjectType>
   extends BaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
@@ -90,20 +68,6 @@ export interface EntityDecl<Name extends string = string, T extends ObjectType =
    */
   displayName?: EntityDisplayName<T>
   displayNameCustomizer?: DisplayNameFn<T>
-  isDeprecated?: boolean
-}
-
-export interface SerializedEntityDecl<
-  Name extends string = string,
-  T extends SerializedObjectType = SerializedObjectType,
-> extends SerializedBaseDecl<Name, []> {
-  kind: NodeKind["EntityDecl"]
-  namePlural: string
-  type: T
-  /**
-   * @default "name"
-   */
-  displayName?: SerializedEntityDisplayName<T>
   isDeprecated?: boolean
 }
 
@@ -124,7 +88,7 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
 ): EntityDecl<Name, T> => {
   validateDeclName(options.name)
 
-  const decl: EntityDecl<Name, T> = {
+  return {
     ...options,
     kind: NodeKind.EntityDecl,
     sourceUrl,
@@ -138,16 +102,14 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
           )
         }
       })
-      return setParent(type, decl)
+      return type
     }),
   }
-
-  return decl
 }
 
 export { EntityDecl as Entity }
 
-export const isEntityDecl = (node: Node): node is EntityDecl => node.kind === NodeKind.EntityDecl
+export const isEntityDecl: Predicate<EntityDecl> = node => node.kind === NodeKind.EntityDecl
 
 export const isSerializedEntityDecl = (node: SerializedNode): node is SerializedEntityDecl =>
   node.kind === NodeKind.EntityDecl
@@ -157,16 +119,13 @@ export const getNestedDeclarationsInEntityDecl: GetNestedDeclarations<EntityDecl
   decl,
 ) => getNestedDeclarationsInObjectType(isDeclAdded, decl.type.value)
 
-export const validateEntityDecl = (
-  helpers: ValidatorHelpers,
-  decl: EntityDecl,
-  value: unknown,
-): Error[] => validate(helpers, decl.type.value, value)
+export const validateEntityDecl: Validator<EntityDecl> = (helpers, decl, value) =>
+  validateType(helpers, decl.type.value, value)
 
-export const resolveTypeArgumentsInEntityDecl = (decl: EntityDecl): EntityDecl =>
+export const resolveTypeArgumentsInEntityDecl: TypeArgumentsResolver<EntityDecl> = (_args, decl) =>
   EntityDecl(decl.sourceUrl, {
     ...decl,
-    type: () => resolveTypeArgumentsInObjectType({}, decl.type.value),
+    type: () => resolveTypeArguments({}, decl.type.value),
   })
 
 export const resolveTypeArgumentsInSerializedEntityDecl = (
@@ -204,7 +163,7 @@ export const createEntityIdentifierTypeAsDecl = <Name extends string>(decl: Enti
     type: createEntityIdentifierType,
   })
 
-export const serializeEntityDecl: Serializer<EntityDecl, SerializedEntityDecl> = type => ({
+export const serializeEntityDecl: Serializer<EntityDecl> = type => ({
   ...type,
   type: serializeObjectType(type.type.value),
   displayName: typeof type.displayName === "function" ? null : type.displayName,

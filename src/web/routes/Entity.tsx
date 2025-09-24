@@ -4,13 +4,9 @@ import { useEffect, useState } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
 import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
-import {
-  deleteInstanceByEntityNameAndId,
-  getEntityByName,
-  getInstancesByEntityName,
-} from "../api.ts"
+import { deleteInstanceByEntityNameAndId, getInstancesByEntityName } from "../api.ts"
 import { Layout } from "../components/Layout.ts"
-import { useAPIResource } from "../hooks/useAPIResource.ts"
+import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
 import { Markdown } from "../utils/Markdown.tsx"
 import { homeTitle } from "./Home.tsx"
@@ -25,7 +21,8 @@ export const Entity: FunctionalComponent = () => {
   } = useRoute()
 
   const [searchText, setSearchText] = useState("")
-  const [entity] = useAPIResource(getEntityByName, name ?? "")
+  const entityFromRoute = useEntityFromRoute()
+  const { declaration: entity } = entityFromRoute ?? {}
   const [instances, reloadInstances] = useMappedAPIResource(
     getInstancesByEntityName,
     mapInstances,
@@ -33,8 +30,8 @@ export const Entity: FunctionalComponent = () => {
   )
 
   useEffect(() => {
-    document.title = toTitleCase(entity?.declaration.namePlural ?? name ?? "") + " — TSONDB"
-  }, [entity?.declaration.namePlural, name])
+    document.title = toTitleCase(entity?.namePlural ?? name ?? "") + " — TSONDB"
+  }, [entity?.namePlural, name])
 
   useEffect(() => {
     if (created) {
@@ -52,7 +49,7 @@ export const Entity: FunctionalComponent = () => {
   if (!entity || !instances) {
     return (
       <div>
-        <h1>{toTitleCase(entity?.declaration.namePlural ?? name)}</h1>
+        <h1>{toTitleCase(entity?.namePlural ?? name)}</h1>
         <p className="loading">Loading …</p>
       </div>
     )
@@ -71,14 +68,12 @@ export const Entity: FunctionalComponent = () => {
   return (
     <Layout breadcrumbs={[{ url: "/", label: homeTitle }]}>
       <div class="header-with-btns">
-        <h1>{toTitleCase(entity.declaration.namePlural)}</h1>
-        <a class="btn btn--primary" href={`/entities/${entity.declaration.name}/instances/create`}>
+        <h1>{toTitleCase(entity.namePlural)}</h1>
+        <a class="btn btn--primary" href={`/entities/${entity.name}/instances/create`}>
           Add
         </a>
       </div>
-      {entity.declaration.comment && (
-        <Markdown class="description" string={entity.declaration.comment} />
-      )}
+      {entity.comment && <Markdown class="description" string={entity.comment} />}
       <div className="list-header">
         <p class="instance-count">
           {searchText === "" ? "" : `${filteredInstances.length.toString()} of `}
@@ -129,17 +124,14 @@ export const Entity: FunctionalComponent = () => {
                   </p>
                 )}
                 <div class="btns">
-                  <a
-                    href={`/entities/${entity.declaration.name}/instances/${instance.id}`}
-                    class="btn"
-                  >
+                  <a href={`/entities/${entity.name}/instances/${instance.id}`} class="btn">
                     Edit
                   </a>
                   <button
                     class="destructive"
                     onClick={() => {
                       if (confirm("Are you sure you want to delete this instance?")) {
-                        deleteInstanceByEntityNameAndId(entity.declaration.name, instance.id)
+                        deleteInstanceByEntityNameAndId(entity.name, instance.id)
                           .then(() => reloadInstances())
                           .catch((error: unknown) => {
                             if (error instanceof Error) {

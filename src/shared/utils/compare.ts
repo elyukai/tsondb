@@ -4,8 +4,8 @@ export const lt: ComparisonOperator = (a, b) => a < b
 export const lte: ComparisonOperator = (a, b) => a <= b
 export const gt: ComparisonOperator = (a, b) => a > b
 export const gte: ComparisonOperator = (a, b) => a >= b
-export const eq: ComparisonOperator = (a, b) => a === b
-export const neq: ComparisonOperator = (a, b) => a !== b
+export const eq: ComparisonOperator = (a, b) => Object.is(a, b)
+export const neq: ComparisonOperator = (a, b) => !Object.is(a, b)
 
 /**
  * Checks two values for value equality. This is a deep equality check that
@@ -13,7 +13,7 @@ export const neq: ComparisonOperator = (a, b) => a !== b
  * compares all enumerable keys, no other properties or the prototype chain.
  */
 export const deepEqual = <T>(a: T, b: T): boolean => {
-  if (a === b) {
+  if (Object.is(a, b)) {
     return true
   }
 

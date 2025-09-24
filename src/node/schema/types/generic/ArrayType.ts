@@ -2,41 +2,27 @@ import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { validateArrayConstraints } from "../../../../shared/validation/array.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations, SerializedDecl } from "../../declarations/Declaration.ts"
-import { getNestedDeclarations } from "../../declarations/Declaration.ts"
-import type { GetReferences, GetReferencesSerialized, Node, Serializer } from "../../Node.ts"
-import { NodeKind } from "../../Node.ts"
-import { validateOption } from "../../validation/options.ts"
-import type { Validator } from "../../validation/type.ts"
 import type {
-  BaseType,
-  SerializedBaseType,
-  SerializedType,
-  StructureFormatter,
-  Type,
-} from "../Type.ts"
+  GetNestedDeclarations,
+  GetReferences,
+  Predicate,
+  Serializer,
+  TypeArgumentsResolver,
+  Validator,
+} from "../../Node.ts"
 import {
-  formatValue,
-  getReferencesForSerializedType,
-  getReferencesForType,
-  removeParentKey,
-  resolveTypeArgumentsInSerializedType,
-  resolveTypeArgumentsInType,
-  serializeType,
-  setParent,
-  validate,
-} from "../Type.ts"
+  getNestedDeclarations,
+  getReferences,
+  NodeKind,
+  resolveTypeArguments,
+  serializeNode,
+  validateType,
+} from "../../Node.ts"
+import { validateOption } from "../../validation/options.ts"
+import type { BaseType, StructureFormatter, Type } from "../Type.ts"
+import { formatValue } from "../Type.ts"
 
 export interface ArrayType<T extends Type = Type> extends BaseType {
-  kind: NodeKind["ArrayType"]
-  minItems?: number
-  maxItems?: number
-  uniqueItems?: boolean
-  items: T
-}
-
-export interface SerializedArrayType<T extends SerializedType = SerializedType>
-  extends SerializedBaseType {
   kind: NodeKind["ArrayType"]
   minItems?: number
   maxItems?: number
@@ -51,31 +37,25 @@ export const ArrayType = <T extends Type>(
     maxItems?: number
     uniqueItems?: boolean
   } = {},
-): ArrayType<T> => {
-  const type: ArrayType<T> = {
-    ...options,
-    kind: NodeKind.ArrayType,
-    minItems: validateOption(
-      options.minItems,
-      "minItems",
-      option => Number.isInteger(option) && option >= 0,
-    ),
-    maxItems: validateOption(
-      options.maxItems,
-      "maxItems",
-      option => Number.isInteger(option) && option >= 0,
-    ),
-    items,
-  }
-
-  setParent(type.items, type)
-
-  return type
-}
+): ArrayType<T> => ({
+  ...options,
+  kind: NodeKind.ArrayType,
+  minItems: validateOption(
+    options.minItems,
+    "minItems",
+    option => Number.isInteger(option) && option >= 0,
+  ),
+  maxItems: validateOption(
+    options.maxItems,
+    "maxItems",
+    option => Number.isInteger(option) && option >= 0,
+  ),
+  items,
+})
 
 export { ArrayType as Array }
 
-export const isArrayType = (node: Node): node is ArrayType => node.kind === NodeKind.ArrayType
+export const isArrayType: Predicate<ArrayType> = node => node.kind === NodeKind.ArrayType
 
 export const getNestedDeclarationsInArrayType: GetNestedDeclarations<ArrayType> = (
   addedDecls,
@@ -92,45 +72,24 @@ export const validateArrayType: Validator<ArrayType> = (helpers, type, value) =>
     ...value.map((item, index) =>
       wrapErrorsIfAny(
         `at index ${key(index.toString(), helpers.useStyling)}`,
-        validate(helpers, type.items, item),
+        validateType(helpers, type.items, item),
       ),
     ),
   ])
 }
 
-export const resolveTypeArgumentsInArrayType = (
-  args: Record<string, Type>,
-  type: ArrayType,
-): ArrayType =>
-  ArrayType(resolveTypeArgumentsInType(args, type.items), {
+export const resolveTypeArgumentsInArrayType: TypeArgumentsResolver<ArrayType> = (args, type) =>
+  ArrayType(resolveTypeArguments(args, type.items), {
     ...type,
   })
 
-export const resolveTypeArgumentsInSerializedArrayType = (
-  args: Record<string, SerializedType>,
-  type: SerializedArrayType,
-  decls: Record<string, SerializedDecl>,
-): SerializedArrayType => ({
+export const serializeArrayType: Serializer<ArrayType> = type => ({
   ...type,
-  items: resolveTypeArgumentsInSerializedType(args, type.items, decls),
-})
-
-export const serializeArrayType: Serializer<ArrayType, SerializedArrayType> = type => ({
-  ...removeParentKey(type),
-  items: serializeType(type.items),
+  items: serializeNode(type.items),
 })
 
 export const getReferencesForArrayType: GetReferences<ArrayType> = (type, value) =>
-  Array.isArray(value) ? value.flatMap(item => getReferencesForType(type.items, item)) : []
-
-export const getReferencesForSerializedArrayType: GetReferencesSerialized<SerializedArrayType> = (
-  type,
-  value,
-  decls,
-) =>
-  Array.isArray(value)
-    ? value.flatMap(item => getReferencesForSerializedType(type.items, item, decls))
-    : []
+  Array.isArray(value) ? value.flatMap(item => getReferences(type.items, item)) : []
 
 export const formatArrayValue: StructureFormatter<ArrayType> = (type, value) =>
   Array.isArray(value) ? value.map(item => formatValue(type.items, item)) : value
