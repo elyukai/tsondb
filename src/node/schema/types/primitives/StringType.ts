@@ -11,7 +11,6 @@ import type {
 } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
-import { removeParentKey } from "../Type.ts"
 
 export interface StringType extends BaseType, StringConstraints {
   kind: NodeKind["StringType"]
@@ -48,11 +47,10 @@ export const validateStringType: Validator<StringType> = (helpers, type, value) 
 export const resolveTypeArgumentsInStringType: TypeArgumentsResolver<StringType> = (_args, type) =>
   type
 
-export const serializeStringType: Serializer<StringType> = type =>
-  removeParentKey({
-    ...type,
-    pattern: type.pattern?.source,
-  })
+export const serializeStringType: Serializer<StringType> = type => ({
+  ...type,
+  pattern: type.pattern?.source,
+})
 
 export const getReferencesForStringType: GetReferences<StringType> = () => []
 

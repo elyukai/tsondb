@@ -11,7 +11,6 @@ import type {
 } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
-import { removeParentKey } from "../Type.ts"
 
 export interface DateType extends BaseType, DateConstraints {
   kind: NodeKind["DateType"]
@@ -39,7 +38,7 @@ export const validateDateType: Validator<DateType> = (helpers, type, value) => {
 
 export const resolveTypeArgumentsInDateType: TypeArgumentsResolver<DateType> = (_args, type) => type
 
-export const serializeDateType: Serializer<DateType> = type => removeParentKey(type)
+export const serializeDateType: Serializer<DateType> = type => type
 
 export const getReferencesForDateType: GetReferences<DateType> = () => []
 

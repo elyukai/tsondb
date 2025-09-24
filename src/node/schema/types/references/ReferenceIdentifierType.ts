@@ -10,7 +10,6 @@ import type {
 } from "../../Node.ts"
 import { getNestedDeclarations, NodeKind, validateType } from "../../Node.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
-import { removeParentKey } from "../Type.ts"
 
 export interface ReferenceIdentifierType extends BaseType {
   kind: NodeKind["ReferenceIdentifierType"]
@@ -51,7 +50,7 @@ export const resolveTypeArgumentsInReferenceIdentifierType: TypeArgumentsResolve
 > = (_args, type) => type
 
 export const serializeReferenceIdentifierType: Serializer<ReferenceIdentifierType> = type => ({
-  ...removeParentKey(type),
+  ...type,
   entity: type.entity.name,
 })
 

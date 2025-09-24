@@ -6,7 +6,6 @@ import type {
 } from "./Node.ts"
 import { getNestedDeclarations, NodeKind, serializeNode } from "./Node.ts"
 import type { Type } from "./types/Type.ts"
-import { removeParentKey } from "./types/Type.ts"
 
 export interface TypeParameter<N extends string = string, T extends Type = Type> {
   kind: NodeKind["TypeParameter"]
@@ -34,7 +33,7 @@ export const resolveTypeArgumentsInTypeParameter: TypeArgumentsResolver<TypePara
 ) => param
 
 export const serializeTypeParameter: Serializer<TypeParameter> = type => ({
-  ...removeParentKey(type),
+  ...type,
   constraint: type.constraint ? serializeNode(type.constraint) : undefined,
 })
 

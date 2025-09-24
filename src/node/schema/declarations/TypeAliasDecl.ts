@@ -19,7 +19,6 @@ import {
 import type { TypeParameter } from "../TypeParameter.ts"
 import { serializeTypeParameter } from "../TypeParameter.ts"
 import type { Type } from "../types/Type.ts"
-import { setParent } from "../types/Type.ts"
 import type { BaseDecl, TypeArguments } from "./Declaration.ts"
 import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
 
@@ -53,7 +52,7 @@ export const GenTypeAliasDecl = <
     ...options,
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,
-    type: Lazy.of(() => setParent(options.type(...options.parameters), decl)),
+    type: Lazy.of(() => options.type(...options.parameters)),
   }
 
   return decl
@@ -77,7 +76,7 @@ export const TypeAliasDecl = <Name extends string, T extends Type>(
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,
     parameters: [],
-    type: Lazy.of(() => setParent(options.type(), decl)),
+    type: Lazy.of(() => options.type()),
   }
 
   return decl

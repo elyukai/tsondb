@@ -22,7 +22,7 @@ import {
 } from "../../Node.ts"
 import { validateOption } from "../../validation/options.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
-import { formatValue, removeParentKey, setParent } from "../Type.ts"
+import { formatValue } from "../Type.ts"
 
 type TConstraint = Record<string, MemberDecl>
 
@@ -65,9 +65,6 @@ export const ObjectType = <T extends TConstraint>(
         `Invalid object key "${key}". Object keys must not start with an underscore and may only contain letters, digits and underscores. (Pattern: ${keyPattern.source})`,
       )
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    setParent(properties[key]!.type, type)
   })
 
   return type
@@ -160,7 +157,7 @@ export const Optional = <T extends Type>(options: {
 }) => MemberDecl(false, options.type, options.comment, options.isDeprecated)
 
 export const serializeObjectType: Serializer<ObjectType> = type => ({
-  ...removeParentKey(type),
+  ...type,
   properties: Object.fromEntries(
     Object.entries(type.properties).map(([key, prop]) => [
       key,

@@ -4,7 +4,7 @@ import { discriminatorKey } from "../../../shared/enum.ts"
 import { unique } from "../../../shared/utils/array.ts"
 import { toCamelCase } from "../../../shared/utils/string.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
-import type { Decl } from "../../schema/declarations/Declaration.ts"
+import { asDecl, type Decl } from "../../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../../schema/declarations/EntityDecl.ts"
 import {
   addEphemeralUUIDToType,
@@ -30,7 +30,6 @@ import { isNestedEntityMapType } from "../../schema/types/references/NestedEntit
 import type { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.ts"
 import type { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.ts"
 import type { Type } from "../../schema/types/Type.ts"
-import { getParentDecl } from "../../schema/types/Type.ts"
 import { ensureSpecialDirStart } from "../../utils/path.ts"
 import type { RenderResult } from "../../utils/render.ts"
 import { combineSyntaxes, indent, prefixLines, syntax } from "../../utils/render.ts"
@@ -250,9 +249,9 @@ export const render = (
   const finalOptions = { ...defaultOptions, ...options }
   const [imports, content] = renderDeclarations(
     finalOptions,
-    flatMapAuxiliaryDecls(node => {
+    flatMapAuxiliaryDecls((parentNodes, node) => {
       if (isNestedEntityMapType(node)) {
-        return TypeAliasDecl(getParentDecl(node)?.sourceUrl ?? "", {
+        return TypeAliasDecl(asDecl(parentNodes[0])?.sourceUrl ?? "", {
           name: node.name,
           comment: node.comment,
           type: () => node.type.value,

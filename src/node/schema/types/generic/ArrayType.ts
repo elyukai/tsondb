@@ -20,7 +20,7 @@ import {
 } from "../../Node.ts"
 import { validateOption } from "../../validation/options.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
-import { formatValue, removeParentKey, setParent } from "../Type.ts"
+import { formatValue } from "../Type.ts"
 
 export interface ArrayType<T extends Type = Type> extends BaseType {
   kind: NodeKind["ArrayType"]
@@ -37,27 +37,21 @@ export const ArrayType = <T extends Type>(
     maxItems?: number
     uniqueItems?: boolean
   } = {},
-): ArrayType<T> => {
-  const type: ArrayType<T> = {
-    ...options,
-    kind: NodeKind.ArrayType,
-    minItems: validateOption(
-      options.minItems,
-      "minItems",
-      option => Number.isInteger(option) && option >= 0,
-    ),
-    maxItems: validateOption(
-      options.maxItems,
-      "maxItems",
-      option => Number.isInteger(option) && option >= 0,
-    ),
-    items,
-  }
-
-  setParent(type.items, type)
-
-  return type
-}
+): ArrayType<T> => ({
+  ...options,
+  kind: NodeKind.ArrayType,
+  minItems: validateOption(
+    options.minItems,
+    "minItems",
+    option => Number.isInteger(option) && option >= 0,
+  ),
+  maxItems: validateOption(
+    options.maxItems,
+    "maxItems",
+    option => Number.isInteger(option) && option >= 0,
+  ),
+  items,
+})
 
 export { ArrayType as Array }
 
@@ -90,7 +84,7 @@ export const resolveTypeArgumentsInArrayType: TypeArgumentsResolver<ArrayType> =
   })
 
 export const serializeArrayType: Serializer<ArrayType> = type => ({
-  ...removeParentKey(type),
+  ...type,
   items: serializeNode(type.items),
 })
 

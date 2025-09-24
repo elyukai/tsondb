@@ -1,6 +1,4 @@
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
-import type { Decl } from "../declarations/Declaration.ts"
-import { isDecl } from "../declarations/Declaration.ts"
 import type { BaseNode } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { ArrayType } from "./generic/ArrayType.ts"
@@ -28,12 +26,7 @@ import { formatReferenceIdentifierValue } from "./references/ReferenceIdentifier
 import type { TypeArgumentType } from "./references/TypeArgumentType.ts"
 import { formatTypeArgumentValue } from "./references/TypeArgumentType.ts"
 
-export interface BaseType extends BaseNode {
-  /**
-   * The parent node of this type will be set when the type is used in a declaration or nested in another type.
-   */
-  parent?: Type | Decl
-}
+export interface BaseType extends BaseNode {}
 
 export type Type =
   | BooleanType
@@ -145,34 +138,6 @@ export type AsNode<T> = T extends (infer I)[]
         : T extends boolean
           ? BooleanType
           : never
-
-export const getParentDecl = (type: Type): Decl | undefined => {
-  if (type.parent === undefined) {
-    return undefined
-  } else if (isDecl(type.parent)) {
-    return type.parent
-  } else {
-    return getParentDecl(type.parent)
-  }
-}
-
-/**
- * Sets the `parent` property of the passed `type` to the passed `parentNode`.
- *
- * The property is set on the instance. It does not create a new instance.
- */
-export const setParent = <T extends BaseType>(
-  type: Omit<T, "parent">,
-  parentNode: Type | Decl,
-): T => {
-  ;(type as T).parent = parentNode
-  return type as T
-}
-
-export const removeParentKey = <T extends BaseType>(type: T): Omit<T, "parent"> => {
-  const { parent: _parent, ...rest } = type
-  return rest
-}
 
 export const findTypeAtPath = (type: Type, path: string[]): Type | undefined => {
   const [head, ...tail] = path

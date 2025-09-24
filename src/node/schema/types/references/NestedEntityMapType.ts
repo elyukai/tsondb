@@ -22,7 +22,7 @@ import {
   serializeObjectType,
 } from "../generic/ObjectType.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
-import { formatValue, removeParentKey, setParent } from "../Type.ts"
+import { formatValue } from "../Type.ts"
 import {
   formatIncludeIdentifierValue,
   getReferencesForIncludeIdentifierType,
@@ -56,7 +56,7 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
     kind: NodeKind.NestedEntityMapType,
-    type: Lazy.of(() => setParent(options.type, nestedEntityMapType)),
+    type: Lazy.of(() => options.type),
   }
 
   return nestedEntityMapType
@@ -73,7 +73,7 @@ const _NestedEntityMapType = <Name extends string, T extends TConstraint>(option
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
     kind: NodeKind.NestedEntityMapType,
-    type: Lazy.of(() => setParent(options.type(), nestedEntityMapType)),
+    type: Lazy.of(() => options.type()),
   }
 
   return nestedEntityMapType
@@ -123,7 +123,7 @@ export const resolveTypeArgumentsInNestedEntityMapType: TypeArgumentsResolver<
   })
 
 export const serializeNestedEntityMapType: Serializer<NestedEntityMapType> = type => ({
-  ...removeParentKey(type),
+  ...type,
   secondaryEntity: type.secondaryEntity.name,
   type: isObjectType(type.type.value)
     ? serializeObjectType(type.type.value)

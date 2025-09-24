@@ -11,7 +11,6 @@ import type {
 } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
-import { removeParentKey } from "../Type.ts"
 
 export interface FloatType extends BaseType, NumberConstraints {
   kind: NodeKind["FloatType"]
@@ -42,7 +41,7 @@ export const validateFloatType: Validator<FloatType> = (helpers, type, value) =>
 export const resolveTypeArgumentsInFloatType: TypeArgumentsResolver<FloatType> = (_args, type) =>
   type
 
-export const serializeFloatType: Serializer<FloatType> = type => removeParentKey(type)
+export const serializeFloatType: Serializer<FloatType> = type => type
 
 export const getReferencesForFloatType: GetReferences<FloatType> = () => []
 

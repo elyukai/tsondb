@@ -12,7 +12,6 @@ import type {
 import { NodeKind } from "../../Node.ts"
 import { validateOption } from "../../validation/options.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
-import { removeParentKey } from "../Type.ts"
 
 export interface IntegerType extends BaseType, NumberConstraints {
   kind: NodeKind["IntegerType"]
@@ -48,7 +47,7 @@ export const resolveTypeArgumentsInIntegerType: TypeArgumentsResolver<IntegerTyp
   type,
 ) => type
 
-export const serializeIntegerType: Serializer<IntegerType> = type => removeParentKey(type)
+export const serializeIntegerType: Serializer<IntegerType> = type => type
 
 export const getReferencesForIntegerType: GetReferences<IntegerType> = () => []
 

@@ -19,7 +19,7 @@ import {
   validateType,
 } from "../../Node.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
-import { formatValue, removeParentKey } from "../Type.ts"
+import { formatValue } from "../Type.ts"
 
 export interface EnumType<T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>>
   extends BaseType {
@@ -29,21 +29,10 @@ export interface EnumType<T extends Record<string, EnumCaseDecl> = Record<string
 
 export const EnumType = <T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>>(
   values: T,
-): EnumType<T> => {
-  const type: EnumType<T> = {
-    kind: NodeKind.EnumType,
-    values,
-  }
-
-  type.values = Object.fromEntries(
-    Object.entries(values).map(([caseName, caseDef]) => [
-      caseName,
-      { ...caseDef, type: caseDef.type === null ? null : { ...caseDef.type, parent: type } },
-    ]),
-  ) as T
-
-  return type
-}
+): EnumType<T> => ({
+  kind: NodeKind.EnumType,
+  values,
+})
 
 export const isEnumType: Predicate<EnumType> = node => node.kind === NodeKind.EnumType
 
@@ -154,7 +143,7 @@ export const EnumCaseDecl = <T extends Type | null>(options: {
 export { EnumCaseDecl as EnumCase }
 
 export const serializeEnumType: Serializer<EnumType> = type => ({
-  ...removeParentKey(type),
+  ...type,
   values: Object.fromEntries(
     Object.entries(type.values).map(([key, caseMember]) => [
       key,

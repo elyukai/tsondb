@@ -42,6 +42,9 @@ export type SecondaryDecl = EnumDecl | TypeAliasDecl
 export const isDecl = (node: Node): node is Decl =>
   isEntityDecl(node) || isEnumDecl(node) || isTypeAliasDecl(node)
 
+export const asDecl = (node: Node | undefined): Decl | undefined =>
+  node && isDecl(node) ? node : undefined
+
 export interface BaseDecl<
   Name extends string = string,
   Params extends TypeParameter[] = TypeParameter[],

@@ -10,7 +10,6 @@ import { NodeKind } from "../../Node.ts"
 import type { TypeParameter } from "../../TypeParameter.ts"
 import { serializeTypeParameter } from "../../TypeParameter.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
-import { removeParentKey } from "../Type.ts"
 
 type TConstraint = TypeParameter
 
@@ -54,7 +53,7 @@ export const resolveTypeArgumentsInTypeArgumentType = (<
 }) satisfies TypeArgumentsResolver<TypeArgumentType>
 
 export const serializeTypeArgumentType: Serializer<TypeArgumentType> = type => ({
-  ...removeParentKey(type),
+  ...type,
   argument: serializeTypeParameter(type.argument),
 })
 

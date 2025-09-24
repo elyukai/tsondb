@@ -19,7 +19,6 @@ import {
   serializeEnumType,
   validateEnumType,
 } from "../types/generic/EnumType.ts"
-import { setParent } from "../types/Type.ts"
 import type { BaseDecl } from "./Declaration.ts"
 import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
 
@@ -52,7 +51,7 @@ export const GenEnumDecl = <
     ...options,
     kind: NodeKind.EnumDecl,
     sourceUrl,
-    type: Lazy.of(() => setParent(EnumType(options.values(...options.parameters)), decl)),
+    type: Lazy.of(() => EnumType(options.values(...options.parameters))),
   }
 
   return decl
@@ -75,7 +74,7 @@ export const EnumDecl = <Name extends string, T extends Record<string, EnumCaseD
     kind: NodeKind.EnumDecl,
     sourceUrl,
     parameters: [],
-    type: Lazy.of(() => setParent(EnumType(options.values()), decl)),
+    type: Lazy.of(() => EnumType(options.values())),
   }
 
   return decl

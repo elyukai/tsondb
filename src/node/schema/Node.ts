@@ -158,39 +158,45 @@ export interface BaseNode {
 export type Node = Decl | Type | TypeParameter
 
 export const flatMapAuxiliaryDecls = (
-  callbackFn: (node: Node, existingDecls: Decl[]) => (Decl | undefined)[] | Decl | undefined,
+  callbackFn: (
+    parentNodes: Node[],
+    node: Node,
+    existingDecls: Decl[],
+  ) => (Decl | undefined)[] | Decl | undefined,
   declarations: readonly Decl[],
 ): Decl[] => {
   const mapNodeTree = (
-    callbackFn: (node: Node, decls: Decl[]) => Decl[],
+    callbackFn: (parentNodes: Node[], node: Node, decls: Decl[]) => Decl[],
+    parentNodes: Node[],
     node: Node,
     decls: Decl[],
   ): Decl[] => {
     switch (node.kind) {
       case NodeKind.EntityDecl: {
-        const newDecls = callbackFn(node, decls)
-        return mapNodeTree(callbackFn, node.type.value, newDecls)
+        const newDecls = callbackFn(parentNodes, node, decls)
+        return mapNodeTree(callbackFn, [node], node.type.value, newDecls)
       }
 
       case NodeKind.EnumDecl: {
-        const newDecls = callbackFn(node, decls)
-        return mapNodeTree(callbackFn, node.type.value, newDecls)
+        const newDecls = callbackFn(parentNodes, node, decls)
+        return mapNodeTree(callbackFn, [node], node.type.value, newDecls)
       }
 
       case NodeKind.TypeAliasDecl: {
-        const newDecls = callbackFn(node, decls)
-        return mapNodeTree(callbackFn, node.type.value, newDecls)
+        const newDecls = callbackFn(parentNodes, node, decls)
+        return mapNodeTree(callbackFn, [node], node.type.value, newDecls)
       }
 
       case NodeKind.ArrayType: {
-        const newDecls = callbackFn(node, decls)
-        return mapNodeTree(callbackFn, node.items, newDecls)
+        const newDecls = callbackFn(parentNodes, node, decls)
+        return mapNodeTree(callbackFn, [...parentNodes, node], node.items, newDecls)
       }
 
       case NodeKind.ObjectType: {
-        const newDecls = callbackFn(node, decls)
+        const newDecls = callbackFn(parentNodes, node, decls)
         return Object.values(node.properties).reduce(
-          (newDeclsAcc, prop) => mapNodeTree(callbackFn, prop.type, newDeclsAcc),
+          (newDeclsAcc, prop) =>
+            mapNodeTree(callbackFn, [...parentNodes, node], prop.type, newDeclsAcc),
           newDecls,
         )
       }
@@ -204,13 +210,15 @@ export const flatMapAuxiliaryDecls = (
       case NodeKind.IncludeIdentifierType:
       case NodeKind.NestedEntityMapType:
       case NodeKind.TypeParameter:
-        return callbackFn(node, decls)
+        return callbackFn(parentNodes, node, decls)
 
       case NodeKind.EnumType: {
-        const newDecls = callbackFn(node, decls)
+        const newDecls = callbackFn(parentNodes, node, decls)
         return Object.values(node.values).reduce(
           (newDeclsAcc, caseDef) =>
-            caseDef.type === null ? newDecls : mapNodeTree(callbackFn, caseDef.type, newDeclsAcc),
+            caseDef.type === null
+              ? newDecls
+              : mapNodeTree(callbackFn, [...parentNodes, node], caseDef.type, newDeclsAcc),
           newDecls,
         )
       }
@@ -220,8 +228,8 @@ export const flatMapAuxiliaryDecls = (
     }
   }
 
-  const reducer = (node: Node, decls: Decl[]): Decl[] => {
-    const result = callbackFn(node, decls)
+  const reducer = (parentNodes: Node[], node: Node, decls: Decl[]): Decl[] => {
+    const result = callbackFn(parentNodes, node, decls)
     const normalizedResult = (Array.isArray(result) ? result : [result]).filter(
       decl => decl !== undefined,
     )
@@ -239,7 +247,7 @@ export const flatMapAuxiliaryDecls = (
   }
 
   return declarations.reduce(
-    (decls: Decl[], node) => mapNodeTree(reducer, node, [...decls, node]),
+    (decls: Decl[], node) => mapNodeTree(reducer, [], node, [...decls, node]),
     [],
   )
 }

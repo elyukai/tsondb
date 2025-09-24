@@ -18,7 +18,6 @@ import {
 } from "../types/generic/ObjectType.ts"
 import { StringType } from "../types/primitives/StringType.ts"
 import type { AsType } from "../types/Type.ts"
-import { setParent } from "../types/Type.ts"
 import type { BaseDecl } from "./Declaration.ts"
 import { validateDeclName } from "./Declaration.ts"
 import { TypeAliasDecl } from "./TypeAliasDecl.ts"
@@ -88,7 +87,7 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
 ): EntityDecl<Name, T> => {
   validateDeclName(options.name)
 
-  const decl: EntityDecl<Name, T> = {
+  return {
     ...options,
     kind: NodeKind.EntityDecl,
     sourceUrl,
@@ -102,11 +101,9 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
           )
         }
       })
-      return setParent(type, decl)
+      return type
     }),
   }
-
-  return decl
 }
 
 export { EntityDecl as Entity }

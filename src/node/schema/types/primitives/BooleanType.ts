@@ -3,7 +3,6 @@ import type { GetNestedDeclarations, TypeArgumentsResolver } from "../../index.t
 import type { GetReferences, Predicate, Serializer, Validator } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
-import { removeParentKey } from "../Type.ts"
 
 export interface BooleanType extends BaseType {
   kind: NodeKind["BooleanType"]
@@ -33,7 +32,7 @@ export const resolveTypeArgumentsInBooleanType: TypeArgumentsResolver<BooleanTyp
   type,
 ) => type
 
-export const serializeBooleanType: Serializer<BooleanType> = type => removeParentKey(type)
+export const serializeBooleanType: Serializer<BooleanType> = type => type
 
 export const getReferencesForBooleanType: GetReferences<BooleanType> = () => []
 

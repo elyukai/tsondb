@@ -22,7 +22,7 @@ import type { TypeParameter } from "../../TypeParameter.ts"
 import type { EnumCaseDecl } from "../generic/EnumType.ts"
 import { formatEnumType } from "../generic/EnumType.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
-import { formatValue, removeParentKey } from "../Type.ts"
+import { formatValue } from "../Type.ts"
 
 type TConstraint<Params extends TypeParameter[]> =
   | TypeAliasDecl<string, Type, Params>
@@ -102,7 +102,7 @@ export const resolveTypeArgumentsInIncludeIdentifierType = (<T extends IncludeId
     : Type) satisfies TypeArgumentsResolver<IncludeIdentifierType>
 
 export const serializeIncludeIdentifierType: Serializer<IncludeIdentifierType> = type => ({
-  ...removeParentKey(type),
+  ...type,
   reference: type.reference.name,
   args: type.args.map(arg => serializeNode(arg)),
 })
