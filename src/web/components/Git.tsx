@@ -2,8 +2,8 @@ import type { FunctionComponent } from "preact"
 import { useLocation } from "preact-iso"
 import type { TargetedEvent } from "preact/compat"
 import { useEffect, useState } from "preact/hooks"
-import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.ts"
 import type { GitStatusResponseBody } from "../../shared/api.ts"
+import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import type { GitFileStatus } from "../../shared/utils/git.ts"
 import {
   getGitStatusForDisplay,

@@ -3,36 +3,31 @@ import { sortObjectKeysAlphabetically } from "../../../../shared/utils/object.ts
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { entity, json, key as keyColor } from "../../../utils/errorFormatting.ts"
-import {
-  getNestedDeclarations,
-  type GetNestedDeclarations,
-} from "../../declarations/Declaration.ts"
+import {} from "../../declarations/Declaration.ts"
 import type { EntityDecl } from "../../declarations/EntityDecl.ts"
 import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
-import { NodeKind } from "../../Node.ts"
-import type { Validator } from "../../validation/type.ts"
 import type {
-  MemberDecl,
-  ObjectType,
-  SerializedMemberDecl,
-  SerializedObjectType,
-} from "../generic/ObjectType.ts"
+  GetNestedDeclarations,
+  GetReferences,
+  Predicate,
+  Serializer,
+  TypeArgumentsResolver,
+  Validator,
+} from "../../Node.ts"
+import { getNestedDeclarations, NodeKind, resolveTypeArguments, validateType } from "../../Node.ts"
+import type { MemberDecl, ObjectType } from "../generic/ObjectType.ts"
 import {
   getReferencesForObjectType,
   isObjectType,
-  resolveTypeArgumentsInObjectType,
   serializeObjectType,
 } from "../generic/ObjectType.ts"
-import type { BaseType, SerializedBaseType, StructureFormatter, Type } from "../Type.ts"
-import { formatValue, removeParentKey, setParent, validate } from "../Type.ts"
+import type { BaseType, StructureFormatter } from "../Type.ts"
+import { formatValue, removeParentKey, setParent } from "../Type.ts"
 import {
   formatIncludeIdentifierValue,
   getReferencesForIncludeIdentifierType,
-  resolveTypeArgumentsInIncludeIdentifierType,
   serializeIncludeIdentifierType,
   type IncludeIdentifier,
-  type SerializedIncludeIdentifierType,
 } from "./IncludeIdentifierType.ts"
 
 type TConstraint = Record<string, MemberDecl>
@@ -50,19 +45,6 @@ export interface NestedEntityMapType<
   comment?: string
   secondaryEntity: EntityDecl
   type: Lazy<PossibleType<T>>
-}
-
-type TSerializedConstraint = Record<string, SerializedMemberDecl>
-
-export interface SerializedNestedEntityMapType<
-  Name extends string = string,
-  T extends TSerializedConstraint = TSerializedConstraint,
-> extends SerializedBaseType {
-  kind: NodeKind["NestedEntityMapType"]
-  name: Name
-  comment?: string
-  secondaryEntity: string
-  type: SerializedObjectType<T> | SerializedIncludeIdentifierType
 }
 
 export const NestedEntityMapType = <Name extends string, T extends TConstraint>(options: {
@@ -97,7 +79,7 @@ const _NestedEntityMapType = <Name extends string, T extends TConstraint>(option
   return nestedEntityMapType
 }
 
-export const isNestedEntityMapType = (node: Node): node is NestedEntityMapType =>
+export const isNestedEntityMapType: Predicate<NestedEntityMapType> = node =>
   node.kind === NodeKind.NestedEntityMapType
 
 export const getNestedDeclarationsInNestedEntityMapType: GetNestedDeclarations<
@@ -121,7 +103,7 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
     Object.keys(value).map(key =>
       wrapErrorsIfAny(
         `at nested entity map ${entity(`"${type.name}"`, helpers.useStyling)} at key ${keyColor(`"${key}"`, helpers.useStyling)}`,
-        validate(helpers, type.type.value, value[key as keyof typeof value]).concat(
+        validateType(helpers, type.type.value, value[key as keyof typeof value]).concat(
           helpers.checkReferentialIntegrity({
             name: type.secondaryEntity.name,
             value: key,
@@ -132,22 +114,15 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
   )
 }
 
-export const resolveTypeArgumentsInNestedEntityMapType = (
-  args: Record<string, Type>,
-  type: NestedEntityMapType,
-): NestedEntityMapType =>
+export const resolveTypeArgumentsInNestedEntityMapType: TypeArgumentsResolver<
+  NestedEntityMapType
+> = (args, type) =>
   _NestedEntityMapType({
     ...type,
-    type: () =>
-      isObjectType(type.type.value)
-        ? resolveTypeArgumentsInObjectType(args, type.type.value)
-        : resolveTypeArgumentsInIncludeIdentifierType(args, type.type.value),
+    type: () => resolveTypeArguments(args, type.type.value),
   })
 
-export const serializeNestedEntityMapType: Serializer<
-  NestedEntityMapType,
-  SerializedNestedEntityMapType
-> = type => ({
+export const serializeNestedEntityMapType: Serializer<NestedEntityMapType> = type => ({
   ...removeParentKey(type),
   secondaryEntity: type.secondaryEntity.name,
   type: isObjectType(type.type.value)

@@ -1,5 +1,5 @@
 import { createContext } from "preact"
-import type { SerializedEntityDecl } from "../../node/schema/index.ts"
+import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 
 export const EntitiesContext = createContext<
   {

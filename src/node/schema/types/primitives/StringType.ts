@@ -1,10 +1,16 @@
 import type { StringConstraints } from "../../../../shared/validation/string.ts"
 import { validateStringConstraints } from "../../../../shared/validation/string.ts"
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type {
+  GetNestedDeclarations,
+  GetReferences,
+  Predicate,
+  Serializer,
+  TypeArgumentsResolver,
+  Validator,
+} from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
-import type { Validator } from "../../validation/type.ts"
-import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.ts"
+import type { BaseType, StructureFormatter } from "../Type.ts"
 import { removeParentKey } from "../Type.ts"
 
 export interface StringType extends BaseType, StringConstraints {
@@ -12,13 +18,6 @@ export interface StringType extends BaseType, StringConstraints {
   pattern?: RegExp
   isMarkdown?: boolean
 }
-
-export interface SerializedStringType extends SerializedBaseType, StringConstraints {
-  kind: NodeKind["StringType"]
-  pattern?: string
-  isMarkdown?: boolean
-}
-
 export const StringType = (
   options: {
     minLength?: number
@@ -33,7 +32,10 @@ export const StringType = (
 
 export { StringType as String }
 
-export const isStringType = (node: Node): node is StringType => node.kind === NodeKind.StringType
+export const isStringType: Predicate<StringType> = node => node.kind === NodeKind.StringType
+
+export const getNestedDeclarationsInStringType: GetNestedDeclarations<StringType> = addedDecls =>
+  addedDecls
 
 export const validateStringType: Validator<StringType> = (helpers, type, value) => {
   if (typeof value !== "string") {
@@ -43,12 +45,15 @@ export const validateStringType: Validator<StringType> = (helpers, type, value) 
   return validateStringConstraints(type, value)
 }
 
-export const serializeStringType: Serializer<StringType, SerializedStringType> = type =>
+export const resolveTypeArgumentsInStringType: TypeArgumentsResolver<StringType> = (_args, type) =>
+  type
+
+export const serializeStringType: Serializer<StringType> = type =>
   removeParentKey({
     ...type,
     pattern: type.pattern?.source,
   })
 
-export const getReferencesForStringType: GetReferences<StringType> = (_type, _value) => []
+export const getReferencesForStringType: GetReferences<StringType> = () => []
 
 export const formatStringValue: StructureFormatter<StringType> = (_type, value) => value

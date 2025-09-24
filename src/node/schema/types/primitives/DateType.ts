@@ -1,17 +1,19 @@
 import type { DateConstraints } from "../../../../shared/validation/date.ts"
 import { validateDateConstraints } from "../../../../shared/validation/date.ts"
 import { json } from "../../../utils/errorFormatting.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
+import type {
+  GetNestedDeclarations,
+  GetReferences,
+  Predicate,
+  Serializer,
+  TypeArgumentsResolver,
+  Validator,
+} from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
-import type { Validator } from "../../validation/type.ts"
-import type { BaseType, SerializedBaseType, StructureFormatter } from "../Type.ts"
+import type { BaseType, StructureFormatter } from "../Type.ts"
 import { removeParentKey } from "../Type.ts"
 
 export interface DateType extends BaseType, DateConstraints {
-  kind: NodeKind["DateType"]
-}
-
-export interface SerializedDateType extends SerializedBaseType, DateConstraints {
   kind: NodeKind["DateType"]
 }
 
@@ -22,7 +24,10 @@ export const DateType = (options?: DateConstraints): DateType => ({
 
 export { DateType as Date }
 
-export const isDateType = (node: Node): node is DateType => node.kind === NodeKind.DateType
+export const isDateType: Predicate<DateType> = node => node.kind === NodeKind.DateType
+
+export const getNestedDeclarationsInDateType: GetNestedDeclarations<DateType> = addedDecls =>
+  addedDecls
 
 export const validateDateType: Validator<DateType> = (helpers, type, value) => {
   if (typeof value !== "string") {
@@ -32,9 +37,10 @@ export const validateDateType: Validator<DateType> = (helpers, type, value) => {
   return validateDateConstraints(type, value)
 }
 
-export const serializeDateType: Serializer<DateType, SerializedDateType> = type =>
-  removeParentKey(type)
+export const resolveTypeArgumentsInDateType: TypeArgumentsResolver<DateType> = (_args, type) => type
 
-export const getReferencesForDateType: GetReferences<DateType> = (_type, _value) => []
+export const serializeDateType: Serializer<DateType> = type => removeParentKey(type)
+
+export const getReferencesForDateType: GetReferences<DateType> = () => []
 
 export const formatDateValue: StructureFormatter<DateType> = (_type, value) => value

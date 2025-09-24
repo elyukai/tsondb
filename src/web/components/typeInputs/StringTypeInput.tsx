@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedStringType } from "../../../node/schema/types/primitives/StringType.ts"
+import type { SerializedStringType } from "../../../shared/schema/types/StringType.ts"
 import { validateStringConstraints } from "../../../shared/validation/string.ts"
 import { Markdown } from "../../utils/Markdown.tsx"
 import { MarkdownHighlighting } from "../../utils/MarkdownHighlighting.tsx"

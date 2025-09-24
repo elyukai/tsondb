@@ -2,36 +2,27 @@ import { discriminatorKey } from "../../../../shared/enum.ts"
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
-import { getNestedDeclarations } from "../../declarations/Declaration.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
-import { NodeKind } from "../../Node.ts"
-import type { Validator } from "../../validation/type.ts"
 import type {
-  BaseType,
-  SerializedBaseType,
-  SerializedType,
-  StructureFormatter,
-  Type,
-} from "../Type.ts"
+  GetNestedDeclarations,
+  GetReferences,
+  Predicate,
+  Serializer,
+  TypeArgumentsResolver,
+  Validator,
+} from "../../Node.ts"
 import {
-  formatValue,
-  getReferencesForType,
-  removeParentKey,
-  resolveTypeArgumentsInType,
-  serializeType,
-  validate,
-} from "../Type.ts"
+  getNestedDeclarations,
+  getReferences,
+  NodeKind,
+  resolveTypeArguments,
+  serializeNode,
+  validateType,
+} from "../../Node.ts"
+import type { BaseType, StructureFormatter, Type } from "../Type.ts"
+import { formatValue, removeParentKey } from "../Type.ts"
 
 export interface EnumType<T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>>
   extends BaseType {
-  kind: NodeKind["EnumType"]
-  values: T
-}
-
-export interface SerializedEnumType<
-  T extends Record<string, SerializedEnumCaseDecl> = Record<string, SerializedEnumCaseDecl>,
-> extends SerializedBaseType {
   kind: NodeKind["EnumType"]
   values: T
 }
@@ -54,7 +45,7 @@ export const EnumType = <T extends Record<string, EnumCaseDecl> = Record<string,
   return type
 }
 
-export const isEnumType = (node: Node): node is EnumType => node.kind === NodeKind.EnumType
+export const isEnumType: Predicate<EnumType> = node => node.kind === NodeKind.EnumType
 
 export const getNestedDeclarationsInEnumType: GetNestedDeclarations<EnumType> = (
   addedDecls,
@@ -119,7 +110,11 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
     return parallelizeErrors([
       wrapErrorsIfAny(
         `at enum case ${key(`"${caseName}"`, helpers.useStyling)}`,
-        validate(helpers, associatedType, (value as Record<typeof caseName, unknown>)[caseName]),
+        validateType(
+          helpers,
+          associatedType,
+          (value as Record<typeof caseName, unknown>)[caseName],
+        ),
       ),
     ])
   }
@@ -127,30 +122,20 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
   return []
 }
 
-export const resolveTypeArgumentsInEnumType = (
-  args: Record<string, Type>,
-  type: EnumType,
-): EnumType =>
+export const resolveTypeArgumentsInEnumType: TypeArgumentsResolver<EnumType> = (args, type) =>
   EnumType(
     Object.fromEntries(
       Object.entries(type.values).map(([key, { type, ...caseMember }]) => [
         key,
         {
           ...caseMember,
-          type: type === null ? null : resolveTypeArgumentsInType(args, type),
+          type: type === null ? null : resolveTypeArguments(args, type),
         },
       ]),
     ),
   )
 
 export interface EnumCaseDecl<T extends Type | null = Type | null> {
-  kind: NodeKind["EnumCaseDecl"]
-  type: T
-  comment?: string
-  isDeprecated?: boolean
-}
-
-export interface SerializedEnumCaseDecl<T extends SerializedType | null = SerializedType | null> {
   kind: NodeKind["EnumCaseDecl"]
   type: T
   comment?: string
@@ -168,14 +153,14 @@ export const EnumCaseDecl = <T extends Type | null>(options: {
 
 export { EnumCaseDecl as EnumCase }
 
-export const serializeEnumType: Serializer<EnumType, SerializedEnumType> = type => ({
+export const serializeEnumType: Serializer<EnumType> = type => ({
   ...removeParentKey(type),
   values: Object.fromEntries(
     Object.entries(type.values).map(([key, caseMember]) => [
       key,
       {
         ...caseMember,
-        type: caseMember.type === null ? null : serializeType(caseMember.type),
+        type: caseMember.type === null ? null : serializeNode(caseMember.type),
       },
     ]),
   ),
@@ -198,7 +183,7 @@ export const getReferencesForEnumType: GetReferences<EnumType> = (type, value) =
     type.values[enumCase] !== undefined &&
     type.values[enumCase].type !== null &&
     enumCase in value
-    ? getReferencesForType(type.values[enumCase].type, (value as Record<string, unknown>)[enumCase])
+    ? getReferences(type.values[enumCase].type, (value as Record<string, unknown>)[enumCase])
     : []
 }
 

@@ -1,6 +1,6 @@
 import { useRoute } from "preact-iso"
 import { useContext, useMemo } from "preact/hooks"
-import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.ts"
+import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import { EntitiesContext } from "../context/entities.ts"
 
 export const useEntityFromRoute = ():

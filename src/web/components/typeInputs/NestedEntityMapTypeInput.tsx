@@ -1,6 +1,6 @@
 import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
-import type { SerializedNestedEntityMapType } from "../../../node/schema/types/references/NestedEntityMapType.ts"
+import type { SerializedNestedEntityMapType } from "../../../shared/schema/types/NestedEntityMapType.ts"
 import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.ts"
 import { toTitleCase } from "../../../shared/utils/string.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"

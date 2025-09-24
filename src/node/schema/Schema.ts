@@ -1,12 +1,9 @@
 import Debug from "debug"
 import type { Decl } from "./declarations/Declaration.ts"
-import {
-  getNestedDeclarations,
-  getParameterNames,
-  walkNodeTree,
-} from "./declarations/Declaration.ts"
+import { getParameterNames, walkNodeTree } from "./declarations/Declaration.ts"
 import type { EntityDecl } from "./declarations/EntityDecl.ts"
 import { isEntityDecl } from "./declarations/EntityDecl.ts"
+import { getNestedDeclarations } from "./index.ts"
 import { isStringType } from "./types/primitives/StringType.ts"
 import { isIncludeIdentifierType } from "./types/references/IncludeIdentifierType.ts"
 import { isNestedEntityMapType } from "./types/references/NestedEntityMapType.ts"

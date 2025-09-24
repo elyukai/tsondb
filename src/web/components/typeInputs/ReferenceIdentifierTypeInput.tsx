@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedReferenceIdentifierType } from "../../../node/schema/types/references/ReferenceIdentifierType.ts"
+import type { SerializedReferenceIdentifierType } from "../../../shared/schema/types/ReferenceIdentifierType.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import { Select } from "../Select.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"

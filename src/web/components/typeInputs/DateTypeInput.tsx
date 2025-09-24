@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedDateType } from "../../../node/schema/types/primitives/DateType.ts"
+import type { SerializedDateType } from "../../../shared/schema/types/DateType.ts"
 import { validateDateConstraints } from "../../../shared/validation/date.ts"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"

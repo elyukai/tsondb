@@ -4,42 +4,30 @@ import type { ObjectConstraints } from "../../../../shared/validation/object.ts"
 import { validateObjectConstraints } from "../../../../shared/validation/object.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key as keyColor } from "../../../utils/errorFormatting.ts"
-import type { GetNestedDeclarations } from "../../declarations/Declaration.ts"
-import { getNestedDeclarations } from "../../declarations/Declaration.ts"
-import type { GetReferences, Node, Serializer } from "../../Node.ts"
-import { NodeKind } from "../../Node.ts"
-import { validateOption } from "../../validation/options.ts"
-import type { Validator } from "../../validation/type.ts"
 import type {
-  BaseType,
-  SerializedBaseType,
-  SerializedType,
-  StructureFormatter,
-  Type,
-} from "../Type.ts"
+  GetNestedDeclarations,
+  GetReferences,
+  Predicate,
+  Serializer,
+  TypeArgumentsResolver,
+  Validator,
+} from "../../Node.ts"
 import {
-  formatValue,
-  getReferencesForType,
-  removeParentKey,
-  resolveTypeArgumentsInType,
-  serializeType,
-  setParent,
-  validate,
-} from "../Type.ts"
+  getNestedDeclarations,
+  getReferences,
+  NodeKind,
+  resolveTypeArguments,
+  serializeNode,
+  validateType,
+} from "../../Node.ts"
+import { validateOption } from "../../validation/options.ts"
+import type { BaseType, StructureFormatter, Type } from "../Type.ts"
+import { formatValue, removeParentKey, setParent } from "../Type.ts"
 
 type TConstraint = Record<string, MemberDecl>
 
 export interface ObjectType<T extends TConstraint = TConstraint>
   extends BaseType,
-    ObjectConstraints {
-  kind: NodeKind["ObjectType"]
-  properties: T
-}
-
-type TSerializedConstraint = Record<string, SerializedMemberDecl>
-
-export interface SerializedObjectType<T extends TSerializedConstraint = TSerializedConstraint>
-  extends SerializedBaseType,
     ObjectConstraints {
   kind: NodeKind["ObjectType"]
   properties: T
@@ -87,7 +75,7 @@ export const ObjectType = <T extends TConstraint>(
 
 export { ObjectType as Object }
 
-export const isObjectType = (node: Node): node is ObjectType => node.kind === NodeKind.ObjectType
+export const isObjectType: Predicate<ObjectType> = node => node.kind === NodeKind.ObjectType
 
 export const getNestedDeclarationsInObjectType: GetNestedDeclarations<ObjectType> = (
   addedDecls,
@@ -116,7 +104,7 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
       } else if (prop.isRequired || (value as Record<string, unknown>)[key] !== undefined) {
         return wrapErrorsIfAny(
           `at object key ${keyColor(`"${key}"`, helpers.useStyling)}`,
-          validate(helpers, prop.type, (value as Record<string, unknown>)[key]),
+          validateType(helpers, prop.type, (value as Record<string, unknown>)[key]),
         )
       }
 
@@ -125,15 +113,12 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
   ])
 }
 
-export const resolveTypeArgumentsInObjectType = (
-  args: Record<string, Type>,
-  type: ObjectType,
-): ObjectType =>
+export const resolveTypeArgumentsInObjectType: TypeArgumentsResolver<ObjectType> = (args, type) =>
   ObjectType(
     Object.fromEntries(
       Object.entries(type.properties).map(
         ([key, config]) =>
-          [key, { ...config, type: resolveTypeArgumentsInType(args, config.type) }] as const,
+          [key, { ...config, type: resolveTypeArguments(args, config.type) }] as const,
       ),
     ),
     {
@@ -142,17 +127,6 @@ export const resolveTypeArgumentsInObjectType = (
   )
 
 export interface MemberDecl<T extends Type = Type, R extends boolean = boolean> {
-  kind: NodeKind["MemberDecl"]
-  isRequired: R
-  type: T
-  comment?: string
-  isDeprecated?: boolean
-}
-
-export interface SerializedMemberDecl<
-  T extends SerializedType = SerializedType,
-  R extends boolean = boolean,
-> {
   kind: NodeKind["MemberDecl"]
   isRequired: R
   type: T
@@ -185,14 +159,14 @@ export const Optional = <T extends Type>(options: {
   type: T
 }) => MemberDecl(false, options.type, options.comment, options.isDeprecated)
 
-export const serializeObjectType: Serializer<ObjectType, SerializedObjectType> = type => ({
+export const serializeObjectType: Serializer<ObjectType> = type => ({
   ...removeParentKey(type),
   properties: Object.fromEntries(
     Object.entries(type.properties).map(([key, prop]) => [
       key,
       {
         ...prop,
-        type: serializeType(prop.type),
+        type: serializeNode(prop.type),
       },
     ]),
   ),
@@ -202,7 +176,7 @@ export const getReferencesForObjectType: GetReferences<ObjectType> = (type, valu
   typeof value === "object" && value !== null
     ? Object.entries(value).flatMap(([key, propValue]) =>
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        key in type.properties ? getReferencesForType(type.properties[key]!.type, propValue) : [],
+        key in type.properties ? getReferences(type.properties[key]!.type, propValue) : [],
       )
     : []
 

@@ -21,7 +21,8 @@ import type { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectTy
 import { isObjectType } from "../../schema/types/generic/ObjectType.ts"
 import type { BooleanType } from "../../schema/types/primitives/BooleanType.ts"
 import type { DateType } from "../../schema/types/primitives/DateType.ts"
-import type { NumericType } from "../../schema/types/primitives/NumericType.ts"
+import type { FloatType } from "../../schema/types/primitives/FloatType.ts"
+import type { IntegerType } from "../../schema/types/primitives/IntegerType.ts"
 import type { StringType } from "../../schema/types/primitives/StringType.ts"
 import type { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.ts"
 import type { NestedEntityMapType } from "../../schema/types/references/NestedEntityMapType.ts"
@@ -102,7 +103,9 @@ const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => syntax`boo
 
 const renderDateType: RenderFn<DateType> = (_options, _type) => syntax`Date`
 
-const renderNumericType: RenderFn<NumericType> = (_options, _type) => syntax`number`
+const renderFloatType: RenderFn<FloatType> = (_options, _type) => syntax`number`
+
+const renderIntegerType: RenderFn<IntegerType> = (_options, _type) => syntax`number`
 
 const renderStringType: RenderFn<StringType> = (_options, _type) => syntax`string`
 
@@ -158,9 +161,9 @@ const renderType: RenderFn<Type> = (options, type) => {
     case NodeKind.DateType:
       return renderDateType(options, type)
     case NodeKind.FloatType:
-      return renderNumericType(options, type)
+      return renderFloatType(options, type)
     case NodeKind.IntegerType:
-      return renderNumericType(options, type)
+      return renderIntegerType(options, type)
     case NodeKind.StringType:
       return renderStringType(options, type)
     case NodeKind.TypeArgumentType:

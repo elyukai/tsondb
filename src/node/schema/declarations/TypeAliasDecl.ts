@@ -1,24 +1,27 @@
 import { Lazy } from "../../../shared/utils/lazy.ts"
-import type { GetReferences, Node, Serializer } from "../Node.ts"
-import { NodeKind } from "../Node.ts"
-import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.ts"
-import { serializeTypeParameter } from "../TypeParameter.ts"
-import type { SerializedType, Type } from "../types/Type.ts"
-import {
-  getReferencesForType,
-  resolveTypeArgumentsInType,
-  serializeType,
-  setParent,
-  validate,
-} from "../types/Type.ts"
-import type { ValidatorHelpers } from "../validation/type.ts"
 import type {
-  BaseDecl,
   GetNestedDeclarations,
-  SerializedBaseDecl,
-  TypeArguments,
-} from "./Declaration.ts"
-import { getNestedDeclarations, getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
+  GetReferences,
+  Predicate,
+  Serializer,
+  TypeArgumentsResolver,
+  ValidatorOfParamDecl,
+  Validators,
+} from "../Node.ts"
+import {
+  getNestedDeclarations,
+  getReferences,
+  NodeKind,
+  resolveTypeArguments,
+  serializeNode,
+  validateType,
+} from "../Node.ts"
+import type { TypeParameter } from "../TypeParameter.ts"
+import { serializeTypeParameter } from "../TypeParameter.ts"
+import type { Type } from "../types/Type.ts"
+import { setParent } from "../types/Type.ts"
+import type { BaseDecl, TypeArguments } from "./Declaration.ts"
+import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
 
 export interface TypeAliasDecl<
   Name extends string = string,
@@ -27,16 +30,6 @@ export interface TypeAliasDecl<
 > extends BaseDecl<Name, Params> {
   kind: NodeKind["TypeAliasDecl"]
   type: Lazy<T>
-  isDeprecated?: boolean
-}
-
-export interface SerializedTypeAliasDecl<
-  Name extends string = string,
-  T extends SerializedType = SerializedType,
-  Params extends SerializedTypeParameter[] = SerializedTypeParameter[],
-> extends SerializedBaseDecl<Name, Params> {
-  kind: NodeKind["TypeAliasDecl"]
-  type: T
   isDeprecated?: boolean
 }
 
@@ -92,7 +85,7 @@ export const TypeAliasDecl = <Name extends string, T extends Type>(
 
 export { TypeAliasDecl as TypeAlias }
 
-export const isTypeAliasDecl = (node: Node): node is TypeAliasDecl =>
+export const isTypeAliasDecl: Predicate<TypeAliasDecl> = node =>
   node.kind === NodeKind.TypeAliasDecl
 
 export const getNestedDeclarationsInTypeAliasDecl: GetNestedDeclarations<TypeAliasDecl> = (
@@ -100,32 +93,32 @@ export const getNestedDeclarationsInTypeAliasDecl: GetNestedDeclarations<TypeAli
   decl,
 ) => getNestedDeclarations(addedDecls, decl.type.value)
 
-export const validateTypeAliasDecl = <Params extends TypeParameter[]>(
-  helpers: ValidatorHelpers,
+export const validateTypeAliasDecl = (<Params extends TypeParameter[]>(
+  helpers: Validators,
   decl: TypeAliasDecl<string, Type, Params>,
   args: TypeArguments<Params>,
   value: unknown,
-): Error[] =>
-  validate(
+) =>
+  validateType(
     helpers,
-    resolveTypeArgumentsInType(getTypeArgumentsRecord(decl, args), decl.type.value),
+    resolveTypeArguments(getTypeArgumentsRecord(decl, args), decl.type.value),
     value,
-  )
+  )) satisfies ValidatorOfParamDecl<TypeAliasDecl>
 
-export const resolveTypeArgumentsInTypeAliasDecl = <Params extends TypeParameter[]>(
-  decl: TypeAliasDecl<string, Type, Params>,
-  args: TypeArguments<Params>,
-): TypeAliasDecl<string, Type, []> =>
+export const resolveTypeArgumentsInTypeAliasDecl: TypeArgumentsResolver<TypeAliasDecl> = (
+  args,
+  decl,
+) =>
   TypeAliasDecl(decl.sourceUrl, {
     ...decl,
-    type: () => resolveTypeArgumentsInType(getTypeArgumentsRecord(decl, args), decl.type.value),
+    type: () => resolveTypeArguments(args, decl.type.value),
   })
 
-export const serializeTypeAliasDecl: Serializer<TypeAliasDecl, SerializedTypeAliasDecl> = type => ({
+export const serializeTypeAliasDecl: Serializer<TypeAliasDecl> = type => ({
   ...type,
-  type: serializeType(type.type.value),
+  type: serializeNode(type.type.value),
   parameters: type.parameters.map(param => serializeTypeParameter(param)),
 })
 
 export const getReferencesForTypeAliasDecl: GetReferences<TypeAliasDecl> = (decl, value) =>
-  getReferencesForType(decl.type.value, value)
+  getReferences(decl.type.value, value)

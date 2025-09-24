@@ -1,4 +1,4 @@
-import type { SerializedEntityDecl } from "../../node/schema/index.ts"
+import type { SerializedEntityDecl } from "../schema/declarations/EntityDecl.ts"
 
 const getValueAtPath = (value: unknown, path: string): unknown => {
   const parts = path.split(".")

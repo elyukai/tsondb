@@ -1,6 +1,6 @@
 import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
-import type { SerializedIntegerType } from "../../../node/schema/types/primitives/IntegerType.ts"
+import type { SerializedIntegerType } from "../../../shared/schema/types/IntegerType.ts"
 import { validateNumberConstraints } from "../../../shared/validation/number.ts"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
