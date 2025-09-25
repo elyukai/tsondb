@@ -55,7 +55,6 @@ describe("serializeFloatType", () => {
   it("returns a serializable FloatType", () => {
     deepEqual(
       serializeFloatType({
-        parent: StringType(),
         kind: NodeKind.FloatType,
       }),
       {
