@@ -3,6 +3,7 @@ import express from "express"
 import { findPackageJSON } from "node:module"
 import { dirname, join } from "node:path"
 import type { SimpleGit } from "simple-git"
+import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.ts"
 import type { Decl } from "../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
@@ -29,6 +30,7 @@ export interface TSONDBRequestLocals {
   entities: readonly EntityDecl[]
   instancesByEntityName: InstancesByEntityName
   entitiesByName: Record<string, EntityDecl>
+  serializedDeclarationsByName: Record<string, SerializedDecl>
   localeEntity?: EntityDecl
   referencesToInstances: ReferencesToInstances
   locales: string[]

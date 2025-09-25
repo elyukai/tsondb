@@ -1,4 +1,4 @@
-import type { NodeKind } from "./Node.ts"
+import type { GetReferencesSerialized, NodeKind, SerializedTypeArgumentsResolver } from "./Node.ts"
 import type { SerializedBaseType, SerializedType } from "./types/Type.ts"
 
 export interface SerializedTypeParameter<
@@ -9,3 +9,11 @@ export interface SerializedTypeParameter<
   name: N
   constraint?: T
 }
+
+export const resolveTypeArgumentsInSerializedTypeParameter: SerializedTypeArgumentsResolver<
+  SerializedTypeParameter
+> = (_decls, _args, param) => param
+
+export const getReferencesForSerializedTypeParameter: GetReferencesSerialized<
+  SerializedTypeParameter
+> = () => []

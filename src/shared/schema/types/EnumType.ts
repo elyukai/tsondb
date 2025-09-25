@@ -1,4 +1,11 @@
-import type { NodeKind } from "../Node.ts"
+import { discriminatorKey } from "../../enum.ts"
+import {
+  getReferencesSerialized,
+  resolveSerializedTypeArguments,
+  type GetReferencesSerialized,
+  type NodeKind,
+  type SerializedTypeArgumentsResolver,
+} from "../Node.ts"
 import type { SerializedBaseType, SerializedType } from "./Type.ts"
 
 export interface SerializedEnumType<
@@ -13,4 +20,48 @@ export interface SerializedEnumCaseDecl<T extends SerializedType | null = Serial
   type: T
   comment?: string
   isDeprecated?: boolean
+}
+
+export const resolveTypeArgumentsInSerializedEnumType: SerializedTypeArgumentsResolver<
+  SerializedEnumType
+> = (decls, args, type) => ({
+  ...type,
+  values: Object.fromEntries(
+    Object.entries(type.values).map(([key, { type, ...caseMember }]) => [
+      key,
+      {
+        ...caseMember,
+        type: type === null ? null : resolveSerializedTypeArguments(decls, args, type),
+      },
+    ]),
+  ),
+})
+
+export const getReferencesForSerializedEnumType: GetReferencesSerialized<SerializedEnumType> = (
+  decls,
+  type,
+  value,
+) => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    !(discriminatorKey in value)
+  ) {
+    return []
+  }
+
+  const enumCase = value[discriminatorKey]
+
+  return typeof enumCase === "string" &&
+    enumCase in type.values &&
+    type.values[enumCase] !== undefined &&
+    type.values[enumCase].type !== null &&
+    enumCase in value
+    ? getReferencesSerialized(
+        decls,
+        type.values[enumCase].type,
+        (value as Record<string, unknown>)[enumCase],
+      )
+    : []
 }

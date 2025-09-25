@@ -3,7 +3,7 @@ import { simpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.ts"
-import { resolveTypeArgumentsInDecls } from "../schema/index.ts"
+import { resolveTypeArgumentsInDecls, serializeNode } from "../schema/index.ts"
 import type { Schema } from "../schema/Schema.ts"
 import {
   attachGitStatusToInstancesByEntityName,
@@ -46,9 +46,16 @@ export const init = async (
     entities.map(entity => [entity.name, entity]),
   ) as Record<string, EntityDecl>
 
+  const serializedDeclarationsByName = Object.fromEntries(
+    declarations.map(decl => [decl.name, serializeNode(decl)]),
+  )
+
   const instancesByEntityNameInMemory = Object.assign({}, instancesByEntityName)
 
-  const referencesToInstances = getReferencesToInstances(instancesByEntityName, entitiesByName)
+  const referencesToInstances = await getReferencesToInstances(
+    instancesByEntityName,
+    serializedDeclarationsByName,
+  )
   debug("created references cache")
 
   if (gitStatus) {
@@ -75,6 +82,7 @@ export const init = async (
     entities: entities,
     instancesByEntityName: instancesByEntityNameInMemory,
     entitiesByName: entitiesByName,
+    serializedDeclarationsByName,
     localeEntity: schema.localeEntity,
     getInstanceById,
     referencesToInstances,
@@ -85,23 +93,19 @@ export const init = async (
 }
 
 export const reinit = async (locals: TSONDBRequestLocals) => {
-  const gitStatus = (await locals.git.checkIsRepo()) ? await locals.git.status() : undefined
-  const instancesByEntityName = await getInstancesByEntityName(locals.dataRoot, locals.entities)
-  const referencesToInstances = getReferencesToInstances(
-    instancesByEntityName,
-    locals.entitiesByName,
+  locals.instancesByEntityName = await getInstancesByEntityName(locals.dataRoot, locals.entities)
+  locals.referencesToInstances = await getReferencesToInstances(
+    locals.instancesByEntityName,
+    locals.serializedDeclarationsByName,
   )
+
+  const gitStatus = (await locals.git.checkIsRepo()) ? await locals.git.status() : undefined
   if (locals.gitRoot && gitStatus) {
     attachGitStatusToInstancesByEntityName(
-      instancesByEntityName,
+      locals.instancesByEntityName,
       locals.dataRoot,
       locals.gitRoot,
       gitStatus,
     )
   }
-
-  Object.assign(locals, {
-    instancesByEntityName,
-    referencesToInstances,
-  })
 }

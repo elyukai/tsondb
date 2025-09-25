@@ -155,6 +155,7 @@ export const serializeEntityDecl: Serializer<EntityDecl> = type => ({
   ...type,
   type: serializeObjectType(type.type.value),
   displayName: typeof type.displayName === "function" ? null : type.displayName,
+  displayNameCustomizer: type.displayNameCustomizer !== undefined,
 })
 
 export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value) =>

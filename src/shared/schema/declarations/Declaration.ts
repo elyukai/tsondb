@@ -12,6 +12,15 @@ export type SerializedTypeArguments<Params extends SerializedTypeParameter[]> = 
     : SerializedType
 }
 
+export const getSerializedTypeArgumentsRecord = <Params extends SerializedTypeParameter[]>(
+  decl: SerializedDeclP<Params>,
+  args: SerializedTypeArguments<Params>,
+): Record<string, SerializedType> =>
+  Object.fromEntries(
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    args.slice(0, decl.parameters.length).map((arg, i) => [decl.parameters[i]!.name, arg] as const),
+  )
+
 export type SerializedDecl = SerializedEntityDecl | SerializedEnumDecl | SerializedTypeAliasDecl
 
 export type SerializedDeclP<Params extends SerializedTypeParameter[] = SerializedTypeParameter[]> =

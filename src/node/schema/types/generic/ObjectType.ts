@@ -172,8 +172,7 @@ export const serializeObjectType: Serializer<ObjectType> = type => ({
 export const getReferencesForObjectType: GetReferences<ObjectType> = (type, value) =>
   typeof value === "object" && value !== null
     ? Object.entries(value).flatMap(([key, propValue]) =>
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        key in type.properties ? getReferences(type.properties[key]!.type, propValue) : [],
+        type.properties[key] ? getReferences(type.properties[key].type, propValue) : [],
       )
     : []
 
