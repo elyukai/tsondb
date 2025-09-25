@@ -16,19 +16,17 @@ export interface SerializedArrayType<T extends SerializedType = SerializedType>
   items: T
 }
 
-export const resolveTypeArgumentsInSerializedArrayType: SerializedTypeArgumentsResolver = (
-  decls,
-  args,
-  type,
-) => ({
+export const resolveTypeArgumentsInSerializedArrayType: SerializedTypeArgumentsResolver<
+  SerializedArrayType
+> = (decls, args, type) => ({
   ...type,
   items: resolveSerializedTypeArguments(decls, args, type.items),
 })
 
 export const getReferencesForSerializedArrayType: GetReferencesSerialized<SerializedArrayType> = (
+  decls,
   type,
   value,
-  decls,
 ) =>
   Array.isArray(value)
     ? value.flatMap(item => getReferencesSerialized(decls, type.items, item))

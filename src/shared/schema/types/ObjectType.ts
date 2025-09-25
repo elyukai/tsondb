@@ -1,9 +1,10 @@
 import type { ObjectConstraints } from "../../validation/object.ts"
 import {
   getReferencesSerialized,
+  NodeKind,
   resolveSerializedTypeArguments,
   type GetReferencesSerialized,
-  type NodeKind,
+  type SerializedNode,
   type SerializedTypeArgumentsResolver,
 } from "../Node.ts"
 import type { SerializedBaseType, SerializedType } from "./Type.ts"
@@ -27,6 +28,9 @@ export interface SerializedMemberDecl<
   comment?: string
   isDeprecated?: boolean
 }
+
+export const isSerializedObjectType = (type: SerializedNode): type is SerializedObjectType =>
+  type.kind === NodeKind.ObjectType
 
 export const resolveTypeArgumentsInSerializedObjectType: SerializedTypeArgumentsResolver<
   SerializedObjectType

@@ -1,3 +1,5 @@
+import type { SerializedTypeArguments } from "../../../../shared/schema/declarations/Declaration.ts"
+import type { SerializedIncludeIdentifierType } from "../../../../shared/schema/types/IncludeIdentifierType.ts"
 import type { IncludableDeclP, TypeArguments } from "../../declarations/Declaration.ts"
 import { getTypeArgumentsRecord } from "../../declarations/Declaration.ts"
 import type { EnumDecl } from "../../declarations/EnumDecl.ts"
@@ -6,6 +8,7 @@ import type {
   GetNestedDeclarations,
   GetReferences,
   Predicate,
+  SerializedTypeParameters,
   Serializer,
   TypeArgumentsResolver,
   Validator,
@@ -101,11 +104,18 @@ export const resolveTypeArgumentsInIncludeIdentifierType = (<T extends IncludeId
     ? T
     : Type) satisfies TypeArgumentsResolver<IncludeIdentifierType>
 
-export const serializeIncludeIdentifierType: Serializer<IncludeIdentifierType> = type => ({
+export const serializeIncludeIdentifierType = (<
+  Params extends TypeParameter[] = TypeParameter[],
+  T extends TConstraint<Params> = TConstraint<Params>,
+>(
+  type: IncludeIdentifierType<Params, T>,
+): SerializedIncludeIdentifierType<SerializedTypeParameters<Params>> => ({
   ...type,
   reference: type.reference.name,
-  args: type.args.map(arg => serializeNode(arg)),
-})
+  args: type.args.map(arg => serializeNode(arg)) as SerializedTypeArguments<
+    SerializedTypeParameters<Params>
+  >,
+})) satisfies Serializer<IncludeIdentifierType>
 
 export const getReferencesForIncludeIdentifierType: GetReferences<IncludeIdentifierType> = (
   type,

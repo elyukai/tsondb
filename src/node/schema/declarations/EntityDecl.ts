@@ -13,7 +13,6 @@ import type { MemberDecl, ObjectType } from "../types/generic/ObjectType.ts"
 import {
   getNestedDeclarationsInObjectType,
   getReferencesForObjectType,
-  getReferencesForSerializedObjectType,
   Required,
   serializeObjectType,
 } from "../types/generic/ObjectType.ts"
@@ -111,9 +110,6 @@ export { EntityDecl as Entity }
 
 export const isEntityDecl: Predicate<EntityDecl> = node => node.kind === NodeKind.EntityDecl
 
-export const isSerializedEntityDecl = (node: SerializedNode): node is SerializedEntityDecl =>
-  node.kind === NodeKind.EntityDecl
-
 export const getNestedDeclarationsInEntityDecl: GetNestedDeclarations<EntityDecl> = (
   isDeclAdded,
   decl,
@@ -127,14 +123,6 @@ export const resolveTypeArgumentsInEntityDecl: TypeArgumentsResolver<EntityDecl>
     ...decl,
     type: () => resolveTypeArguments({}, decl.type.value),
   })
-
-export const resolveTypeArgumentsInSerializedEntityDecl = (
-  decl: SerializedEntityDecl,
-  decls: Record<string, SerializedDecl>,
-): SerializedEntityDecl => ({
-  ...decl,
-  type: resolveTypeArgumentsInSerializedObjectType({}, decl.type, decls),
-})
 
 const createEntityIdentifierComment = () =>
   "The entity’s identifier. A UUID or a locale code if it is registered as the locale entity."
@@ -167,13 +155,8 @@ export const serializeEntityDecl: Serializer<EntityDecl> = type => ({
   ...type,
   type: serializeObjectType(type.type.value),
   displayName: typeof type.displayName === "function" ? null : type.displayName,
+  displayNameCustomizer: type.displayNameCustomizer !== undefined,
 })
 
 export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value) =>
   getReferencesForObjectType(decl.type.value, value)
-
-export const getReferencesForSerializedEntityDecl: GetReferencesSerialized<SerializedEntityDecl> = (
-  decl,
-  value,
-  decls,
-) => getReferencesForSerializedObjectType(decl.type, value, decls)

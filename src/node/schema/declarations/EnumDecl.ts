@@ -1,4 +1,5 @@
 import { Lazy } from "../../../shared/utils/lazy.ts"
+import { onlyKeys } from "../../../shared/utils/object.ts"
 import type {
   GetNestedDeclarations,
   GetReferences,
@@ -42,6 +43,7 @@ export const GenEnumDecl = <
     name: Name
     comment?: string
     parameters: Params
+    isDeprecated?: boolean
     values: (...args: Params) => T
   },
 ): EnumDecl<Name, T, Params> => {
@@ -64,13 +66,14 @@ export const EnumDecl = <Name extends string, T extends Record<string, EnumCaseD
   options: {
     name: Name
     comment?: string
+    isDeprecated?: boolean
     values: () => T
   },
 ): EnumDecl<Name, T, []> => {
   validateDeclName(options.name)
 
   const decl: EnumDecl<Name, T, []> = {
-    ...options,
+    ...onlyKeys(options, "name", "comment", "isDeprecated"),
     kind: NodeKind.EnumDecl,
     sourceUrl,
     parameters: [],
@@ -98,7 +101,9 @@ export const validateEnumDecl: ValidatorOfParamDecl<EnumDecl> = (helpers, decl, 
 
 export const resolveTypeArgumentsInEnumDecl: TypeArgumentsResolver<EnumDecl> = (args, decl) =>
   EnumDecl(decl.sourceUrl, {
-    ...decl,
+    name: decl.name,
+    comment: decl.comment,
+    isDeprecated: decl.isDeprecated,
     values: () => resolveTypeArgumentsInEnumType(args, decl.type.value).values,
   })
 

@@ -6,12 +6,18 @@ import type { SerializedTypeParameter } from "../../shared/schema/TypeParameter.
 import type { SerializedArrayType } from "../../shared/schema/types/ArrayType.ts"
 import type { SerializedBooleanType } from "../../shared/schema/types/BooleanType.ts"
 import type { SerializedDateType } from "../../shared/schema/types/DateType.ts"
-import type { SerializedEnumType } from "../../shared/schema/types/EnumType.ts"
+import type {
+  SerializedEnumCaseDecl,
+  SerializedEnumType,
+} from "../../shared/schema/types/EnumType.ts"
 import type { SerializedFloatType } from "../../shared/schema/types/FloatType.ts"
 import type { SerializedIncludeIdentifierType } from "../../shared/schema/types/IncludeIdentifierType.ts"
 import type { SerializedIntegerType } from "../../shared/schema/types/IntegerType.ts"
 import type { SerializedNestedEntityMapType } from "../../shared/schema/types/NestedEntityMapType.ts"
-import type { SerializedObjectType } from "../../shared/schema/types/ObjectType.ts"
+import type {
+  SerializedMemberDecl,
+  SerializedObjectType,
+} from "../../shared/schema/types/ObjectType.ts"
 import type { SerializedReferenceIdentifierType } from "../../shared/schema/types/ReferenceIdentifierType.ts"
 import type { SerializedStringType } from "../../shared/schema/types/StringType.ts"
 import type { SerializedTypeArgumentType } from "../../shared/schema/types/TypeArgumentType.ts"
@@ -149,15 +155,10 @@ import {
   type TypeArgumentType,
 } from "./types/references/TypeArgumentType.ts"
 import type { Type } from "./types/Type.ts"
+export type { BaseNode } from "../../shared/schema/Node.ts"
 export { NodeKind }
 
-export interface BaseNode {
-  kind: (typeof NodeKind)[keyof typeof NodeKind]
-}
-
 export type Node = Decl | Type | TypeParameter
-
-export type SerializedNode = SerializedDecl | SerializedType
 
 export const flatMapAuxiliaryDecls = (
   callbackFn: (
@@ -512,6 +513,48 @@ export type SerializedNodeMap = {
   [NodeKind.EnumType]: [EnumType, SerializedEnumType]
   [NodeKind.TypeParameter]: [TypeParameter, SerializedTypeParameter]
 }
+
+export type SerializedTypeParameters<T extends TypeParameter[]> = {
+  [K in keyof T]: T[K] extends TypeParameter<infer N, infer C>
+    ? SerializedTypeParameter<N, C extends Type ? Serialized<C> : undefined>
+    : never
+}
+
+// prettier-ignore
+export type Serialized<T extends Node> =
+  T extends EntityDecl<infer Name, infer T> ? SerializedEntityDecl<Name, Serialized<T>> :
+  T extends EnumDecl<infer Name, infer T, infer Params> ? SerializedEnumDecl<Name, {
+    [K in keyof T]: T[K] extends EnumCaseDecl<infer CT>
+      ? SerializedEnumCaseDecl<CT extends Type ? Serialized<CT> : null>
+      : never
+  }, SerializedTypeParameters<Params>> :
+  T extends TypeAliasDecl<infer Name, infer T, infer Params> ? SerializedTypeAliasDecl<Name, Serialized<T>, SerializedTypeParameters<Params>> :
+  T extends ArrayType<infer T> ? SerializedArrayType<Serialized<T>> :
+  T extends ObjectType<infer T> ? SerializedObjectType<{
+    [K in keyof T]: T[K] extends MemberDecl<infer CT, infer R>
+      ? SerializedMemberDecl<CT extends Type ? Serialized<CT> : null, R>
+      : never
+  }> :
+  T extends BooleanType ? SerializedBooleanType :
+  T extends DateType ? SerializedDateType :
+  T extends FloatType ? SerializedFloatType :
+  T extends IntegerType ? SerializedIntegerType :
+  T extends StringType ? SerializedStringType :
+  T extends TypeArgumentType<infer T> ? SerializedTypeArgumentType<Serialized<T>> :
+  T extends ReferenceIdentifierType ? SerializedReferenceIdentifierType :
+  T extends IncludeIdentifierType<infer Params> ? SerializedIncludeIdentifierType<SerializedTypeParameters<Params>> :
+  T extends NestedEntityMapType<infer Name, infer T> ? SerializedNestedEntityMapType<Name, {
+    [K in keyof T]: T[K] extends MemberDecl<infer CT, infer R>
+      ? SerializedMemberDecl<CT extends Type ? Serialized<CT> : null, R>
+      : never
+  }> :
+  T extends EnumType<infer T> ? SerializedEnumType<{
+    [K in keyof T]: T[K] extends EnumCaseDecl<infer CT>
+      ? SerializedEnumCaseDecl<CT extends Type ? Serialized<CT> : null>
+      : never
+  }> :
+  T extends TypeParameter<infer N, infer C> ? SerializedTypeParameter<N, C extends Type ? Serialized<C> : undefined> :
+  never
 
 export type SerializedOf<T extends Node> = SerializedNodeMap[T["kind"]][1]
 

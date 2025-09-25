@@ -26,15 +26,6 @@ export const getTypeArgumentsRecord = <Params extends TypeParameter[]>(
     args.slice(0, decl.parameters.length).map((arg, i) => [decl.parameters[i]!.name, arg] as const),
   )
 
-export const getSerializedTypeArgumentsRecord = <Params extends SerializedTypeParameter[]>(
-  decl: SerializedDeclP<Params>,
-  args: SerializedTypeArguments<Params>,
-): Record<string, SerializedType> =>
-  Object.fromEntries(
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    args.slice(0, decl.parameters.length).map((arg, i) => [decl.parameters[i]!.name, arg] as const),
-  )
-
 export type Decl = EntityDecl | EnumDecl | TypeAliasDecl
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =

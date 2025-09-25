@@ -1,4 +1,10 @@
-import type { NodeKind, SerializedTypeArgumentsResolver } from "../Node.ts"
+import {
+  getReferencesSerialized,
+  resolveSerializedTypeArguments,
+  type GetReferencesSerialized,
+  type NodeKind,
+  type SerializedTypeArgumentsResolver,
+} from "../Node.ts"
 import type { SerializedTypeParameter } from "../TypeParameter.ts"
 import type { SerializedType } from "../types/Type.ts"
 import type { SerializedBaseDecl } from "./Declaration.ts"
@@ -15,16 +21,12 @@ export interface SerializedTypeAliasDecl<
 
 export const resolveTypeArgumentsInSerializedTypeAliasDecl: SerializedTypeArgumentsResolver<
   SerializedTypeAliasDecl
-> = (decl, args, decls) => ({
+> = (decls, args, decl) => ({
   ...decl,
   parameters: [],
-  type: resolveTypeArgumentsInSerializedType(
-    getSerializedTypeArgumentsRecord(decl, args),
-    decl.type,
-    decls,
-  ),
+  type: resolveSerializedTypeArguments(decls, args, decl.type),
 })
 
 export const getReferencesForSerializedTypeAliasDecl: GetReferencesSerialized<
   SerializedTypeAliasDecl
-> = (decl, value, decls) => getReferencesForSerializedType(decl.type, value, decls)
+> = (decls, decl, value) => getReferencesSerialized(decls, decl.type, value)

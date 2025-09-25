@@ -28,4 +28,4 @@ export const resolveTypeArgumentsInSerializedTypeArgumentType = (<
 
 export const getReferencesForSerializedTypeArgumentType: GetReferencesSerialized<
   SerializedTypeArgumentType
-> = (_decls, _type, _value) => []
+> = () => []

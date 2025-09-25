@@ -1,10 +1,10 @@
 import { parentPort, workerData } from "node:worker_threads"
-import type { InstanceContainer } from "../../shared/utils/instances.ts"
+import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import {
   getReferencesForSerializedEntityDecl,
   isSerializedEntityDecl,
-  type SerializedDecl,
-} from "../schema/index.ts"
+} from "../../shared/schema/declarations/EntityDecl.ts"
+import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import type { ReferencesToInstances } from "./references.ts"
 
 const declarationsByName = workerData as Record<string, SerializedDecl>
@@ -43,9 +43,9 @@ parentPort?.on("message", (task: ReferencesWorkerTask) => {
 
   const refs = task.instances.reduce((acc: ReferencesToInstances, instance) => {
     const references = getReferencesForSerializedEntityDecl(
+      declarationsByName,
       entityDecl,
       instance.content,
-      declarationsByName,
     )
     return addReferences(acc, references, instance.id)
   }, {})

@@ -1,5 +1,10 @@
-import type { SerializedDecl, SerializedTypeArguments } from "../declarations/Declaration.ts"
 import {
+  getSerializedTypeArgumentsRecord,
+  type SerializedDecl,
+  type SerializedTypeArguments,
+} from "../declarations/Declaration.ts"
+import {
+  getDecl,
   getReferencesSerialized,
   resolveSerializedTypeArguments,
   type GetReferencesSerialized,
@@ -27,25 +32,35 @@ export const resolveTypeArgumentsInSerializedIncludeIdentifierType = (<
   decls: Record<string, SerializedDecl>,
   args: Record<string, SerializedType>,
   type: T,
-) =>
-  (isNoGenericSerializedIncludeIdentifierType(type)
-    ? type
-    : resolveSerializedTypeArguments(
-        decls,
-        getTypeArgumentsRecord(
-          type.reference,
-          type.args.map(arg => resolveSerializedTypeArguments(decls, args, arg)),
-        ),
-        type.reference,
-      ).type.value) as T extends SerializedIncludeIdentifierType<[]>
-    ? T
-    : SerializedType) satisfies SerializedTypeArgumentsResolver<SerializedIncludeIdentifierType>
+) => {
+  const reference = getDecl(decls, type.reference)
+
+  return (
+    isNoGenericSerializedIncludeIdentifierType(type)
+      ? type
+      : resolveSerializedTypeArguments(
+          decls,
+          getSerializedTypeArgumentsRecord(
+            reference,
+            type.args.map(arg => resolveSerializedTypeArguments(decls, args, arg)),
+          ),
+          reference,
+        ).type
+  ) as T extends SerializedIncludeIdentifierType<[]> ? T : SerializedType
+}) satisfies SerializedTypeArgumentsResolver<SerializedIncludeIdentifierType>
 
 export const getReferencesForSerializedIncludeIdentifierType: GetReferencesSerialized<
   SerializedIncludeIdentifierType
-> = (decls, type, value) =>
-  getReferencesSerialized(
+> = (decls, type, value) => {
+  const reference = getDecl(decls, type.reference)
+
+  return getReferencesSerialized(
     decls,
-    resolveSerializedTypeArguments(decls, type.reference, type.args),
+    resolveSerializedTypeArguments(
+      decls,
+      getSerializedTypeArgumentsRecord(reference, type.args),
+      reference,
+    ),
     value,
   )
+}

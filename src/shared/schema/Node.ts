@@ -1,29 +1,86 @@
 import { enumOfObject } from "../utils/enum.ts"
 import { assertExhaustive } from "../utils/typeSafety.ts"
 import type { SerializedDecl } from "./declarations/Declaration.ts"
-import type { SerializedEntityDecl } from "./declarations/EntityDecl.ts"
-import type { SerializedEnumDecl } from "./declarations/EnumDecl.ts"
-import type { SerializedTypeAliasDecl } from "./declarations/TypeAliasDecl.ts"
-import type { SerializedTypeParameter } from "./TypeParameter.ts"
-import type { SerializedArrayType } from "./types/ArrayType.ts"
-import type { SerializedBooleanType } from "./types/BooleanType.ts"
-import type { SerializedDateType } from "./types/DateType.ts"
-import type { SerializedEnumCaseDecl, SerializedEnumType } from "./types/EnumType.ts"
-import type { SerializedFloatType } from "./types/FloatType.ts"
-import type { SerializedIncludeIdentifierType } from "./types/IncludeIdentifierType.ts"
-import type { SerializedIntegerType } from "./types/IntegerType.ts"
 import {
+  getReferencesForSerializedEntityDecl,
+  resolveTypeArgumentsInSerializedEntityDecl,
+  type SerializedEntityDecl,
+} from "./declarations/EntityDecl.ts"
+import {
+  getReferencesForSerializedEnumDecl,
+  resolveTypeArgumentsInSerializedEnumDecl,
+  type SerializedEnumDecl,
+} from "./declarations/EnumDecl.ts"
+import {
+  getReferencesForSerializedTypeAliasDecl,
+  resolveTypeArgumentsInSerializedTypeAliasDecl,
+  type SerializedTypeAliasDecl,
+} from "./declarations/TypeAliasDecl.ts"
+import {
+  getReferencesForSerializedTypeParameter,
+  resolveTypeArgumentsInSerializedTypeParameter,
+  type SerializedTypeParameter,
+} from "./TypeParameter.ts"
+import {
+  getReferencesForSerializedArrayType,
+  resolveTypeArgumentsInSerializedArrayType,
+  type SerializedArrayType,
+} from "./types/ArrayType.ts"
+import {
+  getReferencesForSerializedBooleanType,
+  resolveTypeArgumentsInSerializedBooleanType,
+  type SerializedBooleanType,
+} from "./types/BooleanType.ts"
+import {
+  getReferencesForSerializedDateType,
+  resolveTypeArgumentsInSerializedDateType,
+  type SerializedDateType,
+} from "./types/DateType.ts"
+import {
+  getReferencesForSerializedEnumType,
+  resolveTypeArgumentsInSerializedEnumType,
+  type SerializedEnumCaseDecl,
+  type SerializedEnumType,
+} from "./types/EnumType.ts"
+import {
+  getReferencesForSerializedFloatType,
+  resolveTypeArgumentsInSerializedFloatType,
+  type SerializedFloatType,
+} from "./types/FloatType.ts"
+import {
+  getReferencesForSerializedIncludeIdentifierType,
+  resolveTypeArgumentsInSerializedIncludeIdentifierType,
+  type SerializedIncludeIdentifierType,
+} from "./types/IncludeIdentifierType.ts"
+import {
+  getReferencesForSerializedIntegerType,
+  resolveTypeArgumentsInSerializedIntegerType,
+  type SerializedIntegerType,
+} from "./types/IntegerType.ts"
+import {
+  getReferencesForSerializedNestedEntityMapType,
   resolveTypeArgumentsInSerializedNestedEntityMapType,
   type SerializedNestedEntityMapType,
 } from "./types/NestedEntityMapType.ts"
-import type { SerializedMemberDecl, SerializedObjectType } from "./types/ObjectType.ts"
 import {
+  getReferencesForSerializedObjectType,
+  resolveTypeArgumentsInSerializedObjectType,
+  type SerializedMemberDecl,
+  type SerializedObjectType,
+} from "./types/ObjectType.ts"
+import {
+  getReferencesForSerializedReferenceIdentifierType,
   resolveTypeArgumentsInSerializedReferenceIdentifierType,
   type SerializedReferenceIdentifierType,
 } from "./types/ReferenceIdentifierType.ts"
-import type { SerializedStringType } from "./types/StringType.ts"
+import {
+  getReferencesForSerializedStringType,
+  resolveTypeArgumentsInSerializedStringType,
+  type SerializedStringType,
+} from "./types/StringType.ts"
 import type { SerializedType } from "./types/Type.ts"
 import {
+  getReferencesForSerializedTypeArgumentType,
   resolveTypeArgumentsInSerializedTypeArgumentType,
   type SerializedTypeArgumentType,
 } from "./types/TypeArgumentType.ts"
@@ -74,7 +131,7 @@ export interface BaseNode {
   kind: (typeof NodeKind)[keyof typeof NodeKind]
 }
 
-export type SerializedNode = SerializedDecl | SerializedType
+export type SerializedNode = SerializedDecl | SerializedType | SerializedTypeParameter
 
 export type SerializedNodeWithResolvedTypeArguments<T extends SerializedNode | null> = T extends
   | SerializedBooleanType
@@ -227,4 +284,14 @@ export const getReferencesSerialized: GetReferencesSerialized = (decls, node, va
     default:
       return assertExhaustive(node)
   }
+}
+
+export const getDecl = (decls: Record<string, SerializedDecl>, name: string) => {
+  const decl = decls[name]
+
+  if (!decl) {
+    throw new Error(`Declaration not found: ${name}`)
+  }
+
+  return decl
 }

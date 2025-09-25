@@ -57,9 +57,6 @@ export const serializeTypeArgumentType: Serializer<TypeArgumentType> = type => (
   argument: serializeTypeParameter(type.argument),
 })
 
-export const getReferencesForTypeArgumentType: GetReferences<TypeArgumentType> = (
-  _type,
-  _value,
-) => []
+export const getReferencesForTypeArgumentType: GetReferences<TypeArgumentType> = () => []
 
 export const formatTypeArgumentValue: StructureFormatter<TypeArgumentType> = (_type, value) => value

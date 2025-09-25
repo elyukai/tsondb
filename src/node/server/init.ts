@@ -93,23 +93,19 @@ export const init = async (
 }
 
 export const reinit = async (locals: TSONDBRequestLocals) => {
-  const gitStatus = (await locals.git.checkIsRepo()) ? await locals.git.status() : undefined
-  const instancesByEntityName = await getInstancesByEntityName(locals.dataRoot, locals.entities)
-  const referencesToInstances = getReferencesToInstances(
-    instancesByEntityName,
+  locals.instancesByEntityName = await getInstancesByEntityName(locals.dataRoot, locals.entities)
+  locals.referencesToInstances = await getReferencesToInstances(
+    locals.instancesByEntityName,
     locals.serializedDeclarationsByName,
   )
+
+  const gitStatus = (await locals.git.checkIsRepo()) ? await locals.git.status() : undefined
   if (locals.gitRoot && gitStatus) {
     attachGitStatusToInstancesByEntityName(
-      instancesByEntityName,
+      locals.instancesByEntityName,
       locals.dataRoot,
       locals.gitRoot,
       gitStatus,
     )
   }
-
-  Object.assign(locals, {
-    instancesByEntityName,
-    referencesToInstances,
-  })
 }

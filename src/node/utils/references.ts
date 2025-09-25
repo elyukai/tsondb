@@ -37,12 +37,12 @@ const addReferences = (
 const mergeReferences = (
   acc: ReferencesToInstances,
   toMerge: ReferencesToInstances,
-): ReferencesToInstances =>
-  Object.entries(toMerge).reduce(
-    (acc1, [reference, instanceIds]) =>
-      instanceIds.reduce((acc2, instanceId) => addReference(acc2, reference, instanceId), acc1),
-    acc,
-  )
+): ReferencesToInstances => {
+  for (const instanceId in toMerge) {
+    ;(acc[instanceId] ??= []).push(...(toMerge[instanceId] ?? []))
+  }
+  return acc
+}
 
 const removeReference = (
   acc: ReferencesToInstances,
@@ -67,36 +67,38 @@ export const getReferencesToInstances = async (
   instancesByEntityName: Record<string, InstanceContainer[]>,
   serializedDeclarationsByName: Record<string, SerializedDecl>,
 ) => {
-  debug("collecting references ...")
+  debug("creating reference worker pool ...")
   const pool = new WorkerPool<
     ReferencesWorkerTask,
     ReferencesToInstances,
     Record<string, SerializedDecl>
-  >(6, resolve(import.meta.filename, "./referencesWorker.js"), serializedDeclarationsByName)
+  >(6, resolve(import.meta.dirname, "./referencesWorker.js"), serializedDeclarationsByName)
 
-  const results = (
-    await Promise.all(
-      Object.entries(instancesByEntityName).map(
-        ([entityName, instances]) =>
-          new Promise<ReferencesToInstances>((resolve, reject) => {
-            pool.runTask({ entityName, instances }, result => {
-              if (isOk(result)) {
-                debug(
-                  "collected references for entity %s in %d instances",
-                  entityName,
-                  instances.length,
-                )
-                resolve(result.value)
-              } else {
-                reject(result.error)
-              }
-            })
-          }),
-      ),
-    )
-  ).reduce(mergeReferences)
+  debug("collecting references ...")
+  const separateResults = await Promise.all(
+    Object.entries(instancesByEntityName).map(
+      ([entityName, instances]) =>
+        new Promise<ReferencesToInstances>((resolve, reject) => {
+          pool.runTask({ entityName, instances }, result => {
+            if (isOk(result)) {
+              debug(
+                "collected references for entity %s in %d instances",
+                entityName,
+                instances.length,
+              )
+              resolve(result.value)
+            } else {
+              reject(result.error)
+            }
+          })
+        }),
+    ),
+  )
 
   await pool.close()
+  const results = separateResults.reduce(mergeReferences, {})
+
+  debug("collected references")
 
   return results
 }
