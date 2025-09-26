@@ -63,6 +63,12 @@ export default defineConfig([
           allowDeclarations: true,
         },
       ],
+      "@typescript-eslint/prefer-promise-reject-errors": [
+        "error",
+        {
+          allowThrowingUnknown: true,
+        }
+      ]
     },
   },
   {
