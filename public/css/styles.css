@@ -52,6 +52,7 @@
   --highlight-color-italic: rgb(41, 155, 96);
   --highlight-color-list-item-marker: rgb(195, 58, 237);
   --highlight-color-table-marker: rgb(237, 58, 118);
+  --highlight-color-attributed: rgb(48, 81, 228);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -84,6 +85,7 @@
     --highlight-color-italic: rgb(130, 230, 178);
     --highlight-color-list-item-marker: rgb(220, 133, 245);
     --highlight-color-table-marker: rgb(244, 135, 171);
+    --highlight-color-attributed: rgb(137, 157, 244);
   }
 }
 
@@ -588,6 +590,24 @@ form > .field--container {
 
 .editor-highlighting .table-marker {
   color: var(--highlight-color-table-marker);
+}
+
+.preview .attributed {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: var(--highlight-color-attributed);
+}
+
+.editor-highlighting .attributed {
+  color: var(--highlight-color-attributed);
+}
+
+.editor-highlighting .attributed__name {
+  font-weight: 700;
+}
+
+.editor-highlighting .attributed__value {
+  font-style: italic;
 }
 
 .help {

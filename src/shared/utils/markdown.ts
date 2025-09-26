@@ -72,7 +72,7 @@ const italicRule: InlineRule = {
 }
 
 const linkRule: InlineRule = {
-  pattern: /(?<!\\)\[(.*?[^\\])\]\((.*?[^\\])\)/,
+  pattern: /(?<![\\^])\[(.*?[^\\])\]\((.*?[^\\])\)/,
   map: (result, parseInside) => ({
     kind: "link",
     href: result[2] ?? "",
@@ -83,6 +83,127 @@ const linkRule: InlineRule = {
     href: result[2] ?? "",
     content: [textNode("["), ...parseInside(result[1] ?? ""), textNode(`](${result[2] ?? ""})`)],
   }),
+}
+
+const booleanAttributePattern = /^(true|false)/
+const numberAttributePattern = /^(-?\d+(\.\d+)?)/
+const stringAttributePattern = /^("(.*?)(?<!\\)"|'(.*?)(?<!\\)')/
+
+const parseAttributeValue = (text: string): [string | number | boolean, string] | null => {
+  const booleanResult = booleanAttributePattern.exec(text)
+  if (booleanResult !== null) {
+    return [booleanResult[1] === "true", booleanResult[0]]
+  }
+
+  const numberResult = numberAttributePattern.exec(text)
+  if (numberResult !== null) {
+    return [Number.parseFloat(numberResult[1] ?? "0"), numberResult[0]]
+  }
+
+  const stringResult = stringAttributePattern.exec(text)
+  if (stringResult !== null) {
+    return [stringResult[2] ?? stringResult[3] ?? "", stringResult[0]]
+  }
+
+  return null
+}
+
+const attributeNamePattern = /^(\w+)(: *)/
+const attributeSeparatorPattern = /^,( *)/
+
+type RawAttribute =
+  | string
+  | { name: string; separator: string; value: string | number | boolean; rawValue: string }
+
+const parseNextAttributes = (text: string): RawAttribute[] => {
+  const separatorResult = attributeSeparatorPattern.exec(text)
+  if (separatorResult === null) {
+    return []
+  }
+
+  const remainingText = text.slice(separatorResult[0].length)
+
+  return [separatorResult[0], ...parseAttributes(remainingText)]
+}
+
+const parseAttributes = (text: string): RawAttribute[] => {
+  const nameResult = attributeNamePattern.exec(text)
+
+  if (nameResult === null) {
+    return []
+  }
+
+  const name = nameResult[1] ?? ""
+  const separator = nameResult[2] ?? ""
+
+  const remainingText = text.slice(nameResult[0].length)
+  const valueResult = parseAttributeValue(remainingText)
+
+  if (valueResult === null) {
+    return []
+  }
+
+  const [value, rawValue] = valueResult
+
+  return [
+    { name, separator, value, rawValue },
+    ...parseNextAttributes(remainingText.slice(rawValue.length)),
+  ]
+}
+
+const mapAttributesToObject = (
+  rawAttributes: RawAttribute[],
+): Record<string, string | number | boolean> =>
+  Object.fromEntries(
+    rawAttributes.filter(attr => typeof attr !== "string").map(attr => [attr.name, attr.value]),
+  )
+
+const mapAttributesToNodes = (rawAttributes: RawAttribute[]): InlineMarkdownNode[] =>
+  rawAttributes.flatMap(attr =>
+    typeof attr === "string"
+      ? [textNode(attr)]
+      : [textNode(attr.name), textNode(attr.separator), textNode(attr.rawValue)],
+  )
+
+const parsedAttributesLength = (rawAttributes: RawAttribute[]): number =>
+  rawAttributes.reduce(
+    (sum, attr) =>
+      sum +
+      (typeof attr === "string"
+        ? attr.length
+        : attr.name.length + attr.separator.length + attr.rawValue.length),
+    0,
+  )
+
+const attributedRule: InlineRule = {
+  pattern:
+    /(?<!\\)\^\[(.*?[^\\])\]\(((?:\w+: *(?:true|false|\d+(?:\.\d+)?|"(.*?)(?<!\\)"|'(.*?)(?<!\\)'))(?:, *\w+: *(?:true|false|\d+(?:\.\d+)?|"(.*?)(?<!\\)"|'(.*?)(?<!\\)'))*)\)/,
+  map: (result, parseInside) => ({
+    kind: "attributed",
+    attributes: mapAttributesToObject(parseAttributes(result[2] ?? "")),
+    content: parseInside(result[1] ?? ""),
+  }),
+  mapHighlighting: (result, parseInside) => {
+    const attributesText = result[2] ?? ""
+    const attributes = parseAttributes(attributesText)
+    const length = parsedAttributesLength(attributes)
+    const unparsedText: InlineMarkdownNode[] =
+      attributesText.length > length
+        ? [{ kind: "text", content: attributesText.slice(length) }]
+        : []
+    return {
+      kind: "attributed",
+      attributes: mapAttributesToObject(attributes),
+      content: [
+        textNode("^["),
+        ...parseInside(result[1] ?? ""),
+        textNode("]("),
+        ...mapAttributesToNodes(attributes),
+        ...unparsedText,
+        textNode(")"),
+      ],
+    }
+  },
 }
 
 const textNode = (content: string): TextNode => ({
@@ -107,6 +228,7 @@ const textRule: InlineRule = {
 const inlineRules: InlineRule[] = [
   codeRule,
   linkRule,
+  attributedRule,
   boldWithItalicRule,
   italicWithBoldRule,
   boldRule,
@@ -131,6 +253,11 @@ export type InlineMarkdownNode =
   | {
       kind: "link"
       href: string
+      content: InlineMarkdownNode[]
+    }
+  | {
+      kind: "attributed"
+      attributes: Record<string, string | number | boolean>
       content: InlineMarkdownNode[]
     }
   | TextNode
@@ -175,6 +302,11 @@ type BlockRule = {
   mapHighlighting: (result: RegExpExecArray) => BlockSyntaxMarkdownNode[]
 }
 
+const nodesForTrailingWhitespace = (text: string | undefined): InlineMarkdownNode[] => {
+  const trailingWhitespace = text ?? ""
+  return trailingWhitespace.length === 0 ? [] : [textNode(trailingWhitespace)]
+}
+
 const listRule: BlockRule = {
   pattern: /^((?:(?:\d+\.|[-*]) [^\n]+?)(?:\n(?:\d+\.|[-*]) [^\n]+?)*)(\n{2,}|$)/,
   map: result => ({
@@ -194,7 +326,7 @@ const listRule: BlockRule = {
       ...parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, ""), true),
       ...(index < array.length - 1 ? [textNode("\n")] : []),
     ]),
-    textNode(result[2] ?? ""),
+    ...nodesForTrailingWhitespace(result[2]),
   ],
 }
 
@@ -206,7 +338,7 @@ const paragraphRule: BlockRule = {
   }),
   mapHighlighting: result => [
     ...parseInlineMarkdown(result[1] ?? "", true),
-    textNode(result[2] ?? ""),
+    ...nodesForTrailingWhitespace(result[2]),
   ],
 }
 
@@ -256,7 +388,7 @@ const tableRule: BlockRule = {
               : [tableMarker("|"), ...parseInlineMarkdown(tc, true)],
           ),
       ]) ?? []),
-    textNode(result[6] ?? ""),
+    ...nodesForTrailingWhitespace(result[6]),
   ],
 }
 

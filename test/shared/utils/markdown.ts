@@ -1,7 +1,13 @@
 import { deepEqual } from "assert/strict"
 import { describe, it } from "node:test"
-import type { BlockMarkdownNode } from "../../../src/shared/utils/markdown.ts"
-import { parseBlockMarkdown } from "../../../src/shared/utils/markdown.ts"
+import type {
+  BlockMarkdownNode,
+  BlockSyntaxMarkdownNode,
+} from "../../../src/shared/utils/markdown.ts"
+import {
+  parseBlockMarkdown,
+  parseBlockMarkdownForSyntaxHighlighting,
+} from "../../../src/shared/utils/markdown.ts"
 
 describe("parseBlockMarkdown", () => {
   it("parses a single bold Markdown formatting", () => {
@@ -335,6 +341,63 @@ This was a table.
           kind: "paragraph",
           content: [{ kind: "text", content: "This was a table." }],
         },
+      ],
+    )
+  })
+
+  it("parses an attributed string", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`This is an ^[attributed](attr1: true, attr2: 2, attr3: "test") string.`),
+      [
+        {
+          kind: "paragraph",
+          content: [
+            { kind: "text", content: "This is an " },
+            {
+              kind: "attributed",
+              attributes: {
+                attr1: true,
+                attr2: 2,
+                attr3: "test",
+              },
+              content: [{ kind: "text", content: "attributed" }],
+            },
+            { kind: "text", content: " string." },
+          ],
+        },
+      ],
+    )
+  })
+
+  it("parses an attributed string for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(
+        `This is an ^[attributed](attr1: true, attr2: 2, attr3: "test") string.`,
+      ),
+      [
+        { kind: "text", content: "This is an " },
+        {
+          kind: "attributed",
+          attributes: { attr1: true, attr2: 2, attr3: "test" },
+          content: [
+            { kind: "text", content: "^[" },
+            { kind: "text", content: "attributed" },
+            { kind: "text", content: "](" },
+            { kind: "text", content: "attr1" },
+            { kind: "text", content: ": " },
+            { kind: "text", content: "true" },
+            { kind: "text", content: ", " },
+            { kind: "text", content: "attr2" },
+            { kind: "text", content: ": " },
+            { kind: "text", content: "2" },
+            { kind: "text", content: ", " },
+            { kind: "text", content: "attr3" },
+            { kind: "text", content: ": " },
+            { kind: "text", content: '"test"' },
+            { kind: "text", content: ")" },
+          ],
+        },
+        { kind: "text", content: " string." },
       ],
     )
   })
