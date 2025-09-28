@@ -10,7 +10,7 @@ export const useEntityFromRoute = ():
     params: { name },
   } = useRoute()
 
-  const entities = useContext(EntitiesContext)
+  const { entities } = useContext(EntitiesContext)
   const entityObj = useMemo(() => entities.find(e => e.declaration.name === name), [entities, name])
 
   return entityObj

@@ -1,11 +1,12 @@
 import type { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
-import { useEffect, useState } from "preact/hooks"
+import { useContext, useEffect, useState } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
 import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
 import { deleteInstanceByEntityNameAndId, getInstancesByEntityName } from "../api.ts"
 import { Layout } from "../components/Layout.ts"
+import { EntitiesContext } from "../context/entities.ts"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
 import { Markdown } from "../utils/Markdown.tsx"
@@ -22,6 +23,7 @@ export const Entity: FunctionalComponent = () => {
 
   const [searchText, setSearchText] = useState("")
   const entityFromRoute = useEntityFromRoute()
+  const { reloadEntities } = useContext(EntitiesContext)
   const { declaration: entity } = entityFromRoute ?? {}
   const [instances, reloadInstances] = useMappedAPIResource(
     getInstancesByEntityName,
@@ -133,6 +135,7 @@ export const Entity: FunctionalComponent = () => {
                       if (confirm("Are you sure you want to delete this instance?")) {
                         deleteInstanceByEntityNameAndId(entity.name, instance.id)
                           .then(() => reloadInstances())
+                          .then(() => reloadEntities())
                           .catch((error: unknown) => {
                             if (error instanceof Error) {
                               alert("Error deleting instance:\n\n" + error.toString())

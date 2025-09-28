@@ -32,7 +32,7 @@ const App: FunctionComponent = () => {
 
   return (
     <LocationProvider>
-      <EntitiesContext.Provider value={entities ?? []}>
+      <EntitiesContext.Provider value={{ entities: entities ?? [], reloadEntities }}>
         <Router>
           <Route path="/" component={Home} />
           <Route path="/entities/:name" component={Entity} />

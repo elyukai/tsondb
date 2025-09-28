@@ -8,7 +8,7 @@ import { Markdown } from "../utils/Markdown.tsx"
 export const homeTitle = "Entities"
 
 export const Home: FunctionalComponent = () => {
-  const entities = useContext(EntitiesContext)
+  const { entities } = useContext(EntitiesContext)
 
   useEffect(() => {
     document.title = homeTitle + " — TSONDB"
