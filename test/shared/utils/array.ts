@@ -1,6 +1,6 @@
 import { deepEqual, throws } from "assert/strict"
 import { describe, it } from "node:test"
-import { difference, insertAt, removeAt, unique } from "../../../src/shared/utils/array.ts"
+import { difference, insertAt, removeAt, reorder, unique } from "../../../src/shared/utils/array.ts"
 
 describe("removeAt", () => {
   it("removes an element at the given index", () => {
@@ -61,5 +61,25 @@ describe("unique", () => {
     const arr = [{ id: 1 }, { id: 2 }, { id: 1 }]
     const equalityCheck = (a: { id: number }, b: { id: number }) => a.id === b.id
     deepEqual(unique(arr, equalityCheck), [{ id: 1 }, { id: 2 }])
+  })
+})
+
+describe("reorder", () => {
+  it("reorders an element from sourceIndex to targetIndex", () => {
+    deepEqual(reorder([1, 2, 3, 4, 5], 1, 3), [1, 3, 4, 2, 5])
+    deepEqual(reorder([1, 2, 3, 4, 5], 3, 1), [1, 4, 2, 3, 5])
+    deepEqual(reorder([1, 2, 3, 4, 5], 0, 4), [2, 3, 4, 5, 1])
+    deepEqual(reorder([1, 2, 3, 4, 5], 4, 0), [5, 1, 2, 3, 4])
+    deepEqual(reorder([1, 2, 3, 4, 5], 2, 2), [1, 2, 3, 4, 5])
+  })
+
+  it("throws an error if the sourceIndex is out of bounds", () => {
+    throws(() => reorder([1, 2, 3], -1, 0), RangeError)
+    throws(() => reorder([1, 2, 3], 3, 0), RangeError)
+  })
+
+  it("throws an error if the targetIndex is out of bounds", () => {
+    throws(() => reorder([1, 2, 3], 0, -1), RangeError)
+    throws(() => reorder([1, 2, 3], 0, 3), RangeError)
   })
 })

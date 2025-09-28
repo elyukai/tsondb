@@ -15,23 +15,27 @@ export interface InstanceContainerOverview {
   id: string
   gitStatus?: GitFileStatus
   displayName: string
+  displayNameLocaleId?: string
 }
 
 export const getInstanceContainerOverview = (
   entity: EntityDecl,
   instanceContainer: InstanceContainer,
   getInstanceById: GetInstanceById,
-  locales?: string[],
+  locales: string[],
 ): InstanceContainerOverview => {
   const { content: _, ...rest } = instanceContainer
+  const { name: displayName, localeId: displayNameLocaleId } = getDisplayNameFromEntityInstance(
+    entity,
+    instanceContainer.content,
+    getInstanceById,
+    locales,
+  )
+
   return {
     ...rest,
-    displayName: getDisplayNameFromEntityInstance(
-      entity,
-      instanceContainer.content,
-      getInstanceById,
-      locales,
-    ),
+    displayName,
+    displayNameLocaleId,
   }
 }
 

@@ -13,20 +13,25 @@ const getValueAtPath = (value: unknown, path: string): unknown => {
   return current
 }
 
+export type DisplayNameResult = { name: string; localeId?: string }
+
 export const getSerializedDisplayNameFromEntityInstance = (
   entity: SerializedEntityDecl,
   instance: unknown,
   defaultName: string,
-  locales: string[] = [],
-): string => {
+  locales: string[],
+): DisplayNameResult => {
   if (entity.displayName === null) {
-    return defaultName
+    return { name: defaultName, localeId: locales[0] }
   }
 
   const displayNamePath = entity.displayName ?? "name"
 
   if (typeof displayNamePath === "string") {
-    return (getValueAtPath(instance, displayNamePath) as string | undefined) ?? defaultName
+    return {
+      name: (getValueAtPath(instance, displayNamePath) as string | undefined) ?? defaultName,
+      localeId: locales[0],
+    }
   } else {
     const localeMapPath = displayNamePath.pathToLocaleMap ?? "translations"
     const localeMap = getValueAtPath(instance, localeMapPath) as Record<string, unknown> | undefined
@@ -35,18 +40,25 @@ export const getSerializedDisplayNameFromEntityInstance = (
     const availableLocales: LocaleMapKey[] = Object.keys(localeMap ?? {})
 
     return availableLocales.length === 0
-      ? defaultName
-      : (locales.reduce(
-          (name: string | undefined, locale) =>
-            name ??
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            (getValueAtPath(localeMap![locale], pathInLocaleMap) as string | undefined),
-          undefined,
-        ) ??
+      ? { name: defaultName }
+      : (locales.reduce((name: { name: string; localeId: string } | undefined, locale) => {
+          if (name) return name
+
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          (getValueAtPath(localeMap![availableLocales[0]!], pathInLocaleMap) as
+          const possibleName = getValueAtPath(localeMap![locale], pathInLocaleMap) as
             | string
-            | undefined) ??
-          defaultName)
+            | undefined
+          if (possibleName) {
+            return { name: possibleName, localeId: locale }
+          } else {
+            return undefined
+          }
+        }, undefined) ?? {
+          name:
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            (getValueAtPath(localeMap![availableLocales[0]!], pathInLocaleMap) as
+              | string
+              | undefined) ?? defaultName,
+        })
   }
 }

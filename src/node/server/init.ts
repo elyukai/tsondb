@@ -33,6 +33,7 @@ export const init = async (
   schema: Schema,
   dataRootPath: string,
   instancesByEntityName: InstancesByEntityName,
+  defaultLocales: string[],
 ): Promise<TSONDBRequestLocals> => {
   const { git, root: gitRoot, status: gitStatus } = await getGit(dataRootPath)
 
@@ -86,7 +87,8 @@ export const init = async (
     localeEntity: schema.localeEntity,
     getInstanceById,
     referencesToInstances,
-    locales: ["de-DE", "en-US"], // TODO: Make this configurable
+    defaultLocales,
+    locales: defaultLocales,
   }
 
   return requestLocals

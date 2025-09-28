@@ -1,5 +1,8 @@
+import type { WebConfig } from "../web/context/config.ts"
 import type { SerializedDecl } from "./schema/declarations/Declaration.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "./utils/instances.ts"
+
+export type GetWebConfigResponseBody = WebConfig
 
 export interface GetAllDeclarationsResponseBody<D extends SerializedDecl = SerializedDecl> {
   declarations: { declaration: D; instanceCount: number }[]
@@ -39,7 +42,7 @@ export interface DeleteInstanceOfEntityResponseBody {
 
 export interface GetAllInstancesResponseBody {
   instances: {
-    [entity: string]: { id: string; name: string }[]
+    [entity: string]: { id: string; name: string; displayNameLocaleId?: string }[]
   }
 }
 

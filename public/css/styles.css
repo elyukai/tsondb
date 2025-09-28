@@ -37,6 +37,7 @@
   --highlight-color: #a08500;
   --highlight-background: #fdfab9;
   --disabled-color: #cdced2;
+  --shadow-color: rgba(53, 56, 58, 0.5);
   --git-status-untracked-color: rgb(13, 149, 101);
   --git-status-untracked-background: rgba(13, 149, 101, 0.15);
   --git-status-added-color: rgb(20, 148, 29);
@@ -86,6 +87,7 @@
     --highlight-color-list-item-marker: rgb(220, 133, 245);
     --highlight-color-table-marker: rgb(244, 135, 171);
     --highlight-color-attributed: rgb(137, 157, 244);
+    --shadow-color: rgba(0, 0, 0, 0);
   }
 }
 
@@ -373,6 +375,25 @@ select {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+.entry-groups {
+  list-style-type: " ";
+  padding: 0;
+  margin: 1.5rem 0 0;
+}
+
+.entry-groups-item {
+  padding: 0;
+  margin: 2rem 0 0;
+}
+
+.entry-groups-item__title {
+  margin: 0;
+}
+
+.entry-groups-item .entries {
+  margin: 1rem 0 0;
 }
 
 .entries {
@@ -704,7 +725,10 @@ button[type="submit"] {
 
 .description {
   color: var(--secondary-color);
-  margin: 0 0 3rem;
+}
+
+:is(.header-with-btns, h1) + .description {
+  margin-bottom: 3rem;
 }
 
 .comment {
@@ -896,4 +920,45 @@ aside.git .branch .select-wrapper {
 
 .git-overlay.git-overlay--open {
   display: block;
+}
+
+dialog {
+  background: var(--background);
+  color: var(--color);
+  border: none;
+  box-shadow: 0 0.5rem 2rem var(--shadow-color);
+  padding: 1.6rem 1.5rem;
+  max-height: calc(100% - 2rem);
+  max-width: calc(100% - 2rem);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+dialog header :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+}
+
+dialog.settings {
+  max-width: min(calc(100% - 2rem), 36rem);
+}
+
+dialog.settings section.locale-settings ol {
+  padding: 0 0 0 1.5rem;
+  margin: 1rem 0;
+}
+
+dialog.settings section.locale-settings ol li:not(:first-child) {
+  margin-top: 0.5rem;
+}
+
+.locale-content {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.locale-content span {
+  flex: 1 1 0;
 }

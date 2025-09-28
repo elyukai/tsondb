@@ -1,4 +1,5 @@
 import type { ComponentChildren, FunctionComponent } from "preact"
+import { Settings } from "./Settings.tsx"
 
 type Props = {
   breadcrumbs: { url: string; label: string }[]
@@ -18,6 +19,7 @@ export const Layout: FunctionComponent<Props> = ({ breadcrumbs, children }) => {
             ))}
           </ol>
         </nav>
+        <Settings />
       </header>
       <main>{children}</main>
     </>

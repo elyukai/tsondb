@@ -1,3 +1,4 @@
+import type { DisplayNameResult } from "../../../shared/utils/displayName.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { Leaves } from "../../../shared/utils/object.ts"
 import type {
@@ -27,7 +28,7 @@ export type GenericDisplayNameFn = (
   instanceDisplayName: string,
   getInstanceById: (id: string) => unknown,
   getDisplayNameForInstanceId: (id: string) => string | undefined,
-  locales: string[] | undefined,
+  locales: string[],
 ) => string
 
 export type GenericEntityDisplayName =
@@ -38,10 +39,11 @@ export type GenericEntityDisplayName =
 export type DisplayNameFn<T extends ObjectType = ObjectType> = (
   instance: AsType<T>,
   instanceDisplayName: string,
+  instanceDisplayNameLocaleId: string | undefined,
   getInstanceById: (id: string) => unknown,
   getDisplayNameForInstanceId: (id: string) => string | undefined,
-  locales: string[] | undefined,
-) => string
+  locales: string[],
+) => DisplayNameResult
 
 export type EntityDisplayName<T extends ObjectType> =
   | Leaves<AsType<T>>

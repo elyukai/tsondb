@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from "preact/hooks"
+import { useCallback, useContext, useEffect, useState } from "preact/hooks"
 import type { GetAllInstancesResponseBody } from "../../shared/api.ts"
-import { getAllInstances } from "../api.ts"
+import { getAllInstances } from "../api/instances.ts"
+import { LocalesContext } from "../context/locales.ts"
 
 export type InstanceNamesByEntity = GetAllInstancesResponseBody["instances"]
 
-export const useInstanceNamesByEntity = (
-  locales: string[] = [],
-): [InstanceNamesByEntity | undefined, () => void] => {
+export const useInstanceNamesByEntity = (): [InstanceNamesByEntity | undefined, () => void] => {
+  const { locales } = useContext(LocalesContext)
   const [instanceNamesByEntity, setInstanceNamesByEntity] =
     useState<GetAllInstancesResponseBody["instances"]>()
 

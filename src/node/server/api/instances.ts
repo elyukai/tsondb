@@ -13,26 +13,26 @@ instancesApi.use((req, _res, next) => {
 })
 
 instancesApi.get("/", (req, res) => {
-  const locales = (
-    Array.isArray(req.query["locales"]) ? req.query["locales"] : [req.query["locales"]]
-  ).filter(locale => typeof locale === "string")
-
   const body: GetAllInstancesResponseBody = {
     instances: Object.fromEntries(
       Object.entries(req.instancesByEntityName)
         .filter(([entityName]) => Object.hasOwn(req.entitiesByName, entityName))
         .map(([entityName, instances]) => [
           entityName,
-          instances.map(instance => ({
-            id: instance.id,
-            name: getDisplayNameFromEntityInstance(
+          instances.map(instance => {
+            const { name, localeId } = getDisplayNameFromEntityInstance(
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               req.entitiesByName[entityName]!,
               instance.content,
               req.getInstanceById,
-              locales,
-            ),
-          })),
+              req.locales,
+            )
+            return {
+              id: instance.id,
+              name,
+              displayNameLocaleId: localeId,
+            }
+          }),
         ]),
     ),
   }
