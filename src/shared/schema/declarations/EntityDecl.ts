@@ -8,6 +8,7 @@ import {
 } from "../Node.ts"
 import {
   getReferencesForSerializedObjectType,
+  type SerializedMemberDecl,
   type SerializedObjectType,
 } from "../types/ObjectType.ts"
 import type { SerializedAsType } from "../types/Type.ts"
@@ -27,17 +28,21 @@ export type SerializedEntityDisplayName<T extends SerializedObjectType> =
     }
   | null
 
+type TConstraint = Record<string, SerializedMemberDecl>
+
 export interface SerializedEntityDecl<
   Name extends string = string,
-  T extends SerializedObjectType = SerializedObjectType,
+  T extends TConstraint = TConstraint,
+  FK extends (keyof T & string) | undefined = (keyof T & string) | undefined,
 > extends SerializedBaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
   namePlural: string
-  type: T
+  type: SerializedObjectType<T>
+  parentReferenceKey: FK
   /**
    * @default "name"
    */
-  displayName?: SerializedEntityDisplayName<T>
+  displayName?: SerializedEntityDisplayName<SerializedObjectType<T>>
   displayNameCustomizer: boolean
   isDeprecated?: boolean
 }

@@ -411,8 +411,16 @@ export type NodeWithResolvedTypeArguments<T extends Node | null> = T extends
   | StringType
   | ReferenceIdentifierType
   ? T
-  : T extends EntityDecl<infer N, infer V>
-    ? EntityDecl<N, NodeWithResolvedTypeArguments<V>>
+  : T extends EntityDecl<infer N, infer P, infer FK>
+    ? EntityDecl<
+        N,
+        {
+          [K in keyof P]: P[K] extends MemberDecl<infer PT, infer R>
+            ? MemberDecl<NodeWithResolvedTypeArguments<PT>, R>
+            : never
+        },
+        FK
+      >
     : T extends EnumDecl<infer N, infer V, TypeParameter[]>
       ? EnumDecl<
           N,
@@ -456,8 +464,8 @@ export type NodeWithResolvedTypeArguments<T extends Node | null> = T extends
                         >
                       : T extends TypeParameter<infer N, infer C>
                         ? TypeParameter<N, NodeWithResolvedTypeArguments<C>>
-                        : T extends ChildEntitiesType<infer E, infer P>
-                          ? ChildEntitiesType<E, P>
+                        : T extends ChildEntitiesType<infer E>
+                          ? ChildEntitiesType<E>
                           : T extends null
                             ? null
                             : never
@@ -539,21 +547,25 @@ export type SerializedTypeParameters<T extends TypeParameter[]> = {
     : never
 }
 
+export type SerializedMemberDeclObject<T extends Record<string, MemberDecl>> = {
+  [K in keyof T]: T[K] extends MemberDecl<infer CT, infer R>
+    ? SerializedMemberDecl<Serialized<CT>, R>
+    : never
+}
+
+export type SerializedEnumCaseDeclObject<T extends Record<string, EnumCaseDecl>> = {
+  [K in keyof T]: T[K] extends EnumCaseDecl<infer CT>
+    ? SerializedEnumCaseDecl<CT extends Type ? Serialized<CT> : null>
+    : never
+}
+
 // prettier-ignore
 export type Serialized<T extends Node> =
-  T extends EntityDecl<infer Name, infer T> ? SerializedEntityDecl<Name, Serialized<T>> :
-  T extends EnumDecl<infer Name, infer T, infer Params> ? SerializedEnumDecl<Name, {
-    [K in keyof T]: T[K] extends EnumCaseDecl<infer CT>
-      ? SerializedEnumCaseDecl<CT extends Type ? Serialized<CT> : null>
-      : never
-  }, SerializedTypeParameters<Params>> :
+  T extends EntityDecl<infer Name, infer T, infer FK> ? SerializedEntityDecl<Name, SerializedMemberDeclObject<T>, FK> :
+  T extends EnumDecl<infer Name, infer T, infer Params> ? SerializedEnumDecl<Name, SerializedEnumCaseDeclObject<T>, SerializedTypeParameters<Params>> :
   T extends TypeAliasDecl<infer Name, infer T, infer Params> ? SerializedTypeAliasDecl<Name, Serialized<T>, SerializedTypeParameters<Params>> :
   T extends ArrayType<infer T> ? SerializedArrayType<Serialized<T>> :
-  T extends ObjectType<infer T> ? SerializedObjectType<{
-    [K in keyof T]: T[K] extends MemberDecl<infer CT, infer R>
-      ? SerializedMemberDecl<CT extends Type ? Serialized<CT> : null, R>
-      : never
-  }> :
+  T extends ObjectType<infer T> ? SerializedObjectType<SerializedMemberDeclObject<T>> :
   T extends BooleanType ? SerializedBooleanType :
   T extends DateType ? SerializedDateType :
   T extends FloatType ? SerializedFloatType :
@@ -562,60 +574,53 @@ export type Serialized<T extends Node> =
   T extends TypeArgumentType<infer T> ? SerializedTypeArgumentType<Serialized<T>> :
   T extends ReferenceIdentifierType ? SerializedReferenceIdentifierType :
   T extends IncludeIdentifierType<infer Params> ? SerializedIncludeIdentifierType<SerializedTypeParameters<Params>> :
-  T extends NestedEntityMapType<infer Name, infer T> ? SerializedNestedEntityMapType<Name, {
-    [K in keyof T]: T[K] extends MemberDecl<infer CT, infer R>
-      ? SerializedMemberDecl<CT extends Type ? Serialized<CT> : null, R>
-      : never
-  }> :
-  T extends EnumType<infer T> ? SerializedEnumType<{
-    [K in keyof T]: T[K] extends EnumCaseDecl<infer CT>
-      ? SerializedEnumCaseDecl<CT extends Type ? Serialized<CT> : null>
-      : never
-  }> :
+  T extends NestedEntityMapType<infer Name, infer T> ? SerializedNestedEntityMapType<Name, SerializedMemberDeclObject<T>> :
+  T extends EnumType<infer T> ? SerializedEnumType<SerializedEnumCaseDeclObject<T>> :
   T extends TypeParameter<infer N, infer C> ? SerializedTypeParameter<N, C extends Type ? Serialized<C> : undefined> :
   T extends ChildEntitiesType ? SerializedChildEntitiesType :
   never
 
 export type SerializedOf<T extends Node> = SerializedNodeMap[T["kind"]][1]
 
-export type Serializer<T extends Node = Node> = <N extends T>(node: N) => SerializedOf<N>
+export type Serializer<T extends Node = Node> = (node: T) => Serialized<T>
 
-export const serializeNode: Serializer = node => {
+export const serializeNode = <T extends Node>(node: T): Serialized<T> => {
+  type SN = Serialized<T>
   switch (node.kind) {
     case NodeKind.EntityDecl:
-      return serializeEntityDecl(node)
+      return serializeEntityDecl(node) as SN
     case NodeKind.EnumDecl:
-      return serializeEnumDecl(node)
+      return serializeEnumDecl(node) as SN
     case NodeKind.TypeAliasDecl:
-      return serializeTypeAliasDecl(node)
+      return serializeTypeAliasDecl(node) as SN
     case NodeKind.ArrayType:
-      return serializeArrayType(node)
+      return serializeArrayType(node) as SN
     case NodeKind.ObjectType:
-      return serializeObjectType(node)
+      return serializeObjectType(node) as SN
     case NodeKind.BooleanType:
-      return serializeBooleanType(node)
+      return serializeBooleanType(node) as SN
     case NodeKind.DateType:
-      return serializeDateType(node)
+      return serializeDateType(node) as SN
     case NodeKind.FloatType:
-      return serializeFloatType(node)
+      return serializeFloatType(node) as SN
     case NodeKind.IntegerType:
-      return serializeIntegerType(node)
+      return serializeIntegerType(node) as SN
     case NodeKind.StringType:
-      return serializeStringType(node)
+      return serializeStringType(node) as SN
     case NodeKind.TypeArgumentType:
-      return serializeTypeArgumentType(node)
+      return serializeTypeArgumentType(node) as SN
     case NodeKind.ReferenceIdentifierType:
-      return serializeReferenceIdentifierType(node)
+      return serializeReferenceIdentifierType(node) as SN
     case NodeKind.IncludeIdentifierType:
-      return serializeIncludeIdentifierType(node)
+      return serializeIncludeIdentifierType(node) as SN
     case NodeKind.NestedEntityMapType:
-      return serializeNestedEntityMapType(node)
+      return serializeNestedEntityMapType(node) as SN
     case NodeKind.EnumType:
-      return serializeEnumType(node)
+      return serializeEnumType(node) as SN
     case NodeKind.TypeParameter:
-      return serializeTypeParameter(node)
+      return serializeTypeParameter(node) as SN
     case NodeKind.ChildEntitiesType:
-      return serializeChildEntitiesType(node)
+      return serializeChildEntitiesType(node) as SN
     default:
       return assertExhaustive(node)
   }

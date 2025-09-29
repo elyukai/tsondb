@@ -1,3 +1,4 @@
+import type { SerializedMemberDecl } from "../../../../shared/schema/types/ObjectType.ts"
 import { sortObjectKeys } from "../../../../shared/utils/object.ts"
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import type { ObjectConstraints } from "../../../../shared/validation/object.ts"
@@ -8,7 +9,8 @@ import type {
   GetNestedDeclarations,
   GetReferences,
   Predicate,
-  Serializer,
+  Serialized,
+  SerializedMemberDeclObject,
   TypeArgumentsResolver,
   Validator,
 } from "../../Node.ts"
@@ -21,6 +23,7 @@ import {
   validateType,
 } from "../../Node.ts"
 import { validateOption } from "../../validation/options.ts"
+import { isChildEntitiesType } from "../references/ChildEntitiesType.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
 import { formatValue } from "../Type.ts"
 
@@ -88,7 +91,9 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
     return [TypeError(`expected an object, but got ${json(value, helpers.useStyling)}`)]
   }
 
-  const expectedKeys = Object.keys(type.properties)
+  const expectedKeys = Object.keys(type.properties).filter(
+    key => type.properties[key] !== undefined && !isChildEntitiesType(type.properties[key].type),
+  )
 
   return parallelizeErrors([
     ...validateObjectConstraints(type, expectedKeys, value),
@@ -156,17 +161,19 @@ export const Optional = <T extends Type>(options: {
   type: T
 }) => MemberDecl(false, options.type, options.comment, options.isDeprecated)
 
-export const serializeObjectType: Serializer<ObjectType> = type => ({
+export const serializeObjectType = <P extends TConstraint>(
+  type: ObjectType<P>,
+): Serialized<ObjectType<P>> => ({
   ...type,
   properties: Object.fromEntries(
-    Object.entries(type.properties).map(([key, prop]) => [
+    Object.entries(type.properties).map(([key, prop]): [string, SerializedMemberDecl] => [
       key,
       {
         ...prop,
         type: serializeNode(prop.type),
       },
     ]),
-  ),
+  ) as SerializedMemberDeclObject<P>,
 })
 
 export const getReferencesForObjectType: GetReferences<ObjectType> = (type, value) =>

@@ -19,11 +19,12 @@ export const Home: FunctionalComponent = () => {
   const lowerSearchText = searchText.toLowerCase().replaceAll(" ", "")
   const filteredEntities =
     searchText.length === 0
-      ? entities
+      ? entities.filter(entity => entity.declaration.parentReferenceKey === undefined)
       : entities.filter(
           entity =>
-            entity.declaration.name.toLowerCase().includes(lowerSearchText) ||
-            entity.declaration.namePlural.toLowerCase().includes(lowerSearchText),
+            entity.declaration.parentReferenceKey === undefined &&
+            (entity.declaration.name.toLowerCase().includes(lowerSearchText) ||
+              entity.declaration.namePlural.toLowerCase().includes(lowerSearchText)),
         )
 
   return (

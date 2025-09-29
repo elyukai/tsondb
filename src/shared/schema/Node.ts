@@ -91,6 +91,7 @@ import {
 } from "./types/TypeArgumentType.ts"
 
 export interface NodeKind {
+  ChildEntityDecl: "ChildEntityDecl"
   EntityDecl: "EntityDecl"
   EnumDecl: "EnumDecl"
   EnumCaseDecl: "EnumCaseDecl"
@@ -113,6 +114,7 @@ export interface NodeKind {
 }
 
 export const NodeKind: NodeKind = enumOfObject({
+  ChildEntityDecl: null,
   EntityDecl: null,
   EnumDecl: null,
   EnumCaseDecl: null,
@@ -148,8 +150,16 @@ export type SerializedNodeWithResolvedTypeArguments<T extends SerializedNode | n
   | SerializedStringType
   | SerializedReferenceIdentifierType
   ? T
-  : T extends SerializedEntityDecl<infer N, infer V>
-    ? SerializedEntityDecl<N, SerializedNodeWithResolvedTypeArguments<V>>
+  : T extends SerializedEntityDecl<infer N, infer P, infer FK>
+    ? SerializedEntityDecl<
+        N,
+        {
+          [K in keyof P]: P[K] extends SerializedMemberDecl<infer PT, infer R>
+            ? SerializedMemberDecl<SerializedNodeWithResolvedTypeArguments<PT>, R>
+            : never
+        },
+        FK
+      >
     : T extends SerializedEnumDecl<infer N, infer V, SerializedTypeParameter[]>
       ? SerializedEnumDecl<
           N,

@@ -1,6 +1,5 @@
-import { createEntityIdentifierType, type EntityDecl } from "../../declarations/EntityDecl.ts"
+import { type EntityDecl } from "../../declarations/EntityDecl.ts"
 import {
-  validateType,
   type GetNestedDeclarations,
   type GetReferences,
   type Predicate,
@@ -9,36 +8,25 @@ import {
   type Validator,
 } from "../../Node.js"
 import { getNestedDeclarations, NodeKind } from "../../Node.ts"
-import { ArrayType } from "../generic/ArrayType.ts"
 import type { MemberDecl } from "../generic/ObjectType.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
-import type { ReferenceIdentifier } from "./ReferenceIdentifierType.ts"
-
-type OnlyReferenceMemberKeys<O extends Record<string, MemberDecl>> = {
-  [K in keyof O]: O[K] extends MemberDecl<ReferenceIdentifier, true> ? K : never
-}[keyof O]
-
-type ReferenceMemberKeysFromEntity<E extends EntityDecl> =
-  E extends EntityDecl<string, infer O> ? OnlyReferenceMemberKeys<O["properties"]> : never
 
 export interface ChildEntitiesType<
-  T extends EntityDecl = EntityDecl,
-  P extends ReferenceMemberKeysFromEntity<T> = ReferenceMemberKeysFromEntity<T>,
+  T extends EntityDecl<string, Record<string, MemberDecl>, string> = EntityDecl<
+    string,
+    Record<string, MemberDecl>,
+    string
+  >,
 > extends BaseType {
   kind: NodeKind["ChildEntitiesType"]
   entity: T
-  parentReferencePath: P
 }
 
-export const ChildEntitiesType = <
-  T extends EntityDecl,
-  P extends ReferenceMemberKeysFromEntity<T>,
->(options: {
-  entity: T
-  parentReferencePath: P
-}): ChildEntitiesType<T, P> => ({
-  ...options,
+export const ChildEntitiesType = <T extends EntityDecl<string, Record<string, MemberDecl>, string>>(
+  entity: T,
+): ChildEntitiesType<T> => ({
   kind: NodeKind.ChildEntitiesType,
+  entity,
 })
 
 export { ChildEntitiesType as ChildEntities }
@@ -51,21 +39,7 @@ export const getNestedDeclarationsInChildEntitiesType: GetNestedDeclarations<Chi
   type,
 ) => getNestedDeclarations([type.entity, ...addedDecls], type.entity)
 
-export const validateChildEntitiesType: Validator<ChildEntitiesType> = (helpers, type, value) =>
-  validateType(
-    helpers,
-    ArrayType(createEntityIdentifierType(), { uniqueItems: true }),
-    value,
-  ).concat(
-    Array.isArray(value) && value.every(id => typeof id === "string")
-      ? value.flatMap(id =>
-          helpers.checkReferentialIntegrity({
-            name: type.entity.name,
-            value: id,
-          }),
-        )
-      : [],
-  )
+export const validateChildEntitiesType: Validator<ChildEntitiesType> = () => []
 
 export const resolveTypeArgumentsInChildEntitiesType: TypeArgumentsResolver<ChildEntitiesType> = (
   _args,
@@ -75,7 +49,6 @@ export const resolveTypeArgumentsInChildEntitiesType: TypeArgumentsResolver<Chil
 export const serializeChildEntitiesType: Serializer<ChildEntitiesType> = type => ({
   ...type,
   entity: type.entity.name,
-  parentReferencePath: type.parentReferencePath,
 })
 
 export const getReferencesForChildEntitiesType: GetReferences<ChildEntitiesType> = (

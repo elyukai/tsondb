@@ -23,9 +23,11 @@ import {
 import type { BaseDecl } from "./Declaration.ts"
 import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
 
+type TConstraint = Record<string, EnumCaseDecl>
+
 export interface EnumDecl<
   Name extends string = string,
-  T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>,
+  T extends TConstraint = TConstraint,
   Params extends TypeParameter[] = TypeParameter[],
 > extends BaseDecl<Name, Params> {
   kind: NodeKind["EnumDecl"]
@@ -35,7 +37,7 @@ export interface EnumDecl<
 
 export const GenEnumDecl = <
   Name extends string,
-  T extends Record<string, EnumCaseDecl>,
+  T extends TConstraint,
   Params extends TypeParameter[],
 >(
   sourceUrl: string,
@@ -115,3 +117,7 @@ export const serializeEnumDecl: Serializer<EnumDecl> = decl => ({
 
 export const getReferencesForEnumDecl: GetReferences<EnumDecl> = (decl, value) =>
   getReferencesForEnumType(decl.type.value, value)
+
+export const cases = <T extends TConstraint>(
+  decl: EnumDecl<string, T>,
+): EnumCaseDecl<T[keyof T]["type"]>[] => Object.values(decl.type.value.values)

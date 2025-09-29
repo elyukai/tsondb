@@ -3,7 +3,6 @@ import type { SerializedChildEntitiesType } from "../../../shared/schema/types/C
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
-import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
 type Props = {
   type: SerializedChildEntitiesType
@@ -19,10 +18,6 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = ({
   getDeclFromDeclName,
   onChange,
 }) => {
-  if (!Array.isArray(value)) {
-    return <MismatchingTypeError actual={value} expected="entity array" />
-  }
-
   const childEntity = getDeclFromDeclName(type.entity)
 
   if (childEntity === undefined) {

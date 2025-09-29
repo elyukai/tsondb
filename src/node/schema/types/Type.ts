@@ -1,4 +1,5 @@
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
+import type { Decl } from "../index.ts"
 import type { BaseNode } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { ArrayType } from "./generic/ArrayType.ts"
@@ -44,23 +45,28 @@ export type Type =
   | EnumType
   | ChildEntitiesType
 
-export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): void {
+export function walkTypeNodeTree(
+  callbackFn: (type: Type, parentTypes: Type[], parentDecl: Decl) => void,
+  type: Type,
+  parentTypes: Type[],
+  parentDecl: Decl,
+): void {
   switch (type.kind) {
     case NodeKind.ArrayType: {
-      callbackFn(type)
-      walkTypeNodeTree(callbackFn, type.items)
+      callbackFn(type, parentTypes, parentDecl)
+      walkTypeNodeTree(callbackFn, type.items, [...parentTypes, type], parentDecl)
       return
     }
     case NodeKind.ObjectType: {
-      callbackFn(type)
+      callbackFn(type, parentTypes, parentDecl)
       Object.values(type.properties).forEach(prop => {
-        walkTypeNodeTree(callbackFn, prop.type)
+        walkTypeNodeTree(callbackFn, prop.type, [...parentTypes, type], parentDecl)
       })
       return
     }
     case NodeKind.NestedEntityMapType: {
-      callbackFn(type)
-      walkTypeNodeTree(callbackFn, type.type.value)
+      callbackFn(type, parentTypes, parentDecl)
+      walkTypeNodeTree(callbackFn, type.type.value, [...parentTypes, type], parentDecl)
       return
     }
     case NodeKind.BooleanType:
@@ -71,21 +77,21 @@ export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): 
     case NodeKind.TypeArgumentType:
     case NodeKind.ReferenceIdentifierType:
     case NodeKind.ChildEntitiesType: {
-      callbackFn(type)
+      callbackFn(type, parentTypes, parentDecl)
       return
     }
     case NodeKind.IncludeIdentifierType: {
-      callbackFn(type)
+      callbackFn(type, parentTypes, parentDecl)
       type.args.forEach(arg => {
-        walkTypeNodeTree(callbackFn, arg)
+        walkTypeNodeTree(callbackFn, arg, [...parentTypes, type], parentDecl)
       })
       return
     }
     case NodeKind.EnumType: {
-      callbackFn(type)
+      callbackFn(type, parentTypes, parentDecl)
       Object.values(type.values).forEach(value => {
         if (value.type) {
-          walkTypeNodeTree(callbackFn, value.type)
+          walkTypeNodeTree(callbackFn, value.type, [...parentTypes, type], parentDecl)
         }
       })
       return
@@ -121,9 +127,9 @@ export type AsType<T extends Type> =
                     : T extends NestedEntityMapType
                       ? unknown
                       : T extends ReferenceIdentifierType
-                        ? unknown
+                        ? string
                         : T extends ChildEntitiesType
-                          ? unknown
+                          ? string[]
                           : never
 
 export type AsNode<T> = T extends (infer I)[]
@@ -142,7 +148,9 @@ export type AsNode<T> = T extends (infer I)[]
         ? FloatType
         : T extends boolean
           ? BooleanType
-          : never
+          : T extends Date
+            ? DateType
+            : never
 
 export const findTypeAtPath = (type: Type, path: string[]): Type | undefined => {
   const [head, ...tail] = path
