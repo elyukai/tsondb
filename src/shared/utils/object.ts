@@ -33,3 +33,6 @@ export type Leaves<T> = T extends object
         : `${Exclude<K, symbol>}${Leaves<T[K]> extends never ? "" : `.${Leaves<T[K]>}`}`
     }[keyof T]
   : never
+
+export const onlyKeys = <T extends object, K extends keyof T>(obj: T, ...keys: K[]): Pick<T, K> =>
+  Object.fromEntries(Object.entries(obj).filter(([key]) => keys.includes(key as K))) as Pick<T, K>

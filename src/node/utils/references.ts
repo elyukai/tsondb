@@ -1,8 +1,12 @@
 import Debug from "debug"
+import { resolve } from "node:path"
+import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import { difference, removeAt } from "../../shared/utils/array.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
+import { isOk } from "../../shared/utils/result.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.ts"
+import type { ReferencesWorkerTask } from "./referencesWorker.ts"
 import { WorkerPool } from "./workers.ts"
 
 const debug = Debug("tsondb:utils:references")
@@ -30,6 +34,16 @@ const addReferences = (
 ): ReferencesToInstances =>
   references.reduce((acc1, reference) => addReference(acc1, reference, instanceId), acc)
 
+const mergeReferences = (
+  acc: ReferencesToInstances,
+  toMerge: ReferencesToInstances,
+): ReferencesToInstances => {
+  for (const instanceId in toMerge) {
+    ;(acc[instanceId] ??= []).push(...(toMerge[instanceId] ?? []))
+  }
+  return acc
+}
+
 const removeReference = (
   acc: ReferencesToInstances,
   reference: string,
@@ -49,26 +63,44 @@ const removeReferences = (
 ): ReferencesToInstances =>
   references.reduce((acc1, reference) => removeReference(acc1, reference, instanceId), acc)
 
-export const getReferencesToInstances = (
+export const getReferencesToInstances = async (
   instancesByEntityName: Record<string, InstanceContainer[]>,
-  entitiesByName: Record<string, EntityDecl>,
+  serializedDeclarationsByName: Record<string, SerializedDecl>,
 ) => {
+  debug("creating reference worker pool ...")
+  const pool = new WorkerPool<
+    ReferencesWorkerTask,
+    ReferencesToInstances,
+    Record<string, SerializedDecl>
+  >(6, resolve(import.meta.dirname, "./referencesWorker.js"), serializedDeclarationsByName)
+
   debug("collecting references ...")
-  return Object.entries(instancesByEntityName).reduce(
-    (acc: ReferencesToInstances, [entityName, instances]) => {
-      const entity = entitiesByName[entityName]
-      if (entity) {
-        const refs = instances.reduce((acc1, instance) => {
-          const references = getReferencesForEntityDecl(entity, instance.content)
-          return addReferences(acc1, references, instance.id)
-        }, acc)
-        debug("collected references for entity %s in %d instances", entityName, instances.length)
-        return refs
-      }
-      return acc
-    },
-    {},
+  const separateResults = await Promise.all(
+    Object.entries(instancesByEntityName).map(
+      ([entityName, instances]) =>
+        new Promise<ReferencesToInstances>((resolve, reject) => {
+          pool.runTask({ entityName, instances }, result => {
+            if (isOk(result)) {
+              debug(
+                "collected references for entity %s in %d instances",
+                entityName,
+                instances.length,
+              )
+              resolve(result.value)
+            } else {
+              reject(result.error)
+            }
+          })
+        }),
+    ),
   )
+
+  await pool.close()
+  const results = separateResults.reduce(mergeReferences, {})
+
+  debug("collected references")
+
+  return results
 }
 
 export const updateReferencesToInstances = (

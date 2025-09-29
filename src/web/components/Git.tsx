@@ -1,8 +1,9 @@
 import type { FunctionComponent } from "preact"
+import { useLocation } from "preact-iso"
 import type { TargetedEvent } from "preact/compat"
-import { useEffect, useState } from "preact/hooks"
-import type { SerializedEntityDecl } from "../../node/schema/declarations/EntityDecl.ts"
+import { useCallback, useContext, useEffect, useState } from "preact/hooks"
 import type { GitStatusResponseBody } from "../../shared/api.ts"
+import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import type { GitFileStatus } from "../../shared/utils/git.ts"
 import {
   getGitStatusForDisplay,
@@ -11,12 +12,12 @@ import {
   isChangedInWorkingDir,
 } from "../../shared/utils/git.ts"
 import type { InstanceContainerOverview } from "../../shared/utils/instances.ts"
+import { getAllEntities } from "../api/declarations.ts"
 import {
   commitStagedFiles,
   createBranch,
-  getAllEntities,
   getBranches,
-  getGitStatus,
+  getStatus,
   pullCommits,
   pushCommits,
   stageAllFiles,
@@ -24,7 +25,8 @@ import {
   switchBranch,
   unstageAllFiles,
   unstageFileOfEntity,
-} from "../api.ts"
+} from "../api/git.ts"
+import { LocalesContext } from "../context/locales.ts"
 
 type Overview = [
   entityName: string,
@@ -91,6 +93,7 @@ const GitFileList: FunctionComponent<{
   )
 
 export const Git: FunctionComponent = () => {
+  const { locales } = useContext(LocalesContext)
   const [isOpen, setIsOpen] = useState(false)
   const [commitsAhead, setCommitsAhead] = useState(0)
   const [commitsBehind, setCommitsBehind] = useState(0)
@@ -101,18 +104,23 @@ export const Git: FunctionComponent = () => {
   const [allBranches, setAllBranches] = useState<string[]>([])
   const [currentBranch, setCurrentBranch] = useState("")
 
-  const updateGitStatus = (localEntities: SerializedEntityDecl[]) =>
-    Promise.all([getGitStatus(), getBranches()]).then(([statusData, branchesData]) => {
-      setIndexFiles(filterFilesForDisplay(isChangedInIndex, localEntities, statusData))
-      setWorkingTreeFiles(filterFilesForDisplay(isChangedInWorkingDir, localEntities, statusData))
-      setCommitsAhead(statusData.commitsAhead)
-      setCommitsBehind(statusData.commitsBehind)
-      setAllBranches(branchesData.allBranches)
-      setCurrentBranch(branchesData.currentBranch)
-    })
+  const updateGitStatus = useCallback(
+    (localEntities: SerializedEntityDecl[]) =>
+      Promise.all([getStatus(locales), getBranches(locales)]).then(([statusData, branchesData]) => {
+        setIndexFiles(filterFilesForDisplay(isChangedInIndex, localEntities, statusData))
+        setWorkingTreeFiles(filterFilesForDisplay(isChangedInWorkingDir, localEntities, statusData))
+        setCommitsAhead(statusData.commitsAhead)
+        setCommitsBehind(statusData.commitsBehind)
+        setAllBranches(branchesData.allBranches)
+        setCurrentBranch(branchesData.currentBranch)
+      }),
+    [locales],
+  )
+
+  const location = useLocation()
 
   useEffect(() => {
-    getAllEntities()
+    getAllEntities(locales)
       .then(async data => {
         const entitiesFromServer = data.declarations.map(decl => decl.declaration)
         setEntities(entitiesFromServer)
@@ -123,10 +131,10 @@ export const Git: FunctionComponent = () => {
           console.error("Error fetching entities:", error.toString())
         }
       })
-  }, [])
+  }, [location.path, locales, updateGitStatus])
 
   const stage = (entityName: string, instance: InstanceContainerOverview) => {
-    stageFileOfEntity(entityName, instance.id)
+    stageFileOfEntity(locales, entityName, instance.id)
       .then(() => updateGitStatus(entities))
       .catch((error: unknown) => {
         if (error instanceof Error) {
@@ -136,7 +144,7 @@ export const Git: FunctionComponent = () => {
   }
 
   const stageAll = () => {
-    stageAllFiles()
+    stageAllFiles(locales)
       .then(() => updateGitStatus(entities))
       .catch((error: unknown) => {
         if (error instanceof Error) {
@@ -146,7 +154,7 @@ export const Git: FunctionComponent = () => {
   }
 
   const unstage = (entityName: string, instance: InstanceContainerOverview) => {
-    unstageFileOfEntity(entityName, instance.id)
+    unstageFileOfEntity(locales, entityName, instance.id)
       .then(() => updateGitStatus(entities))
       .catch((error: unknown) => {
         if (error instanceof Error) {
@@ -156,7 +164,7 @@ export const Git: FunctionComponent = () => {
   }
 
   const unstageAll = () => {
-    unstageAllFiles()
+    unstageAllFiles(locales)
       .then(() => updateGitStatus(entities))
       .catch((error: unknown) => {
         if (error instanceof Error) {
@@ -171,7 +179,7 @@ export const Git: FunctionComponent = () => {
       indexFiles.length > 0 &&
       confirm("Do you want to commit all staged files?")
     ) {
-      commitStagedFiles(commitMessage)
+      commitStagedFiles(locales, commitMessage)
         .then(() => {
           setCommitMessage("")
           return updateGitStatus(entities)
@@ -185,7 +193,7 @@ export const Git: FunctionComponent = () => {
   }
 
   const push = () => {
-    pushCommits()
+    pushCommits(locales)
       .then(() => {
         alert("Pushed commits successfully")
         return updateGitStatus(entities)
@@ -196,7 +204,7 @@ export const Git: FunctionComponent = () => {
   }
 
   const pull = () => {
-    pullCommits()
+    pullCommits(locales)
       .then(() => {
         alert("Pulled commits successfully")
         return updateGitStatus(entities)
@@ -219,7 +227,7 @@ export const Git: FunctionComponent = () => {
       return
     }
 
-    createBranch(newBranchName)
+    createBranch(locales, newBranchName)
       .then(() => {
         return updateGitStatus(entities)
       })
@@ -231,7 +239,7 @@ export const Git: FunctionComponent = () => {
   }
 
   const onSwitchBranch = (event: TargetedEvent<HTMLSelectElement>) => {
-    switchBranch(event.currentTarget.value)
+    switchBranch(locales, event.currentTarget.value)
       .then(() => {
         return updateGitStatus(entities)
       })

@@ -1,6 +1,6 @@
 import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute } from "preact-iso"
-import { useCallback, useEffect, useState } from "preact/hooks"
+import { useCallback, useContext, useEffect, useState } from "preact/hooks"
 import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
@@ -8,9 +8,10 @@ import {
   deleteInstanceByEntityNameAndId,
   getInstanceByEntityNameAndId,
   updateInstanceByEntityNameAndId,
-} from "../api.ts"
+} from "../api/declarations.ts"
 import { Layout } from "../components/Layout.tsx"
 import { TypeInput } from "../components/typeInputs/TypeInput.tsx"
+import { LocalesContext } from "../context/locales.ts"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
 import { useGetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
@@ -22,8 +23,10 @@ export const Instance: FunctionalComponent = () => {
     params: { name, id },
   } = useRoute()
 
+  const { locales } = useContext(LocalesContext)
   const [getDeclFromDeclName, declsLoaded] = useGetDeclFromDeclName()
   const entityFromRoute = useEntityFromRoute()
+  const { declaration: entity } = entityFromRoute ?? {}
   const [instanceNamesByEntity] = useInstanceNamesByEntity()
   const [instance, setInstance] = useState<InstanceContainer>()
   const [originalInstance, setOriginalInstance] = useState<InstanceContainer>()
@@ -31,23 +34,24 @@ export const Instance: FunctionalComponent = () => {
   const { route } = useLocation()
 
   useEffect(() => {
-    if (entityFromRoute?.entity && instance?.content && id) {
+    if (entity && instance?.content && id) {
       const defaultName = id
       const instanceName = getSerializedDisplayNameFromEntityInstance(
-        entityFromRoute.entity,
+        entity,
         instance.content,
         defaultName,
-      )
-      const entityName = entityFromRoute.entity.name
+        locales,
+      ).name
+      const entityName = entity.name
       document.title = instanceName + " — " + toTitleCase(entityName) + " — TSONDB"
     } else {
       document.title = "Not found — TSONDB"
     }
-  }, [entityFromRoute?.entity, id, instance?.content])
+  }, [entity, id, instance?.content, locales])
 
   useEffect(() => {
     if (name && id) {
-      getInstanceByEntityNameAndId(name, id)
+      getInstanceByEntityNameAndId(locales, name, id)
         .then(instanceData => {
           setInstance(instanceData.instance)
           setOriginalInstance(instanceData.instance)
@@ -56,12 +60,12 @@ export const Instance: FunctionalComponent = () => {
           console.error("Error fetching entities:", error)
         })
     }
-  }, [id, name])
+  }, [id, locales, name])
 
   const handleSubmit = (event: SubmitEvent) => {
     event.preventDefault()
     if (event.submitter?.getAttribute("name") === "save" && name && id && instance) {
-      updateInstanceByEntityNameAndId(name, id, instance.content)
+      updateInstanceByEntityNameAndId(locales, name, id, instance.content)
         .then(updatedInstance => {
           setInstance(updatedInstance.instance)
           setOriginalInstance(updatedInstance.instance)
@@ -82,38 +86,46 @@ export const Instance: FunctionalComponent = () => {
     return <NotFound />
   }
 
-  if (
-    !entityFromRoute ||
-    !instance ||
-    !originalInstance ||
-    !instanceNamesByEntity ||
-    !declsLoaded
-  ) {
+  if (!entity || !instance || !originalInstance || !instanceNamesByEntity || !declsLoaded) {
     return (
       <Layout
         breadcrumbs={[
           { url: "/", label: homeTitle },
-          { url: `/entities/${name}`, label: name },
+          {
+            url: `/entities/${name}`,
+            label: entity ? toTitleCase(entity.namePlural) : name,
+          },
         ]}
       >
-        <h1>{id}</h1>
-        <p className="loading">Loading …</p>
+        <div class="header-with-btns">
+          <h1 class="empty-name">
+            <span>{id}</span>{" "}
+            <span className="id" aria-hidden>
+              {id}
+            </span>
+          </h1>
+          <button class="destructive" disabled>
+            Delete
+          </button>
+        </div>
+        <p class="loading">Loading …</p>
       </Layout>
     )
   }
 
   const defaultName = id
   const instanceName = getSerializedDisplayNameFromEntityInstance(
-    entityFromRoute.entity,
+    entity,
     instance.content,
     defaultName,
-  )
+    locales,
+  ).name
 
   return (
     <Layout
       breadcrumbs={[
         { url: "/", label: homeTitle },
-        { url: `/entities/${name}`, label: entityFromRoute.entity.name },
+        { url: `/entities/${name}`, label: toTitleCase(entity.namePlural) },
       ]}
     >
       <div class="header-with-btns">
@@ -127,7 +139,7 @@ export const Instance: FunctionalComponent = () => {
           class="destructive"
           onClick={() => {
             if (confirm("Are you sure you want to delete this instance?")) {
-              deleteInstanceByEntityNameAndId(entityFromRoute.entity.name, instance.id)
+              deleteInstanceByEntityNameAndId(locales, entity.name, instance.id)
                 .then(() => {
                   route(`/entities/${name}`)
                 })
@@ -144,7 +156,7 @@ export const Instance: FunctionalComponent = () => {
       </div>
       <form onSubmit={handleSubmit}>
         <TypeInput
-          type={entityFromRoute.entity.type}
+          type={entity.type}
           value={instance.content}
           path={undefined}
           instanceNamesByEntity={instanceNamesByEntity}

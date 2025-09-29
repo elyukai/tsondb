@@ -49,6 +49,8 @@ const _validate = (
     }
   }
 
+  const validationHelpers = createValidators(instancesByEntityName, true, checkReferentialIntegrity)
+
   const errors = (
     checkOnlyEntities.length > 0
       ? entities.filter(entity => checkOnlyEntities.includes(entity.name))
@@ -59,11 +61,7 @@ const _validate = (
         instancesByEntityName[entity.name]?.map(instance =>
           wrapErrorsIfAny(
             `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, instance.fileName))}"`)}`,
-            validateEntityDecl(
-              createValidators(instancesByEntityName, true, checkReferentialIntegrity),
-              entity,
-              instance.content,
-            ),
+            validateEntityDecl(validationHelpers, entity, instance.content),
           ),
         ) ?? [],
       ),
@@ -107,20 +105,25 @@ export const generateAndValidate = async (
 export const serve = async (
   schema: Schema,
   dataRootPath: string,
+  defaultLocales: string[],
   serverOptions?: Partial<ServerOptions>,
 ) => {
+  if (defaultLocales.length === 0) {
+    throw new Error("At least one default locale must be specified to start the server.")
+  }
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   debug("prepared folders")
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
   debug("loaded instances")
-  await createServer(schema, dataRootPath, instancesByEntityName, serverOptions)
+  await createServer(schema, dataRootPath, instancesByEntityName, defaultLocales, serverOptions)
 }
 
 export const generateValidateAndServe = async (
   schema: Schema,
   outputs: Output[],
   dataRootPath: string,
+  defaultLocales: string[],
   serverOptions?: Partial<ServerOptions>,
   validationOptions?: Partial<ValidationOptions>,
 ) => {
@@ -129,7 +132,7 @@ export const generateValidateAndServe = async (
   await prepareFolders(dataRootPath, entities)
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
   _validate(dataRootPath, entities, instancesByEntityName, validationOptions)
-  await createServer(schema, dataRootPath, instancesByEntityName, serverOptions)
+  await createServer(schema, dataRootPath, instancesByEntityName, defaultLocales, serverOptions)
 }
 
 export const format = async (schema: Schema, dataRootPath: string) => {

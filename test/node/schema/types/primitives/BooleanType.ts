@@ -54,7 +54,6 @@ describe("serializeBooleanType", () => {
   it("returns a serializable BooleanType", () => {
     deepEqual(
       serializeBooleanType({
-        parent: StringType(),
         kind: NodeKind.BooleanType,
       }),
       {

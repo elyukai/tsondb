@@ -1,6 +1,6 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedEnumType } from "../../../node/schema/types/generic/EnumType.ts"
 import { discriminatorKey } from "../../../shared/enum.ts"
+import type { SerializedEnumType } from "../../../shared/schema/types/EnumType.ts"
 import { toTitleCase } from "../../../shared/utils/string.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"

@@ -3,6 +3,7 @@ import express from "express"
 import { findPackageJSON } from "node:module"
 import { dirname, join } from "node:path"
 import type { SimpleGit } from "simple-git"
+import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.ts"
 import type { Decl } from "../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
@@ -10,6 +11,7 @@ import type { Schema } from "../schema/Schema.ts"
 import type { ReferencesToInstances } from "../utils/references.ts"
 import { api } from "./api/index.ts"
 import { init } from "./init.ts"
+import { getLocalesFromRequest } from "./utils/locales.ts"
 
 const debug = Debug("tsondb:server")
 
@@ -29,8 +31,10 @@ export interface TSONDBRequestLocals {
   entities: readonly EntityDecl[]
   instancesByEntityName: InstancesByEntityName
   entitiesByName: Record<string, EntityDecl>
+  serializedDeclarationsByName: Record<string, SerializedDecl>
   localeEntity?: EntityDecl
   referencesToInstances: ReferencesToInstances
+  defaultLocales: string[]
   locales: string[]
   getInstanceById: GetInstanceById
 }
@@ -57,6 +61,7 @@ export const createServer = async (
   schema: Schema,
   dataRootPath: string,
   instancesByEntityName: InstancesByEntityName,
+  defaultLocales: string[],
   options?: Partial<ServerOptions>,
 ): Promise<void> => {
   const { port } = { ...defaultOptions, ...options }
@@ -74,11 +79,13 @@ export const createServer = async (
     schema,
     dataRootPath,
     Object.assign({}, instancesByEntityName),
+    defaultLocales,
   )
 
   app.use((req, _res, next) => {
     debug("%s %s", req.method, req.originalUrl)
     Object.assign(req, requestLocals)
+    req.locales = getLocalesFromRequest(req) ?? defaultLocales
     next()
   })
 
@@ -88,8 +95,10 @@ export const createServer = async (
     {
       imports: {
         preact: "/js/node_modules/preact/dist/preact.module.js",
-        "preact/hooks": "/js/node_modules/preact/hooks/dist/hooks.module.js",
         "preact/compat": "/js/node_modules/preact/compat/dist/compat.module.js",
+        "preact/debug": "/js/node_modules/preact/debug/dist/debug.module.js",
+        "preact/devtools": "/js/node_modules/preact/devtools/dist/devtools.module.js",
+        "preact/hooks": "/js/node_modules/preact/hooks/dist/hooks.module.js",
         "preact/jsx-runtime": "/js/node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
         "preact-iso": "/js/node_modules/preact-iso/src/index.js",
       },

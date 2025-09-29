@@ -37,6 +37,7 @@
   --highlight-color: #a08500;
   --highlight-background: #fdfab9;
   --disabled-color: #cdced2;
+  --shadow-color: rgba(53, 56, 58, 0.5);
   --git-status-untracked-color: rgb(13, 149, 101);
   --git-status-untracked-background: rgba(13, 149, 101, 0.15);
   --git-status-added-color: rgb(20, 148, 29);
@@ -48,6 +49,11 @@
   --git-status-renamed-color: rgb(20, 97, 148);
   --git-status-renamed-background: rgba(20, 97, 148, 0.15);
   --shadow-color: rgba(160, 163, 165, 0.5);
+  --highlight-color-bold: rgb(205, 123, 43);
+  --highlight-color-italic: rgb(41, 155, 96);
+  --highlight-color-list-item-marker: rgb(195, 58, 237);
+  --highlight-color-table-marker: rgb(237, 58, 118);
+  --highlight-color-attributed: rgb(48, 81, 228);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -76,6 +82,12 @@
     --button-color-disabled: hsl(260, 6%, 54%);
     --highlight-color: #f2d600;
     --highlight-background: #333300;
+    --highlight-color-bold: rgb(236, 170, 105);
+    --highlight-color-italic: rgb(130, 230, 178);
+    --highlight-color-list-item-marker: rgb(220, 133, 245);
+    --highlight-color-table-marker: rgb(244, 135, 171);
+    --highlight-color-attributed: rgb(137, 157, 244);
+    --shadow-color: rgba(0, 0, 0, 0);
   }
 }
 
@@ -91,8 +103,8 @@ body {
 
 #app {
   display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: "header aside" "main main";
+  grid-template-columns: 1fr;
+  grid-template-areas: "header" "main" "aside";
   gap: 0 1rem;
 }
 
@@ -220,6 +232,7 @@ button.destructive:hover {
   color: var(--button-color-destructive-hover);
 }
 
+a.btn[aria-disabled="true"],
 button:disabled {
   background: var(--button-background-disabled);
   color: var(--button-color-disabled);
@@ -236,7 +249,7 @@ button.destructive:disabled {
 input,
 textarea,
 select,
-.textarea-grow-wrap::after {
+.textarea-grow-wrap__mirror {
   background: var(--background);
   color: var(--color);
   font-family: var(--font-sans);
@@ -262,10 +275,9 @@ select[aria-invalid="true"] {
   display: grid;
 }
 
-.textarea-grow-wrap::after {
-  content: attr(data-value) " ";
+.textarea-grow-wrap .textarea-grow-wrap__mirror {
   white-space: pre-wrap;
-  visibility: hidden;
+  z-index: -1;
 }
 
 .textarea-grow-wrap > textarea {
@@ -274,7 +286,7 @@ select[aria-invalid="true"] {
 }
 
 .textarea-grow-wrap > textarea,
-.textarea-grow-wrap::after {
+.textarea-grow-wrap__mirror {
   grid-area: 1 / 1 / 2 / 2;
 }
 
@@ -364,6 +376,25 @@ select {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+.entry-groups {
+  list-style-type: " ";
+  padding: 0;
+  margin: 1.5rem 0 0;
+}
+
+.entry-groups-item {
+  padding: 0;
+  margin: 2rem 0 0;
+}
+
+.entry-groups-item__title {
+  margin: 0;
+}
+
+.entry-groups-item .entries {
+  margin: 1rem 0 0;
 }
 
 .entries {
@@ -555,6 +586,58 @@ form > .field--container {
   flex: 1 1 0;
 }
 
+.editor--markdown textarea,
+.editor--markdown input,
+.editor--markdown .textarea-grow-wrap__mirror {
+  font-family: var(--font-mono);
+}
+
+.editor--markdown textarea {
+  color: transparent;
+  background: transparent;
+  caret-color: var(--color);
+}
+
+.editor-highlighting strong {
+  color: var(--highlight-color-bold);
+}
+
+.editor-highlighting em {
+  color: var(--highlight-color-italic);
+}
+
+.editor-highlighting .list-item-marker {
+  color: var(--highlight-color-list-item-marker);
+}
+
+.editor-highlighting .table-marker {
+  color: var(--highlight-color-table-marker);
+}
+
+.preview .attributed {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: var(--highlight-color-attributed);
+}
+
+.editor-highlighting .attributed {
+  color: var(--highlight-color-attributed);
+}
+
+.editor-highlighting .attributed__name {
+  font-weight: 700;
+}
+
+.editor-highlighting .attributed__value {
+  font-style: italic;
+}
+
+.help {
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+  margin: 0.25rem 0 0;
+}
+
 .field--string .preview {
   padding: 1rem;
   background: var(--markdown-background);
@@ -571,6 +654,28 @@ form > .field--container {
 
 .field--string .preview > :last-child {
   margin-bottom: 0;
+}
+
+.field--string .preview table {
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.field--string .preview table :is(th, td) {
+  vertical-align: top;
+  padding: 0.25rem 0.5rem;
+}
+
+.field--string .preview table :is(th, td):first-child {
+  padding-left: 0;
+}
+
+.field--string .preview table :is(th, td):last-child {
+  padding-right: 0;
+}
+
+.field--string .preview table tbody tr {
+  border-top: 1px solid var(--tertiary-color);
 }
 
 .container-item {
@@ -621,7 +726,10 @@ button[type="submit"] {
 
 .description {
   color: var(--secondary-color);
-  margin: 0 0 3rem;
+}
+
+:is(.header-with-btns, h1) + .description {
+  margin-bottom: 3rem;
 }
 
 .comment {
@@ -693,7 +801,6 @@ main:has(.form-footer) {
 }
 
 aside.git {
-  max-width: 30rem;
   grid-area: aside;
 }
 
@@ -703,6 +810,7 @@ aside.git h2 {
 
 @media (min-width: 80rem) {
   aside.git {
+    width: 30rem;
     border-left: 1px solid var(--separator-color);
     padding-left: 1rem;
   }
@@ -813,4 +921,45 @@ aside.git .branch .select-wrapper {
 
 .git-overlay.git-overlay--open {
   display: block;
+}
+
+dialog {
+  background: var(--background);
+  color: var(--color);
+  border: none;
+  box-shadow: 0 0.5rem 2rem var(--shadow-color);
+  padding: 1.6rem 1.5rem;
+  max-height: calc(100% - 2rem);
+  max-width: calc(100% - 2rem);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+dialog header :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+}
+
+dialog.settings {
+  max-width: min(calc(100% - 2rem), 36rem);
+}
+
+dialog.settings section.locale-settings ol {
+  padding: 0 0 0 1.5rem;
+  margin: 1rem 0;
+}
+
+dialog.settings section.locale-settings ol li:not(:first-child) {
+  margin-top: 0.5rem;
+}
+
+.locale-content {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.locale-content span {
+  flex: 1 1 0;
 }

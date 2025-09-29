@@ -1,136 +1,40 @@
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
-import type { Decl } from "../declarations/Declaration.ts"
-import { isDecl } from "../declarations/Declaration.ts"
-import type { BaseNode, GetReferences, Serializer } from "../Node.ts"
+import type { BaseNode } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
-import type { Validator } from "../validation/type.ts"
-import type { ArrayType, SerializedArrayType } from "./generic/ArrayType.ts"
-import {
-  formatArrayValue,
-  getReferencesForArrayType,
-  resolveTypeArgumentsInArrayType,
-  serializeArrayType,
-  validateArrayType,
-} from "./generic/ArrayType.ts"
-import type { EnumType, SerializedEnumType } from "./generic/EnumType.ts"
-import {
-  formatEnumType,
-  getReferencesForEnumType,
-  resolveTypeArgumentsInEnumType,
-  serializeEnumType,
-  validateEnumType,
-} from "./generic/EnumType.ts"
-import type {
-  MemberDecl,
-  ObjectType,
-  SerializedMemberDecl,
-  SerializedObjectType,
-} from "./generic/ObjectType.ts"
-import {
-  formatObjectValue,
-  getReferencesForObjectType,
-  resolveTypeArgumentsInObjectType,
-  serializeObjectType,
-  validateObjectType,
-} from "./generic/ObjectType.ts"
-import type { BooleanType, SerializedBooleanType } from "./primitives/BooleanType.ts"
-import {
-  formatBooleanValue,
-  getReferencesForBooleanType,
-  serializeBooleanType,
-  validateBooleanType,
-} from "./primitives/BooleanType.ts"
-import type { DateType, SerializedDateType } from "./primitives/DateType.ts"
-import {
-  formatDateValue,
-  getReferencesForDateType,
-  serializeDateType,
-  validateDateType,
-} from "./primitives/DateType.ts"
-import type { FloatType, SerializedFloatType } from "./primitives/FloatType.ts"
-import {
-  formatFloatValue,
-  getReferencesForFloatType,
-  serializeFloatType,
-  validateFloatType,
-} from "./primitives/FloatType.ts"
-import type { IntegerType, SerializedIntegerType } from "./primitives/IntegerType.ts"
-import {
-  formatIntegerValue,
-  getReferencesForIntegerType,
-  serializeIntegerType,
-  validateIntegerType,
-} from "./primitives/IntegerType.ts"
-import type { PrimitiveType, SerializedPrimitiveType } from "./primitives/PrimitiveType.ts"
-import type { SerializedStringType, StringType } from "./primitives/StringType.ts"
-import {
-  formatStringValue,
-  getReferencesForStringType,
-  serializeStringType,
-  validateStringType,
-} from "./primitives/StringType.ts"
-import {
-  formatChildEntitiesValue,
-  getReferencesForChildEntitiesType,
-  resolveTypeArgumentsInChildEntitiesType,
-  serializeChildEntitiesType,
-  validateChildEntitiesType,
-  type ChildEntitiesType,
-  type SerializedChildEntitiesType,
-} from "./references/ChildEntitiesType.ts"
-import type {
-  IncludeIdentifierType,
-  SerializedIncludeIdentifierType,
-} from "./references/IncludeIdentifierType.ts"
-import {
-  formatIncludeIdentifierValue,
-  getReferencesForIncludeIdentifierType,
-  resolveTypeArgumentsInIncludeIdentifierType,
-  serializeIncludeIdentifierType,
-  validateIncludeIdentifierType,
-} from "./references/IncludeIdentifierType.ts"
-import type {
-  NestedEntityMapType,
-  SerializedNestedEntityMapType,
-} from "./references/NestedEntityMapType.ts"
-import {
-  formatNestedEntityMapValue,
-  getReferencesForNestedEntityMapType,
-  resolveTypeArgumentsInNestedEntityMapType,
-  serializeNestedEntityMapType,
-  validateNestedEntityMapType,
-} from "./references/NestedEntityMapType.ts"
-import type {
-  ReferenceIdentifierType,
-  SerializedReferenceIdentifierType,
-} from "./references/ReferenceIdentifierType.ts"
-import {
-  formatReferenceIdentifierValue,
-  getReferencesForReferenceIdentifierType,
-  resolveTypeArgumentsInReferenceIdentifierType,
-  serializeReferenceIdentifierType,
-  validateReferenceIdentifierType,
-} from "./references/ReferenceIdentifierType.ts"
-import type { SerializedTypeArgumentType, TypeArgumentType } from "./references/TypeArgumentType.ts"
-import {
-  formatTypeArgumentValue,
-  getReferencesForTypeArgumentType,
-  resolveTypeArgumentsInTypeArgumentType,
-  serializeTypeArgumentType,
-  validateTypeArgumentType,
-} from "./references/TypeArgumentType.ts"
+import type { ArrayType } from "./generic/ArrayType.ts"
+import { formatArrayValue } from "./generic/ArrayType.ts"
+import type { EnumType } from "./generic/EnumType.ts"
+import { formatEnumType } from "./generic/EnumType.ts"
+import type { MemberDecl, ObjectType } from "./generic/ObjectType.ts"
+import { formatObjectValue } from "./generic/ObjectType.ts"
+import type { BooleanType } from "./primitives/BooleanType.ts"
+import { formatBooleanValue } from "./primitives/BooleanType.ts"
+import type { DateType } from "./primitives/DateType.ts"
+import { formatDateValue } from "./primitives/DateType.ts"
+import type { FloatType } from "./primitives/FloatType.ts"
+import { formatFloatValue } from "./primitives/FloatType.ts"
+import type { IntegerType } from "./primitives/IntegerType.ts"
+import { formatIntegerValue } from "./primitives/IntegerType.ts"
+import type { StringType } from "./primitives/StringType.ts"
+import { formatStringValue } from "./primitives/StringType.ts"
+import { formatChildEntitiesValue, type ChildEntitiesType } from "./references/ChildEntitiesType.ts"
+import type { IncludeIdentifierType } from "./references/IncludeIdentifierType.ts"
+import { formatIncludeIdentifierValue } from "./references/IncludeIdentifierType.ts"
+import type { NestedEntityMapType } from "./references/NestedEntityMapType.ts"
+import { formatNestedEntityMapValue } from "./references/NestedEntityMapType.ts"
+import type { ReferenceIdentifierType } from "./references/ReferenceIdentifierType.ts"
+import { formatReferenceIdentifierValue } from "./references/ReferenceIdentifierType.ts"
+import type { TypeArgumentType } from "./references/TypeArgumentType.ts"
+import { formatTypeArgumentValue } from "./references/TypeArgumentType.ts"
 
-export interface BaseType extends BaseNode {
-  /**
-   * The parent node of this type will be set when the type is used in a declaration or nested in another type.
-   */
-  parent?: Type | Decl
-}
-
-export interface SerializedBaseType extends BaseNode {}
+export interface BaseType extends BaseNode {}
 
 export type Type =
-  | PrimitiveType
+  | BooleanType
+  | DateType
+  | FloatType
+  | IntegerType
+  | StringType
   | ArrayType
   | ObjectType
   | TypeArgumentType
@@ -139,79 +43,6 @@ export type Type =
   | NestedEntityMapType
   | EnumType
   | ChildEntitiesType
-
-export type SerializedType =
-  | SerializedPrimitiveType
-  | SerializedArrayType
-  | SerializedObjectType
-  | SerializedTypeArgumentType
-  | SerializedReferenceIdentifierType
-  | SerializedIncludeIdentifierType
-  | SerializedNestedEntityMapType
-  | SerializedEnumType
-  | SerializedChildEntitiesType
-
-export const validate: Validator<Type> = (helpers, type, value) => {
-  switch (type.kind) {
-    case NodeKind.ArrayType:
-      return validateArrayType(helpers, type, value)
-    case NodeKind.ObjectType:
-      return validateObjectType(helpers, type, value)
-    case NodeKind.BooleanType:
-      return validateBooleanType(helpers, type, value)
-    case NodeKind.DateType:
-      return validateDateType(helpers, type, value)
-    case NodeKind.FloatType:
-      return validateFloatType(helpers, type, value)
-    case NodeKind.IntegerType:
-      return validateIntegerType(helpers, type, value)
-    case NodeKind.StringType:
-      return validateStringType(helpers, type, value)
-    case NodeKind.TypeArgumentType:
-      return validateTypeArgumentType(helpers, type, value)
-    case NodeKind.ReferenceIdentifierType:
-      return validateReferenceIdentifierType(helpers, type, value)
-    case NodeKind.IncludeIdentifierType:
-      return validateIncludeIdentifierType(helpers, type, value)
-    case NodeKind.NestedEntityMapType:
-      return validateNestedEntityMapType(helpers, type, value)
-    case NodeKind.EnumType:
-      return validateEnumType(helpers, type, value)
-    case NodeKind.ChildEntitiesType:
-      return validateChildEntitiesType(helpers, type, value)
-    default:
-      return assertExhaustive(type)
-  }
-}
-
-export const resolveTypeArgumentsInType = (args: Record<string, Type>, type: Type): Type => {
-  switch (type.kind) {
-    case NodeKind.ArrayType:
-      return resolveTypeArgumentsInArrayType(args, type)
-    case NodeKind.ObjectType:
-      return resolveTypeArgumentsInObjectType(args, type)
-    case NodeKind.BooleanType:
-    case NodeKind.DateType:
-    case NodeKind.FloatType:
-    case NodeKind.IntegerType:
-    case NodeKind.StringType:
-      return type
-    case NodeKind.TypeArgumentType:
-      return resolveTypeArgumentsInTypeArgumentType(args, type)
-    case NodeKind.ReferenceIdentifierType:
-      return resolveTypeArgumentsInReferenceIdentifierType(args, type)
-    case NodeKind.IncludeIdentifierType:
-      return resolveTypeArgumentsInIncludeIdentifierType(args, type)
-    case NodeKind.NestedEntityMapType:
-      return resolveTypeArgumentsInNestedEntityMapType(args, type)
-    case NodeKind.EnumType:
-      return resolveTypeArgumentsInEnumType(args, type)
-    case NodeKind.ChildEntitiesType:
-      return resolveTypeArgumentsInChildEntitiesType(args, type)
-    default:
-      return assertExhaustive(type)
-  }
-}
 
 export function walkTypeNodeTree(callbackFn: (type: Type) => void, type: Type): void {
   switch (type.kind) {
@@ -295,37 +126,6 @@ export type AsType<T extends Type> =
                           ? unknown
                           : never
 
-export type SerializedAsType<T extends SerializedType> =
-  T extends SerializedArrayType<infer I>
-    ? SerializedAsType<I>[]
-    : T extends SerializedObjectType<infer P>
-      ? {
-          [K in keyof P]: P[K] extends SerializedMemberDecl<SerializedType, true>
-            ? SerializedAsType<P[K]["type"]>
-            : SerializedAsType<P[K]["type"]> | undefined
-        }
-      : T extends SerializedBooleanType
-        ? boolean
-        : T extends SerializedDateType
-          ? Date
-          : T extends SerializedFloatType
-            ? number
-            : T extends SerializedIntegerType
-              ? number
-              : T extends SerializedStringType
-                ? string
-                : T extends SerializedTypeArgumentType
-                  ? unknown
-                  : T extends SerializedIncludeIdentifierType
-                    ? unknown
-                    : T extends SerializedNestedEntityMapType
-                      ? unknown
-                      : T extends SerializedReferenceIdentifierType
-                        ? unknown
-                        : T extends SerializedChildEntitiesType
-                          ? unknown
-                          : never
-
 export type AsNode<T> = T extends (infer I)[]
   ? ArrayType<AsNode<I>>
   : T extends Record<string, unknown>
@@ -344,34 +144,6 @@ export type AsNode<T> = T extends (infer I)[]
           ? BooleanType
           : never
 
-export const getParentDecl = (type: Type): Decl | undefined => {
-  if (type.parent === undefined) {
-    return undefined
-  } else if (isDecl(type.parent)) {
-    return type.parent
-  } else {
-    return getParentDecl(type.parent)
-  }
-}
-
-/**
- * Sets the `parent` property of the passed `type` to the passed `parentNode`.
- *
- * The property is set on the instance. It does not create a new instance.
- */
-export const setParent = <T extends BaseType>(
-  type: Omit<T, "parent">,
-  parentNode: Type | Decl,
-): T => {
-  ;(type as T).parent = parentNode
-  return type as T
-}
-
-export const removeParentKey = <T extends BaseType>(type: T): Omit<T, "parent"> => {
-  const { parent: _parent, ...rest } = type
-  return rest
-}
-
 export const findTypeAtPath = (type: Type, path: string[]): Type | undefined => {
   const [head, ...tail] = path
 
@@ -389,72 +161,6 @@ export const findTypeAtPath = (type: Type, path: string[]): Type | undefined => 
   }
 
   return undefined
-}
-
-export const serializeType: Serializer<Type, SerializedType> = type => {
-  switch (type.kind) {
-    case NodeKind.ArrayType:
-      return serializeArrayType(type)
-    case NodeKind.ObjectType:
-      return serializeObjectType(type)
-    case NodeKind.BooleanType:
-      return serializeBooleanType(type)
-    case NodeKind.DateType:
-      return serializeDateType(type)
-    case NodeKind.FloatType:
-      return serializeFloatType(type)
-    case NodeKind.IntegerType:
-      return serializeIntegerType(type)
-    case NodeKind.StringType:
-      return serializeStringType(type)
-    case NodeKind.TypeArgumentType:
-      return serializeTypeArgumentType(type)
-    case NodeKind.ReferenceIdentifierType:
-      return serializeReferenceIdentifierType(type)
-    case NodeKind.IncludeIdentifierType:
-      return serializeIncludeIdentifierType(type)
-    case NodeKind.NestedEntityMapType:
-      return serializeNestedEntityMapType(type)
-    case NodeKind.EnumType:
-      return serializeEnumType(type)
-    case NodeKind.ChildEntitiesType:
-      return serializeChildEntitiesType(type)
-    default:
-      return assertExhaustive(type)
-  }
-}
-
-export const getReferencesForType: GetReferences<Type> = (type, value) => {
-  switch (type.kind) {
-    case NodeKind.ArrayType:
-      return getReferencesForArrayType(type, value)
-    case NodeKind.ObjectType:
-      return getReferencesForObjectType(type, value)
-    case NodeKind.BooleanType:
-      return getReferencesForBooleanType(type, value)
-    case NodeKind.DateType:
-      return getReferencesForDateType(type, value)
-    case NodeKind.FloatType:
-      return getReferencesForFloatType(type, value)
-    case NodeKind.IntegerType:
-      return getReferencesForIntegerType(type, value)
-    case NodeKind.StringType:
-      return getReferencesForStringType(type, value)
-    case NodeKind.TypeArgumentType:
-      return getReferencesForTypeArgumentType(type, value)
-    case NodeKind.ReferenceIdentifierType:
-      return getReferencesForReferenceIdentifierType(type, value)
-    case NodeKind.IncludeIdentifierType:
-      return getReferencesForIncludeIdentifierType(type, value)
-    case NodeKind.NestedEntityMapType:
-      return getReferencesForNestedEntityMapType(type, value)
-    case NodeKind.EnumType:
-      return getReferencesForEnumType(type, value)
-    case NodeKind.ChildEntitiesType:
-      return getReferencesForChildEntitiesType(type, value)
-    default:
-      return assertExhaustive(type)
-  }
 }
 
 /**

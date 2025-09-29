@@ -6,8 +6,8 @@ import { join } from "node:path"
 import { cwd } from "node:process"
 import { pathToFileURL } from "node:url"
 import { parseArguments } from "simple-cli-args"
+import type { Config } from "../node/config.ts"
 import { format, generateOutputs, serve, validate } from "../node/index.ts"
-import type { Config } from "../shared/config.ts"
 
 const debug = Debug("tsondb:cli")
 
@@ -89,7 +89,7 @@ switch (passedArguments.command.name) {
     break
   case "serve":
     debug(`running command: serve`)
-    await serve(config.schema, config.dataRootPath, config.serverOptions)
+    await serve(config.schema, config.dataRootPath, config.defaultLocales, config.serverOptions)
     break
   case "validate":
     debug(`running command: validate`)

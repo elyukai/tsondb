@@ -2,7 +2,7 @@ import { dirname, relative } from "node:path"
 import { discriminatorKey } from "../../../shared/enum.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import type { RangeBound } from "../../../shared/validation/number.ts"
-import type { Decl } from "../../schema/declarations/Declaration.ts"
+import { asDecl, type Decl } from "../../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../../schema/declarations/EntityDecl.ts"
 import {
   addEphemeralUUIDToType,
@@ -17,7 +17,8 @@ import type { EnumType } from "../../schema/types/generic/EnumType.ts"
 import type { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.ts"
 import type { BooleanType } from "../../schema/types/primitives/BooleanType.ts"
 import type { DateType } from "../../schema/types/primitives/DateType.ts"
-import type { FloatType, IntegerType } from "../../schema/types/primitives/NumericType.ts"
+import type { FloatType } from "../../schema/types/primitives/FloatType.ts"
+import type { IntegerType } from "../../schema/types/primitives/IntegerType.ts"
 import type { StringType } from "../../schema/types/primitives/StringType.ts"
 import type { ChildEntitiesType } from "../../schema/types/references/ChildEntitiesType.ts"
 import type { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.ts"
@@ -26,7 +27,6 @@ import { isNestedEntityMapType } from "../../schema/types/references/NestedEntit
 import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.ts"
 import type { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.ts"
 import type { Type } from "../../schema/types/Type.ts"
-import { getParentDecl } from "../../schema/types/Type.ts"
 import { ensureSpecialDirStart } from "../../utils/path.ts"
 
 export type JsonSchemaRendererOptions = {
@@ -41,7 +41,7 @@ const defaultOptions: JsonSchemaRendererOptions = {
   preserveFiles: false,
 }
 
-type RenderFn<T> = (options: JsonSchemaRendererOptions, node: T) => object
+type RenderFn<T> = (options: JsonSchemaRendererOptions & { parentDecl?: Decl }, node: T) => object
 
 const renderArrayType: RenderFn<ArrayType> = (options, type) => ({
   type: "array",
@@ -124,7 +124,7 @@ const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_optio
 })
 
 const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (options, type) => {
-  const sourceUrl = getParentDecl(type)?.sourceUrl ?? ""
+  const sourceUrl = options.parentDecl?.sourceUrl ?? ""
   const filePath =
     options.preserveFiles && sourceUrl !== type.reference.sourceUrl
       ? ensureSpecialDirStart(relative(dirname(sourceUrl), type.reference.sourceUrl))
@@ -212,11 +212,11 @@ const renderTypeAliasDecl: RenderFn<TypeAliasDecl> = (options, decl) => ({
 const renderDecl: RenderFn<Decl> = (options, decl) => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
-      return renderEntityDecl(options, decl)
+      return renderEntityDecl({ ...options, parentDecl: decl }, decl)
     case NodeKind.EnumDecl:
-      return renderEnumDecl(options, decl)
+      return renderEnumDecl({ ...options, parentDecl: decl }, decl)
     case NodeKind.TypeAliasDecl:
-      return renderTypeAliasDecl(options, decl)
+      return renderTypeAliasDecl({ ...options, parentDecl: decl }, decl)
     default:
       return assertExhaustive(decl, "Unknown declaration")
   }
@@ -234,14 +234,14 @@ export const render = (
     {
       $defs: renderDeclarations(
         finalOptions,
-        flatMapAuxiliaryDecls((node, existingDecls) => {
+        flatMapAuxiliaryDecls((parentNodes, node, existingDecls) => {
           if (isNestedEntityMapType(node)) {
             if (existingDecls.some(decl => decl.name === node.name)) {
               // this may happen when a nested entity map is defined in a generic declaration and the generic declaration is used multiple times
               // TODO: circumvent by defining the nested entity declaration outside the generic declaration
               return undefined
             }
-            return TypeAliasDecl(getParentDecl(node)?.sourceUrl ?? "", {
+            return TypeAliasDecl(asDecl(parentNodes[0])?.sourceUrl ?? "", {
               name: node.name,
               comment: node.comment,
               type: () => node.type.value,

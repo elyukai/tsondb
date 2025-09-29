@@ -1,26 +1,32 @@
 import { serializeEntityDecl, type EntityDecl } from "../../node/schema/index.ts"
 import type { GetInstanceById } from "../../node/server/index.ts"
-import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
+import {
+  getSerializedDisplayNameFromEntityInstance,
+  type DisplayNameResult,
+} from "../../shared/utils/displayName.ts"
 
 export const getDisplayNameFromEntityInstance = (
   entity: EntityDecl,
   instance: unknown,
   getInstanceById: GetInstanceById,
-  locales: string[] = [],
+  locales: string[],
   defaultName: string = "",
   useCustomizer = true,
-): string => {
+): DisplayNameResult => {
   if (useCustomizer && entity.displayNameCustomizer) {
+    const calculatedName = getDisplayNameFromEntityInstance(
+      entity,
+      instance,
+      getInstanceById,
+      locales,
+      defaultName,
+      false,
+    )
+
     return entity.displayNameCustomizer(
       instance as { [x: string]: unknown },
-      getDisplayNameFromEntityInstance(
-        entity,
-        instance,
-        getInstanceById,
-        locales,
-        defaultName,
-        false,
-      ),
+      calculatedName.name,
+      calculatedName.localeId,
       id => getInstanceById(id)?.instance.content,
       id => {
         const result = getInstanceById(id)
@@ -32,7 +38,7 @@ export const getDisplayNameFromEntityInstance = (
             getInstanceById,
             locales,
             id,
-          )
+          ).name
         } else {
           return undefined
         }

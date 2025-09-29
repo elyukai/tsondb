@@ -1,20 +1,14 @@
 import type { FunctionalComponent } from "preact"
-import { useEffect, useState } from "preact/hooks"
-import type { SerializedEntityDecl } from "../../node/schema/index.ts"
-import type { GetAllDeclarationsResponseBody } from "../../shared/api.ts"
+import { useContext, useEffect, useState } from "preact/hooks"
 import { toTitleCase } from "../../shared/utils/string.ts"
-import { getAllEntities } from "../api.ts"
 import { Layout } from "../components/Layout.tsx"
-import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
+import { EntitiesContext } from "../context/entities.ts"
 import { Markdown } from "../utils/Markdown.tsx"
-
-const mapEntities = (data: GetAllDeclarationsResponseBody<SerializedEntityDecl>) =>
-  data.declarations.sort((a, b) => a.declaration.name.localeCompare(b.declaration.name))
 
 export const homeTitle = "Entities"
 
 export const Home: FunctionalComponent = () => {
-  const [entities] = useMappedAPIResource(getAllEntities, mapEntities)
+  const { entities } = useContext(EntitiesContext)
 
   useEffect(() => {
     document.title = homeTitle + " — TSONDB"
@@ -26,7 +20,7 @@ export const Home: FunctionalComponent = () => {
   const filteredEntities =
     searchText.length === 0
       ? entities
-      : entities?.filter(
+      : entities.filter(
           entity =>
             entity.declaration.name.toLowerCase().includes(lowerSearchText) ||
             entity.declaration.namePlural.toLowerCase().includes(lowerSearchText),
@@ -37,8 +31,8 @@ export const Home: FunctionalComponent = () => {
       <h1>{homeTitle}</h1>
       <div className="list-header">
         <p class="instance-count">
-          {searchText === "" ? "" : `${(filteredEntities?.length ?? 0).toString()} of `}
-          {entities?.length ?? 0} entit{entities?.length === 1 ? "y" : "ies"}
+          {searchText === "" ? "" : `${filteredEntities.length.toString()} of `}
+          {entities.length} entit{entities.length === 1 ? "y" : "ies"}
         </p>
         <form
           action=""
@@ -61,7 +55,7 @@ export const Home: FunctionalComponent = () => {
         </form>
       </div>
       <ul class="entries entries--entities">
-        {(filteredEntities ?? []).map(entity => (
+        {filteredEntities.map(entity => (
           <li key={entity.declaration.name} class="entries-item">
             <div class="entries-item__title">
               <h2>{toTitleCase(entity.declaration.namePlural)}</h2>

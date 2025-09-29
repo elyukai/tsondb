@@ -19,13 +19,11 @@ export const useMappedAPIResource = <T, A extends unknown[], U>(
   useEffect(() => {
     fetchData().catch((err: unknown) => {
       console.log(err)
+      alert(err)
     })
   }, [fetchData])
 
-  const reload = useCallback(() => {
-    setData(undefined)
-    return fetchData()
-  }, [fetchData])
+  const reload = useCallback(fetchData, [fetchData])
 
   return [data, reload]
 }

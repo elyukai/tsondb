@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedArrayType } from "../../../node/schema/types/generic/ArrayType.ts"
+import type { SerializedArrayType } from "../../../shared/schema/types/ArrayType.ts"
 import { removeAt } from "../../../shared/utils/array.ts"
 import { validateArrayConstraints } from "../../../shared/validation/array.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"

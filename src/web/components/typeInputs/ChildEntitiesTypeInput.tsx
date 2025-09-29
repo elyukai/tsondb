@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import type { SerializedChildEntitiesType } from "../../../node/schema/types/references/ChildEntitiesType.ts"
+import type { SerializedChildEntitiesType } from "../../../shared/schema/types/ChildEntitiesType.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"

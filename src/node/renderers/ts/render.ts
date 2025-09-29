@@ -4,7 +4,7 @@ import { discriminatorKey } from "../../../shared/enum.ts"
 import { unique } from "../../../shared/utils/array.ts"
 import { toCamelCase } from "../../../shared/utils/string.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
-import type { Decl } from "../../schema/declarations/Declaration.ts"
+import { asDecl, type Decl } from "../../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../../schema/declarations/EntityDecl.ts"
 import {
   addEphemeralUUIDToType,
@@ -21,7 +21,8 @@ import type { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectTy
 import { isObjectType } from "../../schema/types/generic/ObjectType.ts"
 import type { BooleanType } from "../../schema/types/primitives/BooleanType.ts"
 import type { DateType } from "../../schema/types/primitives/DateType.ts"
-import type { NumericType } from "../../schema/types/primitives/NumericType.ts"
+import type { FloatType } from "../../schema/types/primitives/FloatType.ts"
+import type { IntegerType } from "../../schema/types/primitives/IntegerType.ts"
 import type { StringType } from "../../schema/types/primitives/StringType.ts"
 import type { ChildEntitiesType } from "../../schema/types/references/ChildEntitiesType.ts"
 import type { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.ts"
@@ -30,7 +31,6 @@ import { isNestedEntityMapType } from "../../schema/types/references/NestedEntit
 import { ReferenceIdentifierType } from "../../schema/types/references/ReferenceIdentifierType.ts"
 import type { TypeArgumentType } from "../../schema/types/references/TypeArgumentType.ts"
 import type { Type } from "../../schema/types/Type.ts"
-import { getParentDecl } from "../../schema/types/Type.ts"
 import { ensureSpecialDirStart } from "../../utils/path.ts"
 import type { RenderResult } from "../../utils/render.ts"
 import { combineSyntaxes, indent, prefixLines, syntax } from "../../utils/render.ts"
@@ -103,7 +103,9 @@ const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => syntax`boo
 
 const renderDateType: RenderFn<DateType> = (_options, _type) => syntax`Date`
 
-const renderNumericType: RenderFn<NumericType> = (_options, _type) => syntax`number`
+const renderFloatType: RenderFn<FloatType> = (_options, _type) => syntax`number`
+
+const renderIntegerType: RenderFn<IntegerType> = (_options, _type) => syntax`number`
 
 const renderStringType: RenderFn<StringType> = (_options, _type) => syntax`string`
 
@@ -162,9 +164,9 @@ const renderType: RenderFn<Type> = (options, type) => {
     case NodeKind.DateType:
       return renderDateType(options, type)
     case NodeKind.FloatType:
-      return renderNumericType(options, type)
+      return renderFloatType(options, type)
     case NodeKind.IntegerType:
-      return renderNumericType(options, type)
+      return renderIntegerType(options, type)
     case NodeKind.StringType:
       return renderStringType(options, type)
     case NodeKind.TypeArgumentType:
@@ -253,9 +255,9 @@ export const render = (
   const finalOptions = { ...defaultOptions, ...options }
   const [imports, content] = renderDeclarations(
     finalOptions,
-    flatMapAuxiliaryDecls(node => {
+    flatMapAuxiliaryDecls((parentNodes, node) => {
       if (isNestedEntityMapType(node)) {
-        return TypeAliasDecl(getParentDecl(node)?.sourceUrl ?? "", {
+        return TypeAliasDecl(asDecl(parentNodes[0])?.sourceUrl ?? "", {
           name: node.name,
           comment: node.comment,
           type: () => node.type.value,

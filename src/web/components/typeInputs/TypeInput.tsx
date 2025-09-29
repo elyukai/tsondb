@@ -1,6 +1,6 @@
 import type { FunctionComponent } from "preact"
 import { memo } from "preact/compat"
-import type { SerializedType } from "../../../node/schema/types/Type.ts"
+import type { SerializedType } from "../../../shared/schema/types/Type.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"

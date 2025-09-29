@@ -1,13 +1,17 @@
 import { Lazy } from "../../../shared/utils/lazy.ts"
-import type { GetReferences, Node, Serializer } from "../Node.ts"
-import { NodeKind } from "../Node.ts"
-import type { SerializedTypeParameter, TypeParameter } from "../TypeParameter.ts"
-import { serializeTypeParameter } from "../TypeParameter.ts"
+import { onlyKeys } from "../../../shared/utils/object.ts"
 import type {
-  EnumCaseDecl,
-  SerializedEnumCaseDecl,
-  SerializedEnumType,
-} from "../types/generic/EnumType.ts"
+  GetNestedDeclarations,
+  GetReferences,
+  Predicate,
+  Serializer,
+  TypeArgumentsResolver,
+  ValidatorOfParamDecl,
+} from "../Node.ts"
+import { NodeKind } from "../Node.ts"
+import type { TypeParameter } from "../TypeParameter.ts"
+import { serializeTypeParameter } from "../TypeParameter.ts"
+import type { EnumCaseDecl } from "../types/generic/EnumType.ts"
 import {
   EnumType,
   getNestedDeclarationsInEnumType,
@@ -16,14 +20,7 @@ import {
   serializeEnumType,
   validateEnumType,
 } from "../types/generic/EnumType.ts"
-import { setParent, type Type } from "../types/Type.ts"
-import type { ValidatorHelpers } from "../validation/type.ts"
-import type {
-  BaseDecl,
-  GetNestedDeclarations,
-  SerializedBaseDecl,
-  TypeArguments,
-} from "./Declaration.ts"
+import type { BaseDecl } from "./Declaration.ts"
 import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
 
 export interface EnumDecl<
@@ -33,16 +30,6 @@ export interface EnumDecl<
 > extends BaseDecl<Name, Params> {
   kind: NodeKind["EnumDecl"]
   type: Lazy<EnumType<T>>
-  isDeprecated?: boolean
-}
-
-export interface SerializedEnumDecl<
-  Name extends string = string,
-  T extends Record<string, SerializedEnumCaseDecl> = Record<string, SerializedEnumCaseDecl>,
-  Params extends SerializedTypeParameter[] = SerializedTypeParameter[],
-> extends SerializedBaseDecl<Name, Params> {
-  kind: NodeKind["EnumDecl"]
-  type: SerializedEnumType<T>
   isDeprecated?: boolean
 }
 
@@ -56,6 +43,7 @@ export const GenEnumDecl = <
     name: Name
     comment?: string
     parameters: Params
+    isDeprecated?: boolean
     values: (...args: Params) => T
   },
 ): EnumDecl<Name, T, Params> => {
@@ -65,7 +53,7 @@ export const GenEnumDecl = <
     ...options,
     kind: NodeKind.EnumDecl,
     sourceUrl,
-    type: Lazy.of(() => setParent(EnumType(options.values(...options.parameters)), decl)),
+    type: Lazy.of(() => EnumType(options.values(...options.parameters))),
   }
 
   return decl
@@ -78,17 +66,18 @@ export const EnumDecl = <Name extends string, T extends Record<string, EnumCaseD
   options: {
     name: Name
     comment?: string
+    isDeprecated?: boolean
     values: () => T
   },
 ): EnumDecl<Name, T, []> => {
   validateDeclName(options.name)
 
   const decl: EnumDecl<Name, T, []> = {
-    ...options,
+    ...onlyKeys(options, "name", "comment", "isDeprecated"),
     kind: NodeKind.EnumDecl,
     sourceUrl,
     parameters: [],
-    type: Lazy.of(() => setParent(EnumType(options.values()), decl)),
+    type: Lazy.of(() => EnumType(options.values())),
   }
 
   return decl
@@ -96,37 +85,29 @@ export const EnumDecl = <Name extends string, T extends Record<string, EnumCaseD
 
 export { EnumDecl as Enum }
 
-export const isEnumDecl = (node: Node): node is EnumDecl => node.kind === NodeKind.EnumDecl
+export const isEnumDecl: Predicate<EnumDecl> = node => node.kind === NodeKind.EnumDecl
 
 export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = (
   addedDecls,
   decl,
 ) => getNestedDeclarationsInEnumType(addedDecls, decl.type.value)
 
-export const validateEnumDecl = (
-  helpers: ValidatorHelpers,
-  decl: EnumDecl,
-  args: Type[],
-  value: unknown,
-): Error[] =>
+export const validateEnumDecl: ValidatorOfParamDecl<EnumDecl> = (helpers, decl, args, value) =>
   validateEnumType(
     helpers,
     resolveTypeArgumentsInEnumType(getTypeArgumentsRecord(decl, args), decl.type.value),
     value,
   )
 
-export const resolveTypeArgumentsInEnumDecl = <Params extends TypeParameter[]>(
-  decl: EnumDecl<string, Record<string, EnumCaseDecl>, Params>,
-  args: TypeArguments<Params>,
-): EnumDecl<string, Record<string, EnumCaseDecl>, []> => {
-  const resolvedArgs = getTypeArgumentsRecord(decl, args)
-  return EnumDecl(decl.sourceUrl, {
-    ...decl,
-    values: () => resolveTypeArgumentsInEnumType(resolvedArgs, decl.type.value).values,
+export const resolveTypeArgumentsInEnumDecl: TypeArgumentsResolver<EnumDecl> = (args, decl) =>
+  EnumDecl(decl.sourceUrl, {
+    name: decl.name,
+    comment: decl.comment,
+    isDeprecated: decl.isDeprecated,
+    values: () => resolveTypeArgumentsInEnumType(args, decl.type.value).values,
   })
-}
 
-export const serializeEnumDecl: Serializer<EnumDecl, SerializedEnumDecl> = decl => ({
+export const serializeEnumDecl: Serializer<EnumDecl> = decl => ({
   ...decl,
   type: serializeEnumType(decl.type.value),
   parameters: decl.parameters.map(param => serializeTypeParameter(param)),
