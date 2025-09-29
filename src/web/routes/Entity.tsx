@@ -67,10 +67,15 @@ export const Entity: FunctionalComponent = () => {
 
   if (!entity || !instances) {
     return (
-      <div>
-        <h1>{toTitleCase(entity?.namePlural ?? name)}</h1>
-        <p className="loading">Loading …</p>
-      </div>
+      <Layout breadcrumbs={[{ url: "/", label: homeTitle }]}>
+        <div class="header-with-btns">
+          <h1>{toTitleCase(entity?.namePlural ?? name)}</h1>
+          <a class="btn btn--primary" aria-disabled>
+            Add
+          </a>
+        </div>
+        <p class="loading">Loading …</p>
+      </Layout>
     )
   }
 

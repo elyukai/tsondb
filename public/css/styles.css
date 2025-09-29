@@ -103,8 +103,8 @@ body {
 
 #app {
   display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: "header aside" "main main";
+  grid-template-columns: 1fr;
+  grid-template-areas: "header" "main" "aside";
   gap: 0 1rem;
 }
 
@@ -232,6 +232,7 @@ button.destructive:hover {
   color: var(--button-color-destructive-hover);
 }
 
+a.btn[aria-disabled="true"],
 button:disabled {
   background: var(--button-background-disabled);
   color: var(--button-color-disabled);
@@ -800,7 +801,6 @@ main:has(.form-footer) {
 }
 
 aside.git {
-  max-width: 30rem;
   grid-area: aside;
 }
 
@@ -810,6 +810,7 @@ aside.git h2 {
 
 @media (min-width: 80rem) {
   aside.git {
+    width: 30rem;
     border-left: 1px solid var(--separator-color);
     padding-left: 1rem;
   }

@@ -97,8 +97,18 @@ export const Instance: FunctionalComponent = () => {
           },
         ]}
       >
-        <h1>{id}</h1>
-        <p className="loading">Loading …</p>
+        <div class="header-with-btns">
+          <h1 class="empty-name">
+            <span>{id}</span>{" "}
+            <span className="id" aria-hidden>
+              {id}
+            </span>
+          </h1>
+          <button class="destructive" disabled>
+            Delete
+          </button>
+        </div>
+        <p class="loading">Loading …</p>
       </Layout>
     )
   }
