@@ -1,5 +1,5 @@
 import Debug from "debug"
-import { mkdir, writeFile } from "fs/promises"
+import { mkdir } from "fs/promises"
 import { join, sep } from "path"
 import { styleText } from "util"
 import type { Output } from "../shared/output.ts"
@@ -11,7 +11,8 @@ import { getEntities, type Schema } from "./schema/Schema.ts"
 import type { ServerOptions } from "./server/index.ts"
 import { createServer } from "./server/index.ts"
 import { countErrors, getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
-import { formatInstance, getInstancesByEntityName } from "./utils/instances.ts"
+import { getFileNameForId, writeInstance } from "./utils/files.ts"
+import { getInstancesByEntityName } from "./utils/instances.ts"
 
 const debug = Debug("tsondb:jsapi")
 
@@ -60,7 +61,7 @@ const _validate = (
       parallelizeErrors(
         instancesByEntityName[entity.name]?.map(instance =>
           wrapErrorsIfAny(
-            `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, instance.fileName))}"`)}`,
+            `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
             validateEntityDecl(validationHelpers, entity, instance.content),
           ),
         ) ?? [],
@@ -145,11 +146,7 @@ export const format = async (schema: Schema, dataRootPath: string) => {
     const entity = entities.find(entity => entity.name === entityName)!
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     for (const instance of instancesByEntityName[entityName]!) {
-      await writeFile(
-        join(dataRootPath, entityName, instance.fileName),
-        formatInstance(entity, instance.content),
-        { encoding: "utf-8" },
-      )
+      await writeInstance(dataRootPath, entity, instance.id, instance.content)
     }
   }
 }

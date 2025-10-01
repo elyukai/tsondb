@@ -169,6 +169,114 @@ export { NodeKind }
 
 export type Node = Decl | Type | TypeParameter
 
+export const reduceNodes = <R>(
+  reducer: (parentNodes: Node[], node: Node, collectedResults: R[]) => R[],
+  nodes: readonly Node[],
+  options: {
+    initialResults?: R[]
+    followIncludes?: boolean
+    followChildEntities?: boolean
+  } = {},
+): R[] => {
+  const { initialResults = [], followIncludes = false, followChildEntities = false } = options
+
+  const reduceNodeTree = (
+    parentNodes: Node[],
+    node: Node,
+    collectedResults: R[],
+    reducedDecls: Decl[],
+  ): { results: R[]; reducedDecls: Decl[] } => {
+    switch (node.kind) {
+      case NodeKind.EntityDecl:
+      case NodeKind.EnumDecl:
+      case NodeKind.TypeAliasDecl:
+        return reduceNodeTree(
+          [node],
+          node.type.value,
+          reducer(parentNodes, node, collectedResults),
+          [...reducedDecls, node],
+        )
+
+      case NodeKind.ArrayType:
+        return reduceNodeTree(
+          [...parentNodes, node],
+          node.items,
+          reducer(parentNodes, node, collectedResults),
+          reducedDecls,
+        )
+
+      case NodeKind.ObjectType:
+        return Object.values(node.properties).reduce(
+          (collectedResultsAcc, prop) =>
+            reduceNodeTree(
+              [...parentNodes, node],
+              prop.type,
+              collectedResultsAcc.results,
+              collectedResultsAcc.reducedDecls,
+            ),
+          { results: reducer(parentNodes, node, collectedResults), reducedDecls },
+        )
+
+      case NodeKind.EnumType:
+        return Object.values(node.values).reduce(
+          (collectedResultsAcc, caseDef) =>
+            caseDef.type === null
+              ? collectedResultsAcc
+              : reduceNodeTree(
+                  [...parentNodes, node],
+                  caseDef.type,
+                  collectedResultsAcc.results,
+                  collectedResultsAcc.reducedDecls,
+                ),
+          { results: reducer(parentNodes, node, collectedResults), reducedDecls },
+        )
+
+      case NodeKind.IncludeIdentifierType:
+        if (followIncludes && !reducedDecls.includes(node.reference)) {
+          return reduceNodeTree(
+            [],
+            node.reference,
+            reducer(parentNodes, node, collectedResults),
+            reducedDecls,
+          )
+        } else {
+          return { results: reducer(parentNodes, node, collectedResults), reducedDecls }
+        }
+
+      case NodeKind.ChildEntitiesType:
+        if (followChildEntities && !reducedDecls.includes(node.entity)) {
+          return reduceNodeTree(
+            [],
+            node.entity,
+            reducer(parentNodes, node, collectedResults),
+            reducedDecls,
+          )
+        } else {
+          return { results: reducer(parentNodes, node, collectedResults), reducedDecls }
+        }
+
+      case NodeKind.BooleanType:
+      case NodeKind.DateType:
+      case NodeKind.FloatType:
+      case NodeKind.IntegerType:
+      case NodeKind.StringType:
+      case NodeKind.TypeArgumentType:
+      case NodeKind.ReferenceIdentifierType:
+      case NodeKind.NestedEntityMapType:
+      case NodeKind.TypeParameter:
+        return { results: reducer(parentNodes, node, collectedResults), reducedDecls }
+
+      default:
+        return assertExhaustive(node)
+    }
+  }
+
+  return nodes.reduce<{ results: R[]; reducedDecls: Decl[] }>(
+    ({ results, reducedDecls }, node) => reduceNodeTree([], node, results, reducedDecls),
+    { results: initialResults, reducedDecls: [] },
+  ).results
+}
+
 export const flatMapAuxiliaryDecls = (
   callbackFn: (
     parentNodes: Node[],
@@ -177,71 +285,7 @@ export const flatMapAuxiliaryDecls = (
   ) => (Decl | undefined)[] | Decl | undefined,
   declarations: readonly Decl[],
 ): Decl[] => {
-  const mapNodeTree = (
-    callbackFn: (parentNodes: Node[], node: Node, decls: Decl[]) => Decl[],
-    parentNodes: Node[],
-    node: Node,
-    decls: Decl[],
-  ): Decl[] => {
-    switch (node.kind) {
-      case NodeKind.EntityDecl: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return mapNodeTree(callbackFn, [node], node.type.value, newDecls)
-      }
-
-      case NodeKind.EnumDecl: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return mapNodeTree(callbackFn, [node], node.type.value, newDecls)
-      }
-
-      case NodeKind.TypeAliasDecl: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return mapNodeTree(callbackFn, [node], node.type.value, newDecls)
-      }
-
-      case NodeKind.ArrayType: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return mapNodeTree(callbackFn, [...parentNodes, node], node.items, newDecls)
-      }
-
-      case NodeKind.ObjectType: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return Object.values(node.properties).reduce(
-          (newDeclsAcc, prop) =>
-            mapNodeTree(callbackFn, [...parentNodes, node], prop.type, newDeclsAcc),
-          newDecls,
-        )
-      }
-      case NodeKind.BooleanType:
-      case NodeKind.DateType:
-      case NodeKind.FloatType:
-      case NodeKind.IntegerType:
-      case NodeKind.StringType:
-      case NodeKind.TypeArgumentType:
-      case NodeKind.ReferenceIdentifierType:
-      case NodeKind.IncludeIdentifierType:
-      case NodeKind.NestedEntityMapType:
-      case NodeKind.TypeParameter:
-      case NodeKind.ChildEntitiesType:
-        return callbackFn(parentNodes, node, decls)
-
-      case NodeKind.EnumType: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return Object.values(node.values).reduce(
-          (newDeclsAcc, caseDef) =>
-            caseDef.type === null
-              ? newDecls
-              : mapNodeTree(callbackFn, [...parentNodes, node], caseDef.type, newDeclsAcc),
-          newDecls,
-        )
-      }
-
-      default:
-        return assertExhaustive(node)
-    }
-  }
-
-  const reducer = (parentNodes: Node[], node: Node, decls: Decl[]): Decl[] => {
+  return reduceNodes((parentNodes, node, decls) => {
     const result = callbackFn(parentNodes, node, decls)
     const normalizedResult = (Array.isArray(result) ? result : [result]).filter(
       decl => decl !== undefined,
@@ -257,12 +301,7 @@ export const flatMapAuxiliaryDecls = (
       }
     })
     return decls.concat(normalizedResult)
-  }
-
-  return declarations.reduce(
-    (decls: Decl[], node) => mapNodeTree(reducer, [], node, [...decls, node]),
-    [],
-  )
+  }, declarations)
 }
 
 export type IdentifierToCheck = { name: string; value: unknown }

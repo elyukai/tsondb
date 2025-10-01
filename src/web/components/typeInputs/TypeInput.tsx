@@ -1,5 +1,6 @@
 import type { FunctionComponent } from "preact"
 import { memo } from "preact/compat"
+import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../../node/utils/childInstances.ts"
 import type { SerializedType } from "../../../shared/schema/types/Type.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
@@ -18,134 +19,76 @@ import { ObjectTypeInput } from "./ObjectTypeInput.tsx"
 import { ReferenceIdentifierTypeInput } from "./ReferenceIdentifierTypeInput.tsx"
 import { StringTypeInput } from "./StringTypeInput.tsx"
 
-type Props = {
-  type: SerializedType
+export type TypeInputProps<T, V = unknown> = {
+  type: T
   path: string | undefined
   value: unknown
   instanceNamesByEntity: InstanceNamesByEntity
+  parentKey?: string
+  childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   getDeclFromDeclName: GetDeclFromDeclName
-  onChange: (value: unknown) => void
+  onChange: (value: V) => void
+  onChildChange: (index: number, value: unknown) => void
+  onChildAdd: (entityName: string, value: unknown) => void
+  onChildRemove: (index: number) => void
 }
 
-const TypeInput: FunctionComponent<Props> = ({
-  type,
-  path,
-  value,
-  instanceNamesByEntity,
-  getDeclFromDeclName,
-  onChange,
-}) => {
-  // console.log("rendering node at path ", path ?? "<root>")
+type Props = TypeInputProps<SerializedType>
 
-  switch (type.kind) {
+const TypeInput: FunctionComponent<Props> = props => {
+  // console.log("rendering node at path ", props.path ?? "<root>")
+
+  switch (props.type.kind) {
     case "BooleanType":
-      return <BooleanTypeInput type={type} value={value} onChange={onChange} />
+      return <BooleanTypeInput {...props} type={props.type} />
 
     case "DateType":
-      return <DateTypeInput type={type} value={value} onChange={onChange} />
+      return <DateTypeInput {...props} type={props.type} />
 
     case "FloatType":
-      return <FloatTypeInput type={type} value={value} onChange={onChange} />
+      return <FloatTypeInput {...props} type={props.type} />
 
     case "IntegerType":
-      return <IntegerTypeInput type={type} value={value} onChange={onChange} />
+      return <IntegerTypeInput {...props} type={props.type} />
 
     case "StringType":
-      return <StringTypeInput type={type} value={value} onChange={onChange} />
+      return <StringTypeInput {...props} type={props.type} />
 
     case "ArrayType":
-      return (
-        <ArrayTypeInput
-          type={type}
-          path={path}
-          value={value}
-          instanceNamesByEntity={instanceNamesByEntity}
-          getDeclFromDeclName={getDeclFromDeclName}
-          onChange={onChange}
-        />
-      )
+      return <ArrayTypeInput {...props} type={props.type} />
 
     case "ObjectType":
-      return (
-        <ObjectTypeInput
-          type={type}
-          path={path}
-          value={value}
-          instanceNamesByEntity={instanceNamesByEntity}
-          getDeclFromDeclName={getDeclFromDeclName}
-          onChange={onChange}
-        />
-      )
+      return <ObjectTypeInput {...props} type={props.type} />
 
     case "TypeArgumentType":
-      return <TypeArgumentTypeInput type={type} />
+      return <TypeArgumentTypeInput {...props} type={props.type} />
 
     case "ReferenceIdentifierType":
-      return (
-        <ReferenceIdentifierTypeInput
-          type={type}
-          value={value}
-          instanceNamesByEntity={instanceNamesByEntity}
-          onChange={onChange}
-        />
-      )
+      return <ReferenceIdentifierTypeInput {...props} type={props.type} />
 
     case "IncludeIdentifierType":
-      return (
-        <IncludeIdentifierTypeInput
-          type={type}
-          path={path}
-          value={value}
-          instanceNamesByEntity={instanceNamesByEntity}
-          getDeclFromDeclName={getDeclFromDeclName}
-          onChange={onChange}
-        />
-      )
+      return <IncludeIdentifierTypeInput {...props} type={props.type} />
 
     case "NestedEntityMapType":
-      return (
-        <NestedEntityMapTypeInput
-          type={type}
-          path={path}
-          value={value as Record<string, unknown>}
-          instanceNamesByEntity={instanceNamesByEntity}
-          getDeclFromDeclName={getDeclFromDeclName}
-          onChange={onChange}
-        />
-      )
+      return <NestedEntityMapTypeInput {...props} type={props.type} />
 
     case "EnumType":
-      return (
-        <EnumTypeInput
-          type={type}
-          path={path}
-          value={value}
-          instanceNamesByEntity={instanceNamesByEntity}
-          getDeclFromDeclName={getDeclFromDeclName}
-          onChange={onChange}
-        />
-      )
+      return <EnumTypeInput {...props} type={props.type} />
 
     case "ChildEntitiesType":
-      return (
-        <ChildEntitiesTypeInput
-          type={type}
-          value={value}
-          instanceNamesByEntity={instanceNamesByEntity}
-          getDeclFromDeclName={getDeclFromDeclName}
-          onChange={onChange}
-        />
-      )
+      return <ChildEntitiesTypeInput {...props} type={props.type} />
 
     default:
-      return assertExhaustive(type)
+      return assertExhaustive(props.type)
   }
 }
 
 const MemoizedTypeInput = memo(
   TypeInput,
   (prevProps, nextProps) =>
-    prevProps.value === nextProps.value && prevProps.onChange === nextProps.onChange,
+    prevProps.value === nextProps.value &&
+    prevProps.onChange === nextProps.onChange &&
+    prevProps.childInstances === nextProps.childInstances,
 )
 
 export { MemoizedTypeInput as TypeInput }

@@ -82,6 +82,12 @@ export interface EntityDecl<
   isDeprecated?: boolean
 }
 
+export interface EntityDeclWithParentReference<
+  Name extends string = string,
+  T extends TConstraint = TConstraint,
+  FK extends keyof T & string = keyof T & string,
+> extends EntityDecl<Name, T, FK> {}
+
 export const EntityDecl: {
   <Name extends string, T extends TConstraint>(
     sourceUrl: string,
@@ -155,6 +161,14 @@ export const EntityDecl: {
 export { EntityDecl as Entity }
 
 export const isEntityDecl: Predicate<EntityDecl> = node => node.kind === NodeKind.EntityDecl
+
+export const isEntityDeclWithParentReference = <
+  Name extends string,
+  T extends TConstraint,
+  FK extends (keyof T & string) | undefined,
+>(
+  decl: EntityDecl<Name, T, FK>,
+): decl is EntityDecl<Name, T, NonNullable<FK>> => decl.parentReferenceKey !== undefined
 
 export const getNestedDeclarationsInEntityDecl: GetNestedDeclarations<EntityDecl> = (
   isDeclAdded,

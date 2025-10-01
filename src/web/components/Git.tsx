@@ -68,7 +68,7 @@ const GitFileList: FunctionComponent<{
             {instances.map(instance => {
               const gitStatusForDisplay = getGitStatusForDisplay(instance.gitStatus)
               return (
-                <li key={instance.fileName} class="git-instance-list-item">
+                <li key={instance.id} class="git-instance-list-item">
                   <span class="title">{instance.displayName}</span>
                   <span
                     class={`git-status git-status--${gitStatusForDisplay ?? ""}`}

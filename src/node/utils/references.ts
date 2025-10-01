@@ -18,6 +18,15 @@ export type ReferencesToInstances = {
   [instanceId: string]: string[]
 }
 
+export const isReferencedByOtherInstances = (
+  referencesToInstances: ReferencesToInstances,
+  instanceId: string,
+  otherInstancesToDelete?: string[],
+): boolean => {
+  const allInstancesToDelete = [instanceId, ...(otherInstancesToDelete ?? [])]
+  return referencesToInstances[instanceId]?.some(ref => allInstancesToDelete.includes(ref)) ?? false
+}
+
 const addReference = (
   acc: ReferencesToInstances,
   reference: string,
@@ -48,13 +57,20 @@ const removeReference = (
   acc: ReferencesToInstances,
   reference: string,
   instanceId: string,
-): ReferencesToInstances =>
-  acc[reference]
-    ? {
+): ReferencesToInstances => {
+  if (acc[reference]) {
+    const index = acc[reference].indexOf(instanceId)
+
+    if (index > -1) {
+      return {
         ...acc,
-        [reference]: removeAt(acc[reference], acc[reference].indexOf(instanceId)),
+        [reference]: removeAt(acc[reference], index),
       }
-    : acc
+    }
+  }
+
+  return acc
+}
 
 const removeReferences = (
   acc: ReferencesToInstances,

@@ -1,26 +1,12 @@
 import type { FunctionComponent } from "preact"
 import type { SerializedIncludeIdentifierType } from "../../../shared/schema/types/IncludeIdentifierType.ts"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
-import { TypeInput } from "./TypeInput.tsx"
+import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
 
-type Props = {
-  type: SerializedIncludeIdentifierType
-  path: string | undefined
-  value: unknown
-  instanceNamesByEntity: InstanceNamesByEntity
-  getDeclFromDeclName: GetDeclFromDeclName
-  onChange: (value: unknown) => void
-}
+type Props = TypeInputProps<SerializedIncludeIdentifierType>
 
-export const IncludeIdentifierTypeInput: FunctionComponent<Props> = ({
-  type,
-  path,
-  value,
-  instanceNamesByEntity,
-  getDeclFromDeclName,
-  onChange,
-}) => {
+export const IncludeIdentifierTypeInput: FunctionComponent<Props> = props => {
+  const { type, getDeclFromDeclName } = props
+
   const decl = getDeclFromDeclName(type.reference)
 
   if (decl === undefined) {
@@ -31,14 +17,5 @@ export const IncludeIdentifierTypeInput: FunctionComponent<Props> = ({
     )
   }
 
-  return (
-    <TypeInput
-      type={decl.type}
-      path={path}
-      value={value}
-      instanceNamesByEntity={instanceNamesByEntity}
-      getDeclFromDeclName={getDeclFromDeclName}
-      onChange={onChange}
-    />
-  )
+  return <TypeInput {...props} parentKey={undefined} type={decl.type} />
 }

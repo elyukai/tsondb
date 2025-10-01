@@ -1,16 +1,11 @@
 import type { FunctionComponent } from "preact"
 import type { SerializedReferenceIdentifierType } from "../../../shared/schema/types/ReferenceIdentifierType.ts"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
 import { Select } from "../Select.tsx"
+import type { TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
-type Props = {
-  type: SerializedReferenceIdentifierType
-  value: unknown
-  instanceNamesByEntity: InstanceNamesByEntity
-  onChange: (value: string) => void
-}
+type Props = TypeInputProps<SerializedReferenceIdentifierType, string>
 
 export const ReferenceIdentifierTypeInput: FunctionComponent<Props> = ({
   type,

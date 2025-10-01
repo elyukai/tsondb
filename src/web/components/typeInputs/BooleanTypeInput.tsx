@@ -1,12 +1,9 @@
 import type { FunctionComponent } from "preact"
 import type { SerializedBooleanType } from "../../../shared/schema/types/BooleanType.ts"
+import type { TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
-type Props = {
-  type: SerializedBooleanType
-  value: unknown
-  onChange: (value: boolean) => void
-}
+type Props = TypeInputProps<SerializedBooleanType, boolean>
 
 export const BooleanTypeInput: FunctionComponent<Props> = ({ value, onChange }) => {
   if (typeof value !== "boolean") {

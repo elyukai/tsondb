@@ -1,75 +1,82 @@
 import type { FunctionComponent } from "preact"
+import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../../node/utils/childInstances.ts"
+import { isSerializedEntityDecl } from "../../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedChildEntitiesType } from "../../../shared/schema/types/ChildEntitiesType.ts"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
+import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
 
-type Props = {
-  type: SerializedChildEntitiesType
-  value: unknown
-  instanceNamesByEntity: InstanceNamesByEntity
-  getDeclFromDeclName: GetDeclFromDeclName
-  onChange: (value: unknown[]) => void
-}
+type Props = TypeInputProps<SerializedChildEntitiesType>
 
-export const ChildEntitiesTypeInput: FunctionComponent<Props> = ({
-  type,
-  value,
-  getDeclFromDeclName,
-  onChange,
-}) => {
+export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
+  const {
+    type,
+    path,
+    childInstances,
+    getDeclFromDeclName,
+    onChildAdd,
+    onChildChange,
+    onChildRemove,
+  } = props
+
   const childEntity = getDeclFromDeclName(type.entity)
 
-  if (childEntity === undefined) {
+  const childInstancesForEntity = childInstances
+    .map(
+      (childInstance, index): [UnsafeEntityTaggedInstanceContainerWithChildInstances, number] => [
+        childInstance,
+        index,
+      ],
+    )
+    .filter(([childInstance]) => childInstance.entityName === type.entity)
+
+  if (childEntity === undefined || !isSerializedEntityDecl(childEntity)) {
     return (
       <div role="alert">
-        Unresolved declaration identifier <code>{type.entity}</code>
+        Unresolved entity declaration identifier <code>{type.entity}</code>
       </div>
     )
   }
 
-  // const isTuple = typeof type.minItems === "number" && type.minItems === type.maxItems
+  if (path === undefined) {
+    return <div role="alert">A child entities type cannot be the root type of a document.</div>
+  }
 
   return (
     <div class="field field--container field--array">
-      {/* {value.length > 0 && (
+      {childInstancesForEntity.length > 0 ? (
         <ol>
-          {value.map((item, i) => (
+          {childInstancesForEntity.map(([item, originalIndex], i) => (
             <li class="container-item array-item" key={i}>
-              {isTuple ? null : (
-                <div className="container-item-header">
-                  <div className="container-item-title">{i + 1}.</div>
-                  <button
-                    class="destructive"
-                    onClick={() => {
-                      onChange(removeAt(value, i))
-                    }}
-                    disabled={type.minItems !== undefined && value.length <= type.minItems}
-                  >
-                    Delete Item
-                  </button>
-                </div>
-              )}
+              <div className="container-item-header">
+                <div className="container-item-title">{i + 1}.</div>
+                <button
+                  class="destructive"
+                  onClick={() => {
+                    onChildRemove(i)
+                  }}
+                >
+                  Delete Item
+                </button>
+              </div>
               <TypeInput
-                type={type.items}
-                value={item}
-                instanceNamesByEntity={instanceNamesByEntity}
-                getDeclFromDeclName={getDeclFromDeclName}
+                {...props}
+                type={childEntity.type}
+                value={item.content}
+                parentKey={childEntity.parentReferenceKey}
                 onChange={newItem => {
-                  onChange(value.with(i, newItem))
+                  onChildChange(originalIndex, newItem)
                 }}
               />
             </li>
           ))}
         </ol>
-      )} */}
+      ) : (
+        <p class="empty">No child entities</p>
+      )}
       <div class="add-item-container">
         <button
           onClick={() => {
-            onChange([
-              ...(value as unknown[]),
-              createTypeSkeleton(getDeclFromDeclName, childEntity.type),
-            ])
+            onChildAdd(type.entity, createTypeSkeleton(getDeclFromDeclName, childEntity.type))
           }}
         >
           Add Item

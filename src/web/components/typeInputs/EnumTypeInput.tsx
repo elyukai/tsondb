@@ -2,30 +2,16 @@ import type { FunctionComponent } from "preact"
 import { discriminatorKey } from "../../../shared/enum.ts"
 import type { SerializedEnumType } from "../../../shared/schema/types/EnumType.ts"
 import { toTitleCase } from "../../../shared/utils/string.ts"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { Select } from "../Select.tsx"
-import { TypeInput } from "./TypeInput.tsx"
+import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
-type Props = {
-  type: SerializedEnumType
-  path: string | undefined
-  value: unknown
-  instanceNamesByEntity: InstanceNamesByEntity
-  getDeclFromDeclName: GetDeclFromDeclName
-  onChange: (value: unknown) => void
-}
+type Props = TypeInputProps<SerializedEnumType>
 
-export const EnumTypeInput: FunctionComponent<Props> = ({
-  type,
-  path,
-  value,
-  instanceNamesByEntity,
-  getDeclFromDeclName,
-  onChange,
-}) => {
+export const EnumTypeInput: FunctionComponent<Props> = props => {
+  const { type, path, value, getDeclFromDeclName, onChange } = props
+
   if (
     typeof value !== "object" ||
     value === null ||
@@ -67,11 +53,11 @@ export const EnumTypeInput: FunctionComponent<Props> = ({
       {caseMember?.type == null ? null : (
         <div className="associated-type">
           <TypeInput
+            {...props}
+            parentKey={undefined}
             type={caseMember.type}
             path={path === undefined ? `{${activeEnumCase}}` : `${path}.{${activeEnumCase}}`}
             value={(value as Record<string, unknown>)[activeEnumCase]}
-            instanceNamesByEntity={instanceNamesByEntity}
-            getDeclFromDeclName={getDeclFromDeclName}
             onChange={newValue => {
               onChange({
                 [discriminatorKey]: activeEnumCase,

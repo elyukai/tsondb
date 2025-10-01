@@ -3,30 +3,16 @@ import { useState } from "preact/hooks"
 import type { SerializedNestedEntityMapType } from "../../../shared/schema/types/NestedEntityMapType.ts"
 import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.ts"
 import { toTitleCase } from "../../../shared/utils/string.ts"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { Select } from "../Select.tsx"
-import { TypeInput } from "./TypeInput.tsx"
+import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
-type Props = {
-  type: SerializedNestedEntityMapType
-  path: string | undefined
-  value: unknown
-  instanceNamesByEntity: InstanceNamesByEntity
-  getDeclFromDeclName: GetDeclFromDeclName
-  onChange: (value: Record<string, unknown>) => void
-}
+type Props = TypeInputProps<SerializedNestedEntityMapType, Record<string, unknown>>
 
-export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
-  type,
-  path,
-  value,
-  instanceNamesByEntity,
-  getDeclFromDeclName,
-  onChange,
-}) => {
+export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
+  const { type, path, value, instanceNamesByEntity, getDeclFromDeclName, onChange } = props
+
   const [newKey, setNewKey] = useState("")
 
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -71,11 +57,11 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = ({
                   </div>
                 </div>
                 <TypeInput
+                  {...props}
+                  parentKey={undefined}
                   type={type.type}
                   path={path === undefined ? key : `${path}.${key}`}
                   value={item}
-                  instanceNamesByEntity={instanceNamesByEntity}
-                  getDeclFromDeclName={getDeclFromDeclName}
                   onChange={newItem => {
                     onChange(sortObjectKeysAlphabetically({ ...value, [key]: newItem }))
                   }}

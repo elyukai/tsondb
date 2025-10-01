@@ -192,7 +192,15 @@ const checkChildEntityTypeInEntityDecl = (
   }
 }
 
-const checkChildEntityTypes = (decls: Decl[]) => {
+const checkChildEntityTypes = (localeEntity: EntityDecl | undefined, decls: Decl[]) => {
+  if (localeEntity && localeEntity.parentReferenceKey !== undefined) {
+    throw new TypeError(
+      `The locale entity "${localeEntity.name}" cannot be used as a child entity to other entities.`,
+    )
+  }
+
+  // TODO: Check that no cycles exist in child entity relations
+
   for (const decl of decls) {
     if (isEnumDecl(decl)) {
       checkChildEntityTypeNotInEnumDecl(new Set<Decl>(), decl)
@@ -257,7 +265,7 @@ export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema 
   debug("checking child entities ...")
   checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType(allDecls)
   debug("checking child entity types ...")
-  checkChildEntityTypes(allDecls)
+  checkChildEntityTypes(localeEntity, allDecls)
 
   debug("created schema, no integrity violations found")
 
