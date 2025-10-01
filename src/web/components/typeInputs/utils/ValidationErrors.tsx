@@ -1,7 +1,7 @@
 import type { FunctionComponent } from "preact"
 
 type Props = {
-  disabled: boolean | undefined
+  disabled?: boolean
   errors: Error[]
 }
 
