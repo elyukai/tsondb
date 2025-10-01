@@ -1,6 +1,11 @@
 import { createContext } from "preact"
 import type { SetStateAction } from "preact/compat"
-import { defaultSettings, type UserSettings } from "../hooks/useSettings.ts"
+import { type UserSettings } from "../hooks/useSettings.ts"
+
+export const defaultSettings: UserSettings = {
+  displayedLocales: [],
+  enumDisplay: "select",
+}
 
 export type SettingsContext = {
   settings: UserSettings

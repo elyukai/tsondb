@@ -10,7 +10,7 @@ import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 type Props = TypeInputProps<SerializedArrayType, unknown[]>
 
 export const ArrayTypeInput: FunctionComponent<Props> = props => {
-  const { type, path, value, getDeclFromDeclName, onChange } = props
+  const { type, path, value, disabled, getDeclFromDeclName, onChange } = props
 
   if (!(Array.isArray as (arg: unknown) => arg is unknown[])(value)) {
     return <MismatchingTypeError expected="array" actual={value} />
@@ -34,7 +34,9 @@ export const ArrayTypeInput: FunctionComponent<Props> = props => {
                     onClick={() => {
                       onChange(removeAt(value, i))
                     }}
-                    disabled={type.minItems !== undefined && value.length <= type.minItems}
+                    disabled={
+                      disabled || (type.minItems !== undefined && value.length <= type.minItems)
+                    }
                   >
                     Delete Item #{i + 1}
                   </button>
@@ -60,7 +62,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = props => {
             onClick={() => {
               onChange([...value, createTypeSkeleton(getDeclFromDeclName, type.items)])
             }}
-            disabled={type.maxItems !== undefined && value.length >= type.maxItems}
+            disabled={disabled || (type.maxItems !== undefined && value.length >= type.maxItems)}
           >
             Add Item #{value.length + 1}
           </button>

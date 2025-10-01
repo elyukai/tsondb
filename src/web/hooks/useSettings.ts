@@ -1,25 +1,32 @@
 import type { SetStateAction } from "preact/compat"
 import { useCallback, useContext, useState, type Dispatch, type StateUpdater } from "preact/hooks"
-import { SettingsContext } from "../context/settings.ts"
+import type { WebConfig } from "../context/config.ts"
+import { defaultSettings, SettingsContext } from "../context/settings.ts"
 
 export type UserSettings = {
   displayedLocales: string[]
-}
-
-export const defaultSettings: UserSettings = {
-  displayedLocales: [],
+  enumDisplay: "select" | "radio"
 }
 
 const settingsGuards: { [K in keyof UserSettings]: (v: unknown) => v is UserSettings[K] } = {
   displayedLocales: (v): v is string[] =>
     Array.isArray(v) && v.every(e => typeof e === "string") && v.length > 0,
+  enumDisplay: (v): v is "select" | "radio" =>
+    typeof v === "string" && ["select", "radio"].includes(v),
 }
 
-export const useSettings = (): SettingsContext => {
+const defaultSettingsFromConfig = (config: WebConfig): UserSettings => ({
+  ...defaultSettings,
+  displayedLocales:
+    config.defaultLocales.length > 0 ? config.defaultLocales : defaultSettings.displayedLocales,
+})
+
+export const useSettings = (config: WebConfig): SettingsContext => {
+  console.log("useSettings")
   const [settings, setSettings] = useState<UserSettings>(
     () =>
       Object.fromEntries(
-        Object.entries(defaultSettings).map(([key, initialValue]) => {
+        Object.entries(defaultSettingsFromConfig(config)).map(([key, initialValue]) => {
           const item = localStorage.getItem(key)
 
           if (item) {

@@ -8,7 +8,7 @@ import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = TypeInputProps<SerializedFloatType, number>
 
-export const FloatTypeInput: FunctionComponent<Props> = ({ type, value, onChange }) => {
+export const FloatTypeInput: FunctionComponent<Props> = ({ type, value, disabled, onChange }) => {
   const [stringValue, setStringValue] = useState(typeof value === "number" ? value.toString() : "")
 
   if (typeof value !== "number") {
@@ -31,6 +31,7 @@ export const FloatTypeInput: FunctionComponent<Props> = ({ type, value, onChange
         }}
         step={0.01}
         aria-invalid={errors.length > 0}
+        disabled={disabled}
       />
       <ValidationErrors errors={errors} />
     </div>

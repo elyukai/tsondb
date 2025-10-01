@@ -9,7 +9,7 @@ import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = TypeInputProps<SerializedStringType, string>
 
-export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChange }) => {
+export const StringTypeInput: FunctionComponent<Props> = ({ type, value, disabled, onChange }) => {
   if (typeof value !== "string") {
     return <MismatchingTypeError expected="string" actual={value} />
   }
@@ -32,6 +32,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChang
                   onChange(event.currentTarget.value)
                 }}
                 aria-invalid={errors.length > 0}
+                disabled={disabled}
               />
               <p class="help">
                 This textarea supports{" "}
@@ -73,6 +74,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChang
               onChange(event.currentTarget.value)
             }}
             aria-invalid={errors.length > 0}
+            disabled={disabled}
           />
           <ValidationErrors errors={errors} />
         </div>

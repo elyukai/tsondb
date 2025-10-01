@@ -26,6 +26,7 @@ export type TypeInputProps<T, V = unknown> = {
   instanceNamesByEntity: InstanceNamesByEntity
   parentKey?: string
   childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
+  disabled?: boolean
   getDeclFromDeclName: GetDeclFromDeclName
   onChange: (value: V) => void
   onChildChange: (index: number, value: unknown) => void

@@ -13,6 +13,7 @@ const localeMapper = (result: GetAllInstancesOfEntityResponseBody) => result.ins
 
 export const Settings: FunctionComponent = () => {
   const [locales, setLocales] = useSetting("displayedLocales")
+  const [enumDisplay, setEnumDisplay] = useSetting("enumDisplay")
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const config = useContext(ConfigContext)
   const [localeInstances] = useMappedAPIResource(
@@ -134,6 +135,36 @@ export const Settings: FunctionComponent = () => {
                 : (localeInstances?.find(instance => instance.id === newLocale)?.displayName ??
                   newLocale)}
             </button>
+          </div>
+        </section>
+        <section class="locale-settings">
+          <h3>Enum Display Mode</h3>
+          <p class="description">Choose how enumeration types are displayed.</p>
+          <div className="field--option">
+            <input
+              type="radio"
+              name="enum-display"
+              id="enum-display-select"
+              value="select"
+              checked={enumDisplay === "select"}
+              onChange={() => {
+                setEnumDisplay("select")
+              }}
+            />
+            <label htmlFor="enum-display-select">Select Dropdown</label>
+          </div>
+          <div className="field--option">
+            <input
+              type="radio"
+              name="enum-display"
+              id="enum-display-radio"
+              value="radio"
+              checked={enumDisplay === "radio"}
+              onChange={() => {
+                setEnumDisplay("radio")
+              }}
+            />
+            <label htmlFor="enum-display-radio">Radio Buttons</label>
           </div>
         </section>
       </ModalDialog>

@@ -7,7 +7,7 @@ import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = TypeInputProps<SerializedDateType, string>
 
-export const DateTypeInput: FunctionComponent<Props> = ({ type, value, onChange }) => {
+export const DateTypeInput: FunctionComponent<Props> = ({ type, value, disabled, onChange }) => {
   if (typeof value !== "string") {
     return <MismatchingTypeError expected="date string" actual={value} />
   }
@@ -22,6 +22,7 @@ export const DateTypeInput: FunctionComponent<Props> = ({ type, value, onChange 
         onInput={event => {
           onChange(event.currentTarget.value)
         }}
+        disabled={disabled}
       />
       <ValidationErrors errors={errors} />
     </div>

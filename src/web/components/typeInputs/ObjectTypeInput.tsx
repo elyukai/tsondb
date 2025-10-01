@@ -12,7 +12,7 @@ import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 type Props = TypeInputProps<SerializedObjectType, Record<string, unknown>>
 
 export const ObjectTypeInput: FunctionComponent<Props> = props => {
-  const { type, path, value, parentKey, getDeclFromDeclName, onChange } = props
+  const { type, path, value, parentKey, disabled, getDeclFromDeclName, onChange } = props
 
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return <MismatchingTypeError expected="object" actual={value} />
@@ -48,6 +48,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
                         ),
                       )
                     }}
+                    disabled={disabled}
                   >
                     Add {toTitleCase(key)}
                   </button>
@@ -60,6 +61,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
                       delete newObj[key as keyof typeof newObj]
                       onChange(newObj)
                     }}
+                    disabled={disabled}
                   >
                     Remove {toTitleCase(key)}
                   </button>

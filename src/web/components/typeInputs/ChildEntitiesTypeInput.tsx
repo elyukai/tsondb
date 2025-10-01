@@ -12,6 +12,7 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
     type,
     path,
     childInstances,
+    disabled,
     getDeclFromDeclName,
     onChildAdd,
     onChildChange,
@@ -54,6 +55,7 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
                   onClick={() => {
                     onChildRemove(i)
                   }}
+                  disabled={disabled}
                 >
                   Delete Item
                 </button>
@@ -78,6 +80,7 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
           onClick={() => {
             onChildAdd(type.entity, createTypeSkeleton(getDeclFromDeclName, childEntity.type))
           }}
+          disabled={disabled}
         >
           Add Item
         </button>

@@ -28,7 +28,7 @@ type Props = {
 }
 
 const App: FunctionComponent<Props> = ({ config }) => {
-  const settingsContext = useSettings()
+  const settingsContext = useSettings(config)
 
   const [entities, reloadEntities] = useMappedAPIResource(
     getAllEntities,

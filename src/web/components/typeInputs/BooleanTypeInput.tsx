@@ -5,7 +5,7 @@ import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 
 type Props = TypeInputProps<SerializedBooleanType, boolean>
 
-export const BooleanTypeInput: FunctionComponent<Props> = ({ value, onChange }) => {
+export const BooleanTypeInput: FunctionComponent<Props> = ({ value, disabled, onChange }) => {
   if (typeof value !== "boolean") {
     return <MismatchingTypeError expected="boolean" actual={value} />
   }
@@ -18,6 +18,7 @@ export const BooleanTypeInput: FunctionComponent<Props> = ({ value, onChange }) 
         onInput={event => {
           onChange(event.currentTarget.checked)
         }}
+        disabled={disabled}
       />
     </div>
   )

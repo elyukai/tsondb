@@ -11,6 +11,7 @@ export const ReferenceIdentifierTypeInput: FunctionComponent<Props> = ({
   type,
   value,
   instanceNamesByEntity,
+  disabled,
   onChange,
 }) => {
   if (typeof value !== "string") {
@@ -28,7 +29,7 @@ export const ReferenceIdentifierTypeInput: FunctionComponent<Props> = ({
         onInput={event => {
           onChange(event.currentTarget.value)
         }}
-        disabled={instances.length === 0}
+        disabled={disabled || instances.length === 0}
         aria-invalid={!value}
       >
         {instances.length === 0 ? (

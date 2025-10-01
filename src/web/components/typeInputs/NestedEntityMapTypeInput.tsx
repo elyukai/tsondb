@@ -11,7 +11,8 @@ import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 type Props = TypeInputProps<SerializedNestedEntityMapType, Record<string, unknown>>
 
 export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
-  const { type, path, value, instanceNamesByEntity, getDeclFromDeclName, onChange } = props
+  const { type, path, value, instanceNamesByEntity, disabled, getDeclFromDeclName, onChange } =
+    props
 
   const [newKey, setNewKey] = useState("")
 
@@ -51,6 +52,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
                         delete newObj[key as keyof typeof newObj]
                         onChange(newObj)
                       }}
+                      disabled={disabled}
                     >
                       Delete {name}
                     </button>
@@ -77,7 +79,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
           onInput={event => {
             setNewKey(event.currentTarget.value)
           }}
-          disabled={secondaryInstances.length === 0}
+          disabled={disabled || secondaryInstances.length === 0}
         >
           {secondaryInstances.length === 0 ? (
             <option value="" disabled>
@@ -104,7 +106,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
             )
             setNewKey("")
           }}
-          disabled={newKey === ""}
+          disabled={disabled || newKey === ""}
         >
           Add {newKey === "" ? "Key" : toTitleCase(newKey)}
         </button>
