@@ -64,32 +64,54 @@ export interface GenEntityTaggedInstanceContainerWithChildInstances<
   childInstances: C[]
 }
 
+const isParentReferenceReferencingParent = (
+  value: unknown,
+  parentEntityName: string,
+  parentId: string,
+): boolean => {
+  if (typeof value === "object" && value !== null && hasKey(value, "kind")) {
+    return (
+      value.kind === parentEntityName &&
+      hasKey(value, parentEntityName) &&
+      value[parentEntityName] === parentId
+    )
+  } else if (typeof value === "string") {
+    return value === parentId
+  } else {
+    return false
+  }
+}
+
 export const getChildInstances = (
   instancesByEntityName: InstancesByEntityName,
-  entity: EntityDecl,
+  parentEntity: EntityDecl,
   parentId: string,
 ): EntityTaggedInstanceContainerWithChildInstances[] => {
   const childEntities = reduceNodes<EntityDeclWithParentReference>(
     (_parentNodes, node, collectedResults) =>
       isChildEntitiesType(node) ? [...collectedResults, node.entity] : collectedResults,
-    [entity],
+    [parentEntity],
     { followIncludes: true },
   )
 
   return childEntities.flatMap(
-    entity =>
-      instancesByEntityName[entity.name]
+    childEntity =>
+      instancesByEntityName[childEntity.name]
         ?.filter(
           instanceContainer =>
             typeof instanceContainer.content === "object" &&
             instanceContainer.content !== null &&
-            hasKey(instanceContainer.content, entity.parentReferenceKey) &&
-            instanceContainer.content[entity.parentReferenceKey] === parentId,
+            hasKey(instanceContainer.content, childEntity.parentReferenceKey) &&
+            isParentReferenceReferencingParent(
+              instanceContainer.content[childEntity.parentReferenceKey],
+              parentEntity.name,
+              parentId,
+            ),
         )
         .map<EntityTaggedInstanceContainerWithChildInstances>(container => ({
           ...container,
-          entityName: entity.name,
-          childInstances: getChildInstances(instancesByEntityName, entity, container.id),
+          entityName: childEntity.name,
+          childInstances: getChildInstances(instancesByEntityName, childEntity, container.id),
         })) ?? [],
   )
 }
