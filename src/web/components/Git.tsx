@@ -1,7 +1,7 @@
 import type { FunctionComponent } from "preact"
 import { useLocation } from "preact-iso"
 import type { TargetedEvent } from "preact/compat"
-import { useCallback, useContext, useEffect, useState } from "preact/hooks"
+import { useCallback, useEffect, useState } from "preact/hooks"
 import type { GitStatusResponseBody } from "../../shared/api.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import type { GitFileStatus } from "../../shared/utils/git.ts"
@@ -26,7 +26,7 @@ import {
   unstageAllFiles,
   unstageFileOfEntity,
 } from "../api/git.ts"
-import { LocalesContext } from "../context/locales.ts"
+import { useSetting } from "../hooks/useSettings.ts"
 
 type Overview = [
   entityName: string,
@@ -93,7 +93,7 @@ const GitFileList: FunctionComponent<{
   )
 
 export const Git: FunctionComponent = () => {
-  const { locales } = useContext(LocalesContext)
+  const [locales] = useSetting("displayedLocales")
   const [isOpen, setIsOpen] = useState(false)
   const [commitsAhead, setCommitsAhead] = useState(0)
   const [commitsBehind, setCommitsBehind] = useState(0)

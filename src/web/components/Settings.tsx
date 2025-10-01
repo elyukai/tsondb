@@ -4,15 +4,15 @@ import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
 import { removeAt, reorder } from "../../shared/utils/array.ts"
 import { getLocaleInstances } from "../api/declarations.ts"
 import { ConfigContext } from "../context/config.ts"
-import { LocalesContext } from "../context/locales.ts"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
+import { useSetting } from "../hooks/useSettings.ts"
 import { ModalDialog } from "./ModalDialog.tsx"
 import { Select } from "./Select.tsx"
 
 const localeMapper = (result: GetAllInstancesOfEntityResponseBody) => result.instances
 
 export const Settings: FunctionComponent = () => {
-  const { locales, setLocales } = useContext(LocalesContext)
+  const [locales, setLocales] = useSetting("displayedLocales")
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const config = useContext(ConfigContext)
   const [localeInstances] = useMappedAPIResource(

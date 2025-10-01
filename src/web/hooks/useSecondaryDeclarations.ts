@@ -1,12 +1,12 @@
-import { useCallback, useContext, useEffect, useState } from "preact/hooks"
+import { useCallback, useEffect, useState } from "preact/hooks"
 import type { SerializedSecondaryDecl } from "../../shared/schema/declarations/Declaration.ts"
 import { getAllDeclarations } from "../api/declarations.ts"
-import { LocalesContext } from "../context/locales.ts"
+import { useSetting } from "./useSettings.ts"
 
 export type GetDeclFromDeclName = (name: string) => SerializedSecondaryDecl | undefined
 
 export const useGetDeclFromDeclName = (): [GetDeclFromDeclName, loaded: boolean] => {
-  const { locales } = useContext(LocalesContext)
+  const [locales] = useSetting("displayedLocales")
   const [secondaryDeclarations, setSecondaryDeclarations] = useState<SerializedSecondaryDecl[]>()
 
   useEffect(() => {

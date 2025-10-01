@@ -9,9 +9,9 @@ import { getWebConfig } from "./api/index.ts"
 import { Git } from "./components/Git.tsx"
 import { ConfigContext, type WebConfig } from "./context/config.ts"
 import { EntitiesContext } from "./context/entities.ts"
-import { LocalesContext } from "./context/locales.ts"
-import { useLocalStorage } from "./hooks/useLocalStorage.ts"
+import { SettingsContext } from "./context/settings.ts"
 import { useMappedAPIResource } from "./hooks/useMappedAPIResource.ts"
+import { useSettings } from "./hooks/useSettings.ts"
 import { CreateInstance } from "./routes/CreateInstance.tsx"
 import { Entity } from "./routes/Entity.tsx"
 import { Home } from "./routes/Home.tsx"
@@ -28,17 +28,12 @@ type Props = {
 }
 
 const App: FunctionComponent<Props> = ({ config }) => {
-  const [displayedLocales, setDisplayedLocales] = useLocalStorage<string[]>(
-    "displayedLocales",
-    config.defaultLocales,
-    (v, initialValue) =>
-      Array.isArray(v) && v.every(e => typeof e === "string") && v.length > 0 ? v : initialValue,
-  )
+  const settingsContext = useSettings()
 
   const [entities, reloadEntities] = useMappedAPIResource(
     getAllEntities,
     mapEntities,
-    displayedLocales,
+    settingsContext.settings.displayedLocales,
   )
 
   const location = useLocation()
@@ -51,9 +46,7 @@ const App: FunctionComponent<Props> = ({ config }) => {
 
   return (
     <ConfigContext.Provider value={config}>
-      <LocalesContext.Provider
-        value={{ locales: displayedLocales, setLocales: setDisplayedLocales }}
-      >
+      <SettingsContext.Provider value={settingsContext}>
         <LocationProvider>
           <EntitiesContext.Provider value={{ entities: entities ?? [], reloadEntities }}>
             <Router>
@@ -66,7 +59,7 @@ const App: FunctionComponent<Props> = ({ config }) => {
             <Git />
           </EntitiesContext.Provider>
         </LocationProvider>
-      </LocalesContext.Provider>
+      </SettingsContext.Provider>
     </ConfigContext.Provider>
   )
 }

@@ -1,7 +1,7 @@
 import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute, type LocationHook } from "preact-iso"
 import type { SetStateAction } from "preact/compat"
-import { useCallback, useContext, useEffect, useState, type Dispatch } from "preact/hooks"
+import { useCallback, useEffect, useState, type Dispatch } from "preact/hooks"
 import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../node/utils/childInstances.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import { removeAt } from "../../shared/utils/array.ts"
@@ -12,13 +12,13 @@ import {
   deleteInstanceByEntityNameAndId,
   getChildInstancesForInstanceByEntityName,
 } from "../api/declarations.ts"
-import { LocalesContext } from "../context/locales.ts"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
 import {
   useGetDeclFromDeclName,
   type GetDeclFromDeclName,
 } from "../hooks/useSecondaryDeclarations.ts"
+import { useSetting } from "../hooks/useSettings.ts"
 import { homeTitle } from "../routes/Home.tsx"
 import { NotFound } from "../routes/NotFound.tsx"
 import { Layout } from "./Layout.tsx"
@@ -72,7 +72,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
     params: { name, id },
   } = useRoute()
 
-  const { locales } = useContext(LocalesContext)
+  const [locales] = useSetting("displayedLocales")
   const [getDeclFromDeclName, declsLoaded] = useGetDeclFromDeclName()
   const { declaration: entity, isLocaleEntity } = useEntityFromRoute() ?? {}
   const [instanceNamesByEntity] = useInstanceNamesByEntity()

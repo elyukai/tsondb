@@ -13,9 +13,9 @@ import {
 import { Layout } from "../components/Layout.ts"
 import { ConfigContext } from "../context/config.ts"
 import { EntitiesContext } from "../context/entities.ts"
-import { LocalesContext } from "../context/locales.ts"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
+import { useSetting } from "../hooks/useSettings.ts"
 import { Markdown } from "../utils/Markdown.tsx"
 import { homeTitle } from "./Home.tsx"
 import { NotFound } from "./NotFound.tsx"
@@ -29,7 +29,7 @@ export const Entity: FunctionalComponent = () => {
     query: { created },
   } = useRoute()
 
-  const { locales } = useContext(LocalesContext)
+  const [locales] = useSetting("displayedLocales")
   const [searchText, setSearchText] = useState("")
   const entityFromRoute = useEntityFromRoute()
   const config = useContext(ConfigContext)
