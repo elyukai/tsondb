@@ -25,7 +25,7 @@ import type { SerializedTypeArgumentType } from "../../shared/schema/types/TypeA
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import { entity, json } from "../utils/errorFormatting.ts"
-import type { Decl, IncludableDeclP } from "./declarations/Declaration.ts"
+import { isDecl, type Decl, type IncludableDeclP } from "./declarations/Declaration.ts"
 import {
   getNestedDeclarationsInEntityDecl,
   getReferencesForEntityDecl,
@@ -284,9 +284,10 @@ export const flatMapAuxiliaryDecls = (
     existingDecls: Decl[],
   ) => (Decl | undefined)[] | Decl | undefined,
   declarations: readonly Decl[],
-): Decl[] => {
-  return reduceNodes((parentNodes, node, decls) => {
-    const result = callbackFn(parentNodes, node, decls)
+): Decl[] =>
+  reduceNodes((parentNodes, node, decls) => {
+    const declsWithCurrentDecl = isDecl(node) ? [...decls, node] : decls
+    const result = callbackFn(parentNodes, node, declsWithCurrentDecl)
     const normalizedResult = (Array.isArray(result) ? result : [result]).filter(
       decl => decl !== undefined,
     )
@@ -300,9 +301,8 @@ export const flatMapAuxiliaryDecls = (
         )
       }
     })
-    return decls.concat(normalizedResult)
+    return declsWithCurrentDecl.concat(normalizedResult)
   }, declarations)
-}
 
 export type IdentifierToCheck = { name: string; value: unknown }
 
