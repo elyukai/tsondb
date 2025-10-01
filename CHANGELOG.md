@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.6.0](https://github.com/elyukai/tsondb/compare/v0.5.19...v0.6.0) (2025-10-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* child entities type
+* extract serialized types into shared folder and centralize functions switching over node kinds
+
+* extract serialized types into shared folder and centralize functions switching over node kinds ([227abc0](https://github.com/elyukai/tsondb/commit/227abc0af4fc4462f4171477bc42c858015173f3))
+
+
+### Features
+
+* allow grouping of entities on editor home page ([3eb47b8](https://github.com/elyukai/tsondb/commit/3eb47b8c880ea0765981bdf690e31ae72fd06376)), closes [#20](https://github.com/elyukai/tsondb/issues/20)
+* attributed strings in markdown ([43dffe4](https://github.com/elyukai/tsondb/commit/43dffe408a342c9ebbebcb3d0bcaa93f9cf171a9)), closes [#27](https://github.com/elyukai/tsondb/issues/27)
+* child entities type ([aa020ba](https://github.com/elyukai/tsondb/commit/aa020baaad8c9ed5a13bc6dd21f35983e4ef2e83)), closes [#31](https://github.com/elyukai/tsondb/issues/31)
+* locale selection for display names and instance groups ([ead9f9a](https://github.com/elyukai/tsondb/commit/ead9f9acde43696909d4f269d918374ef2c8f891)), closes [#18](https://github.com/elyukai/tsondb/issues/18)
+* option to display all enum cases as radio buttons ([365ba4a](https://github.com/elyukai/tsondb/commit/365ba4a43065f614c5e4a0cd7968d7075426ae01))
+* provide disabled placeholder forms for every enum case in radio mode ([298b25d](https://github.com/elyukai/tsondb/commit/298b25da62f7fb025e4f4af6cb1f23eb4cbaeb35))
+
+
+### Bug Fixes
+
+* child entity type should resolve child instance with polymorphic parents ([aa6731d](https://github.com/elyukai/tsondb/commit/aa6731d047ad95cd6fbd29995774be1e6b5f7338))
+* limit number of concurrent file reads when loading the database ([a41d72a](https://github.com/elyukai/tsondb/commit/a41d72a831e7bc19f78fa43359931b9b75b09730)), closes [#29](https://github.com/elyukai/tsondb/issues/29)
+* make disabled property optional for validation errors ([545f6e2](https://github.com/elyukai/tsondb/commit/545f6e219dc2e4a5341c6e646b373ea64572d1d3))
+* reduce layout jumps during api calls ([f3d5277](https://github.com/elyukai/tsondb/commit/f3d5277ec1a650ef1e367ec53757f7706597e581))
+* reload global instances when deleting an instance ([919f859](https://github.com/elyukai/tsondb/commit/919f859cf9bf5b0c193d4e516ee4a06213f9893a))
+* types in declarations should have their parent key always set correctly when an instance of a node is used in multiple places ([2534f7c](https://github.com/elyukai/tsondb/commit/2534f7cd3b9b12c11fb56af0db1bc57ee73936f8)), closes [#19](https://github.com/elyukai/tsondb/issues/19)
+* uneven container item padding ([6f7da16](https://github.com/elyukai/tsondb/commit/6f7da166deb8c187e47986dcb980ece687dfdddb))
+* use Object.is for shallow equality check in comparison utils ([bdd7fad](https://github.com/elyukai/tsondb/commit/bdd7fad8e4a0052bc7a72d06d6e99c5e90b88856))
+
 ## [0.5.19](https://github.com/elyukai/tsondb/compare/v0.5.18...v0.5.19) (2025-09-18)
 
 
