@@ -1,6 +1,7 @@
 import type { BaseNode } from "../Node.ts"
 import type { SerializedTypeParameter } from "../TypeParameter.ts"
 import type { SerializedEnumCaseDecl } from "../types/EnumType.ts"
+import type { SerializedMemberDecl } from "../types/ObjectType.ts"
 import { type SerializedType } from "../types/Type.ts"
 import type { SerializedEntityDecl } from "./EntityDecl.ts"
 import type { SerializedEnumDecl } from "./EnumDecl.ts"
@@ -28,7 +29,10 @@ export type SerializedDeclP<Params extends SerializedTypeParameter[] = Serialize
   | SerializedEnumDecl<string, Record<string, SerializedEnumCaseDecl>, Params>
   | SerializedTypeAliasDecl<string, SerializedType, Params>
 
-export type SerializedSecondaryDecl = SerializedEnumDecl | SerializedTypeAliasDecl
+export type SerializedSecondaryDecl =
+  | SerializedEnumDecl
+  | SerializedTypeAliasDecl
+  | SerializedEntityDecl<string, Record<string, SerializedMemberDecl>, string>
 
 export interface SerializedBaseDecl<
   Name extends string = string,

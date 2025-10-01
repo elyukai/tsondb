@@ -2,30 +2,16 @@ import type { FunctionComponent } from "preact"
 import type { SerializedArrayType } from "../../../shared/schema/types/ArrayType.ts"
 import { removeAt } from "../../../shared/utils/array.ts"
 import { validateArrayConstraints } from "../../../shared/validation/array.ts"
-import type { InstanceNamesByEntity } from "../../hooks/useInstanceNamesByEntity.ts"
-import type { GetDeclFromDeclName } from "../../hooks/useSecondaryDeclarations.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
-import { TypeInput } from "./TypeInput.tsx"
+import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
-type Props = {
-  type: SerializedArrayType
-  path: string | undefined
-  value: unknown
-  instanceNamesByEntity: InstanceNamesByEntity
-  getDeclFromDeclName: GetDeclFromDeclName
-  onChange: (value: unknown[]) => void
-}
+type Props = TypeInputProps<SerializedArrayType, unknown[]>
 
-export const ArrayTypeInput: FunctionComponent<Props> = ({
-  type,
-  path,
-  value,
-  instanceNamesByEntity,
-  getDeclFromDeclName,
-  onChange,
-}) => {
+export const ArrayTypeInput: FunctionComponent<Props> = props => {
+  const { type, path, value, getDeclFromDeclName, onChange } = props
+
   if (!(Array.isArray as (arg: unknown) => arg is unknown[])(value)) {
     return <MismatchingTypeError expected="array" actual={value} />
   }
@@ -55,11 +41,11 @@ export const ArrayTypeInput: FunctionComponent<Props> = ({
                 </div>
               )}
               <TypeInput
+                {...props}
+                parentKey={undefined}
                 type={type.items}
                 path={path === undefined ? `[${i.toString()}]` : `${path}[${i.toString()}]`}
                 value={item}
-                instanceNamesByEntity={instanceNamesByEntity}
-                getDeclFromDeclName={getDeclFromDeclName}
                 onChange={newItem => {
                   onChange(value.with(i, newItem))
                 }}

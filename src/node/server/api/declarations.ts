@@ -1,12 +1,15 @@
 import Debug from "debug"
 import express from "express"
 import type {
+  CreateInstanceOfEntityRequestBody,
   CreateInstanceOfEntityResponseBody,
   DeleteInstanceOfEntityResponseBody,
+  GetAllChildInstancesOfInstanceResponseBody,
   GetAllDeclarationsResponseBody,
   GetAllInstancesOfEntityResponseBody,
   GetDeclarationResponseBody,
   GetInstanceOfEntityResponseBody,
+  UpdateInstanceOfEntityRequestBody,
   UpdateInstanceOfEntityResponseBody,
 } from "../../../shared/api.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
@@ -16,7 +19,8 @@ import { isEntityDecl } from "../../schema/declarations/EntityDecl.ts"
 import { isEnumDecl } from "../../schema/declarations/EnumDecl.ts"
 import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
 import { serializeNode } from "../../schema/index.ts"
-import { createInstance, deleteInstance, updateInstance } from "./instanceOperations.ts"
+import { getChildInstances } from "../../utils/childInstances.ts"
+import { createInstance, deleteInstance, updateInstance } from "../utils/instanceOperations.ts"
 
 const debug = Debug("tsondb:server:api:declarations")
 
@@ -113,7 +117,8 @@ declarationsApi.post("/:name/instances", async (req, res) => {
     return
   }
 
-  const result = await createInstance(req, req.params.name, req.body, req.query["id"])
+  const requestBody = req.body as CreateInstanceOfEntityRequestBody
+  const result = await createInstance(req, requestBody.instance, req.query["id"])
 
   if (isOk(result)) {
     const body: CreateInstanceOfEntityResponseBody = {
@@ -170,7 +175,8 @@ declarationsApi.put("/:name/instances/:id", async (req, res) => {
     return
   }
 
-  const result = await updateInstance(req, req.params.name, req.params.id, req.body)
+  const requestBody = req.body as UpdateInstanceOfEntityRequestBody
+  const result = await updateInstance(req, requestBody.instance)
 
   if (isOk(result)) {
     const body: UpdateInstanceOfEntityResponseBody = {
@@ -209,4 +215,24 @@ declarationsApi.delete("/:name/instances/:id", async (req, res) => {
   } else {
     res.status(result.error[0]).send(result.error[1])
   }
+})
+
+declarationsApi.get("/:name/instances/:id/children", (req, res) => {
+  const decl = req.declarations.find(decl => decl.name === req.params.name)
+
+  if (decl === undefined) {
+    res.status(404).send(`Declaration "${req.params.name}" not found`)
+    return
+  }
+
+  if (!isEntityDecl(decl)) {
+    res.status(400).send(`Declaration "${decl.name}" is not an entity`)
+    return
+  }
+
+  const body: GetAllChildInstancesOfInstanceResponseBody = {
+    instances: getChildInstances(req.instancesByEntityName, decl, req.params.id),
+  }
+
+  res.json(body)
 })

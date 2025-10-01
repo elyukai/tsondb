@@ -32,6 +32,11 @@ import {
   type SerializedBooleanType,
 } from "./types/BooleanType.ts"
 import {
+  getReferencesForSerializedChildEntitiesType,
+  resolveTypeArgumentsInSerializedChildEntitiesType,
+  type SerializedChildEntitiesType,
+} from "./types/ChildEntitiesType.ts"
+import {
   getReferencesForSerializedDateType,
   resolveTypeArgumentsInSerializedDateType,
   type SerializedDateType,
@@ -86,6 +91,7 @@ import {
 } from "./types/TypeArgumentType.ts"
 
 export interface NodeKind {
+  ChildEntityDecl: "ChildEntityDecl"
   EntityDecl: "EntityDecl"
   EnumDecl: "EnumDecl"
   EnumCaseDecl: "EnumCaseDecl"
@@ -104,9 +110,11 @@ export interface NodeKind {
   IncludeIdentifierType: "IncludeIdentifierType"
   NestedEntityMapType: "NestedEntityMapType"
   EnumType: "EnumType"
+  ChildEntitiesType: "ChildEntitiesType"
 }
 
 export const NodeKind: NodeKind = enumOfObject({
+  ChildEntityDecl: null,
   EntityDecl: null,
   EnumDecl: null,
   EnumCaseDecl: null,
@@ -125,6 +133,7 @@ export const NodeKind: NodeKind = enumOfObject({
   IncludeIdentifierType: null,
   NestedEntityMapType: null,
   EnumType: null,
+  ChildEntitiesType: null,
 })
 
 export interface BaseNode {
@@ -141,8 +150,16 @@ export type SerializedNodeWithResolvedTypeArguments<T extends SerializedNode | n
   | SerializedStringType
   | SerializedReferenceIdentifierType
   ? T
-  : T extends SerializedEntityDecl<infer N, infer V>
-    ? SerializedEntityDecl<N, SerializedNodeWithResolvedTypeArguments<V>>
+  : T extends SerializedEntityDecl<infer N, infer P, infer FK>
+    ? SerializedEntityDecl<
+        N,
+        {
+          [K in keyof P]: P[K] extends SerializedMemberDecl<infer PT, infer R>
+            ? SerializedMemberDecl<SerializedNodeWithResolvedTypeArguments<PT>, R>
+            : never
+        },
+        FK
+      >
     : T extends SerializedEnumDecl<infer N, infer V, SerializedTypeParameter[]>
       ? SerializedEnumDecl<
           N,
@@ -186,9 +203,11 @@ export type SerializedNodeWithResolvedTypeArguments<T extends SerializedNode | n
                         >
                       : T extends SerializedTypeParameter<infer N, infer C>
                         ? SerializedTypeParameter<N, SerializedNodeWithResolvedTypeArguments<C>>
-                        : T extends null
-                          ? null
-                          : never
+                        : T extends SerializedChildEntitiesType
+                          ? SerializedChildEntitiesType
+                          : T extends null
+                            ? null
+                            : never
 
 export type SerializedTypeArgumentsResolver<T extends SerializedNode = SerializedNode> = (
   decls: Record<string, SerializedDecl>,
@@ -236,6 +255,8 @@ export const resolveSerializedTypeArguments = <T extends SerializedNode = Serial
       return resolveTypeArgumentsInSerializedEnumType(decls, args, node) as NT
     case NodeKind.TypeParameter:
       return resolveTypeArgumentsInSerializedTypeParameter(decls, args, node) as NT
+    case NodeKind.ChildEntitiesType:
+      return resolveTypeArgumentsInSerializedChildEntitiesType(decls, args, node) as NT
     default:
       return assertExhaustive(node)
   }
@@ -281,6 +302,8 @@ export const getReferencesSerialized: GetReferencesSerialized = (decls, node, va
       return getReferencesForSerializedEnumType(decls, node, value)
     case NodeKind.TypeParameter:
       return getReferencesForSerializedTypeParameter(decls, node, value)
+    case NodeKind.ChildEntitiesType:
+      return getReferencesForSerializedChildEntitiesType(decls, node, value)
     default:
       return assertExhaustive(node)
   }

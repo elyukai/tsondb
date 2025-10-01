@@ -1,7 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from "preact/hooks"
 import type { SerializedSecondaryDecl } from "../../shared/schema/declarations/Declaration.ts"
-import type { SerializedEnumDecl } from "../../shared/schema/declarations/EnumDecl.ts"
-import type { SerializedTypeAliasDecl } from "../../shared/schema/declarations/TypeAliasDecl.ts"
 import { getAllDeclarations } from "../api/declarations.ts"
 import { LocalesContext } from "../context/locales.ts"
 
@@ -18,8 +16,10 @@ export const useGetDeclFromDeclName = (): [GetDeclFromDeclName, loaded: boolean]
           data.declarations
             .map(decl => decl.declaration)
             .filter(
-              (decl): decl is SerializedEnumDecl | SerializedTypeAliasDecl =>
-                decl.kind === "EnumDecl" || decl.kind === "TypeAliasDecl",
+              (decl): decl is SerializedSecondaryDecl =>
+                decl.kind === "EnumDecl" ||
+                decl.kind === "TypeAliasDecl" ||
+                decl.parentReferenceKey !== undefined,
             ),
         )
       })

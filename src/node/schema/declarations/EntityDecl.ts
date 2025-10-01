@@ -1,3 +1,5 @@
+import type { SerializedEntityDisplayName } from "../../../shared/schema/declarations/EntityDecl.ts"
+import type { SerializedObjectType } from "../../../shared/schema/types/ObjectType.ts"
 import type { DisplayNameResult } from "../../../shared/utils/displayName.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { Leaves } from "../../../shared/utils/object.ts"
@@ -5,6 +7,8 @@ import type {
   GetNestedDeclarations,
   GetReferences,
   Predicate,
+  Serialized,
+  SerializedMemberDeclObject,
   Serializer,
   TypeArgumentsResolver,
   Validator,
@@ -45,13 +49,13 @@ export type DisplayNameFn<T extends ObjectType = ObjectType> = (
   locales: string[],
 ) => DisplayNameResult
 
-export type EntityDisplayName<T extends ObjectType> =
-  | Leaves<AsType<T>>
+export type EntityDisplayName<T extends TConstraint> =
+  | Leaves<AsType<ObjectType<T>>>
   | {
       /**
        * @default "translations"
        */
-      pathToLocaleMap?: Leaves<AsType<T>>
+      pathToLocaleMap?: Leaves<AsType<ObjectType<T>>>
       /**
        * @default "name"
        */
@@ -59,34 +63,79 @@ export type EntityDisplayName<T extends ObjectType> =
     }
   | null
 
-export interface EntityDecl<Name extends string = string, T extends ObjectType = ObjectType>
-  extends BaseDecl<Name, []> {
+type TConstraint = Record<string, MemberDecl>
+
+export interface EntityDecl<
+  Name extends string = string,
+  T extends TConstraint = TConstraint,
+  FK extends (keyof T & string) | undefined = (keyof T & string) | undefined,
+> extends BaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
   namePlural: string
-  type: Lazy<T>
+  type: Lazy<ObjectType<T>>
+  parentReferenceKey: FK
   /**
    * @default "name"
    */
   displayName?: EntityDisplayName<T>
-  displayNameCustomizer?: DisplayNameFn<T>
+  displayNameCustomizer?: DisplayNameFn<ObjectType<T>>
   isDeprecated?: boolean
 }
 
-export const EntityDecl = <Name extends string, T extends ObjectType>(
+export interface EntityDeclWithParentReference<
+  Name extends string = string,
+  T extends TConstraint = TConstraint,
+  FK extends keyof T & string = keyof T & string,
+> extends EntityDecl<Name, T, FK> {}
+
+export const EntityDecl: {
+  <Name extends string, T extends TConstraint>(
+    sourceUrl: string,
+    options: {
+      name: Name
+      namePlural: string
+      comment?: string
+      type: () => ObjectType<T>
+      /**
+       * @default "name"
+       */
+      displayName?: EntityDisplayName<T>
+      displayNameCustomizer?: DisplayNameFn<ObjectType<T>>
+      isDeprecated?: boolean
+    },
+  ): EntityDecl<Name, T, undefined>
+  <Name extends string, T extends TConstraint, FK extends keyof T & string>(
+    sourceUrl: string,
+    options: {
+      name: Name
+      namePlural: string
+      comment?: string
+      type: () => ObjectType<T>
+      parentReferenceKey: FK
+      /**
+       * @default "name"
+       */
+      displayName?: EntityDisplayName<T>
+      displayNameCustomizer?: DisplayNameFn<ObjectType<T>>
+      isDeprecated?: boolean
+    },
+  ): EntityDecl<Name, T, FK>
+} = <Name extends string, T extends TConstraint, FK extends (keyof T & string) | undefined>(
   sourceUrl: string,
   options: {
     name: Name
     namePlural: string
     comment?: string
-    type: () => T
+    type: () => ObjectType<T>
+    parentReferenceKey?: FK
     /**
      * @default "name"
      */
     displayName?: EntityDisplayName<T>
-    displayNameCustomizer?: DisplayNameFn<T>
+    displayNameCustomizer?: DisplayNameFn<ObjectType<T>>
     isDeprecated?: boolean
   },
-): EntityDecl<Name, T> => {
+): EntityDecl<Name, T, FK> => {
   validateDeclName(options.name)
 
   return {
@@ -105,12 +154,21 @@ export const EntityDecl = <Name extends string, T extends ObjectType>(
       })
       return type
     }),
+    parentReferenceKey: options.parentReferenceKey as FK,
   }
 }
 
 export { EntityDecl as Entity }
 
 export const isEntityDecl: Predicate<EntityDecl> = node => node.kind === NodeKind.EntityDecl
+
+export const isEntityDeclWithParentReference = <
+  Name extends string,
+  T extends TConstraint,
+  FK extends (keyof T & string) | undefined,
+>(
+  decl: EntityDecl<Name, T, FK>,
+): decl is EntityDecl<Name, T, NonNullable<FK>> => decl.parentReferenceKey !== undefined
 
 export const getNestedDeclarationsInEntityDecl: GetNestedDeclarations<EntityDecl> = (
   isDeclAdded,
@@ -129,8 +187,8 @@ export const resolveTypeArgumentsInEntityDecl: TypeArgumentsResolver<EntityDecl>
 const createEntityIdentifierComment = () =>
   "The entity’s identifier. A UUID or a locale code if it is registered as the locale entity."
 
-export const addEphemeralUUIDToType = <T extends Record<string, MemberDecl>>(
-  decl: EntityDecl<string, ObjectType<T>>,
+export const addEphemeralUUIDToType = <T extends TConstraint>(
+  decl: EntityDecl<string, T>,
 ): ObjectType<Omit<T, "id"> & { id: MemberDecl<StringType, true> }> => ({
   ...decl.type.value,
   properties: {
@@ -153,10 +211,21 @@ export const createEntityIdentifierTypeAsDecl = <Name extends string>(decl: Enti
     type: createEntityIdentifierType,
   })
 
-export const serializeEntityDecl: Serializer<EntityDecl> = type => ({
+export const serializeEntityDecl: Serializer<EntityDecl> = <
+  Name extends string,
+  T extends TConstraint,
+  FK extends (keyof T & string) | undefined,
+>(
+  type: EntityDecl<Name, T, FK>,
+): Serialized<EntityDecl<Name, T, FK>> => ({
   ...type,
   type: serializeObjectType(type.type.value),
-  displayName: typeof type.displayName === "function" ? null : type.displayName,
+  displayName:
+    typeof type.displayName === "function"
+      ? null
+      : (type.displayName as SerializedEntityDisplayName<
+          SerializedObjectType<SerializedMemberDeclObject<T>>
+        >),
   displayNameCustomizer: type.displayNameCustomizer !== undefined,
 })
 

@@ -2,14 +2,11 @@ import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
 import type { SerializedIntegerType } from "../../../shared/schema/types/IntegerType.ts"
 import { validateNumberConstraints } from "../../../shared/validation/number.ts"
+import type { TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
-type Props = {
-  type: SerializedIntegerType
-  value: unknown
-  onChange: (value: number) => void
-}
+type Props = TypeInputProps<SerializedIntegerType, number>
 
 export const IntegerTypeInput: FunctionComponent<Props> = ({ type, value, onChange }) => {
   const [stringValue, setStringValue] = useState(typeof value === "number" ? value.toString() : "")

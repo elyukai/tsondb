@@ -1,6 +1,5 @@
-import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import type { BaseNode, Node } from "../Node.ts"
-import { NodeKind, resolveTypeArguments } from "../Node.ts"
+import { resolveTypeArguments } from "../Node.ts"
 import type { TypeParameter } from "../TypeParameter.ts"
 import type { EnumCaseDecl } from "../types/generic/EnumType.ts"
 import { walkTypeNodeTree, type Type } from "../types/Type.ts"
@@ -71,26 +70,12 @@ export const isDeclWithoutTypeParameters = (decl: Decl): decl is DeclP<[]> =>
 export const resolveTypeArgumentsInDecls = (decls: readonly Decl[]): Decl[] =>
   decls.filter(isDeclWithoutTypeParameters).map(decl => resolveTypeArguments({}, decl))
 
-export function walkNodeTree(callbackFn: (node: Node) => void, decl: Decl): void {
-  switch (decl.kind) {
-    case NodeKind.EntityDecl: {
-      callbackFn(decl)
-      walkTypeNodeTree(callbackFn, decl.type.value)
-      return
-    }
-    case NodeKind.EnumDecl: {
-      callbackFn(decl)
-      walkTypeNodeTree(callbackFn, decl.type.value)
-      return
-    }
-    case NodeKind.TypeAliasDecl: {
-      callbackFn(decl)
-      walkTypeNodeTree(callbackFn, decl.type.value)
-      return
-    }
-    default:
-      return assertExhaustive(decl)
-  }
+export function walkNodeTree(
+  callbackFn: (node: Node, parentTypes: Type[], parentDecl: Decl) => void,
+  decl: Decl,
+): void {
+  callbackFn(decl, [], decl)
+  walkTypeNodeTree(callbackFn, decl.type.value, [], decl)
 }
 
 export const groupDeclarationsBySourceUrl = (

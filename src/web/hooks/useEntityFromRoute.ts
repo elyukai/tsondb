@@ -11,7 +11,13 @@ export const useEntityFromRoute = ():
   } = useRoute()
 
   const { entities } = useContext(EntitiesContext)
-  const entityObj = useMemo(() => entities.find(e => e.declaration.name === name), [entities, name])
+  const entityObj = useMemo(
+    () =>
+      entities.find(
+        e => e.declaration.name === name && e.declaration.parentReferenceKey === undefined,
+      ),
+    [entities, name],
+  )
 
   return entityObj
 }

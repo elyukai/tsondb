@@ -1,3 +1,8 @@
+import type {
+  CreatedEntityTaggedInstanceContainerWithChildInstances,
+  EntityTaggedInstanceContainerWithChildInstances,
+  UpdatedEntityTaggedInstanceContainerWithChildInstances,
+} from "../node/utils/childInstances.ts"
 import type { WebConfig } from "../web/context/config.ts"
 import type { SerializedDecl } from "./schema/declarations/Declaration.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "./utils/instances.ts"
@@ -20,6 +25,14 @@ export interface GetAllInstancesOfEntityResponseBody {
   isLocaleEntity: boolean
 }
 
+export interface GetAllChildInstancesOfInstanceResponseBody {
+  instances: EntityTaggedInstanceContainerWithChildInstances[]
+}
+
+export interface CreateInstanceOfEntityRequestBody {
+  instance: CreatedEntityTaggedInstanceContainerWithChildInstances
+}
+
 export interface CreateInstanceOfEntityResponseBody {
   instance: InstanceContainer
   isLocaleEntity: boolean
@@ -28,6 +41,10 @@ export interface CreateInstanceOfEntityResponseBody {
 export interface GetInstanceOfEntityResponseBody {
   instance: InstanceContainer
   isLocaleEntity: boolean
+}
+
+export interface UpdateInstanceOfEntityRequestBody {
+  instance: UpdatedEntityTaggedInstanceContainerWithChildInstances
 }
 
 export interface UpdateInstanceOfEntityResponseBody {

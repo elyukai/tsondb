@@ -1,6 +1,7 @@
 import type { BaseNode } from "../Node.ts"
 import type { SerializedArrayType } from "./ArrayType.ts"
 import type { SerializedBooleanType } from "./BooleanType.ts"
+import type { SerializedChildEntitiesType } from "./ChildEntitiesType.ts"
 import type { SerializedDateType } from "./DateType.ts"
 import type { SerializedEnumType } from "./EnumType.ts"
 import type { SerializedFloatType } from "./FloatType.ts"
@@ -27,6 +28,7 @@ export type SerializedType =
   | SerializedIncludeIdentifierType
   | SerializedNestedEntityMapType
   | SerializedEnumType
+  | SerializedChildEntitiesType
 
 export type SerializedAsType<T extends SerializedType> =
   T extends SerializedArrayType<infer I>
@@ -55,4 +57,6 @@ export type SerializedAsType<T extends SerializedType> =
                       ? unknown
                       : T extends SerializedReferenceIdentifierType
                         ? unknown
-                        : never
+                        : T extends SerializedChildEntitiesType
+                          ? unknown
+                          : never

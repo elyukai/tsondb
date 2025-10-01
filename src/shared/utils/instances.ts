@@ -4,14 +4,12 @@ import { getDisplayNameFromEntityInstance } from "../../node/utils/displayName.t
 import type { GitFileStatus } from "./git.ts"
 
 export interface InstanceContainer {
-  fileName: string
   id: string
   content: unknown
   gitStatus?: GitFileStatus
 }
 
 export interface InstanceContainerOverview {
-  fileName: string
   id: string
   gitStatus?: GitFileStatus
   displayName: string

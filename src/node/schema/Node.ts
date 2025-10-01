@@ -5,6 +5,7 @@ import { NodeKind } from "../../shared/schema/Node.ts"
 import type { SerializedTypeParameter } from "../../shared/schema/TypeParameter.ts"
 import type { SerializedArrayType } from "../../shared/schema/types/ArrayType.ts"
 import type { SerializedBooleanType } from "../../shared/schema/types/BooleanType.ts"
+import type { SerializedChildEntitiesType } from "../../shared/schema/types/ChildEntitiesType.ts"
 import type { SerializedDateType } from "../../shared/schema/types/DateType.ts"
 import type {
   SerializedEnumCaseDecl,
@@ -24,7 +25,7 @@ import type { SerializedTypeArgumentType } from "../../shared/schema/types/TypeA
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import { entity, json } from "../utils/errorFormatting.ts"
-import type { Decl, IncludableDeclP } from "./declarations/Declaration.ts"
+import { isDecl, type Decl, type IncludableDeclP } from "./declarations/Declaration.ts"
 import {
   getNestedDeclarationsInEntityDecl,
   getReferencesForEntityDecl,
@@ -123,6 +124,14 @@ import {
   type StringType,
 } from "./types/primitives/StringType.ts"
 import {
+  getNestedDeclarationsInChildEntitiesType,
+  getReferencesForChildEntitiesType,
+  resolveTypeArgumentsInChildEntitiesType,
+  serializeChildEntitiesType,
+  validateChildEntitiesType,
+  type ChildEntitiesType,
+} from "./types/references/ChildEntitiesType.ts"
+import {
   getNestedDeclarationsInIncludeIdentifierType,
   getReferencesForIncludeIdentifierType,
   resolveTypeArgumentsInIncludeIdentifierType,
@@ -160,49 +169,92 @@ export { NodeKind }
 
 export type Node = Decl | Type | TypeParameter
 
-export const flatMapAuxiliaryDecls = (
-  callbackFn: (
+export const reduceNodes = <R>(
+  reducer: (parentNodes: Node[], node: Node, collectedResults: R[]) => R[],
+  nodes: readonly Node[],
+  options: {
+    initialResults?: R[]
+    followIncludes?: boolean
+    followChildEntities?: boolean
+  } = {},
+): R[] => {
+  const { initialResults = [], followIncludes = false, followChildEntities = false } = options
+
+  const reduceNodeTree = (
     parentNodes: Node[],
     node: Node,
-    existingDecls: Decl[],
-  ) => (Decl | undefined)[] | Decl | undefined,
-  declarations: readonly Decl[],
-): Decl[] => {
-  const mapNodeTree = (
-    callbackFn: (parentNodes: Node[], node: Node, decls: Decl[]) => Decl[],
-    parentNodes: Node[],
-    node: Node,
-    decls: Decl[],
-  ): Decl[] => {
+    collectedResults: R[],
+    reducedDecls: Decl[],
+  ): { results: R[]; reducedDecls: Decl[] } => {
     switch (node.kind) {
-      case NodeKind.EntityDecl: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return mapNodeTree(callbackFn, [node], node.type.value, newDecls)
-      }
-
-      case NodeKind.EnumDecl: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return mapNodeTree(callbackFn, [node], node.type.value, newDecls)
-      }
-
-      case NodeKind.TypeAliasDecl: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return mapNodeTree(callbackFn, [node], node.type.value, newDecls)
-      }
-
-      case NodeKind.ArrayType: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return mapNodeTree(callbackFn, [...parentNodes, node], node.items, newDecls)
-      }
-
-      case NodeKind.ObjectType: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return Object.values(node.properties).reduce(
-          (newDeclsAcc, prop) =>
-            mapNodeTree(callbackFn, [...parentNodes, node], prop.type, newDeclsAcc),
-          newDecls,
+      case NodeKind.EntityDecl:
+      case NodeKind.EnumDecl:
+      case NodeKind.TypeAliasDecl:
+        return reduceNodeTree(
+          [node],
+          node.type.value,
+          reducer(parentNodes, node, collectedResults),
+          [...reducedDecls, node],
         )
-      }
+
+      case NodeKind.ArrayType:
+        return reduceNodeTree(
+          [...parentNodes, node],
+          node.items,
+          reducer(parentNodes, node, collectedResults),
+          reducedDecls,
+        )
+
+      case NodeKind.ObjectType:
+        return Object.values(node.properties).reduce(
+          (collectedResultsAcc, prop) =>
+            reduceNodeTree(
+              [...parentNodes, node],
+              prop.type,
+              collectedResultsAcc.results,
+              collectedResultsAcc.reducedDecls,
+            ),
+          { results: reducer(parentNodes, node, collectedResults), reducedDecls },
+        )
+
+      case NodeKind.EnumType:
+        return Object.values(node.values).reduce(
+          (collectedResultsAcc, caseDef) =>
+            caseDef.type === null
+              ? collectedResultsAcc
+              : reduceNodeTree(
+                  [...parentNodes, node],
+                  caseDef.type,
+                  collectedResultsAcc.results,
+                  collectedResultsAcc.reducedDecls,
+                ),
+          { results: reducer(parentNodes, node, collectedResults), reducedDecls },
+        )
+
+      case NodeKind.IncludeIdentifierType:
+        if (followIncludes && !reducedDecls.includes(node.reference)) {
+          return reduceNodeTree(
+            [],
+            node.reference,
+            reducer(parentNodes, node, collectedResults),
+            reducedDecls,
+          )
+        } else {
+          return { results: reducer(parentNodes, node, collectedResults), reducedDecls }
+        }
+
+      case NodeKind.ChildEntitiesType:
+        if (followChildEntities && !reducedDecls.includes(node.entity)) {
+          return reduceNodeTree(
+            [],
+            node.entity,
+            reducer(parentNodes, node, collectedResults),
+            reducedDecls,
+          )
+        } else {
+          return { results: reducer(parentNodes, node, collectedResults), reducedDecls }
+        }
+
       case NodeKind.BooleanType:
       case NodeKind.DateType:
       case NodeKind.FloatType:
@@ -210,29 +262,32 @@ export const flatMapAuxiliaryDecls = (
       case NodeKind.StringType:
       case NodeKind.TypeArgumentType:
       case NodeKind.ReferenceIdentifierType:
-      case NodeKind.IncludeIdentifierType:
       case NodeKind.NestedEntityMapType:
       case NodeKind.TypeParameter:
-        return callbackFn(parentNodes, node, decls)
-
-      case NodeKind.EnumType: {
-        const newDecls = callbackFn(parentNodes, node, decls)
-        return Object.values(node.values).reduce(
-          (newDeclsAcc, caseDef) =>
-            caseDef.type === null
-              ? newDecls
-              : mapNodeTree(callbackFn, [...parentNodes, node], caseDef.type, newDeclsAcc),
-          newDecls,
-        )
-      }
+        return { results: reducer(parentNodes, node, collectedResults), reducedDecls }
 
       default:
         return assertExhaustive(node)
     }
   }
 
-  const reducer = (parentNodes: Node[], node: Node, decls: Decl[]): Decl[] => {
-    const result = callbackFn(parentNodes, node, decls)
+  return nodes.reduce<{ results: R[]; reducedDecls: Decl[] }>(
+    ({ results, reducedDecls }, node) => reduceNodeTree([], node, results, reducedDecls),
+    { results: initialResults, reducedDecls: [] },
+  ).results
+}
+
+export const flatMapAuxiliaryDecls = (
+  callbackFn: (
+    parentNodes: Node[],
+    node: Node,
+    existingDecls: Decl[],
+  ) => (Decl | undefined)[] | Decl | undefined,
+  declarations: readonly Decl[],
+): Decl[] =>
+  reduceNodes((parentNodes, node, decls) => {
+    const declsWithCurrentDecl = isDecl(node) ? [...decls, node] : decls
+    const result = callbackFn(parentNodes, node, declsWithCurrentDecl)
     const normalizedResult = (Array.isArray(result) ? result : [result]).filter(
       decl => decl !== undefined,
     )
@@ -246,14 +301,8 @@ export const flatMapAuxiliaryDecls = (
         )
       }
     })
-    return decls.concat(normalizedResult)
-  }
-
-  return declarations.reduce(
-    (decls: Decl[], node) => mapNodeTree(reducer, [], node, [...decls, node]),
-    [],
-  )
-}
+    return declsWithCurrentDecl.concat(normalizedResult)
+  }, declarations)
 
 export type IdentifierToCheck = { name: string; value: unknown }
 
@@ -327,6 +376,8 @@ export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node) =
       return getNestedDeclarationsInEnumType(addedDecls, node)
     case NodeKind.TypeParameter:
       return getNestedDeclarationsInTypeParameter(addedDecls, node)
+    case NodeKind.ChildEntitiesType:
+      return getNestedDeclarationsInChildEntitiesType(addedDecls, node)
     default:
       return assertExhaustive(node)
   }
@@ -384,6 +435,8 @@ export const validateType: Validator<Type> = (helpers, type, value) => {
       return validateNestedEntityMapType(helpers, type, value)
     case NodeKind.EnumType:
       return validateEnumType(helpers, type, value)
+    case NodeKind.ChildEntitiesType:
+      return validateChildEntitiesType(helpers, type, value)
     default:
       return assertExhaustive(type)
   }
@@ -397,8 +450,16 @@ export type NodeWithResolvedTypeArguments<T extends Node | null> = T extends
   | StringType
   | ReferenceIdentifierType
   ? T
-  : T extends EntityDecl<infer N, infer V>
-    ? EntityDecl<N, NodeWithResolvedTypeArguments<V>>
+  : T extends EntityDecl<infer N, infer P, infer FK>
+    ? EntityDecl<
+        N,
+        {
+          [K in keyof P]: P[K] extends MemberDecl<infer PT, infer R>
+            ? MemberDecl<NodeWithResolvedTypeArguments<PT>, R>
+            : never
+        },
+        FK
+      >
     : T extends EnumDecl<infer N, infer V, TypeParameter[]>
       ? EnumDecl<
           N,
@@ -442,9 +503,11 @@ export type NodeWithResolvedTypeArguments<T extends Node | null> = T extends
                         >
                       : T extends TypeParameter<infer N, infer C>
                         ? TypeParameter<N, NodeWithResolvedTypeArguments<C>>
-                        : T extends null
-                          ? null
-                          : never
+                        : T extends ChildEntitiesType<infer E>
+                          ? ChildEntitiesType<E>
+                          : T extends null
+                            ? null
+                            : never
 
 export type TypeArgumentsResolver<T extends Node = Node> = (
   args: Record<string, Type>,
@@ -490,6 +553,8 @@ export const resolveTypeArguments = <T extends Node = Node>(
       return resolveTypeArgumentsInEnumType(args, node) as NT
     case NodeKind.TypeParameter:
       return resolveTypeArgumentsInTypeParameter(args, node) as NT
+    case NodeKind.ChildEntitiesType:
+      return resolveTypeArgumentsInChildEntitiesType(args, node) as NT
     default:
       return assertExhaustive(node)
   }
@@ -512,6 +577,7 @@ export type SerializedNodeMap = {
   [NodeKind.NestedEntityMapType]: [NestedEntityMapType, SerializedNestedEntityMapType]
   [NodeKind.EnumType]: [EnumType, SerializedEnumType]
   [NodeKind.TypeParameter]: [TypeParameter, SerializedTypeParameter]
+  [NodeKind.ChildEntitiesType]: [ChildEntitiesType, SerializedChildEntitiesType]
 }
 
 export type SerializedTypeParameters<T extends TypeParameter[]> = {
@@ -520,21 +586,25 @@ export type SerializedTypeParameters<T extends TypeParameter[]> = {
     : never
 }
 
+export type SerializedMemberDeclObject<T extends Record<string, MemberDecl>> = {
+  [K in keyof T]: T[K] extends MemberDecl<infer CT, infer R>
+    ? SerializedMemberDecl<Serialized<CT>, R>
+    : never
+}
+
+export type SerializedEnumCaseDeclObject<T extends Record<string, EnumCaseDecl>> = {
+  [K in keyof T]: T[K] extends EnumCaseDecl<infer CT>
+    ? SerializedEnumCaseDecl<CT extends Type ? Serialized<CT> : null>
+    : never
+}
+
 // prettier-ignore
 export type Serialized<T extends Node> =
-  T extends EntityDecl<infer Name, infer T> ? SerializedEntityDecl<Name, Serialized<T>> :
-  T extends EnumDecl<infer Name, infer T, infer Params> ? SerializedEnumDecl<Name, {
-    [K in keyof T]: T[K] extends EnumCaseDecl<infer CT>
-      ? SerializedEnumCaseDecl<CT extends Type ? Serialized<CT> : null>
-      : never
-  }, SerializedTypeParameters<Params>> :
+  T extends EntityDecl<infer Name, infer T, infer FK> ? SerializedEntityDecl<Name, SerializedMemberDeclObject<T>, FK> :
+  T extends EnumDecl<infer Name, infer T, infer Params> ? SerializedEnumDecl<Name, SerializedEnumCaseDeclObject<T>, SerializedTypeParameters<Params>> :
   T extends TypeAliasDecl<infer Name, infer T, infer Params> ? SerializedTypeAliasDecl<Name, Serialized<T>, SerializedTypeParameters<Params>> :
   T extends ArrayType<infer T> ? SerializedArrayType<Serialized<T>> :
-  T extends ObjectType<infer T> ? SerializedObjectType<{
-    [K in keyof T]: T[K] extends MemberDecl<infer CT, infer R>
-      ? SerializedMemberDecl<CT extends Type ? Serialized<CT> : null, R>
-      : never
-  }> :
+  T extends ObjectType<infer T> ? SerializedObjectType<SerializedMemberDeclObject<T>> :
   T extends BooleanType ? SerializedBooleanType :
   T extends DateType ? SerializedDateType :
   T extends FloatType ? SerializedFloatType :
@@ -543,57 +613,53 @@ export type Serialized<T extends Node> =
   T extends TypeArgumentType<infer T> ? SerializedTypeArgumentType<Serialized<T>> :
   T extends ReferenceIdentifierType ? SerializedReferenceIdentifierType :
   T extends IncludeIdentifierType<infer Params> ? SerializedIncludeIdentifierType<SerializedTypeParameters<Params>> :
-  T extends NestedEntityMapType<infer Name, infer T> ? SerializedNestedEntityMapType<Name, {
-    [K in keyof T]: T[K] extends MemberDecl<infer CT, infer R>
-      ? SerializedMemberDecl<CT extends Type ? Serialized<CT> : null, R>
-      : never
-  }> :
-  T extends EnumType<infer T> ? SerializedEnumType<{
-    [K in keyof T]: T[K] extends EnumCaseDecl<infer CT>
-      ? SerializedEnumCaseDecl<CT extends Type ? Serialized<CT> : null>
-      : never
-  }> :
+  T extends NestedEntityMapType<infer Name, infer T> ? SerializedNestedEntityMapType<Name, SerializedMemberDeclObject<T>> :
+  T extends EnumType<infer T> ? SerializedEnumType<SerializedEnumCaseDeclObject<T>> :
   T extends TypeParameter<infer N, infer C> ? SerializedTypeParameter<N, C extends Type ? Serialized<C> : undefined> :
+  T extends ChildEntitiesType ? SerializedChildEntitiesType :
   never
 
 export type SerializedOf<T extends Node> = SerializedNodeMap[T["kind"]][1]
 
-export type Serializer<T extends Node = Node> = <N extends T>(node: N) => SerializedOf<N>
+export type Serializer<T extends Node = Node> = (node: T) => Serialized<T>
 
-export const serializeNode: Serializer = node => {
+export const serializeNode = <T extends Node>(node: T): Serialized<T> => {
+  type SN = Serialized<T>
   switch (node.kind) {
     case NodeKind.EntityDecl:
-      return serializeEntityDecl(node)
+      return serializeEntityDecl(node) as SN
     case NodeKind.EnumDecl:
-      return serializeEnumDecl(node)
+      return serializeEnumDecl(node) as SN
     case NodeKind.TypeAliasDecl:
-      return serializeTypeAliasDecl(node)
+      return serializeTypeAliasDecl(node) as SN
     case NodeKind.ArrayType:
-      return serializeArrayType(node)
+      return serializeArrayType(node) as SN
     case NodeKind.ObjectType:
-      return serializeObjectType(node)
+      return serializeObjectType(node) as SN
     case NodeKind.BooleanType:
-      return serializeBooleanType(node)
+      return serializeBooleanType(node) as SN
     case NodeKind.DateType:
-      return serializeDateType(node)
+      return serializeDateType(node) as SN
     case NodeKind.FloatType:
-      return serializeFloatType(node)
+      return serializeFloatType(node) as SN
     case NodeKind.IntegerType:
-      return serializeIntegerType(node)
+      return serializeIntegerType(node) as SN
     case NodeKind.StringType:
-      return serializeStringType(node)
+      return serializeStringType(node) as SN
     case NodeKind.TypeArgumentType:
-      return serializeTypeArgumentType(node)
+      return serializeTypeArgumentType(node) as SN
     case NodeKind.ReferenceIdentifierType:
-      return serializeReferenceIdentifierType(node)
+      return serializeReferenceIdentifierType(node) as SN
     case NodeKind.IncludeIdentifierType:
-      return serializeIncludeIdentifierType(node)
+      return serializeIncludeIdentifierType(node) as SN
     case NodeKind.NestedEntityMapType:
-      return serializeNestedEntityMapType(node)
+      return serializeNestedEntityMapType(node) as SN
     case NodeKind.EnumType:
-      return serializeEnumType(node)
+      return serializeEnumType(node) as SN
     case NodeKind.TypeParameter:
-      return serializeTypeParameter(node)
+      return serializeTypeParameter(node) as SN
+    case NodeKind.ChildEntitiesType:
+      return serializeChildEntitiesType(node) as SN
     default:
       return assertExhaustive(node)
   }
@@ -635,6 +701,8 @@ export const getReferences: GetReferences = (node, value) => {
       return getReferencesForEnumType(node, value)
     case NodeKind.TypeParameter:
       return getReferencesForTypeParameter(node, value)
+    case NodeKind.ChildEntitiesType:
+      return getReferencesForChildEntitiesType(node, value)
     default:
       return assertExhaustive(node)
   }

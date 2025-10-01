@@ -8,6 +8,7 @@ import { mapAsync } from "../../shared/utils/async.ts"
 import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
 import { formatValue } from "../schema/index.ts"
+import { getFileNameForId } from "./files.ts"
 import { getGitFileStatusFromStatusResult } from "./git.ts"
 
 const exec = promisify(child_process.exec)
@@ -28,7 +29,6 @@ export const getInstancesByEntityName = async (
           const instances = await mapAsync(
             instanceFileNames,
             async (instanceFileName): Promise<InstanceContainer> => ({
-              fileName: instanceFileName,
               id: basename(instanceFileName, extname(instanceFileName)),
               content: JSON.parse(
                 await readFile(join(entityDir, instanceFileName), "utf-8"),
@@ -57,7 +57,7 @@ export const attachGitStatusToInstancesByEntityName = (
         gitRoot,
         dataRoot,
         entityName,
-        instanceContainer.fileName,
+        getFileNameForId(instanceContainer.id),
       ),
     }))
   })

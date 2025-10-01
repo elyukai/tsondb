@@ -22,7 +22,10 @@ export interface Error<E> {
 /**
  * Creates a result that contains a value.
  */
-export const ok = <T>(value: T): Result<T, never> => ({ tag: "Ok", value })
+export const ok: {
+  (): Result<void, never>
+  <T>(value: T): Result<T, never>
+} = <T>(value?: T): Result<T, never> => ({ tag: "Ok", value: value as T })
 
 /**
  * Checks if a result contains a value.

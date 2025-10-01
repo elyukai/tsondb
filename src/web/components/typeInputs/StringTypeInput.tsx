@@ -3,14 +3,11 @@ import type { SerializedStringType } from "../../../shared/schema/types/StringTy
 import { validateStringConstraints } from "../../../shared/validation/string.ts"
 import { Markdown } from "../../utils/Markdown.tsx"
 import { MarkdownHighlighting } from "../../utils/MarkdownHighlighting.tsx"
+import type { TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
-type Props = {
-  type: SerializedStringType
-  value: unknown
-  onChange: (value: string) => void
-}
+type Props = TypeInputProps<SerializedStringType, string>
 
 export const StringTypeInput: FunctionComponent<Props> = ({ type, value, onChange }) => {
   if (typeof value !== "string") {

@@ -4,7 +4,7 @@ import type {
   GetAllGitBranchesResponseBody,
   GitStatusResponseBody,
 } from "../../shared/api.ts"
-import { getResource, postResource } from "../api.ts"
+import { getResource, postResource } from "../utils/api.ts"
 
 export const getStatus = async (locales: string[]): Promise<GitStatusResponseBody> =>
   getResource<GitStatusResponseBody>("/api/git/status", { locales })
