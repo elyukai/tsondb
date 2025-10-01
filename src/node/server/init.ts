@@ -1,6 +1,7 @@
 import Debug from "debug"
 import { simpleGit } from "simple-git"
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
+import type { HomeLayoutSection } from "../config.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { resolveTypeArgumentsInDecls, serializeNode } from "../schema/index.ts"
@@ -34,6 +35,7 @@ export const init = async (
   dataRootPath: string,
   instancesByEntityName: InstancesByEntityName,
   defaultLocales: string[],
+  homeLayoutSections?: HomeLayoutSection[],
 ): Promise<TSONDBRequestLocals> => {
   const { git, root: gitRoot, status: gitStatus } = await getGit(dataRootPath)
 
@@ -89,6 +91,7 @@ export const init = async (
     referencesToInstances,
     defaultLocales,
     locales: defaultLocales,
+    homeLayoutSections,
   }
 
   return requestLocals

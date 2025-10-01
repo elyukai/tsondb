@@ -89,7 +89,13 @@ switch (passedArguments.command.name) {
     break
   case "serve":
     debug(`running command: serve`)
-    await serve(config.schema, config.dataRootPath, config.defaultLocales, config.serverOptions)
+    await serve(
+      config.schema,
+      config.dataRootPath,
+      config.defaultLocales,
+      config.homeLayoutSections,
+      config.serverOptions,
+    )
     break
   case "validate":
     debug(`running command: validate`)

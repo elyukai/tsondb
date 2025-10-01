@@ -14,6 +14,10 @@ api.get("/config", (req, res) => {
   const body: GetWebConfigResponseBody = {
     localeEntityName: req.localeEntity?.name,
     defaultLocales: req.defaultLocales,
+    homeLayoutSections: req.homeLayoutSections?.map(section => ({
+      ...section,
+      entities: section.entities.map(entity => entity.name),
+    })),
   }
 
   res.json(body)

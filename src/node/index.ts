@@ -5,6 +5,7 @@ import { styleText } from "util"
 import type { Output } from "../shared/output.ts"
 import type { InstancesByEntityName } from "../shared/utils/instances.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
+import type { HomeLayoutSection } from "./config.ts"
 import { validateEntityDecl, type EntityDecl } from "./schema/declarations/EntityDecl.ts"
 import { createValidators } from "./schema/Node.ts"
 import { getEntities, type Schema } from "./schema/Schema.ts"
@@ -107,6 +108,7 @@ export const serve = async (
   schema: Schema,
   dataRootPath: string,
   defaultLocales: string[],
+  homeLayoutSections?: HomeLayoutSection[],
   serverOptions?: Partial<ServerOptions>,
 ) => {
   if (defaultLocales.length === 0) {
@@ -117,7 +119,14 @@ export const serve = async (
   debug("prepared folders")
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
   debug("loaded instances")
-  await createServer(schema, dataRootPath, instancesByEntityName, defaultLocales, serverOptions)
+  await createServer(
+    schema,
+    dataRootPath,
+    instancesByEntityName,
+    defaultLocales,
+    homeLayoutSections,
+    serverOptions,
+  )
 }
 
 export const generateValidateAndServe = async (
@@ -125,6 +134,7 @@ export const generateValidateAndServe = async (
   outputs: Output[],
   dataRootPath: string,
   defaultLocales: string[],
+  homeLayoutSections?: HomeLayoutSection[],
   serverOptions?: Partial<ServerOptions>,
   validationOptions?: Partial<ValidationOptions>,
 ) => {
@@ -133,7 +143,14 @@ export const generateValidateAndServe = async (
   await prepareFolders(dataRootPath, entities)
   const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
   _validate(dataRootPath, entities, instancesByEntityName, validationOptions)
-  await createServer(schema, dataRootPath, instancesByEntityName, defaultLocales, serverOptions)
+  await createServer(
+    schema,
+    dataRootPath,
+    instancesByEntityName,
+    defaultLocales,
+    homeLayoutSections,
+    serverOptions,
+  )
 }
 
 export const format = async (schema: Schema, dataRootPath: string) => {

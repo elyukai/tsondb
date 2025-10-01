@@ -5,6 +5,7 @@ import { dirname, join } from "node:path"
 import type { SimpleGit } from "simple-git"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.ts"
+import type { HomeLayoutSection } from "../config.ts"
 import type { Decl } from "../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import type { Schema } from "../schema/Schema.ts"
@@ -36,6 +37,7 @@ export interface TSONDBRequestLocals {
   referencesToInstances: ReferencesToInstances
   defaultLocales: string[]
   locales: string[]
+  homeLayoutSections?: HomeLayoutSection[]
   getInstanceById: GetInstanceById
 }
 
@@ -62,6 +64,7 @@ export const createServer = async (
   dataRootPath: string,
   instancesByEntityName: InstancesByEntityName,
   defaultLocales: string[],
+  homeLayoutSections?: HomeLayoutSection[],
   options?: Partial<ServerOptions>,
 ): Promise<void> => {
   const { port } = { ...defaultOptions, ...options }
@@ -80,6 +83,7 @@ export const createServer = async (
     dataRootPath,
     Object.assign({}, instancesByEntityName),
     defaultLocales,
+    homeLayoutSections,
   )
 
   app.use((req, _res, next) => {
