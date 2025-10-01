@@ -21,7 +21,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = props => {
   const isTuple = typeof type.minItems === "number" && type.minItems === type.maxItems
 
   return (
-    <div class="field field--container field--array">
+    <div class={"field field--container field--array" + (disabled ? " field--disabled" : "")}>
       {value.length > 0 && (
         <ol>
           {value.map((item, i) => (
@@ -68,7 +68,7 @@ export const ArrayTypeInput: FunctionComponent<Props> = props => {
           </button>
         </div>
       )}
-      <ValidationErrors errors={errors} />
+      <ValidationErrors disabled={disabled} errors={errors} />
     </div>
   )
 }

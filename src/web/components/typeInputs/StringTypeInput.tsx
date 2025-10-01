@@ -50,7 +50,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, disable
                 string={value}
               />
             </div>
-            <ValidationErrors errors={errors} />
+            <ValidationErrors disabled={disabled} errors={errors} />
           </div>
           <div class="preview">
             <Markdown string={value} />
@@ -76,7 +76,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, disable
             aria-invalid={errors.length > 0}
             disabled={disabled}
           />
-          <ValidationErrors errors={errors} />
+          <ValidationErrors disabled={disabled} errors={errors} />
         </div>
       )}
     </div>

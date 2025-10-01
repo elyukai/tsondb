@@ -33,7 +33,7 @@ export const FloatTypeInput: FunctionComponent<Props> = ({ type, value, disabled
         aria-invalid={errors.length > 0}
         disabled={disabled}
       />
-      <ValidationErrors errors={errors} />
+      <ValidationErrors disabled={disabled} errors={errors} />
     </div>
   )
 }

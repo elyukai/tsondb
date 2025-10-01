@@ -21,7 +21,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
   const errors = validateObjectConstraints(type, Object.keys(type.properties), value)
 
   return (
-    <div class="field field--container field--object">
+    <div class={"field field--container field--object" + (disabled ? " field--disabled" : "")}>
       <ul>
         {Object.entries(type.properties)
           .filter(([key]) => key !== parentKey)
@@ -84,7 +84,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
             </li>
           ))}
       </ul>
-      <ValidationErrors errors={errors} />
+      <ValidationErrors disabled={disabled} errors={errors} />
     </div>
   )
 }

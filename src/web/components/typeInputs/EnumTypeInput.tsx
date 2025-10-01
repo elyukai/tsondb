@@ -116,26 +116,37 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
                 {caseMember.comment === undefined ? null : (
                   <Markdown class="comment" string={caseMember.comment} />
                 )}
+                {caseMember.type == null ? null : (
+                  <div className="associated-type">
+                    <TypeInput
+                      {...props}
+                      parentKey={undefined}
+                      type={caseMember.type}
+                      path={
+                        path === undefined ? `{${activeEnumCase}}` : `${path}.{${activeEnumCase}}`
+                      }
+                      value={
+                        enumValue === activeEnumCase
+                          ? (value as Record<string, unknown>)[activeEnumCase]
+                          : createTypeSkeleton(getDeclFromDeclName, caseMember.type)
+                      }
+                      disabled={disabled || enumValue !== activeEnumCase}
+                      onChange={
+                        disabled
+                          ? () => {}
+                          : newValue => {
+                              onChange({
+                                [discriminatorKey]: activeEnumCase,
+                                [activeEnumCase]: newValue,
+                              })
+                            }
+                      }
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ))}
-          {activeCaseMember?.type == null ? null : (
-            <div className="associated-type">
-              <TypeInput
-                {...props}
-                parentKey={undefined}
-                type={activeCaseMember.type}
-                path={path === undefined ? `{${activeEnumCase}}` : `${path}.{${activeEnumCase}}`}
-                value={(value as Record<string, unknown>)[activeEnumCase]}
-                onChange={newValue => {
-                  onChange({
-                    [discriminatorKey]: activeEnumCase,
-                    [activeEnumCase]: newValue,
-                  })
-                }}
-              />
-            </div>
-          )}
         </div>
       )
 

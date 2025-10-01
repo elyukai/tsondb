@@ -47,7 +47,10 @@ export const ReferenceIdentifierTypeInput: FunctionComponent<Props> = ({
           </option>
         ))}
       </Select>
-      <ValidationErrors errors={!value ? [ReferenceError("no reference provided")] : []} />
+      <ValidationErrors
+        disabled={disabled}
+        errors={!value ? [ReferenceError("no reference provided")] : []}
+      />
     </div>
   )
 }

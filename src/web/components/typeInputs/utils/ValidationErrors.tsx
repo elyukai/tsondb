@@ -1,11 +1,12 @@
 import type { FunctionComponent } from "preact"
 
 type Props = {
+  disabled: boolean | undefined
   errors: Error[]
 }
 
-export const ValidationErrors: FunctionComponent<Props> = ({ errors }) => {
-  return errors.length === 0 ? null : (
+export const ValidationErrors: FunctionComponent<Props> = ({ disabled, errors }) =>
+  disabled || errors.length === 0 ? null : (
     <div role="alert" class="validation-errors">
       <ul>
         {errors.map((error, i) => (
@@ -14,4 +15,3 @@ export const ValidationErrors: FunctionComponent<Props> = ({ errors }) => {
       </ul>
     </div>
   )
-}

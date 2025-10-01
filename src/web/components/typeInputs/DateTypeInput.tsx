@@ -24,7 +24,7 @@ export const DateTypeInput: FunctionComponent<Props> = ({ type, value, disabled,
         }}
         disabled={disabled}
       />
-      <ValidationErrors errors={errors} />
+      <ValidationErrors disabled={disabled} errors={errors} />
     </div>
   )
 }

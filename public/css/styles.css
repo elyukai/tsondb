@@ -168,6 +168,16 @@ h2.h1-faded {
   color: var(--tertiary-color);
 }
 
+h3 {
+  margin: 1.6rem 0 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0.5rem 0;
+}
+
 a {
   color: var(--color);
 }
@@ -262,9 +272,16 @@ select,
   border-radius: 0;
 }
 
-input[aria-invalid="true"],
-textarea[aria-invalid="true"],
-select[aria-invalid="true"] {
+input:disabled,
+textarea:disabled,
+select:disabled {
+  border-color: var(--disabled-color);
+  color: var(--disabled-color);
+}
+
+input[aria-invalid="true"]:not(:disabled),
+textarea[aria-invalid="true"]:not(:disabled),
+select[aria-invalid="true"]:not(:disabled) {
   border-color: var(--error-color);
   color: var(--error-color);
 }
@@ -301,12 +318,20 @@ select[aria-invalid="true"] {
   appearance: none;
 }
 
+:is(input[type="checkbox"], input[type="radio"]):disabled {
+  border-color: var(--disabled-color);
+}
+
 input[type="radio"] {
   border-radius: 50%;
 }
 
 :is(input[type="checkbox"], input[type="radio"]):checked {
   background: var(--color);
+}
+
+:is(input[type="checkbox"], input[type="radio"]):checked:disabled {
+  background: var(--disabled-color);
 }
 
 :is(input[type="checkbox"], input[type="radio"]):checked::before {
@@ -336,8 +361,17 @@ input[type="radio"]:checked::before {
   margin-top: 0.1rem;
 }
 
+:is(input[type="checkbox"], input[type="radio"]):disabled + label,
+:is(input[type="checkbox"], input[type="radio"]):disabled + * label {
+  color: var(--disabled-color);
+}
+
 .field--option {
   display: flex;
+}
+
+.field--option > :not(input) {
+  flex: 1 1 0;
 }
 
 .field--option + .field--option {
@@ -565,6 +599,14 @@ select {
   padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
 
+.field--container.field--disabled {
+  color: var(--disabled-color);
+}
+
+.field--container.field--disabled .comment {
+  color: var(--disabled-color);
+}
+
 form > .field--container {
   padding: 0;
   border: none;
@@ -663,6 +705,11 @@ form > .field--container {
   font-size: 0.8rem;
   color: var(--secondary-color);
   margin: 0.25rem 0 0;
+}
+
+:disabled + .help,
+:disabled + .help a {
+  color: var(--disabled-color);
 }
 
 .field--string .preview {

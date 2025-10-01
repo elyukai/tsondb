@@ -33,7 +33,7 @@ export const IntegerTypeInput: FunctionComponent<Props> = ({ type, value, disabl
         aria-invalid={errors.length > 0}
         disabled={disabled}
       />
-      <ValidationErrors errors={errors} />
+      <ValidationErrors disabled={disabled} errors={errors} />
     </div>
   )
 }
