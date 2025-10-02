@@ -29,7 +29,7 @@ export const getInstanceContainerOverview = (
   const { content: _, ...rest } = instanceContainer
   const { name: displayName, localeId: displayNameLocaleId } = getDisplayNameFromEntityInstance(
     entity,
-    instanceContainer.content,
+    instanceContainer,
     getInstanceById,
     getChildInstancesForInstanceId,
     locales,

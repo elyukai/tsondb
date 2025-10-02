@@ -1,9 +1,8 @@
 import type { SerializedEntityDisplayName } from "../../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedObjectType } from "../../../shared/schema/types/ObjectType.ts"
-import type { DisplayNameResult } from "../../../shared/utils/displayName.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { Leaves } from "../../../shared/utils/object.ts"
-import type { GetChildInstancesForInstanceId } from "../../utils/displayName.ts"
+import type { DisplayNameCustomizer } from "../../utils/displayName.ts"
 import type {
   GetNestedDeclarations,
   GetReferences,
@@ -32,16 +31,6 @@ export type GenericEntityDisplayName =
   | string
   | { pathToLocaleMap?: string; pathInLocaleMap?: string }
   | null
-
-export type DisplayNameFn<T extends ObjectType = ObjectType> = (params: {
-  instance: AsType<T>
-  instanceDisplayName: string
-  instanceDisplayNameLocaleId: string | undefined
-  locales: string[]
-  getInstanceById: (id: string) => unknown
-  getDisplayNameForInstanceId: (id: string) => string | undefined
-  getChildInstancesForInstanceId: GetChildInstancesForInstanceId
-}) => DisplayNameResult
 
 export type EntityDisplayName<T extends TConstraint> =
   | Leaves<AsType<ObjectType<T>>>
@@ -72,7 +61,7 @@ export interface EntityDecl<
    * @default "name"
    */
   displayName?: EntityDisplayName<T>
-  displayNameCustomizer?: DisplayNameFn<ObjectType<T>>
+  displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
   isDeprecated?: boolean
 }
 
@@ -94,7 +83,7 @@ export const EntityDecl: {
        * @default "name"
        */
       displayName?: EntityDisplayName<T>
-      displayNameCustomizer?: DisplayNameFn<ObjectType<T>>
+      displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
       isDeprecated?: boolean
     },
   ): EntityDecl<Name, T, undefined>
@@ -110,7 +99,7 @@ export const EntityDecl: {
        * @default "name"
        */
       displayName?: EntityDisplayName<T>
-      displayNameCustomizer?: DisplayNameFn<ObjectType<T>>
+      displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
       isDeprecated?: boolean
     },
   ): EntityDecl<Name, T, FK>
@@ -126,7 +115,7 @@ export const EntityDecl: {
      * @default "name"
      */
     displayName?: EntityDisplayName<T>
-    displayNameCustomizer?: DisplayNameFn<ObjectType<T>>
+    displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
     isDeprecated?: boolean
   },
 ): EntityDecl<Name, T, FK> => {

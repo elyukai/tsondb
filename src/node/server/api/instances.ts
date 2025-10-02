@@ -26,7 +26,7 @@ instancesApi.get("/", (req, res) => {
             const { name, localeId } = getDisplayNameFromEntityInstance(
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               req.entitiesByName[entityName]!,
-              instance.content,
+              instance,
               req.getInstanceById,
               getChildInstancesForInstanceId,
               req.locales,
