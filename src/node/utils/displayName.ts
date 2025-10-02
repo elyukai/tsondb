@@ -11,7 +11,7 @@ export type GetChildInstancesForInstanceId = (
   parentEntityName: string,
   parentId: string,
   childEntityName: string,
-) => unknown[]
+) => { id: string; content: unknown }[]
 
 export type DisplayNameCustomizer<T extends Type> = (params: {
   instance: AsType<T>
