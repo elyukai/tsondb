@@ -1,11 +1,10 @@
 import type { FunctionalComponent } from "preact"
-import type { SelectHTMLAttributes } from "preact/compat"
 
 const isNullableString = (value: unknown): value is string | undefined => {
   return typeof value === "string" || value === undefined
 }
 
-export const Select: FunctionalComponent<SelectHTMLAttributes> = props => (
+export const Select: FunctionalComponent<preact.SelectHTMLAttributes> = props => (
   <div class="select-wrapper">
     <select
       {...props}

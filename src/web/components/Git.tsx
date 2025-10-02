@@ -1,6 +1,5 @@
 import type { FunctionComponent } from "preact"
 import { useLocation } from "preact-iso"
-import type { TargetedEvent } from "preact/compat"
 import { useCallback, useEffect, useState } from "preact/hooks"
 import type { GitStatusResponseBody } from "../../shared/api.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
@@ -238,7 +237,7 @@ export const Git: FunctionComponent = () => {
       })
   }
 
-  const onSwitchBranch = (event: TargetedEvent<HTMLSelectElement>) => {
+  const onSwitchBranch = (event: preact.TargetedEvent<HTMLSelectElement>) => {
     switchBranch(locales, event.currentTarget.value)
       .then(() => {
         return updateGitStatus(entities)

@@ -1,8 +1,7 @@
 import type { FunctionComponent } from "preact"
-import type { DialogHTMLAttributes } from "preact/compat"
 import { useEffect, useRef } from "preact/hooks"
 
-export const ModalDialog: FunctionComponent<DialogHTMLAttributes> = props => {
+export const ModalDialog: FunctionComponent<preact.DialogHTMLAttributes> = props => {
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {

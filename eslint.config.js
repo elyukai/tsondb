@@ -78,7 +78,16 @@ export default defineConfig([
     }
   },
   pluginReact.configs.flat.recommended,
-  reactHooks.configs['recommended-latest'],
+  {
+    files: ["src/**/*.{js,jsx,ts,tsx}"],
+    plugins: {
+      'react-hooks': reactHooks,
+    },
+    rules: {
+      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
+    },
+  },
   {
 		settings: {
 			react: {
