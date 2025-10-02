@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.6.1](https://github.com/elyukai/tsondb/compare/v0.6.0...v0.6.1) (2025-10-02)
+
 ## [0.6.0](https://github.com/elyukai/tsondb/compare/v0.5.19...v0.6.0) (2025-10-01)
 
 
