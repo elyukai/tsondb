@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.3](https://github.com/elyukai/tsondb/compare/v0.7.2...v0.7.3) (2025-10-02)
+
+
+### Bug Fixes
+
+* getDisplayNameForInstanceId should return full display name result ([ca896c3](https://github.com/elyukai/tsondb/commit/ca896c3203bfc211407dd0381335ff9dff87bdaf))
+
 ## [0.7.2](https://github.com/elyukai/tsondb/compare/v0.7.1...v0.7.2) (2025-10-02)
 
 
