@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.4](https://github.com/elyukai/tsondb/compare/v0.7.3...v0.7.4) (2025-10-02)
+
+
+### Bug Fixes
+
+* follow type alias includes for entity display name path check ([0ef2611](https://github.com/elyukai/tsondb/commit/0ef2611a7f138e291e49b28947dfc54a11345344))
+
 ## [0.7.3](https://github.com/elyukai/tsondb/compare/v0.7.2...v0.7.3) (2025-10-02)
 
 
