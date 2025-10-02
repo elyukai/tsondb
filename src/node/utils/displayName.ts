@@ -5,10 +5,17 @@ import {
   type DisplayNameResult,
 } from "../../shared/utils/displayName.ts"
 
+export type GetChildInstancesForInstanceId = (
+  parentEntityName: string,
+  parentId: string,
+  childEntityName: string,
+) => unknown[]
+
 export const getDisplayNameFromEntityInstance = (
   entity: EntityDecl,
   instance: unknown,
   getInstanceById: GetInstanceById,
+  getChildInstancesForInstanceId: GetChildInstancesForInstanceId,
   locales: string[],
   defaultName: string = "",
   useCustomizer = true,
@@ -18,17 +25,19 @@ export const getDisplayNameFromEntityInstance = (
       entity,
       instance,
       getInstanceById,
+      getChildInstancesForInstanceId,
       locales,
       defaultName,
       false,
     )
 
-    return entity.displayNameCustomizer(
-      instance as { [x: string]: unknown },
-      calculatedName.name,
-      calculatedName.localeId,
-      id => getInstanceById(id)?.instance.content,
-      id => {
+    return entity.displayNameCustomizer({
+      instance: instance as { [x: string]: unknown },
+      instanceDisplayName: calculatedName.name,
+      instanceDisplayNameLocaleId: calculatedName.localeId,
+      locales,
+      getInstanceById: id => getInstanceById(id)?.instance.content,
+      getDisplayNameForInstanceId: id => {
         const result = getInstanceById(id)
         if (result) {
           const { entity, instance } = result
@@ -36,6 +45,7 @@ export const getDisplayNameFromEntityInstance = (
             entity,
             instance.content,
             getInstanceById,
+            getChildInstancesForInstanceId,
             locales,
             id,
           ).name
@@ -43,8 +53,8 @@ export const getDisplayNameFromEntityInstance = (
           return undefined
         }
       },
-      locales,
-    )
+      getChildInstancesForInstanceId,
+    })
   } else {
     return getSerializedDisplayNameFromEntityInstance(
       serializeEntityDecl(entity),

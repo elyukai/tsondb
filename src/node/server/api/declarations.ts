@@ -20,6 +20,7 @@ import { isEnumDecl } from "../../schema/declarations/EnumDecl.ts"
 import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
 import { serializeNode } from "../../schema/index.ts"
 import { getChildInstances } from "../../utils/childInstances.ts"
+import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
 import { createInstance, deleteInstance, updateInstance } from "../utils/instanceOperations.ts"
 
 const debug = Debug("tsondb:server:api:declarations")
@@ -89,11 +90,19 @@ declarationsApi.get("/:name/instances", (req, res) => {
     return
   }
 
+  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
+
   const body: GetAllInstancesOfEntityResponseBody = {
     instances:
       req.instancesByEntityName[req.params.name]
         ?.map(instanceContainer =>
-          getInstanceContainerOverview(decl, instanceContainer, req.getInstanceById, req.locales),
+          getInstanceContainerOverview(
+            decl,
+            instanceContainer,
+            req.getInstanceById,
+            getChildInstancesForInstanceId,
+            req.locales,
+          ),
         )
         .toSorted((a, b) =>
           a.displayName.localeCompare(b.displayName, undefined, { numeric: true }),

@@ -1,5 +1,5 @@
 import type { GitFileStatus } from "../../shared/utils/git.ts"
-import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
+import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.ts"
 import { hasKey } from "../../shared/utils/object.ts"
 import { error, isError, ok, type Result } from "../../shared/utils/result.ts"
 import type {
@@ -82,10 +82,29 @@ const isParentReferenceReferencingParent = (
   }
 }
 
+export const getChildInstancesFromEntity = (
+  instancesByEntityName: InstancesByEntityName,
+  parentEntity: EntityDecl,
+  parentId: string,
+  childEntity: EntityDeclWithParentReference,
+): InstanceContainer[] =>
+  instancesByEntityName[childEntity.name]?.filter(
+    instanceContainer =>
+      typeof instanceContainer.content === "object" &&
+      instanceContainer.content !== null &&
+      hasKey(instanceContainer.content, childEntity.parentReferenceKey) &&
+      isParentReferenceReferencingParent(
+        instanceContainer.content[childEntity.parentReferenceKey],
+        parentEntity.name,
+        parentId,
+      ),
+  ) ?? []
+
 export const getChildInstances = (
   instancesByEntityName: InstancesByEntityName,
   parentEntity: EntityDecl,
   parentId: string,
+  recursive: boolean = true,
 ): EntityTaggedInstanceContainerWithChildInstances[] => {
   const childEntities = reduceNodes<EntityDeclWithParentReference>(
     (_parentNodes, node, collectedResults) =>
@@ -94,25 +113,19 @@ export const getChildInstances = (
     { followIncludes: true },
   )
 
-  return childEntities.flatMap(
-    childEntity =>
-      instancesByEntityName[childEntity.name]
-        ?.filter(
-          instanceContainer =>
-            typeof instanceContainer.content === "object" &&
-            instanceContainer.content !== null &&
-            hasKey(instanceContainer.content, childEntity.parentReferenceKey) &&
-            isParentReferenceReferencingParent(
-              instanceContainer.content[childEntity.parentReferenceKey],
-              parentEntity.name,
-              parentId,
-            ),
-        )
-        .map<EntityTaggedInstanceContainerWithChildInstances>(container => ({
-          ...container,
-          entityName: childEntity.name,
-          childInstances: getChildInstances(instancesByEntityName, childEntity, container.id),
-        })) ?? [],
+  return childEntities.flatMap(childEntity =>
+    getChildInstancesFromEntity(
+      instancesByEntityName,
+      parentEntity,
+      parentId,
+      childEntity,
+    ).map<EntityTaggedInstanceContainerWithChildInstances>(container => ({
+      ...container,
+      entityName: childEntity.name,
+      childInstances: recursive
+        ? getChildInstances(instancesByEntityName, childEntity, container.id)
+        : [],
+    })),
   )
 }
 

@@ -2,6 +2,7 @@ import Debug from "debug"
 import express from "express"
 import type { GetAllInstancesResponseBody } from "../../../shared/api.ts"
 import { getDisplayNameFromEntityInstance } from "../../utils/displayName.ts"
+import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
 
 const debug = Debug("tsondb:server:api:instances")
 
@@ -13,6 +14,8 @@ instancesApi.use((req, _res, next) => {
 })
 
 instancesApi.get("/", (req, res) => {
+  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
+
   const body: GetAllInstancesResponseBody = {
     instances: Object.fromEntries(
       Object.entries(req.instancesByEntityName)
@@ -25,6 +28,7 @@ instancesApi.get("/", (req, res) => {
               req.entitiesByName[entityName]!,
               instance.content,
               req.getInstanceById,
+              getChildInstancesForInstanceId,
               req.locales,
             )
             return {

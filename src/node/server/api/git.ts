@@ -11,6 +11,7 @@ import { hasFileChanges } from "../../../shared/utils/git.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
 import { attachGitStatusToInstancesByEntityName } from "../../utils/instances.ts"
 import { reinit } from "../init.ts"
+import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
 
 const debug = Debug("tsondb:server:api:git")
 
@@ -37,6 +38,8 @@ gitApi.get("/status", async (req, res) => {
     status,
   )
 
+  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
+
   const body: GitStatusResponseBody = {
     commitsAhead: status.ahead,
     commitsBehind: status.behind,
@@ -51,6 +54,7 @@ gitApi.get("/status", async (req, res) => {
               req.entitiesByName[entityName]!,
               instance,
               req.getInstanceById,
+              getChildInstancesForInstanceId,
               req.locales,
             ),
           ),

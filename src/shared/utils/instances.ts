@@ -1,6 +1,9 @@
 import type { EntityDecl } from "../../node/schema/index.ts"
 import type { GetInstanceById } from "../../node/server/index.ts"
-import { getDisplayNameFromEntityInstance } from "../../node/utils/displayName.ts"
+import {
+  getDisplayNameFromEntityInstance,
+  type GetChildInstancesForInstanceId,
+} from "../../node/utils/displayName.ts"
 import type { GitFileStatus } from "./git.ts"
 
 export interface InstanceContainer {
@@ -20,6 +23,7 @@ export const getInstanceContainerOverview = (
   entity: EntityDecl,
   instanceContainer: InstanceContainer,
   getInstanceById: GetInstanceById,
+  getChildInstancesForInstanceId: GetChildInstancesForInstanceId,
   locales: string[],
 ): InstanceContainerOverview => {
   const { content: _, ...rest } = instanceContainer
@@ -27,6 +31,7 @@ export const getInstanceContainerOverview = (
     entity,
     instanceContainer.content,
     getInstanceById,
+    getChildInstancesForInstanceId,
     locales,
   )
 

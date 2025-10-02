@@ -1,8 +1,11 @@
 import { error, ok, type Result } from "../../../shared/utils/result.ts"
-import type {
-  EntityTaggedInstanceContainerWithChildInstances,
-  UnsafeEntityTaggedInstanceContainerWithChildInstances,
+import { isEntityDeclWithParentReference } from "../../schema/index.ts"
+import {
+  getChildInstancesFromEntity,
+  type EntityTaggedInstanceContainerWithChildInstances,
+  type UnsafeEntityTaggedInstanceContainerWithChildInstances,
 } from "../../utils/childInstances.ts"
+import type { GetChildInstancesForInstanceId } from "../../utils/displayName.ts"
 import type { TSONDBRequestLocals } from "../index.ts"
 import { updateLocalsAfterInstanceChangeToReflectDiskState } from "./instanceOperations.ts"
 
@@ -82,3 +85,25 @@ export const updateLocalsAfterInstanceTreeChangeToReflectDiskState = async (
 
   return ok()
 }
+
+export const createChildInstancesForInstanceIdGetter =
+  (locals: TSONDBRequestLocals): GetChildInstancesForInstanceId =>
+  (parentEntityName, parentId, childEntityName) => {
+    const parentEntity = locals.entitiesByName[parentEntityName]
+    const childEntity = locals.entitiesByName[childEntityName]
+
+    if (
+      parentEntity === undefined ||
+      childEntity === undefined ||
+      !isEntityDeclWithParentReference(childEntity)
+    ) {
+      return []
+    }
+
+    return getChildInstancesFromEntity(
+      locals.instancesByEntityName,
+      parentEntity,
+      parentId,
+      childEntity,
+    )
+  }
