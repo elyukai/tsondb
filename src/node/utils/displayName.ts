@@ -20,7 +20,7 @@ export type DisplayNameCustomizer<T extends Type> = (params: {
   instanceDisplayNameLocaleId: string | undefined
   locales: string[]
   getInstanceById: (id: string) => unknown
-  getDisplayNameForInstanceId: (id: string) => string | undefined
+  getDisplayNameForInstanceId: (id: string) => DisplayNameResult | undefined
   getChildInstancesForInstanceId: GetChildInstancesForInstanceId
 }) => DisplayNameResult
 
@@ -62,7 +62,7 @@ export const getDisplayNameFromEntityInstance = (
             getChildInstancesForInstanceId,
             locales,
             id,
-          ).name
+          )
         } else {
           return undefined
         }
