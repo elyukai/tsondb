@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.0](https://github.com/elyukai/tsondb/compare/v0.6.2...v0.7.0) (2025-10-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* add child entity getter to display name customizer parameters
+
+### Features
+
+* add child entity getter to display name customizer parameters ([154dd16](https://github.com/elyukai/tsondb/commit/154dd16783f4106a1c701bc87f2f7e8f5d26429d))
+
 ## [0.6.2](https://github.com/elyukai/tsondb/compare/v0.6.1...v0.6.2) (2025-10-02)
 
 
