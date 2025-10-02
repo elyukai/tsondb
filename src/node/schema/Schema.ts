@@ -69,7 +69,9 @@ const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) =
           )
         }
 
-        const localeMapAtPath = findTypeAtPath(decl.type.value, pathToLocaleMap.split("."))
+        const localeMapAtPath = findTypeAtPath(decl.type.value, pathToLocaleMap.split("."), {
+          followTypeAliasIncludes: true,
+        })
 
         if (
           !localeMapAtPath ||
@@ -84,6 +86,7 @@ const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) =
         const typeAtLocaleMapPath = findTypeAtPath(
           localeMapAtPath.type.value,
           pathInLocaleMap.split("."),
+          { followTypeAliasIncludes: true },
         )
 
         if (!typeAtLocaleMapPath || !isStringType(typeAtLocaleMapPath)) {
@@ -93,7 +96,7 @@ const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) =
         }
       } else {
         const path = displayName.split(".")
-        const typeAtPath = findTypeAtPath(decl.type.value, path)
+        const typeAtPath = findTypeAtPath(decl.type.value, path, { followTypeAliasIncludes: true })
         if (!typeAtPath || !isStringType(typeAtPath)) {
           throw new Error(
             `Display name path "${displayName}" for entity "${decl.name}" does not lead to a value of type string.`,

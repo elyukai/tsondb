@@ -1,13 +1,13 @@
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
-import type { Decl } from "../index.ts"
+import { isTypeAliasDecl, type Decl } from "../index.ts"
 import type { BaseNode } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { ArrayType } from "./generic/ArrayType.ts"
-import { formatArrayValue } from "./generic/ArrayType.ts"
+import { formatArrayValue, isArrayType } from "./generic/ArrayType.ts"
 import type { EnumType } from "./generic/EnumType.ts"
 import { formatEnumType } from "./generic/EnumType.ts"
 import type { MemberDecl, ObjectType } from "./generic/ObjectType.ts"
-import { formatObjectValue } from "./generic/ObjectType.ts"
+import { formatObjectValue, isObjectType } from "./generic/ObjectType.ts"
 import type { BooleanType } from "./primitives/BooleanType.ts"
 import { formatBooleanValue } from "./primitives/BooleanType.ts"
 import type { DateType } from "./primitives/DateType.ts"
@@ -20,7 +20,10 @@ import type { StringType } from "./primitives/StringType.ts"
 import { formatStringValue } from "./primitives/StringType.ts"
 import { formatChildEntitiesValue, type ChildEntitiesType } from "./references/ChildEntitiesType.ts"
 import type { IncludeIdentifierType } from "./references/IncludeIdentifierType.ts"
-import { formatIncludeIdentifierValue } from "./references/IncludeIdentifierType.ts"
+import {
+  formatIncludeIdentifierValue,
+  isIncludeIdentifierType,
+} from "./references/IncludeIdentifierType.ts"
 import type { NestedEntityMapType } from "./references/NestedEntityMapType.ts"
 import { formatNestedEntityMapValue } from "./references/NestedEntityMapType.ts"
 import type { ReferenceIdentifierType } from "./references/ReferenceIdentifierType.ts"
@@ -152,20 +155,30 @@ export type AsNode<T> = T extends (infer I)[]
             ? DateType
             : never
 
-export const findTypeAtPath = (type: Type, path: string[]): Type | undefined => {
+export const findTypeAtPath = (
+  type: Type,
+  path: string[],
+  options: { followTypeAliasIncludes?: boolean } = {},
+): Type | undefined => {
   const [head, ...tail] = path
 
   if (head === undefined) {
     return type
   }
 
-  if (type.kind === NodeKind.ObjectType) {
+  if (isObjectType(type)) {
     const prop = type.properties[head]
     if (prop) {
-      return findTypeAtPath(prop.type, tail)
+      return findTypeAtPath(prop.type, tail, options)
     }
-  } else if (type.kind === NodeKind.ArrayType && head === "0") {
-    return findTypeAtPath(type.items, path)
+  } else if (isArrayType(type) && head === "0") {
+    return findTypeAtPath(type.items, path, options)
+  } else if (
+    isIncludeIdentifierType(type) &&
+    options.followTypeAliasIncludes &&
+    isTypeAliasDecl(type.reference)
+  ) {
+    return findTypeAtPath(type.reference.type.value, path, options)
   }
 
   return undefined
