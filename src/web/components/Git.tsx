@@ -1,6 +1,6 @@
 import type { FunctionComponent } from "preact"
 import { useLocation } from "preact-iso"
-import { useCallback, useEffect, useState } from "preact/hooks"
+import { useCallback, useContext, useEffect, useState } from "preact/hooks"
 import type { GitStatusResponseBody } from "../../shared/api.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import type { GitFileStatus } from "../../shared/utils/git.ts"
@@ -25,6 +25,7 @@ import {
   unstageAllFiles,
   unstageFileOfEntity,
 } from "../api/git.ts"
+import { GitContext } from "../context/git.ts"
 import { useSetting } from "../hooks/useSettings.ts"
 
 type Overview = [
@@ -93,7 +94,7 @@ const GitFileList: FunctionComponent<{
 
 export const Git: FunctionComponent = () => {
   const [locales] = useSetting("displayedLocales")
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen] = useContext(GitContext)
   const [commitsAhead, setCommitsAhead] = useState(0)
   const [commitsBehind, setCommitsBehind] = useState(0)
   const [commitMessage, setCommitMessage] = useState("")
@@ -252,13 +253,6 @@ export const Git: FunctionComponent = () => {
   return (
     <aside class="git">
       <h2 class="h1-faded">Version Control</h2>
-      <button
-        onClick={() => {
-          setIsOpen(b => !b)
-        }}
-      >
-        File changes
-      </button>
       <div className={`git-overlay ${isOpen ? "git-overlay--open" : ""}`}>
         <div class="sync">
           <button onClick={push}>

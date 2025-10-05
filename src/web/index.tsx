@@ -1,7 +1,7 @@
 import type { FunctionComponent } from "preact"
 import { render } from "preact"
 import { LocationProvider, Route, Router, useLocation } from "preact-iso"
-import { useEffect } from "preact/hooks"
+import { useEffect, useState } from "preact/hooks"
 import type { GetAllDeclarationsResponseBody } from "../shared/api.ts"
 import type { SerializedEntityDecl } from "../shared/schema/declarations/EntityDecl.ts"
 import { getAllEntities } from "./api/declarations.ts"
@@ -9,6 +9,7 @@ import { getWebConfig } from "./api/index.ts"
 import { Git } from "./components/Git.tsx"
 import { ConfigContext, type WebConfig } from "./context/config.ts"
 import { EntitiesContext } from "./context/entities.ts"
+import { GitContext } from "./context/git.ts"
 import { SettingsContext } from "./context/settings.ts"
 import { useMappedAPIResource } from "./hooks/useMappedAPIResource.ts"
 import { useSettings } from "./hooks/useSettings.ts"
@@ -29,6 +30,7 @@ type Props = {
 
 const App: FunctionComponent<Props> = ({ config }) => {
   const settingsContext = useSettings(config)
+  const [isGitOpen, setIsGitOpen] = useState(false)
 
   const [entities, reloadEntities] = useMappedAPIResource(
     getAllEntities,
@@ -47,18 +49,20 @@ const App: FunctionComponent<Props> = ({ config }) => {
   return (
     <ConfigContext.Provider value={config}>
       <SettingsContext.Provider value={settingsContext}>
-        <LocationProvider>
-          <EntitiesContext.Provider value={{ entities: entities ?? [], reloadEntities }}>
-            <Router>
-              <Route path="/" component={Home} />
-              <Route path="/entities/:name" component={Entity} />
-              <Route path="/entities/:name/instances/create" component={CreateInstance} />
-              <Route path="/entities/:name/instances/:id" component={Instance} />
-              <Route default component={NotFound} />
-            </Router>
-            <Git />
-          </EntitiesContext.Provider>
-        </LocationProvider>
+        <GitContext.Provider value={[isGitOpen, setIsGitOpen]}>
+          <LocationProvider>
+            <EntitiesContext.Provider value={{ entities: entities ?? [], reloadEntities }}>
+              <Router>
+                <Route path="/" component={Home} />
+                <Route path="/entities/:name" component={Entity} />
+                <Route path="/entities/:name/instances/create" component={CreateInstance} />
+                <Route path="/entities/:name/instances/:id" component={Instance} />
+                <Route default component={NotFound} />
+              </Router>
+              <Git />
+            </EntitiesContext.Provider>
+          </LocationProvider>
+        </GitContext.Provider>
       </SettingsContext.Provider>
     </ConfigContext.Provider>
   )

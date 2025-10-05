@@ -134,6 +134,11 @@ header nav ol {
   margin: 0;
 }
 
+.nav-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
 main {
   grid-area: main;
 }
@@ -875,6 +880,12 @@ main:has(.form-footer) {
 
 aside.git {
   grid-area: aside;
+  position: absolute;
+  top: 5rem;
+  right: 0;
+  width: 30rem;
+  max-width: calc(100% - 1.5rem);
+  max-height: calc(100% - 6.5rem);
 }
 
 aside.git h2 {
@@ -886,13 +897,18 @@ aside.git h2 {
     width: 30rem;
     border-left: 1px solid var(--separator-color);
     padding-left: 1rem;
+    top: unset;
+    right: unset;
+    position: static;
+    max-height: none;
+    max-width: none;
   }
 
   aside.git h2 {
     display: block;
   }
 
-  aside.git > button {
+  .git-toggle {
     display: none;
   }
 }
