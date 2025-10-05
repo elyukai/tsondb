@@ -9,6 +9,7 @@ export type Config = {
   defaultLocales: string[]
   dataRootPath: string
   homeLayoutSections?: HomeLayoutSection[]
+  customStylesheetPath?: string
 }
 
 export type ServerOptions = {

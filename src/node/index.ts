@@ -110,6 +110,7 @@ export const serve = async (
   defaultLocales: string[],
   homeLayoutSections?: HomeLayoutSection[],
   serverOptions?: Partial<ServerOptions>,
+  customStylesheetPath?: string,
 ) => {
   if (defaultLocales.length === 0) {
     throw new Error("At least one default locale must be specified to start the server.")
@@ -126,6 +127,7 @@ export const serve = async (
     defaultLocales,
     homeLayoutSections,
     serverOptions,
+    customStylesheetPath,
   )
 }
 

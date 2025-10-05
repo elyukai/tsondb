@@ -66,6 +66,7 @@ export const createServer = async (
   defaultLocales: string[],
   homeLayoutSections?: HomeLayoutSection[],
   options?: Partial<ServerOptions>,
+  customStylesheetPath?: string,
 ): Promise<void> => {
   const { port } = { ...defaultOptions, ...options }
 
@@ -111,6 +112,17 @@ export const createServer = async (
     2,
   )
 
+  const customStylesheetLinkHeader = customStylesheetPath
+    ? `
+  <link rel="stylesheet" href="/css/custom.css">`
+    : ""
+
+  if (customStylesheetPath) {
+    app.use("/css/custom.css", (_req, res) => {
+      res.sendFile(customStylesheetPath)
+    })
+  }
+
   app.get(/^\/.*/, (_req, res) => {
     res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -118,7 +130,7 @@ export const createServer = async (
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TSONDB</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/styles.css">${customStylesheetLinkHeader}
   <script type="importmap">${importMap}</script>
 </head>
 <body>

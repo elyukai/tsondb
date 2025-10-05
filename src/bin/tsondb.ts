@@ -95,6 +95,7 @@ switch (passedArguments.command.name) {
       config.defaultLocales,
       config.homeLayoutSections,
       config.serverOptions,
+      config.customStylesheetPath,
     )
     break
   case "validate":
