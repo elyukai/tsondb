@@ -54,6 +54,7 @@
   --highlight-color-list-item-marker: rgb(195, 58, 237);
   --highlight-color-table-marker: rgb(237, 58, 118);
   --highlight-color-attributed: rgb(48, 81, 228);
+  --highlight-color-heading-marker: rgb(62, 189, 191);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -87,6 +88,7 @@
     --highlight-color-list-item-marker: rgb(220, 133, 245);
     --highlight-color-table-marker: rgb(244, 135, 171);
     --highlight-color-attributed: rgb(137, 157, 244);
+    --highlight-color-heading-marker: rgb(140, 229, 231);
     --shadow-color: rgba(0, 0, 0, 0);
   }
 }
@@ -685,6 +687,10 @@ form > .field--container {
 
 .editor-highlighting .table-marker {
   color: var(--highlight-color-table-marker);
+}
+
+.editor-highlighting .heading-marker {
+  color: var(--highlight-color-heading-marker);
 }
 
 .preview .attributed {
