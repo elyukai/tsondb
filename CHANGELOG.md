@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.5](https://github.com/elyukai/tsondb/compare/v0.7.4...v0.7.5) (2025-10-05)
+
+
+### Features
+
+* support custom stylesheet ([4d9b107](https://github.com/elyukai/tsondb/commit/4d9b107c058089cddc36ed131f47aaca19a7bb35)), closes [#37](https://github.com/elyukai/tsondb/issues/37)
+* support markdown headings ([a19a56f](https://github.com/elyukai/tsondb/commit/a19a56f49b33b2f8e486d47db937b5f2762d31a0)), closes [#36](https://github.com/elyukai/tsondb/issues/36)
+
+
+### Bug Fixes
+
+* git button and git content placement in narrow viewports ([235f9ff](https://github.com/elyukai/tsondb/commit/235f9ff91545d7ed6df309a86b7ba2caa41cc232)), closes [#35](https://github.com/elyukai/tsondb/issues/35)
+
 ## [0.7.4](https://github.com/elyukai/tsondb/compare/v0.7.3...v0.7.4) (2025-10-02)
 
 
