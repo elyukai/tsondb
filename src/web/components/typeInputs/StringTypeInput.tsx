@@ -53,7 +53,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, disable
             <ValidationErrors disabled={disabled} errors={errors} />
           </div>
           <div class="preview">
-            <Markdown string={value} />
+            <Markdown string={value} outerHeadingLevel={2} />
           </div>
         </>
       ) : (

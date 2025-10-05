@@ -401,4 +401,84 @@ This was a table.
       ],
     )
   })
+
+  it("parses a text of paragraphs and headings", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`# Heading 1
+
+This is a paragraph under heading 1.
+
+## Heading 2
+
+This is a paragraph under heading 2.
+
+### Heading 3
+
+This is a paragraph under heading 3.
+`),
+      [
+        {
+          kind: "heading",
+          level: 1,
+          content: [{ kind: "text", content: "Heading 1" }],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is a paragraph under heading 1." }],
+        },
+        {
+          kind: "heading",
+          level: 2,
+          content: [{ kind: "text", content: "Heading 2" }],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is a paragraph under heading 2." }],
+        },
+        {
+          kind: "heading",
+          level: 3,
+          content: [{ kind: "text", content: "Heading 3" }],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is a paragraph under heading 3." }],
+        },
+      ],
+    )
+  })
+
+  it("parses a text of paragraphs and headings for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(`# Heading 1
+
+This is a paragraph under heading 1.
+
+## Heading 2
+
+This is a paragraph under heading 2.
+
+### Heading 3
+
+This is a paragraph under heading 3.
+`),
+      [
+        { kind: "headingmarker", content: "# " },
+        { kind: "text", content: "Heading 1" },
+        { kind: "text", content: "\n\n" },
+        { kind: "text", content: "This is a paragraph under heading 1." },
+        { kind: "text", content: "\n\n" },
+        { kind: "headingmarker", content: "## " },
+        { kind: "text", content: "Heading 2" },
+        { kind: "text", content: "\n\n" },
+        { kind: "text", content: "This is a paragraph under heading 2." },
+        { kind: "text", content: "\n\n" },
+        { kind: "headingmarker", content: "### " },
+        { kind: "text", content: "Heading 3" },
+        { kind: "text", content: "\n\n" },
+        { kind: "text", content: "This is a paragraph under heading 3." },
+        { kind: "text", content: "\n" },
+      ],
+    )
+  })
 })

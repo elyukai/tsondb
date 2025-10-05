@@ -4,9 +4,10 @@ import { InlineMarkdown } from "./InlineMarkdown.tsx"
 
 type Props = {
   node: BlockMarkdownNode
+  outerHeadingLevel?: number
 }
 
-export const BlockMarkdown: FunctionalComponent<Props> = ({ node }) => {
+export const BlockMarkdown: FunctionalComponent<Props> = ({ node, outerHeadingLevel = 0 }) => {
   switch (node.kind) {
     case "paragraph":
       return (
@@ -15,6 +16,16 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({ node }) => {
             <InlineMarkdown key={ii} node={inline} />
           ))}
         </p>
+      )
+    case "heading":
+      const Tag =
+        `h${(node.level + outerHeadingLevel).toString()}` as keyof preact.JSX.IntrinsicElements
+      return (
+        <Tag>
+          {node.content.map((inline, ii) => (
+            <InlineMarkdown key={ii} node={inline} />
+          ))}
+        </Tag>
       )
     case "list":
       if (node.ordered) {

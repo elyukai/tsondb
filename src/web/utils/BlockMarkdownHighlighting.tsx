@@ -12,6 +12,8 @@ export const BlockMarkdownHighlighting: FunctionalComponent<Props> = ({ node }) 
       return <span class="list-item-marker">{node.content}</span>
     case "tablemarker":
       return <span class="table-marker">{node.content}</span>
+    case "headingmarker":
+      return <span class="heading-marker">{node.content}</span>
     default:
       return <InlineMarkdown node={node} />
   }

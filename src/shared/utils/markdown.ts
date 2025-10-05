@@ -342,6 +342,20 @@ const paragraphRule: BlockRule = {
   ],
 }
 
+const headingRule: BlockRule = {
+  pattern: /^(#+)( +)([^\s\n][^\n]*?)(\n{2,}|\s*$)/,
+  map: result => ({
+    kind: "heading",
+    level: result[1]?.length ?? 1,
+    content: parseInlineMarkdown(result[3] ?? "", false),
+  }),
+  mapHighlighting: result => [
+    { kind: "headingmarker", content: (result[1] ?? "") + (result[2] ?? "") },
+    ...parseInlineMarkdown(result[3] ?? "", true),
+    ...nodesForTrailingWhitespace(result[4]),
+  ],
+}
+
 const removeSurroundingPipes = (text: string) => text.replace(/^\|/, "").replace(/\|$/, "")
 
 const tableMarker = (text: string): BlockSyntaxMarkdownNode => ({
@@ -392,11 +406,16 @@ const tableRule: BlockRule = {
   ],
 }
 
-const blockRules: BlockRule[] = [tableRule, listRule, paragraphRule]
+const blockRules: BlockRule[] = [headingRule, tableRule, listRule, paragraphRule]
 
 export type BlockMarkdownNode =
   | {
       kind: "paragraph"
+      content: InlineMarkdownNode[]
+    }
+  | {
+      kind: "heading"
+      level: number
       content: InlineMarkdownNode[]
     }
   | {
@@ -421,6 +440,10 @@ export type BlockSyntaxMarkdownNode =
     }
   | {
       kind: "tablemarker"
+      content: string
+    }
+  | {
+      kind: "headingmarker"
       content: string
     }
 
