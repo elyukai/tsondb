@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.6](https://github.com/elyukai/tsondb/compare/v0.7.5...v0.7.6) (2025-10-05)
+
+
+### Bug Fixes
+
+* syntax highlighting for heading markers ([71d2e53](https://github.com/elyukai/tsondb/commit/71d2e532ad300d6100cb04abbfc85c1da9b253c8))
+
 ## [0.7.5](https://github.com/elyukai/tsondb/compare/v0.7.4...v0.7.5) (2025-10-05)
 
 
