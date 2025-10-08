@@ -1,11 +1,12 @@
 import { Lazy } from "../../../../shared/utils/lazy.ts"
 import { sortObjectKeysAlphabetically } from "../../../../shared/utils/object.ts"
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
+import type { DisplayNameCustomizer } from "../../../utils/displayName.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { entity, json, key as keyColor } from "../../../utils/errorFormatting.ts"
-import {} from "../../declarations/Declaration.ts"
-import type { EntityDecl } from "../../declarations/EntityDecl.ts"
-import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.ts"
+import type { EntityDecl } from "../../declarations/EntityDecl.js"
+import { type EntityDisplayName } from "../../declarations/EntityDecl.js"
+import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
 import type {
   GetNestedDeclarations,
   GetReferences,
@@ -42,6 +43,7 @@ export interface NestedEntityMapType<
 > extends BaseType {
   kind: NodeKind["NestedEntityMapType"]
   name: Name
+  namePlural: string
   comment?: string
   secondaryEntity: EntityDecl
   type: Lazy<PossibleType<T>>
@@ -49,9 +51,16 @@ export interface NestedEntityMapType<
 
 export const NestedEntityMapType = <Name extends string, T extends TConstraint>(options: {
   name: Name
+  namePlural: string
   comment?: string
   secondaryEntity: EntityDecl
   type: PossibleType<T>
+  /**
+   * @default "name"
+   */
+  displayName?: EntityDisplayName<T>
+  displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
+  isDeprecated?: boolean
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
@@ -66,9 +75,16 @@ export { NestedEntityMapType as NestedEntityMap }
 
 const _NestedEntityMapType = <Name extends string, T extends TConstraint>(options: {
   name: Name
+  namePlural: string
   comment?: string
   secondaryEntity: EntityDecl
   type: () => PossibleType<T>
+  /**
+   * @default "name"
+   */
+  displayName?: EntityDisplayName<T>
+  displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
+  isDeprecated?: boolean
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
@@ -84,11 +100,14 @@ export const isNestedEntityMapType: Predicate<NestedEntityMapType> = node =>
 
 export const getNestedDeclarationsInNestedEntityMapType: GetNestedDeclarations<
   NestedEntityMapType
-> = (addedDecls, type) =>
-  getNestedDeclarations(
-    addedDecls.includes(type.secondaryEntity) ? addedDecls : [type.secondaryEntity, ...addedDecls],
-    type.type.value,
+> = (addedDecls, type, parentDecl) => {
+  const nestedType = type.type.value
+  return getNestedDeclarations(
+    [...addedDecls, ...(addedDecls.includes(type.secondaryEntity) ? [] : [type.secondaryEntity])],
+    nestedType,
+    parentDecl,
   )
+}
 
 export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
   helpers,

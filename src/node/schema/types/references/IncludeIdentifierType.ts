@@ -74,12 +74,12 @@ const isNoGenericIncludeIdentifierType = (
 
 export const getNestedDeclarationsInIncludeIdentifierType: GetNestedDeclarations<
   IncludeIdentifierType
-> = (addedDecls, type) =>
+> = (addedDecls, type, parentDecl) =>
   type.args.reduce(
-    (accAddedDecls, arg) => getNestedDeclarations(accAddedDecls, arg),
+    (accAddedDecls, arg) => getNestedDeclarations(accAddedDecls, arg, parentDecl),
     addedDecls.includes(type.reference)
       ? addedDecls
-      : getNestedDeclarations([type.reference, ...addedDecls], type.reference),
+      : getNestedDeclarations([type.reference, ...addedDecls], type.reference, parentDecl),
   )
 
 export const validateIncludeIdentifierType: Validator<IncludeIdentifierType> = (

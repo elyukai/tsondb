@@ -37,7 +37,8 @@ export const isChildEntitiesType: Predicate<ChildEntitiesType> = node =>
 export const getNestedDeclarationsInChildEntitiesType: GetNestedDeclarations<ChildEntitiesType> = (
   addedDecls,
   type,
-) => getNestedDeclarations([type.entity, ...addedDecls], type.entity)
+  parentDecl,
+) => getNestedDeclarations([type.entity, ...addedDecls], type.entity, parentDecl)
 
 export const validateChildEntitiesType: Validator<ChildEntitiesType> = () => []
 

@@ -92,7 +92,7 @@ export const isEnumDecl: Predicate<EnumDecl> = node => node.kind === NodeKind.En
 export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = (
   addedDecls,
   decl,
-) => getNestedDeclarationsInEnumType(addedDecls, decl.type.value)
+) => getNestedDeclarationsInEnumType(addedDecls, decl.type.value, decl)
 
 export const validateEnumDecl: ValidatorOfParamDecl<EnumDecl> = (helpers, decl, args, value) =>
   validateEnumType(

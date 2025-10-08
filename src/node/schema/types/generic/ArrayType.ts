@@ -60,7 +60,8 @@ export const isArrayType: Predicate<ArrayType> = node => node.kind === NodeKind.
 export const getNestedDeclarationsInArrayType: GetNestedDeclarations<ArrayType> = (
   addedDecls,
   type,
-) => getNestedDeclarations(addedDecls, type.items)
+  parentDecl,
+) => getNestedDeclarations(addedDecls, type.items, parentDecl)
 
 export const validateArrayType: Validator<ArrayType> = (helpers, type, value) => {
   if (!Array.isArray(value)) {

@@ -80,9 +80,10 @@ export const isObjectType: Predicate<ObjectType> = node => node.kind === NodeKin
 export const getNestedDeclarationsInObjectType: GetNestedDeclarations<ObjectType> = (
   addedDecls,
   type,
+  parentDecl,
 ) =>
   Object.values(type.properties).reduce(
-    (acc, prop) => getNestedDeclarations(acc, prop.type),
+    (acc, prop) => getNestedDeclarations(acc, prop.type, parentDecl),
     addedDecls,
   )
 

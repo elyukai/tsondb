@@ -90,7 +90,7 @@ export const isTypeAliasDecl: Predicate<TypeAliasDecl> = node =>
 export const getNestedDeclarationsInTypeAliasDecl: GetNestedDeclarations<TypeAliasDecl> = (
   addedDecls,
   decl,
-) => getNestedDeclarations(addedDecls, decl.type.value)
+) => getNestedDeclarations(addedDecls, decl.type.value, decl)
 
 export const validateTypeAliasDecl = (<Params extends TypeParameter[]>(
   helpers: Validators,

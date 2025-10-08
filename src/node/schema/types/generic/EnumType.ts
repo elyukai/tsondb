@@ -39,10 +39,11 @@ export const isEnumType: Predicate<EnumType> = node => node.kind === NodeKind.En
 export const getNestedDeclarationsInEnumType: GetNestedDeclarations<EnumType> = (
   addedDecls,
   type,
+  parentDecl,
 ) =>
   Object.values(type.values).reduce(
     (acc, caseMember) =>
-      caseMember.type === null ? acc : getNestedDeclarations(acc, caseMember.type),
+      caseMember.type === null ? acc : getNestedDeclarations(acc, caseMember.type, parentDecl),
     addedDecls,
   )
 

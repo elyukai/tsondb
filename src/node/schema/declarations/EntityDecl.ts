@@ -156,7 +156,7 @@ export const isEntityDeclWithParentReference = <
 export const getNestedDeclarationsInEntityDecl: GetNestedDeclarations<EntityDecl> = (
   isDeclAdded,
   decl,
-) => getNestedDeclarationsInObjectType(isDeclAdded, decl.type.value)
+) => getNestedDeclarationsInObjectType(isDeclAdded, decl.type.value, decl)
 
 export const validateEntityDecl: Validator<EntityDecl> = (helpers, decl, value) =>
   validateType(helpers, decl.type.value, value)

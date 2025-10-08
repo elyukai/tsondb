@@ -169,6 +169,15 @@ export { NodeKind }
 
 export type Node = Decl | Type | TypeParameter
 
+export type NestedDecl = Decl | NestedEntity
+
+export type NestedEntity = {
+  kind: "NestedEntity"
+  sourceUrl: string
+  name: string
+  type: NestedEntityMapType
+}
+
 export const reduceNodes = <R>(
   reducer: (parentNodes: Node[], node: Node, collectedResults: R[]) => R[],
   nodes: readonly Node[],
@@ -340,44 +349,70 @@ export const createValidators = (
 
 export type Predicate<T extends Node> = (node: Node) => node is T
 
-export type GetNestedDeclarations<T extends Node = Node> = (addedDecls: Decl[], node: T) => Decl[]
+export type GetNestedDeclarations<T extends Node = Node> = (
+  addedDecls: NestedDecl[],
+  node: T,
+  parentDecl: Decl | undefined,
+) => NestedDecl[]
 
-export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node) => {
+export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node, parentDecl) => {
   switch (node.kind) {
     case NodeKind.EntityDecl:
-      return getNestedDeclarationsInEntityDecl(addedDecls, node)
+      return addedDecls.includes(node)
+        ? addedDecls
+        : getNestedDeclarationsInEntityDecl([...addedDecls, node], node, parentDecl)
     case NodeKind.EnumDecl:
-      return getNestedDeclarationsInEnumDecl(addedDecls, node)
+      return addedDecls.includes(node)
+        ? addedDecls
+        : getNestedDeclarationsInEnumDecl([...addedDecls, node], node, parentDecl)
     case NodeKind.TypeAliasDecl:
-      return getNestedDeclarationsInTypeAliasDecl(addedDecls, node)
+      return addedDecls.includes(node)
+        ? addedDecls
+        : getNestedDeclarationsInTypeAliasDecl([...addedDecls, node], node, parentDecl)
     case NodeKind.ArrayType:
-      return getNestedDeclarationsInArrayType(addedDecls, node)
+      return getNestedDeclarationsInArrayType(addedDecls, node, parentDecl)
     case NodeKind.ObjectType:
-      return getNestedDeclarationsInObjectType(addedDecls, node)
+      return getNestedDeclarationsInObjectType(addedDecls, node, parentDecl)
     case NodeKind.BooleanType:
-      return getNestedDeclarationsInBooleanType(addedDecls, node)
+      return getNestedDeclarationsInBooleanType(addedDecls, node, parentDecl)
     case NodeKind.DateType:
-      return getNestedDeclarationsInDateType(addedDecls, node)
+      return getNestedDeclarationsInDateType(addedDecls, node, parentDecl)
     case NodeKind.FloatType:
-      return getNestedDeclarationsInFloatType(addedDecls, node)
+      return getNestedDeclarationsInFloatType(addedDecls, node, parentDecl)
     case NodeKind.IntegerType:
-      return getNestedDeclarationsInIntegerType(addedDecls, node)
+      return getNestedDeclarationsInIntegerType(addedDecls, node, parentDecl)
     case NodeKind.StringType:
-      return getNestedDeclarationsInStringType(addedDecls, node)
+      return getNestedDeclarationsInStringType(addedDecls, node, parentDecl)
     case NodeKind.TypeArgumentType:
-      return getNestedDeclarationsInTypeArgumentType(addedDecls, node)
+      return getNestedDeclarationsInTypeArgumentType(addedDecls, node, parentDecl)
     case NodeKind.ReferenceIdentifierType:
-      return getNestedDeclarationsInReferenceIdentifierType(addedDecls, node)
+      return getNestedDeclarationsInReferenceIdentifierType(addedDecls, node, parentDecl)
     case NodeKind.IncludeIdentifierType:
-      return getNestedDeclarationsInIncludeIdentifierType(addedDecls, node)
+      return getNestedDeclarationsInIncludeIdentifierType(addedDecls, node, parentDecl)
     case NodeKind.NestedEntityMapType:
-      return getNestedDeclarationsInNestedEntityMapType(addedDecls, node)
+      return addedDecls.some(
+        addedDecl => addedDecl.kind === "NestedEntity" && addedDecl.type === node,
+      )
+        ? addedDecls
+        : getNestedDeclarationsInNestedEntityMapType(
+            [
+              ...addedDecls,
+              {
+                kind: "NestedEntity",
+                sourceUrl: parentDecl?.sourceUrl ?? "",
+                name: node.name,
+                type: node,
+              },
+            ],
+            node,
+            parentDecl,
+          )
     case NodeKind.EnumType:
-      return getNestedDeclarationsInEnumType(addedDecls, node)
+      return getNestedDeclarationsInEnumType(addedDecls, node, parentDecl)
     case NodeKind.TypeParameter:
-      return getNestedDeclarationsInTypeParameter(addedDecls, node)
+      return getNestedDeclarationsInTypeParameter(addedDecls, node, parentDecl)
     case NodeKind.ChildEntitiesType:
-      return getNestedDeclarationsInChildEntitiesType(addedDecls, node)
+      return getNestedDeclarationsInChildEntitiesType(addedDecls, node, parentDecl)
     default:
       return assertExhaustive(node)
   }

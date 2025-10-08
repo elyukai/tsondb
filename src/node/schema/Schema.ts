@@ -4,7 +4,7 @@ import { getParameterNames, walkNodeTree } from "./declarations/Declaration.ts"
 import type { EntityDecl } from "./declarations/EntityDecl.ts"
 import { isEntityDecl } from "./declarations/EntityDecl.ts"
 import { cases, isEnumDecl } from "./declarations/EnumDecl.ts"
-import { getNestedDeclarations } from "./Node.ts"
+import { getNestedDeclarations, type NestedDecl } from "./Node.ts"
 import type { EnumCaseDecl } from "./types/generic/EnumType.ts"
 import { isObjectType } from "./types/generic/ObjectType.ts"
 import { isStringType } from "./types/primitives/StringType.ts"
@@ -24,7 +24,7 @@ export interface Schema {
   localeEntity?: EntityDecl
 }
 
-const checkDuplicateIdentifier = (existingDecls: Decl[], decl: Decl) => {
+const checkDuplicateIdentifier = (existingDecls: NestedDecl[], decl: NestedDecl) => {
   const existingDeclWithSameName = existingDecls
     .values()
     .find(
@@ -241,12 +241,14 @@ const checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType = (dec
   }
 }
 
-const addDeclarations = (existingDecls: Decl[], declsToAdd: Decl[], nested: boolean): Decl[] =>
+const addDeclarations = (existingDecls: NestedDecl[], declsToAdd: NestedDecl[]): NestedDecl[] =>
   declsToAdd.reduce((accDecls, decl) => {
     if (!accDecls.includes(decl)) {
-      checkDuplicateIdentifier(accDecls, decl)
-      const nestedDecls = nested ? getNestedDeclarations(accDecls, decl) : []
-      return addDeclarations([...accDecls, decl], nestedDecls, false)
+      return getNestedDeclarations(
+        accDecls,
+        decl.kind === "NestedEntity" ? decl.type : decl,
+        undefined,
+      )
     }
 
     return accDecls
@@ -258,22 +260,28 @@ export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema 
   const allDecls = addDeclarations(
     [],
     localeEntity ? declarations.concat(localeEntity) : declarations,
-    true,
   )
 
+  debug("checking for duplicate identifiers ...")
+  allDecls.forEach((decl, declIndex) => {
+    checkDuplicateIdentifier(allDecls.slice(0, declIndex), decl)
+  })
+
+  const allDeclsWithoutNestedEntities = allDecls.filter(decl => decl.kind !== "NestedEntity")
+
   debug("checking name shadowing ...")
-  checkParameterNamesShadowing(allDecls)
+  checkParameterNamesShadowing(allDeclsWithoutNestedEntities)
   debug("checking entity display name paths ...")
-  checkEntityDisplayNamePaths(allDecls, localeEntity)
+  checkEntityDisplayNamePaths(allDeclsWithoutNestedEntities, localeEntity)
   debug("checking child entities ...")
-  checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType(allDecls)
+  checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType(allDeclsWithoutNestedEntities)
   debug("checking child entity types ...")
-  checkChildEntityTypes(localeEntity, allDecls)
+  checkChildEntityTypes(localeEntity, allDeclsWithoutNestedEntities)
 
   debug("created schema, no integrity violations found")
 
   return {
-    declarations: allDecls,
+    declarations: allDeclsWithoutNestedEntities,
     localeEntity,
   }
 }

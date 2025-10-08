@@ -25,7 +25,9 @@ export const Param = <N extends string = string, T extends Type = Type>(
 export const getNestedDeclarationsInTypeParameter: GetNestedDeclarations<TypeParameter> = (
   addedDecls,
   param,
-) => (param.constraint ? getNestedDeclarations(addedDecls, param.constraint) : addedDecls)
+  parentDecl,
+) =>
+  param.constraint ? getNestedDeclarations(addedDecls, param.constraint, parentDecl) : addedDecls
 
 export const resolveTypeArgumentsInTypeParameter: TypeArgumentsResolver<TypeParameter> = (
   _args,
