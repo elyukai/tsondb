@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from "preact/hooks"
 import type { SerializedSecondaryDecl } from "../../shared/schema/declarations/Declaration.ts"
+import { isSerializedEntityDeclWithParentReference } from "../../shared/schema/declarations/EntityDecl.ts"
+import { isSerializedEnumDecl } from "../../shared/schema/declarations/EnumDecl.ts"
+import { isSerializedTypeAliasDecl } from "../../shared/schema/declarations/TypeAliasDecl.ts"
 import { getAllDeclarations } from "../api/declarations.ts"
 import { useSetting } from "./useSettings.ts"
 
@@ -16,10 +19,10 @@ export const useGetDeclFromDeclName = (): [GetDeclFromDeclName, loaded: boolean]
           data.declarations
             .map(decl => decl.declaration)
             .filter(
-              (decl): decl is SerializedSecondaryDecl =>
-                decl.kind === "EnumDecl" ||
-                decl.kind === "TypeAliasDecl" ||
-                decl.parentReferenceKey !== undefined,
+              decl =>
+                isSerializedEnumDecl(decl) ||
+                isSerializedTypeAliasDecl(decl) ||
+                isSerializedEntityDeclWithParentReference(decl),
             ),
         )
       })

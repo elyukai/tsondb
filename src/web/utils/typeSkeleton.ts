@@ -71,7 +71,7 @@ export const createTypeSkeleton = (
     }
 
     case "ChildEntitiesType":
-      return []
+      return undefined
 
     default:
       return assertExhaustive(type)

@@ -8,7 +8,8 @@ type Props = {
 export const MismatchingTypeError: FunctionComponent<Props> = ({ expected, actual }) => {
   return (
     <div role="alert">
-      Expected value of type {expected}, but got {JSON.stringify(actual)}
+      Expected value of type {expected}, but got{" "}
+      <code>{actual === undefined ? "undefined" : JSON.stringify(actual)}</code>
     </div>
   )
 }

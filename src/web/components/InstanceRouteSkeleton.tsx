@@ -91,7 +91,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   }, [entity, id, instanceContent, locales, titleBuilder])
 
   useEffect(() => {
-    if (entity && instanceContent === undefined) {
+    if (entity && instanceContent === undefined && declsLoaded) {
       init({ locales, entity, instanceId: id, setInstanceContent, getDeclFromDeclName })
         .then(() =>
           id
@@ -104,7 +104,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           console.error("Error initializing instance route skeleton:", error)
         })
     }
-  }, [entity, getDeclFromDeclName, id, init, instanceContent, locales, name])
+  }, [entity, declsLoaded, getDeclFromDeclName, id, init, instanceContent, locales, name])
 
   const handleSubmit = (event: SubmitEvent) => {
     event.preventDefault()

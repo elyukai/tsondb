@@ -1,8 +1,9 @@
 import {
   getReferencesSerialized,
+  NodeKind,
   resolveSerializedTypeArguments,
   type GetReferencesSerialized,
-  type NodeKind,
+  type SerializedNode,
   type SerializedTypeArgumentsResolver,
 } from "../Node.ts"
 import type { SerializedTypeParameter } from "../TypeParameter.ts"
@@ -18,6 +19,9 @@ export interface SerializedTypeAliasDecl<
   type: T
   isDeprecated?: boolean
 }
+
+export const isSerializedTypeAliasDecl = (node: SerializedNode): node is SerializedTypeAliasDecl =>
+  node.kind === NodeKind.TypeAliasDecl
 
 export const resolveTypeArgumentsInSerializedTypeAliasDecl: SerializedTypeArgumentsResolver<
   SerializedTypeAliasDecl

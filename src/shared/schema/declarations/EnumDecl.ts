@@ -1,4 +1,9 @@
-import type { GetReferencesSerialized, NodeKind, SerializedTypeArgumentsResolver } from "../Node.ts"
+import {
+  NodeKind,
+  type GetReferencesSerialized,
+  type SerializedNode,
+  type SerializedTypeArgumentsResolver,
+} from "../Node.js"
 import type { SerializedTypeParameter } from "../TypeParameter.ts"
 import {
   getReferencesForSerializedEnumType,
@@ -17,6 +22,10 @@ export interface SerializedEnumDecl<
   type: SerializedEnumType<T>
   isDeprecated?: boolean
 }
+
+export const isSerializedEnumDecl = (node: SerializedNode): node is SerializedEnumDecl =>
+  node.kind === NodeKind.EnumDecl
+
 export const resolveTypeArgumentsInSerializedEnumDecl: SerializedTypeArgumentsResolver<
   SerializedEnumDecl
 > = (decls, args, decl) => {

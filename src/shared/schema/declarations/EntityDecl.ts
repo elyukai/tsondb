@@ -50,6 +50,21 @@ export interface SerializedEntityDecl<
 export const isSerializedEntityDecl = (node: SerializedNode): node is SerializedEntityDecl =>
   node.kind === NodeKind.EntityDecl
 
+export const isSerializedEntityDeclWithParentReference = <
+  Name extends string,
+  T extends TConstraint,
+  FK extends (keyof T & string) | undefined,
+>(
+  decl: SerializedEntityDecl<Name, T, FK>,
+): decl is SerializedEntityDecl<Name, T, NonNullable<FK>> => decl.parentReferenceKey !== undefined
+
+export const isSerializedEntityDeclWithoutParentReference = <
+  Name extends string,
+  T extends TConstraint,
+>(
+  decl: SerializedEntityDecl<Name, T>,
+): decl is SerializedEntityDecl<Name, T, undefined> => decl.parentReferenceKey === undefined
+
 export const resolveTypeArgumentsInSerializedEntityDecl: SerializedTypeArgumentsResolver<
   SerializedEntityDecl
 > = (decls, _args, decl) => ({
