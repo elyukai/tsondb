@@ -54,19 +54,30 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
   instanceContent,
   buttonName,
   childInstances,
+  route,
 }) => {
-  if (instanceId && buttonName === "save") {
-    try {
+  try {
+    if (instanceId && buttonName) {
       await updateInstanceByEntityNameAndId(locales, entity.name, instanceId, {
         childInstances,
         entityName: entity.name,
         content: instanceContent,
         id: instanceId,
       })
-    } catch (error) {
-      if (error instanceof Error) {
-        alert(`Error updating instance:\n\n${error}`)
+
+      switch (buttonName) {
+        case "saveandcontinue": {
+          break
+        }
+        case "save": {
+          route(`/entities/${entity.name}`)
+          break
+        }
       }
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      alert(`Error updating instance:\n\n${error}`)
     }
   }
 }
@@ -75,6 +86,10 @@ export const Instance: FunctionalComponent = () => {
   return (
     <InstanceRouteSkeleton
       mode="edit"
+      buttons={[
+        { label: "Save", name: "save", primary: true },
+        { label: "Save and continue", name: "saveandcontinue" },
+      ]}
       init={init}
       titleBuilder={titleBuilder}
       onSubmit={onSubmit}

@@ -37,35 +37,38 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
   getDeclFromDeclName,
 }) => {
   try {
-    const createdInstance = await createInstanceByEntityNameAndId(
-      locales,
-      entity.name,
-      {
-        childInstances,
-        entityName: entity.name,
-        content: instanceContent,
-        id: undefined,
-      },
-      isLocaleEntity ? customId : undefined,
-    )
+    if (buttonName) {
+      const createdInstance = await createInstanceByEntityNameAndId(
+        locales,
+        entity.name,
+        {
+          childInstances,
+          entityName: entity.name,
+          content: instanceContent,
+          id: undefined,
+        },
+        isLocaleEntity ? customId : undefined,
+      )
 
-    switch (buttonName) {
-      case "saveandcontinue": {
-        route(`/entities/${entity.name}/instances/${createdInstance.instance.id}`)
-        break
-      }
-      case "saveandaddanother": {
-        setInstanceContent(createTypeSkeleton(getDeclFromDeclName, entity.type))
-        setCustomId("")
-        alert(
-          `Instance of entity ${entity.name} created successfully with identifier ${createdInstance.instance.id}. You can add another instance now.`,
-        )
-        break
-      }
-      case "save":
-      default: {
-        route(`/entities/${entity.name}?created=${encodeURIComponent(createdInstance.instance.id)}`)
-        break
+      switch (buttonName) {
+        case "saveandcontinue": {
+          route(`/entities/${entity.name}/instances/${createdInstance.instance.id}`)
+          break
+        }
+        case "saveandaddanother": {
+          setInstanceContent(createTypeSkeleton(getDeclFromDeclName, entity.type))
+          setCustomId("")
+          alert(
+            `Instance of entity ${entity.name} created successfully with identifier ${createdInstance.instance.id}. You can add another instance now.`,
+          )
+          break
+        }
+        case "save": {
+          route(
+            `/entities/${entity.name}?created=${encodeURIComponent(createdInstance.instance.id)}`,
+          )
+          break
+        }
       }
     }
   } catch (error) {
@@ -78,6 +81,11 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
 export const CreateInstance: FunctionalComponent = () => (
   <InstanceRouteSkeleton
     mode="create"
+    buttons={[
+      { label: "Save", name: "save", primary: true },
+      { label: "Save and continue", name: "saveandcontinue" },
+      { label: "Save and add another", name: "saveandaddanother" },
+    ]}
     init={init}
     titleBuilder={titleBuilder}
     onSubmit={onSubmit}

@@ -57,6 +57,7 @@ export type InstanceRouteSkeletonTitleBuilder = (values: {
 
 type Props = {
   mode: "create" | "edit"
+  buttons: { label: string; name: string; primary?: boolean }[]
   init: InstanceRouteSkeletonInitializer
   titleBuilder: InstanceRouteSkeletonTitleBuilder
   onSubmit: InstanceRouteSkeletonOnSubmitHandler
@@ -64,6 +65,7 @@ type Props = {
 
 export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   mode,
+  buttons,
   init,
   titleBuilder,
   onSubmit,
@@ -259,9 +261,16 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           onChildRemove={handleOnChildRemove}
         />
         <div class="form-footer btns">
-          <button type="submit" name="save" class="primary">
-            Save
-          </button>
+          {buttons.map(button => (
+            <button
+              key={button.name}
+              type="submit"
+              name={button.name}
+              class={button.primary ? "primary" : undefined}
+            >
+              {button.label}
+            </button>
+          ))}
         </div>
       </form>
     </Layout>
