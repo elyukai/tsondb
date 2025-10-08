@@ -22,7 +22,6 @@ const defaultSettingsFromConfig = (config: WebConfig): UserSettings => ({
 })
 
 export const useSettings = (config: WebConfig): SettingsContext => {
-  console.log("useSettings")
   const [settings, setSettings] = useState<UserSettings>(
     () =>
       Object.fromEntries(
