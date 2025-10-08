@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.7](https://github.com/elyukai/tsondb/compare/v0.7.6...v0.7.7) (2025-10-08)
+
+
+### Bug Fixes
+
+* check nested entity maps for name duplicates ([3e2eb6d](https://github.com/elyukai/tsondb/commit/3e2eb6d108cde0f55880cb22b440bb8f19fd7fcd))
+* nested declaration resolving ([7b1882d](https://github.com/elyukai/tsondb/commit/7b1882d03aceb1746c3306664ba2020c5357ccc2))
+* only create type skeleton for new instance when all declarations are loaded ([eaa0259](https://github.com/elyukai/tsondb/commit/eaa02594e43627de714f3a703ec92fb65cd40c13)), closes [#41](https://github.com/elyukai/tsondb/issues/41)
+* only try to save instance when one of the submit buttons is clicked ([5396275](https://github.com/elyukai/tsondb/commit/539627554fd5281e04cdea25ae22f42df055f2fd))
+* remove console.log ([642f37d](https://github.com/elyukai/tsondb/commit/642f37dca2de5aaa123efad8fd9c8431146f8e26))
+
 ## [0.7.6](https://github.com/elyukai/tsondb/compare/v0.7.5...v0.7.6) (2025-10-05)
 
 
