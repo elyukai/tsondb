@@ -261,6 +261,7 @@ export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema 
     [],
     localeEntity ? declarations.concat(localeEntity) : declarations,
   )
+  debug("found %d nested declarations", allDecls.length)
 
   debug("checking for duplicate identifiers ...")
   allDecls.forEach((decl, declIndex) => {

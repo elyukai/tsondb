@@ -38,7 +38,7 @@ export const getNestedDeclarationsInChildEntitiesType: GetNestedDeclarations<Chi
   addedDecls,
   type,
   parentDecl,
-) => getNestedDeclarations([type.entity, ...addedDecls], type.entity, parentDecl)
+) => getNestedDeclarations(addedDecls, type.entity, parentDecl)
 
 export const validateChildEntitiesType: Validator<ChildEntitiesType> = () => []
 

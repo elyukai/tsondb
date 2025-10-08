@@ -100,14 +100,12 @@ export const isNestedEntityMapType: Predicate<NestedEntityMapType> = node =>
 
 export const getNestedDeclarationsInNestedEntityMapType: GetNestedDeclarations<
   NestedEntityMapType
-> = (addedDecls, type, parentDecl) => {
-  const nestedType = type.type.value
-  return getNestedDeclarations(
-    [...addedDecls, ...(addedDecls.includes(type.secondaryEntity) ? [] : [type.secondaryEntity])],
-    nestedType,
+> = (addedDecls, type, parentDecl) =>
+  getNestedDeclarations(
+    getNestedDeclarations(addedDecls, type.secondaryEntity, parentDecl),
+    type.type.value,
     parentDecl,
   )
-}
 
 export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
   helpers,
