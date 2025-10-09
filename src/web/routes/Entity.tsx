@@ -2,7 +2,7 @@ import type { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
 import { useContext, useEffect, useState } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
-import { getGitStatusForDisplay, getLabelForGitStatus } from "../../shared/utils/git.ts"
+import { getGitStatusForDisplay } from "../../shared/utils/git.ts"
 import type { InstanceContainerOverview } from "../../shared/utils/instances.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
 import {
@@ -10,6 +10,7 @@ import {
   getInstancesByEntityName,
   getLocaleInstances,
 } from "../api/declarations.ts"
+import { GitStatusIndicator } from "../components/git/GitStatusIndicator.tsx"
 import { Layout } from "../components/Layout.ts"
 import { ConfigContext } from "../context/config.ts"
 import { EntitiesContext } from "../context/entities.ts"
@@ -120,14 +121,7 @@ export const Entity: FunctionalComponent = () => {
           {instance.id}
         </p>
         <div class="entries-item__side">
-          {gitStatusForDisplay !== undefined && (
-            <p
-              class={`git-status git-status--${gitStatusForDisplay}`}
-              title={getLabelForGitStatus(gitStatusForDisplay)}
-            >
-              {gitStatusForDisplay}
-            </p>
-          )}
+          <GitStatusIndicator status={instance.gitStatus} />
           <div class="btns">
             <a href={`/entities/${entity.name}/instances/${instance.id}`} class="btn">
               Edit

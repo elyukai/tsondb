@@ -63,7 +63,13 @@ export interface GetAllInstancesResponseBody {
   }
 }
 
+export interface IsRepoResponseBody {
+  isRepo: boolean
+}
+
 export interface GitStatusResponseBody {
+  currentBranch: string | null
+  trackingBranch: string | null
   commitsAhead: number
   commitsBehind: number
   instances: {
@@ -71,9 +77,21 @@ export interface GitStatusResponseBody {
   }
 }
 
+export interface GetAllGitBranchesResponseBodyBranchSummary {
+  current: boolean
+  name: string
+  commit: string
+  label: string
+  linkedWorkTree: boolean
+}
+
 export interface GetAllGitBranchesResponseBody {
-  allBranches: string[]
+  isDetached: boolean
   currentBranch: string
+  allBranches: string[]
+  branches: {
+    [key: string]: GetAllGitBranchesResponseBodyBranchSummary
+  }
 }
 
 export interface CreateCommitRequestBody {

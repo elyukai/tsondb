@@ -3,8 +3,12 @@ import type {
   CreateCommitRequestBody,
   GetAllGitBranchesResponseBody,
   GitStatusResponseBody,
+  IsRepoResponseBody,
 } from "../../shared/api.ts"
 import { getResource, postResource } from "../utils/api.ts"
+
+export const isRepo = async (locales: string[]): Promise<IsRepoResponseBody> =>
+  getResource<IsRepoResponseBody>("/api/git", { locales })
 
 export const getStatus = async (locales: string[]): Promise<GitStatusResponseBody> =>
   getResource<GitStatusResponseBody>("/api/git/status", { locales })

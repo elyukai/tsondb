@@ -1,7 +1,7 @@
 import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute, type LocationHook } from "preact-iso"
 import type { SetStateAction } from "preact/compat"
-import { useCallback, useEffect, useState, type Dispatch } from "preact/hooks"
+import { useCallback, useContext, useEffect, useState, type Dispatch } from "preact/hooks"
 import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../node/utils/childInstances.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import { removeAt } from "../../shared/utils/array.ts"
@@ -12,6 +12,7 @@ import {
   deleteInstanceByEntityNameAndId,
   getChildInstancesForInstanceByEntityName,
 } from "../api/declarations.ts"
+import { GitClientContext } from "../context/gitClient.ts"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
 import {
@@ -46,6 +47,7 @@ export type InstanceRouteSkeletonOnSubmitHandler = (values: {
   setInstanceContent: Dispatch<SetStateAction<unknown>>
   setCustomId: Dispatch<SetStateAction<string>>
   getDeclFromDeclName: GetDeclFromDeclName
+  updateGitStatus?: () => Promise<void>
 }) => Promise<void>
 
 export type InstanceRouteSkeletonTitleBuilder = (values: {
@@ -83,6 +85,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
     UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   >([])
   const [customId, setCustomId] = useState("")
+  const client = useContext(GitClientContext)
 
   const { route } = useLocation()
 
@@ -125,6 +128,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
         setCustomId,
         setInstanceContent,
         childInstances,
+        updateGitStatus: client?.update,
       }).catch((error: unknown) => {
         console.error("Error submitting instance data:", error)
       })

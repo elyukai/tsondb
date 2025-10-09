@@ -6,6 +6,7 @@ import type {
   CreateCommitRequestBody,
   GetAllGitBranchesResponseBody,
   GitStatusResponseBody,
+  IsRepoResponseBody,
 } from "../../../shared/api.ts"
 import { hasFileChanges } from "../../../shared/utils/git.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
@@ -19,12 +20,20 @@ export const gitApi = express.Router()
 
 gitApi.use((req, res, next) => {
   debug(req.path)
-  if (req.gitRoot === undefined) {
-    res.status(500).send("Git repository not found")
+  if (req.path !== "/" && req.gitRoot === undefined) {
+    res.status(400).send("Git repository not found").set("Content-Type", "text/plain")
     return
   }
 
   next()
+})
+
+gitApi.get("/", (req, res) => {
+  const body: IsRepoResponseBody = {
+    isRepo: req.gitRoot !== undefined,
+  }
+
+  res.json(body)
 })
 
 gitApi.get("/status", async (req, res) => {
@@ -41,6 +50,8 @@ gitApi.get("/status", async (req, res) => {
   const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
 
   const body: GitStatusResponseBody = {
+    currentBranch: status.current,
+    trackingBranch: status.tracking,
     commitsAhead: status.ahead,
     commitsBehind: status.behind,
     instances: Object.fromEntries(
@@ -68,22 +79,29 @@ gitApi.get("/status", async (req, res) => {
 gitApi.post("/stage", async (req, res) => {
   try {
     await req.git.add(req.dataRoot)
-    res.status(200).send("Added all database files to index")
+    res.status(200).send("Added all database files to index").set("Content-Type", "text/plain")
   } catch (error) {
     debug(`${req.path}: ${(error as Error).message}`)
-    res.status(500).send("Adding all database files to index failed")
+    res
+      .status(500)
+      .send("Adding all database files to index failed")
+      .set("Content-Type", "text/plain")
   }
 })
 
 gitApi.post("/stage/:entityName", async (req, res) => {
   try {
     await req.git.add(join(req.dataRoot, req.params.entityName))
-    res.status(200).send(`Added all database files for entity ${req.params.entityName} to index`)
+    res
+      .status(200)
+      .send(`Added all database files for entity ${req.params.entityName} to index`)
+      .set("Content-Type", "text/plain")
   } catch (error) {
     debug(`${req.path}: ${(error as Error).message}`)
     res
       .status(500)
       .send(`Adding all database files for entity ${req.params.entityName} to index failed`)
+      .set("Content-Type", "text/plain")
   }
 })
 
@@ -95,6 +113,7 @@ gitApi.post("/stage/:entityName/:instanceId", async (req, res) => {
       .send(
         `Added database file ${req.params.instanceId} for entity ${req.params.entityName} to index`,
       )
+      .set("Content-Type", "text/plain")
   } catch (error) {
     debug(`${req.path}: ${(error as Error).message}`)
     res
@@ -102,28 +121,36 @@ gitApi.post("/stage/:entityName/:instanceId", async (req, res) => {
       .send(
         `Adding database file ${req.params.instanceId} for entity ${req.params.entityName} to index failed`,
       )
+      .set("Content-Type", "text/plain")
   }
 })
 
 gitApi.post("/unstage", async (req, res) => {
   try {
     await req.git.reset(["HEAD", "--", req.dataRoot])
-    res.status(200).send("Removed all database files to index")
+    res.status(200).send("Removed all database files to index").set("Content-Type", "text/plain")
   } catch (error) {
     debug(`${req.path}: ${(error as Error).message}`)
-    res.status(500).send("Removing all database files to index failed")
+    res
+      .status(500)
+      .send("Removing all database files to index failed")
+      .set("Content-Type", "text/plain")
   }
 })
 
 gitApi.post("/unstage/:entityName", async (req, res) => {
   try {
     await req.git.reset(["HEAD", "--", join(req.dataRoot, req.params.entityName)])
-    res.status(200).send(`Removed all database files for entity ${req.params.entityName} to index`)
+    res
+      .status(200)
+      .send(`Removed all database files for entity ${req.params.entityName} to index`)
+      .set("Content-Type", "text/plain")
   } catch (error) {
     debug(`${req.path}: ${(error as Error).message}`)
     res
       .status(500)
       .send(`Removing all database files for entity ${req.params.entityName} to index failed`)
+      .set("Content-Type", "text/plain")
   }
 })
 
@@ -139,6 +166,7 @@ gitApi.post("/unstage/:entityName/:instanceId", async (req, res) => {
       .send(
         `Removed database file ${req.params.instanceId} for entity ${req.params.entityName} to index`,
       )
+      .set("Content-Type", "text/plain")
   } catch (error) {
     debug(`${req.path}: ${(error as Error).message}`)
     res
@@ -146,6 +174,7 @@ gitApi.post("/unstage/:entityName/:instanceId", async (req, res) => {
       .send(
         `Removing database file ${req.params.instanceId} for entity ${req.params.entityName} to index failed`,
       )
+      .set("Content-Type", "text/plain")
   }
 })
 
@@ -155,42 +184,48 @@ gitApi.post("/commit", async (req: CreateCommitRequest, res) => {
   const message = req.body.message
 
   if (typeof message !== "string" || message.length === 0) {
-    res.status(400).send("Invalid commit message")
+    res.status(400).send("Invalid commit message").set("Content-Type", "text/plain")
     return
   }
 
   try {
     await req.git.commit(message)
-    res.status(200).send("Commit successful")
+    res.status(200).send("Commit successful").set("Content-Type", "text/plain")
   } catch {
-    res.status(500).send("Commit failed")
+    res.status(500).send("Commit failed").set("Content-Type", "text/plain")
   }
 })
 
 gitApi.post("/push", async (req, res) => {
   try {
-    await req.git.push()
-    res.status(200).send("Push successful")
+    const status = await req.git.status()
+    const remotes = await req.git.getRemotes()
+    await req.git.push(remotes[0]?.name, status.current ?? undefined)
+    res.status(200).send("Push successful").set("Content-Type", "text/plain")
   } catch {
-    res.status(500).send("Push failed")
+    res.status(500).send("Push failed").set("Content-Type", "text/plain")
   }
 })
 
 gitApi.post("/pull", async (req, res) => {
   try {
-    await req.git.pull()
-    res.status(200).send("Pull successful")
+    const status = await req.git.status()
+    const remotes = await req.git.getRemotes()
+    await req.git.pull(remotes[0]?.name, status.current ?? undefined)
+    res.status(200).send("Pull successful").set("Content-Type", "text/plain")
   } catch {
-    res.status(500).send("Pull failed")
+    res.status(500).send("Pull failed").set("Content-Type", "text/plain")
   }
 })
 
 gitApi.get("/branch", async (req, res) => {
-  const branchSummary = await req.git.branchLocal()
+  const branchSummary = await req.git.branch()
 
   const body: GetAllGitBranchesResponseBody = {
     allBranches: branchSummary.all,
     currentBranch: branchSummary.current,
+    isDetached: branchSummary.detached,
+    branches: branchSummary.branches,
   }
 
   res.json(body)
@@ -202,24 +237,36 @@ gitApi.post("/branch", async (req: CreateBranchRequest, res) => {
   const branchName = req.body.branchName
 
   if (typeof branchName !== "string" || branchName.length === 0) {
-    res.status(400).send("Invalid branch name")
+    res.status(400).send("Invalid branch name").set("Content-Type", "text/plain")
     return
   }
 
   try {
     await req.git.checkoutLocalBranch(branchName)
     await reinit(req)
-    res.status(200).send(`Creation of branch "${branchName}" successful`)
+    res
+      .status(200)
+      .send(`Creation of branch "${branchName}" successful`)
+      .set("Content-Type", "text/plain")
   } catch {
-    res.status(500).send(`Creation of branch "${branchName}" failed`)
+    res
+      .status(500)
+      .send(`Creation of branch "${branchName}" failed`)
+      .set("Content-Type", "text/plain")
   }
 })
 
 gitApi.post("/branch/:branchName", async (req, res) => {
   try {
     await req.git.checkout(req.params.branchName)
-    res.status(200).send(`Switch to branch "${req.params.branchName}" successful`)
+    res
+      .status(200)
+      .send(`Switch to branch "${req.params.branchName}" successful`)
+      .set("Content-Type", "text/plain")
   } catch {
-    res.status(500).send(`Switch to branch "${req.params.branchName}" failed`)
+    res
+      .status(500)
+      .send(`Switch to branch "${req.params.branchName}" failed`)
+      .set("Content-Type", "text/plain")
   }
 })

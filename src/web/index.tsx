@@ -6,11 +6,14 @@ import type { GetAllDeclarationsResponseBody } from "../shared/api.ts"
 import type { SerializedEntityDecl } from "../shared/schema/declarations/EntityDecl.ts"
 import { getAllEntities } from "./api/declarations.ts"
 import { getWebConfig } from "./api/index.ts"
-import { Git } from "./components/Git.tsx"
+import { ContextProviderWrapper } from "./components/ContextProviderWrapper.tsx"
+import { Git } from "./components/git/Git.tsx"
 import { ConfigContext, type WebConfig } from "./context/config.ts"
 import { EntitiesContext } from "./context/entities.ts"
 import { GitContext } from "./context/git.ts"
+import { GitClientContext } from "./context/gitClient.ts"
 import { SettingsContext } from "./context/settings.ts"
+import { useGitClient } from "./hooks/useGitClient.ts"
 import { useMappedAPIResource } from "./hooks/useMappedAPIResource.ts"
 import { useSettings } from "./hooks/useSettings.ts"
 import { CreateInstance } from "./routes/CreateInstance.tsx"
@@ -52,14 +55,16 @@ const App: FunctionComponent<Props> = ({ config }) => {
         <GitContext.Provider value={[isGitOpen, setIsGitOpen]}>
           <LocationProvider>
             <EntitiesContext.Provider value={{ entities: entities ?? [], reloadEntities }}>
-              <Router>
-                <Route path="/" component={Home} />
-                <Route path="/entities/:name" component={Entity} />
-                <Route path="/entities/:name/instances/create" component={CreateInstance} />
-                <Route path="/entities/:name/instances/:id" component={Instance} />
-                <Route default component={NotFound} />
-              </Router>
-              <Git />
+              <ContextProviderWrapper context={GitClientContext} useValue={useGitClient}>
+                <Router>
+                  <Route path="/" component={Home} />
+                  <Route path="/entities/:name" component={Entity} />
+                  <Route path="/entities/:name/instances/create" component={CreateInstance} />
+                  <Route path="/entities/:name/instances/:id" component={Instance} />
+                  <Route default component={NotFound} />
+                </Router>
+                <Git />
+              </ContextProviderWrapper>
             </EntitiesContext.Provider>
           </LocationProvider>
         </GitContext.Provider>
