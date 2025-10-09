@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid"
+import { randomUUID } from "node:crypto"
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import { error, isOk, map, ok, type Result } from "../../shared/utils/result.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.js"
@@ -7,7 +7,7 @@ import { getErrorMessageForDisplay } from "./error.ts"
 import * as Files from "./files.ts"
 import { isReferencedByOtherInstances, type ReferencesToInstances } from "./references.ts"
 
-export const createNewId = () => uuidv4()
+export const createNewId = () => randomUUID()
 
 export const checkCreateInstancePossible = (
   localeEntity: EntityDecl | undefined,

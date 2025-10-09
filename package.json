@@ -52,8 +52,7 @@
     "preact": "^10.27.2",
     "preact-iso": "^2.11.0",
     "simple-cli-args": "^0.1.3",
-    "simple-git": "^3.28.0",
-    "uuid": "^13.0.0"
+    "simple-git": "^3.28.0"
   },
   "repository": "github:elyukai/tsondb",
   "bugs": {
