@@ -1,4 +1,5 @@
 import type { FunctionComponent } from "preact"
+import { useLocation } from "preact-iso"
 import type { InstanceContainerOverview } from "../../../shared/utils/instances.ts"
 import { GitStatusIndicator } from "./GitStatusIndicator.tsx"
 
@@ -18,8 +19,9 @@ export const GitFileList: FunctionComponent<Props> = ({
   filesByEntity,
   onFileButtonClick,
   fileButtonLabel,
-}) =>
-  filesByEntity.length === 0 ? (
+}) => {
+  const { route } = useLocation()
+  return filesByEntity.length === 0 ? (
     <p class="no-changes">No changes</p>
   ) : (
     <ul class="git-entity-list">
@@ -33,7 +35,7 @@ export const GitFileList: FunctionComponent<Props> = ({
                 <GitStatusIndicator status={instance.gitStatus} />
                 <button
                   onClick={() => {
-                    void onFileButtonClick(entityName, instance)
+                    route(`/entities/${entityName}/instances/${instance.id}`)
                   }}
                 >
                   View
@@ -52,3 +54,4 @@ export const GitFileList: FunctionComponent<Props> = ({
       ))}
     </ul>
   )
+}
