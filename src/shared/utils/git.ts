@@ -107,7 +107,7 @@ export const getLabelForGitStatus = (status: GitFileStatusForDisplay): string =>
     case "M":
       return "modified"
     case "A":
-      return "sdded"
+      return "added"
     case "D":
       return "deleted"
     case "R":
