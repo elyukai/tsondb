@@ -1,7 +1,11 @@
 import type { FunctionComponent } from "preact"
 import { useEffect, useRef } from "preact/hooks"
+import { LoadingOverlay } from "./LoadingOverlay.tsx"
 
-export const ModalDialog: FunctionComponent<preact.DialogHTMLAttributes> = props => {
+export const ModalDialog: FunctionComponent<preact.DialogHTMLAttributes> = ({
+  children,
+  ...props
+}) => {
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -14,5 +18,10 @@ export const ModalDialog: FunctionComponent<preact.DialogHTMLAttributes> = props
     }
   }, [props.open])
 
-  return <dialog {...props} open={undefined} ref={ref} />
+  return (
+    <dialog {...props} open={undefined} ref={ref}>
+      <LoadingOverlay />
+      {children}
+    </dialog>
+  )
 }

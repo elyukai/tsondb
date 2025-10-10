@@ -8,6 +8,7 @@ import { getAllEntities } from "./api/declarations.ts"
 import { getWebConfig } from "./api/index.ts"
 import { ContextProviderWrapper } from "./components/ContextProviderWrapper.tsx"
 import { Git } from "./components/git/Git.tsx"
+import { LoadingOverlay } from "./components/LoadingOverlay.tsx"
 import { ConfigContext, type WebConfig } from "./context/config.ts"
 import { EntitiesContext } from "./context/entities.ts"
 import { GitContext } from "./context/git.ts"
@@ -56,6 +57,7 @@ const App: FunctionComponent<Props> = ({ config }) => {
           <LocationProvider>
             <EntitiesContext.Provider value={{ entities: entities ?? [], reloadEntities }}>
               <ContextProviderWrapper context={GitClientContext} useValue={useGitClient}>
+                <LoadingOverlay />
                 <Router>
                   <Route path="/" component={Home} />
                   <Route path="/entities/:name" component={Entity} />

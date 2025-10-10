@@ -1058,3 +1058,33 @@ dialog.settings section.locale-settings ol li:not(:first-child) {
 .locale-content span {
   flex: 1 1 0;
 }
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  z-index: 1000;
+  font-weight: 200;
+  letter-spacing: 0.05em;
+  transition: opacity 0.25s ease-in-out;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#app:not(:has(dialog[open])) > .loading-overlay--open,
+dialog[open] > .loading-overlay--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+dialog[open]:has(> .loading-overlay--open)::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+}

@@ -47,6 +47,7 @@
     "typescript-eslint": "^8.45.0"
   },
   "dependencies": {
+    "@preact/signals": "^2.3.2",
     "debug": "^4.4.3",
     "express": "^5.1.0",
     "preact": "^10.27.2",

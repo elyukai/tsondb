@@ -22,6 +22,7 @@ import {
 import { useSetting } from "../hooks/useSettings.ts"
 import { homeTitle } from "../routes/Home.tsx"
 import { NotFound } from "../routes/NotFound.tsx"
+import { runWithLoading } from "../signals/loading.ts"
 import { Layout } from "./Layout.tsx"
 import { TypeInput } from "./typeInputs/TypeInput.tsx"
 import { ValidationErrors } from "./typeInputs/utils/ValidationErrors.tsx"
@@ -97,7 +98,9 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
 
   useEffect(() => {
     if (entity && instanceContent === undefined && declsLoaded) {
-      init({ locales, entity, instanceId: id, setInstanceContent, getDeclFromDeclName })
+      runWithLoading(() =>
+        init({ locales, entity, instanceId: id, setInstanceContent, getDeclFromDeclName }),
+      )
         .then(() =>
           id
             ? getChildInstancesForInstanceByEntityName(locales, entity.name, id).then(result => {
@@ -115,21 +118,23 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
     event.preventDefault()
     if (entity && instanceContent !== undefined) {
       const buttonName = event.submitter?.getAttribute("name") ?? undefined
-      onSubmit({
-        locales,
-        entity,
-        instanceId: id,
-        instanceContent,
-        buttonName,
-        route,
-        customId,
-        getDeclFromDeclName,
-        isLocaleEntity,
-        setCustomId,
-        setInstanceContent,
-        childInstances,
-        updateGitStatus: client?.update,
-      }).catch((error: unknown) => {
+      runWithLoading(() =>
+        onSubmit({
+          locales,
+          entity,
+          instanceId: id,
+          instanceContent,
+          buttonName,
+          route,
+          customId,
+          getDeclFromDeclName,
+          isLocaleEntity,
+          setCustomId,
+          setInstanceContent,
+          childInstances,
+          updateGitStatus: client?.update,
+        }),
+      ).catch((error: unknown) => {
         console.error("Error submitting instance data:", error)
       })
     }

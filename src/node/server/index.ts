@@ -74,6 +74,8 @@ export const createServer = async (
 
   app.use(express.static(join(import.meta.dirname, "../../../../public")))
   app.use("/js/node_modules/preact", staticNodeModule("preact"))
+  app.use("/js/node_modules/@preact/signals", staticNodeModule("@preact/signals"))
+  app.use("/js/node_modules/@preact/signals-core", staticNodeModule("@preact/signals-core"))
   app.use("/js/node_modules/preact-iso", staticNodeModule("preact-iso"))
   app.use("/js/client", express.static(join(import.meta.dirname, "../../../../dist/src/web")))
   app.use("/js/shared", express.static(join(import.meta.dirname, "../../../../dist/src/shared")))
@@ -106,6 +108,8 @@ export const createServer = async (
         "preact/hooks": "/js/node_modules/preact/hooks/dist/hooks.module.js",
         "preact/jsx-runtime": "/js/node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
         "preact-iso": "/js/node_modules/preact-iso/src/index.js",
+        "@preact/signals": "/js/node_modules/@preact/signals/dist/signals.module.js",
+        "@preact/signals-core": "/js/node_modules/@preact/signals-core/dist/signals-core.module.js",
       },
     },
     null,
