@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.8](https://github.com/elyukai/tsondb/compare/v0.7.7...v0.7.8) (2025-10-12)
+
+
+### Features
+
+* add view button to git file list ([2dcc33e](https://github.com/elyukai/tsondb/commit/2dcc33edf53a25dcb58ff2efcf8a489f4abe08e9))
+* git branch manager ([133758e](https://github.com/elyukai/tsondb/commit/133758e84c27f8a82d35ba6cb68e71ab724bd921)), closes [#39](https://github.com/elyukai/tsondb/issues/39) [#40](https://github.com/elyukai/tsondb/issues/40)
+* loading overlay for longer-running operations ([2e495b0](https://github.com/elyukai/tsondb/commit/2e495b05785ea45c4e27ac033ac2a7204ff1a90e))
+* table captions in markdown ([f8f4b0a](https://github.com/elyukai/tsondb/commit/f8f4b0a0052c21aab03691f048e4dd7027b70b9f)), closes [#42](https://github.com/elyukai/tsondb/issues/42)
+
+
+### Bug Fixes
+
+* typo in git status ([86b788c](https://github.com/elyukai/tsondb/commit/86b788cfd5fba527757f43bf644b385405d8e4ff))
+
 ## [0.7.7](https://github.com/elyukai/tsondb/compare/v0.7.6...v0.7.7) (2025-10-08)
 
 
