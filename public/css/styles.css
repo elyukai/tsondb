@@ -12,95 +12,109 @@
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
     monospace;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --background: white;
-  --markdown-background: #e1e3e7;
-  --color: black;
-  --error-color: #9d1212;
-  --separator-color: #e9e5eb;
-  --secondary-color: #7e7f87;
-  --tertiary-color: #bcbdc2;
-  --input-border-color: black;
-  --button-background: #c7cad0;
-  --button-background-hover: #dedfe4;
-  --button-background-primary: black;
-  --button-background-primary-hover: #727379;
-  --button-background-destructive: #b51616;
-  --button-background-destructive-hover: #e63333;
-  --button-background-disabled: #a4a5aa;
-  --button-color: black;
-  --button-color-hover: black;
-  --button-color-primary: white;
-  --button-color-primary-hover: white;
-  --button-color-destructive: white;
-  --button-color-destructive-hover: white;
-  --button-color-disabled: #cdced2;
-  --highlight-color: #a08500;
-  --highlight-background: #fdfab9;
-  --disabled-color: #cdced2;
-  --shadow-color: rgba(53, 56, 58, 0.5);
-  --git-status-untracked-color: rgb(13, 149, 101);
-  --git-status-untracked-background: rgba(13, 149, 101, 0.15);
-  --git-status-added-color: rgb(20, 148, 29);
-  --git-status-added-background: rgba(20, 148, 29, 0.15);
-  --git-status-modified-color: rgb(196, 155, 18);
-  --git-status-modified-background: rgba(196, 155, 18, 0.15);
-  --git-status-deleted-color: rgb(135, 22, 11);
-  --git-status-deleted-background: rgba(135, 22, 11, 0.15);
-  --git-status-renamed-color: rgb(20, 97, 148);
-  --git-status-renamed-background: rgba(20, 97, 148, 0.15);
-  --shadow-color: rgba(160, 163, 165, 0.5);
-  --highlight-color-bold: rgb(205, 123, 43);
-  --highlight-color-italic: rgb(41, 155, 96);
-  --highlight-color-list-item-marker: rgb(195, 58, 237);
-  --highlight-color-table-marker: rgb(237, 58, 118);
-  --highlight-color-attributed: rgb(48, 81, 228);
-  --highlight-color-heading-marker: rgb(62, 189, 191);
+
+  --color-background-primary: hsl(260, 6%, 97%);
+  --color-background-secondary: hsl(260, 6%, 90%);
+  --color-background-tertiary: hsl(260, 6%, 85%);
+
+  --color-foreground-primary: hsl(260, 6%, 10%);
+  --color-foreground-secondary: hsl(260, 6%, 40%);
+  --color-foreground-tertiary: hsl(260, 6%, 50%);
+
+  --color-error: #9d1212;
+  --color-placeholder: hsla(260, 6%, 50%);
+  --color-separator: hsla(260, 6%, 25%, 0.125);
+  --color-separator-input: hsl(260, 6%, 50%);
+  --color-disabled: hsl(260, 6%, 75%);
+  --color-shadow: rgba(53, 56, 58, 0.5);
+
+  --color-button-background: hsl(260, 6%, 75%);
+  --color-button-foreground: hsl(260, 6%, 10%);
+  --color-button-background-hover: hsl(260, 6%, 60%);
+  --color-button-foreground-hover: hsl(260, 6%, 10%);
+  --color-button-background-primary: hsl(260, 6%, 10%);
+  --color-button-foreground-primary: hsl(260, 6%, 95%);
+  --color-button-background-primary-hover: hsl(260, 6%, 30%);
+  --color-button-foreground-primary-hover: hsl(260, 6%, 95%);
+  --color-button-background-destructive: #b51616;
+  --color-button-foreground-destructive: white;
+  --color-button-background-destructive-hover: #e63333;
+  --color-button-foreground-destructive-hover: white;
+  --color-button-background-disabled: hsl(260, 6%, 90%);
+  --color-button-foreground-disabled: hsl(260, 6%, 75%);
+
+  --color-highlight-background: #fdfab9;
+  --color-highlight-foreground: #a08500;
+
+  --git-status-untracked-background-color: rgba(13, 149, 101, 0.15);
+  --git-status-untracked-foreground-color: rgb(13, 149, 101);
+  --git-status-added-background-color: rgba(20, 148, 29, 0.15);
+  --git-status-added-foreground-color: rgb(20, 148, 29);
+  --git-status-modified-background-color: rgba(196, 155, 18, 0.15);
+  --git-status-modified-foreground-color: rgb(196, 155, 18);
+  --git-status-deleted-background-color: rgba(135, 22, 11, 0.15);
+  --git-status-deleted-foreground-color: rgb(135, 22, 11);
+  --git-status-renamed-background-color: rgba(20, 97, 148, 0.15);
+  --git-status-renamed-foreground-color: rgb(20, 97, 148);
+
+  --color-syntax-bold: rgb(205, 123, 43);
+  --color-syntax-italic: rgb(41, 155, 96);
+  --color-syntax-list-item-marker: rgb(195, 58, 237);
+  --color-syntax-table-marker: rgb(237, 58, 118);
+  --color-syntax-attributed: rgb(48, 81, 228);
+  --color-syntax-heading-marker: rgb(62, 189, 191);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: hsl(260, 6%, 10%);
-    --markdown-background: hsl(260, 6%, 17%);
-    --color: hsl(260, 6%, 88%);
-    --error-color: #ff6b6b;
-    --separator-color: hsl(260, 6%, 24%);
-    --secondary-color: hsl(260, 6%, 69%);
-    --tertiary-color: hsl(260, 6%, 49%);
-    --input-border-color: hsl(260, 6%, 40%);
-    --button-background: hsl(260, 6%, 24%);
-    --button-background-hover: hsl(260, 6%, 30%);
-    --button-background-primary: hsl(260, 6%, 80%);
-    --button-background-primary-hover: hsl(260, 6%, 60%);
-    --button-background-destructive: #922727;
-    --button-background-destructive-hover: #ff8080;
-    --button-background-disabled: hsl(260, 6%, 35%);
-    --button-color: #fff;
-    --button-color-hover: #fff;
-    --button-color-primary: #000;
-    --button-color-primary-hover: #000;
-    --button-color-destructive: #fff;
-    --button-color-destructive-hover: #fff;
-    --button-color-disabled: hsl(260, 6%, 54%);
-    --disabled-color: #606164;
-    --highlight-color: #f2d600;
-    --highlight-background: #333300;
-    --highlight-color-bold: rgb(236, 170, 105);
-    --highlight-color-italic: rgb(130, 230, 178);
-    --highlight-color-list-item-marker: rgb(220, 133, 245);
-    --highlight-color-table-marker: rgb(244, 135, 171);
-    --highlight-color-attributed: rgb(137, 157, 244);
-    --highlight-color-heading-marker: rgb(140, 229, 231);
-    --shadow-color: rgba(0, 0, 0, 0);
+    --color-background-primary: hsl(260, 6%, 10%);
+    --color-background-secondary: hsl(260, 6%, 15%);
+    --color-background-tertiary: hsl(260, 6%, 20%);
+
+    --color-foreground-primary: hsl(260, 6%, 90%);
+    --color-foreground-secondary: hsl(260, 6%, 70%);
+    --color-foreground-tertiary: hsl(260, 6%, 50%);
+
+    --color-error: #ff6b6b;
+    --color-separator: hsla(260, 6%, 75%, 0.25);
+    --color-separator-input: hsl(260, 6%, 50%);
+    --color-disabled: hsl(260, 6%, 30%);
+    --color-shadow: rgba(0, 0, 0, 0);
+
+    --color-button-background: hsl(260, 6%, 25%);
+    --color-button-foreground: #fff;
+    --color-button-background-hover: hsl(260, 6%, 30%);
+    --color-button-foreground-hover: #fff;
+    --color-button-background-primary: hsl(260, 6%, 80%);
+    --color-button-foreground-primary: #000;
+    --color-button-background-primary-hover: hsl(260, 6%, 60%);
+    --color-button-foreground-primary-hover: #000;
+    --color-button-background-destructive: #922727;
+    --color-button-foreground-destructive: #fff;
+    --color-button-background-destructive-hover: #ff8080;
+    --color-button-foreground-destructive-hover: #fff;
+    --color-button-background-disabled: hsl(260, 6%, 15%);
+    --color-button-foreground-disabled: hsl(260, 6%, 35%);
+
+    --color-highlight-background: #333300;
+    --color-highlight-foreground: #f2d600;
+
+    --color-syntax-bold: rgb(236, 170, 105);
+    --color-syntax-italic: rgb(130, 230, 178);
+    --color-syntax-list-item-marker: rgb(220, 133, 245);
+    --color-syntax-table-marker: rgb(244, 135, 171);
+    --color-syntax-attributed: rgb(137, 157, 244);
+    --color-syntax-heading-marker: rgb(140, 229, 231);
   }
 }
 
 body {
   font-family: var(--font-sans);
-  color: var(--color);
+  color: var(--color-foreground-primary);
   margin: 0;
   padding: 1.5rem;
   line-height: 1.4;
-  background: var(--background);
+  background: var(--color-background-primary);
   z-index: 1;
 }
 
@@ -153,11 +167,11 @@ h1 {
 }
 
 h1.empty-name {
-  color: var(--tertiary-color);
+  color: var(--color-foreground-tertiary);
 }
 
 h1 .id {
-  color: var(--tertiary-color);
+  color: var(--color-foreground-tertiary);
   font-size: 0.8rem;
   font-family: var(--font-mono);
   display: block;
@@ -173,7 +187,7 @@ h2 {
 h2.h1-faded {
   margin: 2rem 0 1.5rem;
   font-size: 2.5rem;
-  color: var(--tertiary-color);
+  color: var(--color-foreground-tertiary);
 }
 
 h3 {
@@ -187,7 +201,7 @@ p {
 }
 
 a {
-  color: var(--color);
+  color: var(--color-foreground-primary);
 }
 
 a.btn,
@@ -197,12 +211,12 @@ button {
   /* padding: calc(0.5rem - var(--border-width)) calc(1rem - var(--border-width)); */
   padding: 0.5rem 1rem;
   margin: 0;
-  background: var(--button-background);
-  color: var(--button-color);
+  background: var(--color-button-background);
+  color: var(--color-button-foreground);
   font-family: var(--font-sans);
   font-size: 1rem;
   line-height: 1.4;
-  /* border: var(--border-width) solid var(--button-color); */
+  /* border: var(--border-width) solid var(--color-button-foreground); */
   border: none;
   text-decoration: none;
   cursor: pointer;
@@ -210,15 +224,15 @@ button {
 
 a.btn:hover,
 button:hover {
-  background: var(--button-background-hover);
-  color: var(--button-color-hover);
-  border-color: var(--button-color-hover);
+  background: var(--color-button-background-hover);
+  color: var(--color-button-foreground-hover);
+  border-color: var(--color-button-foreground-hover);
 }
 
 a.btn--primary,
 button.primary {
-  background: var(--button-background-primary);
-  color: var(--button-color-primary);
+  background: var(--color-button-background-primary);
+  color: var(--color-button-foreground-primary);
   padding: 0.5rem 1rem;
   border: none;
 }
@@ -232,35 +246,35 @@ button.primary {
 
 a.btn--primary:hover,
 button.primary:hover {
-  background: var(--button-background-primary-hover);
-  color: var(--button-color-primary-hover);
+  background: var(--color-button-background-primary-hover);
+  color: var(--color-button-foreground-primary-hover);
 }
 
 a.btn--destructive,
 button.destructive {
-  background: var(--button-background-destructive);
-  color: var(--button-color-destructive);
+  background: var(--color-button-background-destructive);
+  color: var(--color-button-foreground-destructive);
   padding: 0.5rem 1rem;
   border: none;
 }
 
 a.btn--destructive:hover,
 button.destructive:hover {
-  background: var(--button-background-destructive-hover);
-  color: var(--button-color-destructive-hover);
+  background: var(--color-button-background-destructive-hover);
+  color: var(--color-button-foreground-destructive-hover);
 }
 
 a.btn[aria-disabled="true"],
 button:disabled {
-  background: var(--button-background-disabled);
-  color: var(--button-color-disabled);
+  background: var(--color-button-background-disabled);
+  color: var(--color-button-foreground-disabled);
   cursor: not-allowed;
 }
 
 button.primary:disabled,
 button.destructive:disabled {
-  background: var(--button-background-disabled);
-  color: var(--button-color-disabled);
+  background: var(--color-button-background-disabled);
+  color: var(--color-button-foreground-disabled);
   cursor: not-allowed;
 }
 
@@ -268,10 +282,10 @@ input,
 textarea,
 select,
 .textarea-grow-wrap__mirror {
-  background: var(--background);
-  color: var(--color);
+  background: var(--color-background-primary);
+  color: var(--color-foreground-primary);
   font-family: var(--font-sans);
-  border: 1px solid var(--input-border-color);
+  border: 1px solid var(--color-separator-input);
   padding: 0.5rem;
   display: block;
   width: 100%;
@@ -280,18 +294,24 @@ select,
   border-radius: 0;
 }
 
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: var(--color-placeholder);
+}
+
 input:disabled,
 textarea:disabled,
 select:disabled {
-  border-color: var(--disabled-color);
-  color: var(--disabled-color);
+  border-color: var(--color-disabled);
+  color: var(--color-disabled);
 }
 
 input[aria-invalid="true"]:not(:disabled),
 textarea[aria-invalid="true"]:not(:disabled),
 select[aria-invalid="true"]:not(:disabled) {
-  border-color: var(--error-color);
-  color: var(--error-color);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 /* https://css-tricks.com/the-cleanest-trick-for-autogrowing-textareas/ */
@@ -319,7 +339,7 @@ select[aria-invalid="true"]:not(:disabled) {
   height: 1rem;
   width: 1rem;
   margin: 0.25rem 0.5rem 0 0;
-  border: 1px solid var(--color);
+  border: 1px solid var(--color-foreground-primary);
   flex: none;
   border-radius: 0;
   -webkit-appearance: none;
@@ -327,7 +347,7 @@ select[aria-invalid="true"]:not(:disabled) {
 }
 
 :is(input[type="checkbox"], input[type="radio"]):disabled {
-  border-color: var(--disabled-color);
+  border-color: var(--color-disabled);
 }
 
 input[type="radio"] {
@@ -335,11 +355,11 @@ input[type="radio"] {
 }
 
 :is(input[type="checkbox"], input[type="radio"]):checked {
-  background: var(--color);
+  background: var(--color-foreground-primary);
 }
 
 :is(input[type="checkbox"], input[type="radio"]):checked:disabled {
-  background: var(--disabled-color);
+  background: var(--color-disabled);
 }
 
 :is(input[type="checkbox"], input[type="radio"]):checked::before {
@@ -352,7 +372,7 @@ input[type="checkbox"]:checked::before {
   border-style: solid;
   width: 0.8rem;
   height: 0.4rem;
-  border-color: var(--background);
+  border-color: var(--color-background-primary);
   transform: rotate(-45deg);
   margin: calc(-0.325rem) 0 0 calc(-0.4rem);
 }
@@ -360,7 +380,7 @@ input[type="checkbox"]:checked::before {
 input[type="radio"]:checked::before {
   width: 0.5rem;
   height: 0.5rem;
-  background-color: var(--background);
+  background-color: var(--color-background-primary);
   border-radius: 50%;
   margin: -0.25rem;
 }
@@ -371,7 +391,7 @@ input[type="radio"]:checked::before {
 
 :is(input[type="checkbox"], input[type="radio"]):disabled + label,
 :is(input[type="checkbox"], input[type="radio"]):disabled + * label {
-  color: var(--disabled-color);
+  color: var(--color-disabled);
 }
 
 .field--option {
@@ -399,22 +419,22 @@ input[type="radio"]:checked::before {
   height: 0.5rem;
   border-width: 0 1px 1px 0;
   border-style: solid;
-  border-color: var(--color);
+  border-color: var(--color-foreground-primary);
   transform: rotate(45deg);
   pointer-events: none;
 }
 
 .select-wrapper:has(> select:disabled)::after {
-  border-color: var(--tertiary-color);
+  border-color: var(--color-foreground-tertiary);
 }
 
 select.no-selection {
-  color: var(--tertiary-color);
+  color: var(--color-foreground-tertiary);
 }
 
 select:disabled {
-  color: var(--disabled-color);
-  border-color: var(--disabled-color);
+  color: var(--color-disabled);
+  border-color: var(--color-disabled);
 }
 
 select {
@@ -477,7 +497,7 @@ select {
   display: grid;
   gap: 0.125rem 1.5rem;
   padding: 0.5rem 0;
-  border-top: 1px solid var(--separator-color);
+  border-top: 1px solid var(--color-separator);
   grid-template-columns: 1fr auto;
   grid-template-rows: auto 1fr;
   grid-template-areas: "title side" "subtitle side" ". side";
@@ -499,8 +519,8 @@ select {
 }
 
 .entries-item--created {
-  color: var(--highlight-color);
-  background: var(--highlight-background);
+  color: var(--color-highlight-foreground);
+  background: var(--color-highlight-background);
 }
 
 .entries-item h2 {
@@ -522,7 +542,7 @@ select {
 }
 
 .entries-item__title p {
-  color: var(--secondary-color);
+  color: var(--color-foreground-secondary);
   margin: 0.125rem 0 0;
 }
 
@@ -531,7 +551,7 @@ select {
 }
 
 .entries-item__subtitle {
-  color: var(--secondary-color);
+  color: var(--color-foreground-secondary);
   margin: 0;
   padding: 0;
   white-space: nowrap;
@@ -587,7 +607,7 @@ select {
 
 .validation-errors {
   margin: 0.5rem 0 0;
-  color: var(--error-color);
+  color: var(--color-error);
   font-size: 0.8rem;
 }
 
@@ -601,18 +621,18 @@ select {
 }
 
 .field--container {
-  border: 1px solid var(--separator-color);
-  /* border-left-color: var(--color); */
+  border: 1px solid var(--color-separator);
+  /* border-left-color: var(--color-foreground-primary); */
   border-left-width: 4px;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
 
 .field--container.field--disabled {
-  color: var(--disabled-color);
+  color: var(--color-disabled);
 }
 
 .field--container.field--disabled .comment {
-  color: var(--disabled-color);
+  color: var(--color-disabled);
 }
 
 form > .field--container {
@@ -630,7 +650,7 @@ form > .field--container {
 .field--container > ul > li,
 .field--container > ol > li {
   padding-block: 0.5rem;
-  border-top: 1px solid var(--separator-color);
+  border-top: 1px solid var(--color-separator);
   display: block;
 }
 
@@ -671,37 +691,37 @@ form > .field--container {
 .editor--markdown textarea {
   color: transparent;
   background: transparent;
-  caret-color: var(--color);
+  caret-color: var(--color-foreground-primary);
 }
 
 .editor-highlighting strong {
-  color: var(--highlight-color-bold);
+  color: var(--color-syntax-bold);
 }
 
 .editor-highlighting em {
-  color: var(--highlight-color-italic);
+  color: var(--color-syntax-italic);
 }
 
 .editor-highlighting .list-item-marker {
-  color: var(--highlight-color-list-item-marker);
+  color: var(--color-syntax-list-item-marker);
 }
 
 .editor-highlighting .table-marker {
-  color: var(--highlight-color-table-marker);
+  color: var(--color-syntax-table-marker);
 }
 
 .editor-highlighting .heading-marker {
-  color: var(--highlight-color-heading-marker);
+  color: var(--color-syntax-heading-marker);
 }
 
 .preview .attributed {
   text-decoration-line: underline;
   text-decoration-style: dashed;
-  text-decoration-color: var(--highlight-color-attributed);
+  text-decoration-color: var(--color-syntax-attributed);
 }
 
 .editor-highlighting .attributed {
-  color: var(--highlight-color-attributed);
+  color: var(--color-syntax-attributed);
 }
 
 .editor-highlighting .attributed__name {
@@ -714,18 +734,18 @@ form > .field--container {
 
 .help {
   font-size: 0.8rem;
-  color: var(--secondary-color);
+  color: var(--color-foreground-secondary);
   margin: 0.25rem 0 0;
 }
 
 :disabled + .help,
 :disabled + .help a {
-  color: var(--disabled-color);
+  color: var(--color-disabled);
 }
 
 .preview {
   padding: 1rem;
-  background: var(--markdown-background);
+  background: var(--color-background-secondary);
   flex: 1 1 0;
 }
 
@@ -746,7 +766,11 @@ form > .field--container {
   margin: 0.5rem 0;
 }
 
-.preview table :is(th, td) {
+.preview table caption {
+  padding: 0.25rem 0;
+}
+
+.preview table :is(th, td, caption) {
   vertical-align: top;
   padding: 0.25rem 0.5rem;
 }
@@ -759,8 +783,12 @@ form > .field--container {
   padding-right: 0;
 }
 
-.preview table tbody tr {
-  border-top: 1px solid var(--tertiary-color);
+.preview table tr {
+  border-top: 1px solid var(--color-separator);
+}
+
+.preview table thead:first-child tr {
+  border-top: none;
 }
 
 .container-item {
@@ -781,7 +809,7 @@ form > .field--container {
 }
 
 .container-item-title .id {
-  color: var(--tertiary-color);
+  color: var(--color-foreground-tertiary);
   font-size: 0.8rem;
   font-family: var(--font-mono);
 }
@@ -810,7 +838,7 @@ button[type="submit"] {
 }
 
 .description {
-  color: var(--secondary-color);
+  color: var(--color-foreground-secondary);
 }
 
 :is(.header-with-btns, h1) + .description {
@@ -820,7 +848,7 @@ button[type="submit"] {
 .comment {
   font-size: 0.8rem;
   line-height: 1.4;
-  color: var(--secondary-color);
+  color: var(--color-foreground-secondary);
   margin: 0.5rem 0 0;
   max-width: 55em;
 }
@@ -843,7 +871,7 @@ main:has(.form-footer) {
   position: sticky;
   bottom: 0;
   padding-bottom: 1.5rem;
-  background: var(--background);
+  background: var(--color-background-primary);
 }
 
 .git-status {
@@ -861,28 +889,28 @@ main:has(.form-footer) {
 }
 
 .git-status.git-status--U {
-  color: var(--git-status-untracked-color);
-  background: var(--git-status-untracked-background);
+  color: var(--git-status-untracked-foreground-color);
+  background: var(--git-status-untracked-background-color);
 }
 
 .git-status.git-status--A {
-  color: var(--git-status-added-color);
-  background: var(--git-status-added-background);
+  color: var(--git-status-added-foreground-color);
+  background: var(--git-status-added-background-color);
 }
 
 .git-status.git-status--M {
-  color: var(--git-status-modified-color);
-  background: var(--git-status-modified-background);
+  color: var(--git-status-modified-foreground-color);
+  background: var(--git-status-modified-background-color);
 }
 
 .git-status.git-status--D {
-  color: var(--git-status-deleted-color);
-  background: var(--git-status-deleted-background);
+  color: var(--git-status-deleted-foreground-color);
+  background: var(--git-status-deleted-background-color);
 }
 
 .git-status.git-status--R {
-  color: var(--git-status-renamed-color);
-  background: var(--git-status-renamed-background);
+  color: var(--git-status-renamed-foreground-color);
+  background: var(--git-status-renamed-background-color);
 }
 
 aside.git {
@@ -898,7 +926,7 @@ aside.git h2 {
   aside.git {
     display: block;
     width: 30rem;
-    border-left: 1px solid var(--separator-color);
+    border-left: 1px solid var(--color-separator);
     padding-left: 1rem;
   }
 
@@ -956,7 +984,7 @@ aside.git h2 {
 }
 
 .git-files p.no-changes {
-  color: var(--tertiary-color);
+  color: var(--color-foreground-tertiary);
   margin: 0;
 }
 
@@ -979,19 +1007,19 @@ aside.git h2 {
 }
 
 .branch__origin {
-  color: var(--secondary-color);
+  color: var(--color-foreground-secondary);
 }
 
 .branch__current-indicator {
-  color: var(--secondary-color);
+  color: var(--color-foreground-secondary);
   flex: none;
 }
 
 dialog {
-  background: var(--background);
-  color: var(--color);
+  background: var(--color-background-primary);
+  color: var(--color-foreground-primary);
   border: none;
-  box-shadow: 0 0.5rem 2rem var(--shadow-color);
+  box-shadow: 0 0.5rem 2rem var(--color-shadow);
   padding: 1.6rem 1.5rem;
   max-height: calc(100% - 2rem);
   max-width: calc(100% - 2rem);
