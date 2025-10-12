@@ -181,13 +181,12 @@ const parsedAttributesLength = (rawAttributes: RawAttribute[]): number =>
 const attributedRule: InlineRule = {
   pattern:
     /(?<!\\)\^\[(.*?[^\\])\]\(((?:\w+: *(?:true|false|\d+(?:\.\d+)?|"(.*?)(?<!\\)"|'(.*?)(?<!\\)'))(?:, *\w+: *(?:true|false|\d+(?:\.\d+)?|"(.*?)(?<!\\)"|'(.*?)(?<!\\)'))*)\)/,
-  map: (result, parseInside) => ({
+  map: ([_res, content = "", attributesText = ""], parseInside) => ({
     kind: "attributed",
-    attributes: mapAttributesToObject(parseAttributes(result[2] ?? "")),
-    content: parseInside(result[1] ?? ""),
+    attributes: mapAttributesToObject(parseAttributes(attributesText)),
+    content: parseInside(content),
   }),
-  mapHighlighting: (result, parseInside) => {
-    const attributesText = result[2] ?? ""
+  mapHighlighting: ([_res, content = "", attributesText = ""], parseInside) => {
     const attributes = parseAttributes(attributesText)
     const length = parsedAttributesLength(attributes)
     const unparsedText: InlineMarkdownNode[] =
@@ -199,7 +198,7 @@ const attributedRule: InlineRule = {
       attributes: mapAttributesToObject(attributes),
       content: [
         textNode("^["),
-        ...parseInside(result[1] ?? ""),
+        ...parseInside(content),
         textNode("]("),
         ...mapAttributesToNodes(attributes),
         ...unparsedText,
@@ -217,7 +216,7 @@ const textNode = (content: string): TextNode => ({
 const parseEscapedCharacters = (text: string) => text.replace(/\\([*_`[\]()\\])/g, "$1")
 
 const textRule: InlineRule = {
-  pattern: /.+/,
+  pattern: /.+/s,
   map: result => ({
     kind: "text",
     content: parseEscapedCharacters(result[0]),
@@ -349,13 +348,13 @@ const listRule: BlockRule = {
 
 const paragraphRule: BlockRule = {
   pattern: /^((?:[^\n]+?)(?:\n[^\n]+?)*)(\n{2,}|\s*$)/,
-  map: result => ({
+  map: ([_res, content = "", _trailingWhitespace]) => ({
     kind: "paragraph",
-    content: parseInlineMarkdown(result[1] ?? "", false),
+    content: parseInlineMarkdown(content, false),
   }),
-  mapHighlighting: result => [
-    ...parseInlineMarkdown(result[1] ?? "", true),
-    ...nodesForTrailingWhitespace(result[2]),
+  mapHighlighting: ([_res, content = "", trailingWhitespace]) => [
+    ...parseInlineMarkdown(content, true),
+    ...nodesForTrailingWhitespace(trailingWhitespace),
   ],
 }
 
@@ -544,40 +543,76 @@ const parseForBlockRules = <R>(
   }
 }
 
-export const reduceSyntaxNodes = (nodes: BlockSyntaxMarkdownNode[]): BlockSyntaxMarkdownNode[] =>
-  nodes.reduce<BlockSyntaxMarkdownNode[]>((reducedNodes, node) => {
-    const lastNode = reducedNodes.at(-1)
-    if (node.kind === lastNode?.kind) {
-      switch (lastNode.kind) {
-        case "bold":
-        case "italic":
-          lastNode.content = [
-            ...lastNode.content,
-            ...(node as BoldMarkdownNode | ItalicMarkdownNode).content,
-          ]
-          break
-        case "code":
-        case "text":
-        case "listitemmarker":
-        case "tablemarker":
-        case "headingmarker":
-          lastNode.content += (node as CodeMarkdownNode | TextNode | SyntaxNode).content
-          break
-        case "link":
-        case "attributed":
-          reducedNodes.push({ ...node })
-          break
-        default:
-          return assertExhaustive(lastNode)
-      }
-    } else {
-      reducedNodes.push({ ...node })
-    }
-    return reducedNodes
-  }, [])
+type BlockSyntaxMarkdownNodeByKind = {
+  bold: BoldMarkdownNode
+  italic: ItalicMarkdownNode
+  code: CodeMarkdownNode
+  link: LinkMarkdownNode
+  attributed: AttributedStringMarkdownNode
+  text: TextNode
+  listitemmarker: ListItemMarkerSyntaxNode
+  tablemarker: TableMarkerSyntaxNode
+  headingmarker: HeadingMarkerSyntaxNode
+}
 
 export const parseBlockMarkdown = (text: string): BlockMarkdownNode[] =>
   parseForBlockRules(blockRules, text, parseActiveBlockRule)
 
 export const parseBlockMarkdownForSyntaxHighlighting = (text: string): BlockSyntaxMarkdownNode[] =>
   reduceSyntaxNodes(parseForBlockRules(blockRules, text, parseActiveBlockSyntaxRule))
+
+export const reduceSyntaxNodes = <T extends BlockSyntaxMarkdownNode>(nodes: T[]): T[] =>
+  nodes.reduce<T[]>((reducedNodes, node, index) => {
+    const lastNode = index > 0 ? reducedNodes[reducedNodes.length - 1] : undefined
+    const newLastNode = lastNode ? mergeSyntaxNodes(lastNode, node) : null
+
+    if (newLastNode) {
+      reducedNodes[reducedNodes.length - 1] = reduceSyntaxNode(newLastNode)
+    } else {
+      reducedNodes.push(reduceSyntaxNode(node))
+    }
+    return reducedNodes
+  }, [])
+
+type MergeFn<T> = <U extends T>(a: U, b: U) => U
+
+const reduceSyntaxNode = <T extends BlockSyntaxMarkdownNode>(node: T): T => {
+  switch (node.kind) {
+    case "bold":
+    case "italic":
+      return { ...node, content: reduceSyntaxNodes(node.content) }
+    case "code":
+    case "link":
+    case "attributed":
+    case "text":
+    case "listitemmarker":
+    case "tablemarker":
+    case "headingmarker":
+      return node
+    default:
+      return assertExhaustive(node)
+  }
+}
+
+const syntaxNodeMergeRules: {
+  [K in BlockSyntaxMarkdownNode["kind"]]: MergeFn<BlockSyntaxMarkdownNodeByKind[K]> | null
+} = {
+  bold: (a, b) => ({ ...a, content: [...a.content, ...b.content] }),
+  italic: (a, b) => ({ ...a, content: [...a.content, ...b.content] }),
+  code: (a, b) => ({ ...a, content: a.content + b.content }),
+  text: (a, b) => ({ ...a, content: a.content + b.content }),
+  listitemmarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  tablemarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  headingmarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  link: null,
+  attributed: null,
+}
+
+const mergeSyntaxNodes = <T extends BlockSyntaxMarkdownNode>(lastNode: T, node: T) => {
+  if (lastNode.kind !== node.kind) {
+    return null
+  }
+
+  const mergeFn = syntaxNodeMergeRules[lastNode.kind] as MergeFn<T> | null
+  return mergeFn?.(lastNode, node) ?? null
+}

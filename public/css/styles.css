@@ -81,6 +81,7 @@
     --button-color-destructive: #fff;
     --button-color-destructive-hover: #fff;
     --button-color-disabled: hsl(260, 6%, 54%);
+    --disabled-color: #606164;
     --highlight-color: #f2d600;
     --highlight-background: #333300;
     --highlight-color-bold: rgb(236, 170, 105);
@@ -722,43 +723,43 @@ form > .field--container {
   color: var(--disabled-color);
 }
 
-.field--string .preview {
+.preview {
   padding: 1rem;
   background: var(--markdown-background);
   flex: 1 1 0;
 }
 
-.field--string .preview p {
+.preview p {
   margin: 0.5rem 0 0;
 }
 
-.field--string .preview > :first-child {
+.preview > :first-child {
   margin-top: 0;
 }
 
-.field--string .preview > :last-child {
+.preview > :last-child {
   margin-bottom: 0;
 }
 
-.field--string .preview table {
+.preview table {
   border-collapse: collapse;
   margin: 0.5rem 0;
 }
 
-.field--string .preview table :is(th, td) {
+.preview table :is(th, td) {
   vertical-align: top;
   padding: 0.25rem 0.5rem;
 }
 
-.field--string .preview table :is(th, td):first-child {
+.preview table :is(th, td):first-child {
   padding-left: 0;
 }
 
-.field--string .preview table :is(th, td):last-child {
+.preview table :is(th, td):last-child {
   padding-right: 0;
 }
 
-.field--string .preview table tbody tr {
+.preview table tbody tr {
   border-top: 1px solid var(--tertiary-color);
 }
 
@@ -886,12 +887,7 @@ main:has(.form-footer) {
 
 aside.git {
   grid-area: aside;
-  position: absolute;
-  top: 5rem;
-  right: 0;
-  width: 30rem;
-  max-width: calc(100% - 1.5rem);
-  max-height: calc(100% - 6.5rem);
+  display: none;
 }
 
 aside.git h2 {
@@ -900,14 +896,10 @@ aside.git h2 {
 
 @media (min-width: 80rem) {
   aside.git {
+    display: block;
     width: 30rem;
     border-left: 1px solid var(--separator-color);
     padding-left: 1rem;
-    top: unset;
-    right: unset;
-    position: static;
-    max-height: none;
-    max-width: none;
   }
 
   aside.git h2 {
@@ -919,103 +911,80 @@ aside.git h2 {
   }
 }
 
-aside.git h3 {
+.git-files h3 {
   font-size: 1.25rem;
   margin: 0;
 }
 
-aside.git ul {
+.git-files ul {
   list-style-type: " ";
   padding: 0;
   margin: 0;
   display: block;
 }
 
-aside.git .git-entity-list-item > .title {
-  margin: 1rem 0 0.5rem;
+.git-files .git-entity-list-item > .title {
+  margin: 1.5rem 0 0.75rem;
 }
 
-aside.git .git-instance-list-item {
-  display: flex;
-  justify-content: space-between;
-  margin: 0.25rem 0 0;
-  gap: 0.25rem;
-}
-
-aside.git li .title {
+.git-files li .title {
   display: block;
   margin: 0.25rem 0;
   flex: 1 1 0;
 }
 
-aside.git li.git-entity-list-item > .title {
+.git-files li.git-entity-list-item > .title {
   font-weight: 600;
 }
 
-aside.git li button {
+.git-files li button {
   padding: 0 0.5rem;
   line-height: 1.75rem;
   height: 1.75rem;
 }
 
-aside.git .git-section-title {
+.git-files .git-section-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
-  margin: 1rem 0 0.5rem;
+  margin: 2rem 0 1rem;
 }
 
-aside.git .git-section-title h2 {
+.git-files .git-section-title h2 {
   margin: 0;
 }
 
-aside.git p.no-changes {
+.git-files p.no-changes {
   color: var(--tertiary-color);
   margin: 0;
 }
 
-aside.git .commit,
-aside.git .sync,
-aside.git .branch {
+.git-branches ul {
+  padding: 0;
+  margin: 0;
+}
+
+.git-branches ul li {
   display: flex;
-  gap: 0.5rem;
+  align-items: start;
+  margin-top: 0.5rem;
 }
 
-aside.git .sync,
-aside.git .branch {
-  margin-bottom: 1rem;
-}
-
-aside.git .commit input,
-aside.git .branch .select-wrapper {
+.branch__full-name {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
   flex: 1 1 0;
 }
 
-.git-overlay {
-  display: none;
-  position: absolute;
-  right: 1.5rem;
-  box-shadow: 0 0.5rem 2rem var(--shadow-color);
-  z-index: 1000;
-  padding: 1rem;
-  background: var(--background);
-  overflow-y: auto;
-  max-height: calc(90vh - 5rem);
+.branch__origin {
+  color: var(--secondary-color);
 }
 
-@media (min-width: 80rem) {
-  .git-overlay {
-    display: block;
-    position: static;
-    box-shadow: none;
-    padding: 0.5rem 0 0;
-    max-height: none;
-  }
-}
-
-.git-overlay.git-overlay--open {
-  display: block;
+.branch__current-indicator {
+  color: var(--secondary-color);
+  flex: none;
 }
 
 dialog {
@@ -1026,14 +995,24 @@ dialog {
   padding: 1.6rem 1.5rem;
   max-height: calc(100% - 2rem);
   max-width: calc(100% - 2rem);
+  overscroll-behavior: contain;
 }
 
 dialog::backdrop {
   background: rgba(0, 0, 0, 0.5);
+  transition: background 0.25s ease-in-out;
+}
+
+dialog header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.6rem;
 }
 
 dialog header :is(h1, h2, h3, h4, h5, h6) {
   margin: 0;
+  flex: 1 1 0;
 }
 
 dialog.settings {
@@ -1049,6 +1028,17 @@ dialog.settings section.locale-settings ol li:not(:first-child) {
   margin-top: 0.5rem;
 }
 
+dialog.git {
+  max-width: min(calc(100% - 2rem), 36rem);
+  width: 100%;
+}
+
+@media (min-width: 80rem) {
+  dialog.git header .git__tab--files {
+    display: none;
+  }
+}
+
 .locale-content {
   display: flex;
   gap: 0.25rem;
@@ -1057,6 +1047,48 @@ dialog.settings section.locale-settings ol li:not(:first-child) {
 
 .locale-content span {
   flex: 1 1 0;
+}
+
+.form-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-block: 1rem;
+}
+
+.form-row--sides {
+  justify-content: space-between;
+}
+
+.form-row--compact {
+  gap: 0.25rem;
+  margin-block: 0.5rem;
+}
+
+.form-row__group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form-row--compact .form-row__group {
+  gap: 0.25rem;
+}
+
+.form-row__text {
+  padding-block: 0.5rem;
+}
+
+.form-row--compact .form-row__text {
+  padding-block: 0.175rem;
+}
+
+.form-row__fill {
+  flex: 1 1 0;
+}
+
+.form-row--compact button {
+  padding: 0.175rem 0.5rem;
+  height: 1.75rem;
 }
 
 .loading-overlay {

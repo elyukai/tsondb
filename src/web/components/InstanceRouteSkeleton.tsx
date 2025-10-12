@@ -48,7 +48,7 @@ export type InstanceRouteSkeletonOnSubmitHandler = (values: {
   setInstanceContent: Dispatch<SetStateAction<unknown>>
   setCustomId: Dispatch<SetStateAction<string>>
   getDeclFromDeclName: GetDeclFromDeclName
-  updateGitStatus?: () => Promise<void>
+  updateLocalGitState?: () => Promise<void>
 }) => Promise<void>
 
 export type InstanceRouteSkeletonTitleBuilder = (values: {
@@ -132,7 +132,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           setCustomId,
           setInstanceContent,
           childInstances,
-          updateGitStatus: client?.update,
+          updateLocalGitState: client?.updateLocalState,
         }),
       ).catch((error: unknown) => {
         console.error("Error submitting instance data:", error)

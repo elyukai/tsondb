@@ -1,4 +1,4 @@
-import type { FunctionComponent } from "preact"
+import type { ComponentChildren } from "preact"
 import { useLocation } from "preact-iso"
 import type { InstanceContainerOverview } from "../../../shared/utils/instances.ts"
 import { GitStatusIndicator } from "./GitStatusIndicator.tsx"
@@ -9,16 +9,20 @@ export type GitEntityOverview = [
   instances: InstanceContainerOverview[],
 ]
 
-type Props = {
+type Props<A extends string> = {
   filesByEntity: GitEntityOverview[]
-  fileButtonLabel: string
-  onFileButtonClick: (entityName: string, instance: InstanceContainerOverview) => Promise<void>
+  fileButtons: { label: string; action: A }[]
+  onFileButtonClick: (
+    entityName: string,
+    instance: InstanceContainerOverview,
+    action: A,
+  ) => Promise<void>
 }
 
-export const GitFileList: FunctionComponent<Props> = ({
+export const GitFileList: <A extends string>(props: Props<A>) => ComponentChildren = ({
   filesByEntity,
   onFileButtonClick,
-  fileButtonLabel,
+  fileButtons,
 }) => {
   const { route } = useLocation()
   return filesByEntity.length === 0 ? (
@@ -30,8 +34,8 @@ export const GitFileList: FunctionComponent<Props> = ({
           <span class="title">{entityNamePlural}</span>
           <ul class="git-instance-list">
             {instances.map(instance => (
-              <li key={instance.id} class="git-instance-list-item">
-                <span class="title">{instance.displayName}</span>
+              <li key={instance.id} class="form-row form-row--compact git-instance-list-item">
+                <span class="title form-row__fill">{instance.displayName}</span>
                 <GitStatusIndicator status={instance.gitStatus} />
                 <button
                   onClick={() => {
@@ -40,13 +44,16 @@ export const GitFileList: FunctionComponent<Props> = ({
                 >
                   View
                 </button>
-                <button
-                  onClick={() => {
-                    void onFileButtonClick(entityName, instance)
-                  }}
-                >
-                  {fileButtonLabel}
-                </button>
+                {fileButtons.map(({ label, action }) => (
+                  <button
+                    key={label}
+                    onClick={() => {
+                      void onFileButtonClick(entityName, instance, action)
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
               </li>
             ))}
           </ul>

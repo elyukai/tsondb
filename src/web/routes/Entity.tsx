@@ -14,6 +14,7 @@ import { GitStatusIndicator } from "../components/git/GitStatusIndicator.tsx"
 import { Layout } from "../components/Layout.ts"
 import { ConfigContext } from "../context/config.ts"
 import { EntitiesContext } from "../context/entities.ts"
+import { GitClientContext } from "../context/gitClient.ts"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
 import { useSetting } from "../hooks/useSettings.ts"
@@ -34,6 +35,7 @@ export const Entity: FunctionalComponent = () => {
   const [searchText, setSearchText] = useState("")
   const entityFromRoute = useEntityFromRoute()
   const config = useContext(ConfigContext)
+  const gitClient = useContext(GitClientContext)
   const { reloadEntities } = useContext(EntitiesContext)
   const { declaration: entity, isLocaleEntity } = entityFromRoute ?? {}
   const [instances, reloadInstances] = useMappedAPIResource(
@@ -81,7 +83,7 @@ export const Entity: FunctionalComponent = () => {
   }
 
   const lowerSearchText = searchText.toLowerCase()
-  const filteredInstances =
+  const filteredInstances = (
     searchText.length === 0
       ? instances
       : instances.filter(
@@ -89,6 +91,10 @@ export const Entity: FunctionalComponent = () => {
             instance.id.includes(searchText) ||
             instance.displayName.toLowerCase().includes(lowerSearchText),
         )
+  ).map(instance => ({
+    ...instance,
+    gitStatus: gitClient?.getGitStatusOfInstance(entity.name, instance.id),
+  }))
 
   const instancesByLocale = Object.groupBy(
     filteredInstances,

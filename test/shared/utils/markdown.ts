@@ -7,6 +7,7 @@ import type {
 import {
   parseBlockMarkdown,
   parseBlockMarkdownForSyntaxHighlighting,
+  reduceSyntaxNodes,
 } from "../../../src/shared/utils/markdown.ts"
 
 describe("parseBlockMarkdown", () => {
@@ -232,6 +233,29 @@ describe("parseBlockMarkdown", () => {
         ],
       },
     ])
+  })
+
+  it("parses a single-line paragraph for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting("This is **bold**"),
+      [
+        { kind: "text", content: "This is " },
+        { kind: "bold", content: [{ kind: "text", content: "**bold**" }] },
+      ],
+    )
+  })
+
+  it("parses a multi-line paragraph for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting("This is **bold**.\nThis is also **bold**."),
+      [
+        { kind: "text", content: "This is " },
+        { kind: "bold", content: [{ kind: "text", content: "**bold**" }] },
+        { kind: "text", content: ".\nThis is also " },
+        { kind: "bold", content: [{ kind: "text", content: "**bold**" }] },
+        { kind: "text", content: "." },
+      ],
+    )
   })
 
   it("parses multiple blocks", () => {
@@ -581,6 +605,94 @@ This is a paragraph under heading 3.
         { kind: "text", content: "Heading 2\n\nThis is a paragraph under heading 2.\n\n" },
         { kind: "headingmarker", content: "### " },
         { kind: "text", content: "Heading 3\n\nThis is a paragraph under heading 3.\n" },
+      ],
+    )
+  })
+})
+
+describe("reduceSyntaxNodes", () => {
+  it("reduces adjacent text nodes into a single text node", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      reduceSyntaxNodes([
+        {
+          content: "# ",
+          kind: "headingmarker",
+        },
+        {
+          content: "Heading 1\n\n",
+          kind: "text",
+        },
+        {
+          content: "This is a paragraph under heading 1.",
+          kind: "text",
+        },
+        {
+          content: "\n\n",
+          kind: "text",
+        },
+        {
+          content: "## ",
+          kind: "headingmarker",
+        },
+        {
+          content: "Heading 2",
+          kind: "text",
+        },
+        {
+          content: "\n\n",
+          kind: "text",
+        },
+        {
+          content: "This is a paragraph under heading 2.",
+          kind: "text",
+        },
+        {
+          content: "\n\n",
+          kind: "text",
+        },
+        {
+          content: "### ",
+          kind: "headingmarker",
+        },
+        {
+          content: "Heading 3",
+          kind: "text",
+        },
+        {
+          content: "\n\n",
+          kind: "text",
+        },
+        {
+          content: "This is a paragraph under heading 3.",
+          kind: "text",
+        },
+        {
+          content: "\n",
+          kind: "text",
+        },
+      ]),
+      [
+        { kind: "headingmarker", content: "# " },
+        { kind: "text", content: "Heading 1\n\nThis is a paragraph under heading 1.\n\n" },
+        { kind: "headingmarker", content: "## " },
+        { kind: "text", content: "Heading 2\n\nThis is a paragraph under heading 2.\n\n" },
+        { kind: "headingmarker", content: "### " },
+        { kind: "text", content: "Heading 3\n\nThis is a paragraph under heading 3.\n" },
+      ],
+    )
+  })
+
+  it("does not reduce non-adjacent text nodes into a single text node", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      reduceSyntaxNodes([
+        { kind: "text", content: "This is a " },
+        { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+        { kind: "text", content: " paragraph." },
+      ]),
+      [
+        { kind: "text", content: "This is a " },
+        { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+        { kind: "text", content: " paragraph." },
       ],
     )
   })

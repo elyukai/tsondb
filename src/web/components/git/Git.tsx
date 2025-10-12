@@ -2,92 +2,105 @@ import type { FunctionComponent } from "preact"
 import { useContext, useState } from "preact/hooks"
 import { GitContext } from "../../context/git.ts"
 import { GitClientContext } from "../../context/gitClient.ts"
-import { GitFileList } from "./GitFileList.tsx"
+import { ModalDialog } from "../ModalDialog.tsx"
+import { GitBranchManager } from "./GitBranchManager.tsx"
+import { GitFileManager } from "./GitFileManager.tsx"
+
+type GitMode = "files" | "branches"
 
 export const Git: FunctionComponent = () => {
-  const [isOpen] = useContext(GitContext)
+  const [isOpen, setIsOpen] = useContext(GitContext)
+  const [mode, setMode] = useState<GitMode>("files")
   const client = useContext(GitClientContext)
-  const [commitMessage, setCommitMessage] = useState("")
 
   if (!client || !client.isRepo) {
     return null
   }
 
-  const commit = () => {
-    void client.commit(commitMessage)
-  }
-
-  const onCreateBranch = () => {
-    const newBranchName = prompt("Enter new branch name:")
-
-    if (newBranchName !== null) {
-      void client.createBranch(newBranchName)
-    }
-  }
-
-  const onSwitchBranch = (event: preact.TargetedEvent<HTMLSelectElement>) => {
-    void client.switchBranch(event.currentTarget.value)
-  }
-
   return (
-    <aside class="git">
-      <h2 class="h1-faded">Version Control</h2>
-      <div className={`git-overlay ${isOpen ? "git-overlay--open" : ""}`}>
-        <div class="sync">
-          <button onClick={() => void client.push()}>
-            Push{client.commitsAhead > 0 ? ` (${client.commitsAhead.toString()})` : ""}
-          </button>
-          <button onClick={() => void client.pull()}>
-            Pull{client.commitsBehind > 0 ? ` (${client.commitsBehind.toString()})` : ""}
-          </button>
-        </div>
-        <div className="branch">
-          <div className="select-wrapper">
-            <select value={client.currentBranch} onInput={onSwitchBranch}>
-              {client.allBranches.map(branch => (
-                <option key={branch} value={branch}>
-                  {branch}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button onClick={onCreateBranch}>New branch</button>
-        </div>
-        <div class="commit">
-          <input
-            type="text"
-            value={commitMessage}
-            onInput={event => {
-              setCommitMessage(event.currentTarget.value)
-            }}
-            placeholder="added X to instance Y, …"
-          />
+    <>
+      <ModalDialog
+        open={isOpen}
+        class="git"
+        closedBy="any"
+        onClose={() => {
+          setIsOpen(false)
+        }}
+      >
+        <header>
+          <h2>
+            {(() => {
+              switch (mode) {
+                case "branches":
+                  return "Branches"
+                case "files":
+                  return "Files"
+                default:
+                  return null
+              }
+            })()}
+          </h2>
+          {mode === "branches" ? (
+            <button
+              onClick={() => {
+                void client.fetch()
+              }}
+            >
+              Fetch
+            </button>
+          ) : null}
+          {mode !== "files" ? (
+            <button
+              class="git__tab git__tab--files"
+              onClick={() => {
+                setMode("files")
+              }}
+            >
+              View Files
+            </button>
+          ) : null}
+          {mode !== "branches" ? (
+            <button
+              class="git__tab git__tab--branches"
+              onClick={() => {
+                setMode("branches")
+              }}
+            >
+              Manage Branches
+            </button>
+          ) : null}
           <button
-            onClick={commit}
-            disabled={commitMessage.length === 0 || client.indexFiles.length === 0}
+            class="close"
+            onClick={() => {
+              setIsOpen(false)
+            }}
           >
-            Commit
+            Close
           </button>
-        </div>
-        <div className="git-section-title">
-          <h3>Files to be committed</h3>
-          <button onClick={() => void client.unstageAll()}>Unstage all</button>
-        </div>
-        <GitFileList
-          filesByEntity={client.indexFiles}
-          fileButtonLabel="Unstage"
-          onFileButtonClick={client.unstage}
-        />
-        <div className="git-section-title">
-          <h3>Working tree changes</h3>
-          <button onClick={() => void client.stageAll()}>Stage all</button>
-        </div>
-        <GitFileList
-          filesByEntity={client.workingTreeFiles}
-          fileButtonLabel="Stage"
-          onFileButtonClick={client.stage}
-        />
-      </div>
-    </aside>
+        </header>
+        {(() => {
+          switch (mode) {
+            case "branches":
+              return <GitBranchManager client={client} />
+            case "files":
+              return <GitFileManager client={client} />
+            default:
+              return null
+          }
+        })()}
+      </ModalDialog>
+      {isOpen && mode === "files" ? null : (
+        <aside class="git">
+          <h2 class="h1-faded">Version Control</h2>
+          <GitFileManager
+            client={client}
+            manageBranches={() => {
+              setIsOpen(true)
+              setMode("branches")
+            }}
+          />
+        </aside>
+      )}
+    </>
   )
 }

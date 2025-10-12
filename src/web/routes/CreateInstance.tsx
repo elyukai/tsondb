@@ -35,7 +35,7 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
   setCustomId,
   route,
   getDeclFromDeclName,
-  updateGitStatus,
+  updateLocalGitState,
 }) => {
   try {
     if (buttonName) {
@@ -51,7 +51,7 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
         isLocaleEntity ? customId : undefined,
       )
 
-      await updateGitStatus?.()
+      await updateLocalGitState?.()
 
       switch (buttonName) {
         case "saveandcontinue": {

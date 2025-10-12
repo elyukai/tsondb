@@ -5,13 +5,15 @@ import type {
   GitStatusResponseBody,
   IsRepoResponseBody,
 } from "../../shared/api.ts"
-import { getResource, postResource } from "../utils/api.ts"
+import { deleteResource, getResource, postResource } from "../utils/api.ts"
 
 export const isRepo = async (locales: string[]): Promise<IsRepoResponseBody> =>
   getResource<IsRepoResponseBody>("/api/git", { locales })
 
 export const getStatus = async (locales: string[]): Promise<GitStatusResponseBody> =>
   getResource<GitStatusResponseBody>("/api/git/status", { locales })
+
+export const fetch = async (locales: string[]) => postResource("/api/git/fetch", { locales })
 
 export const stageAllFiles = async (locales: string[]) =>
   postResource("/api/git/stage", { locales })
@@ -31,6 +33,9 @@ export const unstageAllFilesOfEntity = async (locales: string[], entityName: str
 export const unstageFileOfEntity = async (locales: string[], entityName: string, id: string) =>
   postResource(`/api/git/unstage/${entityName}/${id}`, { locales })
 
+export const resetFileOfEntity = async (locales: string[], entityName: string, id: string) =>
+  postResource(`/api/git/reset/${entityName}/${id}`, { locales })
+
 export const commitStagedFiles = async (locales: string[], message: string) => {
   const body: CreateCommitRequestBody = { message }
   return postResource(`/api/git/commit`, { locales, body })
@@ -49,4 +54,7 @@ export const createBranch = async (locales: string[], branchName: string) => {
 }
 
 export const switchBranch = async (locales: string[], branchName: string) =>
-  postResource(`/api/git/branch/${branchName}`, { locales })
+  postResource(`/api/git/branch/${encodeURIComponent(branchName)}`, { locales })
+
+export const deleteBranch = async (locales: string[], branchName: string) =>
+  deleteResource(`/api/git/branch/${encodeURIComponent(branchName)}`, { locales })

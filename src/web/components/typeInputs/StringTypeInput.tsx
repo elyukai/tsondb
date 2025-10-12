@@ -47,7 +47,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, disable
               </p>
               <MarkdownHighlighting
                 class="textarea-grow-wrap__mirror editor-highlighting"
-                string={value}
+                string={value + " "}
               />
             </div>
             <ValidationErrors disabled={disabled} errors={errors} />

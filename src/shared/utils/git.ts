@@ -116,3 +116,10 @@ export const getLabelForGitStatus = (status: GitFileStatusForDisplay): string =>
       return ""
   }
 }
+
+const remotePattern = /^remotes\/(\w+?)\/(.+)$/
+
+export const splitBranchName = (branch: string): { remote?: string; name: string } => {
+  const [_, remote, actualBranch] = branch.match(remotePattern) ?? ["", undefined, branch]
+  return { remote, name: actualBranch }
+}

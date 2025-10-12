@@ -55,7 +55,7 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
   buttonName,
   childInstances,
   route,
-  updateGitStatus,
+  updateLocalGitState,
 }) => {
   try {
     if (instanceId && buttonName) {
@@ -66,7 +66,7 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
         id: instanceId,
       })
 
-      await updateGitStatus?.()
+      await updateLocalGitState?.()
 
       switch (buttonName) {
         case "saveandcontinue": {
