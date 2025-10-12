@@ -1,3 +1,6 @@
+import { omitUndefinedKeys } from "./object.ts"
+import { assertExhaustive } from "./typeSafety.ts"
+
 type InlineRule = {
   pattern: RegExp
   predicate?: (result: RegExpExecArray) => boolean
@@ -241,25 +244,39 @@ type TextNode = {
   content: string
 }
 
+type BoldMarkdownNode = {
+  kind: "bold"
+  content: InlineMarkdownNode[]
+}
+
+type ItalicMarkdownNode = {
+  kind: "italic"
+  content: InlineMarkdownNode[]
+}
+
+type CodeMarkdownNode = {
+  kind: "code"
+  content: string
+}
+
+type LinkMarkdownNode = {
+  kind: "link"
+  href: string
+  content: InlineMarkdownNode[]
+}
+
+type AttributedStringMarkdownNode = {
+  kind: "attributed"
+  attributes: Record<string, string | number | boolean>
+  content: InlineMarkdownNode[]
+}
+
 export type InlineMarkdownNode =
-  | {
-      kind: "bold" | "italic"
-      content: InlineMarkdownNode[]
-    }
-  | {
-      kind: "code"
-      content: string
-    }
-  | {
-      kind: "link"
-      href: string
-      content: InlineMarkdownNode[]
-    }
-  | {
-      kind: "attributed"
-      attributes: Record<string, string | number | boolean>
-      content: InlineMarkdownNode[]
-    }
+  | BoldMarkdownNode
+  | ItalicMarkdownNode
+  | CodeMarkdownNode
+  | LinkMarkdownNode
+  | AttributedStringMarkdownNode
   | TextNode
 
 const parseForInlineRules = (
@@ -365,31 +382,63 @@ const tableMarker = (text: string): BlockSyntaxMarkdownNode => ({
 
 const tableRule: BlockRule = {
   pattern:
-    /^(\| *)?(.+?(?: *(?<!\\)\| *.+?)+)( *\|)?\n((?:\| *)?(?:-{3,}|:-{2,}|-{2,}:|:-+:)(?: *\| *(?:-{3,}|:-{2,}|-{2,}:|:-+:))*(?: *\|)?)((?:\n\|? *.+?(?: *(?<!\\)\| *.+?)* *(?<!\\)\|?)+)(\n{2,}|$)/,
-  map: result => ({
-    kind: "table",
-    header: result[2]?.split("|").map(th => parseInlineMarkdown(th.trim(), false)) ?? [],
-    rows:
-      result[5]
-        ?.split("\n")
-        .slice(1)
-        .map(tr =>
-          removeSurroundingPipes(tr)
-            .split("|")
-            .map(tc => parseInlineMarkdown(tc.trim(), false)),
-        ) ?? [],
-  }),
-  mapHighlighting: result => [
-    tableMarker(result[1] ?? ""),
-    ...(result[2]
+    /^(?:(\|#)(.+?)(#\|)\n)?(\|)?(.+?(?:(?<!\\)\|.+?)+)((?<!\\)\|)?\n((?:\| *)?(?:-{3,}|:-{2,}|-{2,}:|:-+:)(?: *\| *(?:-{3,}|:-{2,}|-{2,}:|:-+:))*(?: *\|)?)((?:\n\|?.+?(?:(?<!\\)\|.+?)*(?<!\\)\|?)+)(\n{2,}|$)/,
+  map: ([
+    _res,
+    _captionMarkerStart,
+    caption,
+    _captionMarkerEnd,
+    _headerMarkerStart,
+    headers,
+    _headerMarkerEnd,
+    _bodySeparators,
+    body,
+    _trailingWhitespace,
+  ]) =>
+    omitUndefinedKeys({
+      kind: "table",
+      caption: caption !== undefined ? parseInlineMarkdown(caption.trim(), false) : undefined,
+      header: headers?.split("|").map(th => parseInlineMarkdown(th.trim(), false)) ?? [],
+      rows:
+        body
+          ?.split("\n")
+          .slice(1)
+          .map(tr =>
+            removeSurroundingPipes(tr)
+              .split("|")
+              .map(tc => parseInlineMarkdown(tc.trim(), false)),
+          ) ?? [],
+    }),
+  mapHighlighting: ([
+    _res,
+    captionMarkerStart,
+    caption,
+    captionMarkerEnd,
+    headerMarkerStart,
+    headers,
+    headerMarkerEnd,
+    bodySeparators,
+    body,
+    trailingWhitespace,
+  ]) => [
+    ...(caption !== undefined
+      ? [
+          tableMarker(captionMarkerStart ?? ""),
+          ...parseInlineMarkdown(caption, true),
+          tableMarker(captionMarkerEnd ?? ""),
+          textNode("\n"),
+        ]
+      : []),
+    tableMarker(headerMarkerStart ?? ""),
+    ...(headers
       ?.split("|")
       .flatMap((th, i): BlockSyntaxMarkdownNode[] =>
         i === 0
           ? parseInlineMarkdown(th, true)
           : [tableMarker("|"), ...parseInlineMarkdown(th, true)],
       ) ?? []),
-    tableMarker((result[3] ?? "") + "\n" + (result[4] ?? "")),
-    ...(result[5]
+    tableMarker((headerMarkerEnd ?? "") + "\n" + (bodySeparators ?? "")),
+    ...(body
       ?.split("\n")
       .slice(1)
       .flatMap((tr): BlockSyntaxMarkdownNode[] => [
@@ -402,50 +451,65 @@ const tableRule: BlockRule = {
               : [tableMarker("|"), ...parseInlineMarkdown(tc, true)],
           ),
       ]) ?? []),
-    ...nodesForTrailingWhitespace(result[6]),
+    ...nodesForTrailingWhitespace(trailingWhitespace),
   ],
 }
 
 const blockRules: BlockRule[] = [headingRule, tableRule, listRule, paragraphRule]
 
-export type BlockMarkdownNode =
-  | {
-      kind: "paragraph"
-      content: InlineMarkdownNode[]
-    }
-  | {
-      kind: "heading"
-      level: number
-      content: InlineMarkdownNode[]
-    }
-  | {
-      kind: "list"
-      ordered: boolean
-      content: {
-        kind: "listitem"
-        content: InlineMarkdownNode[]
-      }[]
-    }
-  | {
-      kind: "table"
-      header: InlineMarkdownNode[][]
-      rows: InlineMarkdownNode[][][]
-    }
+type ParagraphBlockNode = {
+  kind: "paragraph"
+  content: InlineMarkdownNode[]
+}
 
-export type BlockSyntaxMarkdownNode =
-  | InlineMarkdownNode
-  | {
-      kind: "listitemmarker"
-      content: string
-    }
-  | {
-      kind: "tablemarker"
-      content: string
-    }
-  | {
-      kind: "headingmarker"
-      content: string
-    }
+type HeadingBlockNode = {
+  kind: "heading"
+  level: number
+  content: InlineMarkdownNode[]
+}
+
+type ListBlockNode = {
+  kind: "list"
+  ordered: boolean
+  content: ListItemNode[]
+}
+
+type ListItemNode = {
+  kind: "listitem"
+  content: InlineMarkdownNode[]
+}
+
+type TableBlockNode = {
+  kind: "table"
+  caption?: InlineMarkdownNode[]
+  header: InlineMarkdownNode[][]
+  rows: InlineMarkdownNode[][][]
+}
+
+export type BlockMarkdownNode =
+  | ParagraphBlockNode
+  | HeadingBlockNode
+  | ListBlockNode
+  | TableBlockNode
+
+type ListItemMarkerSyntaxNode = {
+  kind: "listitemmarker"
+  content: string
+}
+
+type TableMarkerSyntaxNode = {
+  kind: "tablemarker"
+  content: string
+}
+
+type HeadingMarkerSyntaxNode = {
+  kind: "headingmarker"
+  content: string
+}
+
+type SyntaxNode = ListItemMarkerSyntaxNode | TableMarkerSyntaxNode | HeadingMarkerSyntaxNode
+
+export type BlockSyntaxMarkdownNode = InlineMarkdownNode | SyntaxNode
 
 const parseActiveBlockRule = (rule: BlockRule, res: RegExpExecArray): BlockMarkdownNode[] => [
   rule.map(res),
@@ -480,8 +544,40 @@ const parseForBlockRules = <R>(
   }
 }
 
+export const reduceSyntaxNodes = (nodes: BlockSyntaxMarkdownNode[]): BlockSyntaxMarkdownNode[] =>
+  nodes.reduce<BlockSyntaxMarkdownNode[]>((reducedNodes, node) => {
+    const lastNode = reducedNodes.at(-1)
+    if (node.kind === lastNode?.kind) {
+      switch (lastNode.kind) {
+        case "bold":
+        case "italic":
+          lastNode.content = [
+            ...lastNode.content,
+            ...(node as BoldMarkdownNode | ItalicMarkdownNode).content,
+          ]
+          break
+        case "code":
+        case "text":
+        case "listitemmarker":
+        case "tablemarker":
+        case "headingmarker":
+          lastNode.content += (node as CodeMarkdownNode | TextNode | SyntaxNode).content
+          break
+        case "link":
+        case "attributed":
+          reducedNodes.push({ ...node })
+          break
+        default:
+          return assertExhaustive(lastNode)
+      }
+    } else {
+      reducedNodes.push({ ...node })
+    }
+    return reducedNodes
+  }, [])
+
 export const parseBlockMarkdown = (text: string): BlockMarkdownNode[] =>
   parseForBlockRules(blockRules, text, parseActiveBlockRule)
 
 export const parseBlockMarkdownForSyntaxHighlighting = (text: string): BlockSyntaxMarkdownNode[] =>
-  parseForBlockRules(blockRules, text, parseActiveBlockSyntaxRule)
+  reduceSyntaxNodes(parseForBlockRules(blockRules, text, parseActiveBlockSyntaxRule))

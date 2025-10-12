@@ -345,6 +345,118 @@ This was a table.
     )
   })
 
+  it("parses a table for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(`Here is a table:
+
+| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |
+
+This was a table.
+`),
+      [
+        { kind: "text", content: "Here is a table:\n\n" },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Header 1 " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Header 2 " },
+        { kind: "tablemarker", content: "|\n|----------|----------|" },
+        { kind: "text", content: "\n" },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Cell 1   " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Cell 2   " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: "\n" },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Cell 3   " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Cell 4   " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: "\n\nThis was a table.\n" },
+      ],
+    )
+  })
+
+  it("parses a table with a table caption", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`Here is a table:
+
+|# Table Caption     #|
+| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |
+
+This was a table.
+`),
+      [
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "Here is a table:" }],
+        },
+        {
+          kind: "table",
+          caption: [{ kind: "text", content: "Table Caption" }],
+          header: [
+            [{ kind: "text", content: "Header 1" }],
+            [{ kind: "text", content: "Header 2" }],
+          ],
+          rows: [
+            [[{ kind: "text", content: "Cell 1" }], [{ kind: "text", content: "Cell 2" }]],
+            [[{ kind: "text", content: "Cell 3" }], [{ kind: "text", content: "Cell 4" }]],
+          ],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This was a table." }],
+        },
+      ],
+    )
+  })
+
+  it("parses a table with a table caption for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(`Here is a table:
+
+|# Table Caption     #|
+| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |
+
+This was a table.
+`),
+      [
+        { kind: "text", content: "Here is a table:\n\n" },
+        { kind: "tablemarker", content: "|#" },
+        { kind: "text", content: " Table Caption     " },
+        { kind: "tablemarker", content: "#|" },
+        { kind: "text", content: "\n" },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Header 1 " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Header 2 " },
+        { kind: "tablemarker", content: "|\n|----------|----------|" },
+        { kind: "text", content: "\n" },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Cell 1   " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Cell 2   " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: "\n" },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Cell 3   " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: " Cell 4   " },
+        { kind: "tablemarker", content: "|" },
+        { kind: "text", content: "\n\nThis was a table.\n" },
+      ],
+    )
+  })
+
   it("parses an attributed string", () => {
     deepEqual<BlockMarkdownNode[]>(
       parseBlockMarkdown(`This is an ^[attributed](attr1: true, attr2: 2, attr3: "test") string.`),
@@ -464,20 +576,11 @@ This is a paragraph under heading 3.
 `),
       [
         { kind: "headingmarker", content: "# " },
-        { kind: "text", content: "Heading 1" },
-        { kind: "text", content: "\n\n" },
-        { kind: "text", content: "This is a paragraph under heading 1." },
-        { kind: "text", content: "\n\n" },
+        { kind: "text", content: "Heading 1\n\nThis is a paragraph under heading 1.\n\n" },
         { kind: "headingmarker", content: "## " },
-        { kind: "text", content: "Heading 2" },
-        { kind: "text", content: "\n\n" },
-        { kind: "text", content: "This is a paragraph under heading 2." },
-        { kind: "text", content: "\n\n" },
+        { kind: "text", content: "Heading 2\n\nThis is a paragraph under heading 2.\n\n" },
         { kind: "headingmarker", content: "### " },
-        { kind: "text", content: "Heading 3" },
-        { kind: "text", content: "\n\n" },
-        { kind: "text", content: "This is a paragraph under heading 3." },
-        { kind: "text", content: "\n" },
+        { kind: "text", content: "Heading 3\n\nThis is a paragraph under heading 3.\n" },
       ],
     )
   })

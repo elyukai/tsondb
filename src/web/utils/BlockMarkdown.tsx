@@ -56,6 +56,13 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({ node, outerHeadingLe
     case "table":
       return (
         <table>
+          {node.caption !== undefined && (
+            <caption>
+              {node.caption.map((inline, ci) => (
+                <InlineMarkdown key={ci} node={inline} />
+              ))}
+            </caption>
+          )}
           <thead>
             <tr>
               {node.header.map((th, hi) => (

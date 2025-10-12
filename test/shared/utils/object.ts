@@ -1,7 +1,8 @@
-import { deepEqual } from "node:assert/strict"
+import { deepEqual, notDeepEqual } from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
   mergeObjects,
+  omitUndefinedKeys,
   sortObjectKeys,
   sortObjectKeysAlphabetically,
 } from "../../../src/shared/utils/object.ts"
@@ -39,5 +40,17 @@ describe("mergeObjects", () => {
       mergeObjects({ a: 1, b: 3 }, { b: 2 }, (a, b) => a + b),
       { a: 1, b: 5 },
     )
+  })
+})
+
+describe("omitUndefinedKeys", () => {
+  it("should return an object without keys that have undefined values", () => {
+    deepEqual(omitUndefinedKeys({ a: 1, b: undefined, c: 3, d: undefined }), { a: 1, c: 3 })
+    notDeepEqual(omitUndefinedKeys({ a: 1, b: undefined, c: 3, d: undefined }), {
+      a: 1,
+      b: undefined,
+      c: 3,
+      d: undefined,
+    })
   })
 })

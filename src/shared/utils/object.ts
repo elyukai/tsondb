@@ -41,3 +41,6 @@ export const hasKey = <T extends object, K extends PropertyKey>(
   obj: T,
   key: K,
 ): obj is T & { [k in K]: unknown } => Object.hasOwn(obj, key)
+
+export const omitUndefinedKeys = <T extends object>(obj: T): T =>
+  Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as T
