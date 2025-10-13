@@ -1081,7 +1081,7 @@ dialog.git {
 }
 
 @media (min-width: 80rem) {
-  dialog.git header .git__tab--files {
+  dialog.git:not(.git--no-sidebar) header .git__tab--files {
     display: none;
   }
 }

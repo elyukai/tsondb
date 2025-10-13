@@ -23,7 +23,7 @@ export const Git: FunctionComponent = () => {
     <>
       <ModalDialog
         open={isOpen}
-        class="git"
+        class={"git" + (!isGitAlwaysOpen ? " git--no-sidebar" : "")}
         closedBy="any"
         onClose={() => {
           setIsOpen(false)
