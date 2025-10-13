@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.8.0](https://github.com/elyukai/tsondb/compare/v0.7.12...v0.8.0) (2025-10-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* add markdown table sections, table colspan, footnotes and containers/sections
+
+### Features
+
+* add markdown table sections, table colspan, footnotes and containers/sections ([753ffd8](https://github.com/elyukai/tsondb/commit/753ffd8dfa697fd538fe743e3419614e9fb33fd0))
+
 ## [0.7.12](https://github.com/elyukai/tsondb/compare/v0.7.11...v0.7.12) (2025-10-13)
 
 
