@@ -5,6 +5,7 @@ import { useCallback, useContext, useEffect, useState, type Dispatch } from "pre
 import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../node/utils/childInstances.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import { removeAt } from "../../shared/utils/array.ts"
+import { deepEqual } from "../../shared/utils/compare.ts"
 import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
 import { validateLocaleIdentifier } from "../../shared/validation/identifier.ts"
@@ -66,6 +67,12 @@ type Props = {
   onSubmit: InstanceRouteSkeletonOnSubmitHandler
 }
 
+const onBeforeUnload = (event: BeforeUnloadEvent) => {
+  event.preventDefault()
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- best practice according to MDN
+  event.returnValue = "unsaved changes"
+}
+
 export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   mode,
   buttons,
@@ -82,6 +89,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   const { declaration: entity, isLocaleEntity } = useEntityFromRoute() ?? {}
   const [instanceNamesByEntity] = useInstanceNamesByEntity()
   const [instanceContent, setInstanceContent] = useState<unknown>()
+  const [savedInstanceContent, setSavedInstanceContent] = useState<unknown>()
   const [childInstances, setChildInstances] = useState<
     UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   >([])
@@ -89,6 +97,18 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   const client = useContext(GitClientContext)
 
   const { route } = useLocation()
+
+  useEffect(() => {
+    if (deepEqual(instanceContent, savedInstanceContent)) {
+      window.removeEventListener("beforeunload", onBeforeUnload)
+    } else {
+      window.addEventListener("beforeunload", onBeforeUnload)
+    }
+
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload)
+    }
+  }, [instanceContent, savedInstanceContent])
 
   useEffect(() => {
     document.title =
@@ -99,7 +119,16 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   useEffect(() => {
     if (entity && instanceContent === undefined && declsLoaded) {
       runWithLoading(() =>
-        init({ locales, entity, instanceId: id, setInstanceContent, getDeclFromDeclName }),
+        init({
+          locales,
+          entity,
+          instanceId: id,
+          setInstanceContent: value => {
+            setInstanceContent(value)
+            setSavedInstanceContent(value)
+          },
+          getDeclFromDeclName,
+        }),
       )
         .then(() =>
           id
@@ -130,7 +159,10 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           getDeclFromDeclName,
           isLocaleEntity,
           setCustomId,
-          setInstanceContent,
+          setInstanceContent: value => {
+            setInstanceContent(value)
+            setSavedInstanceContent(value)
+          },
           childInstances,
           updateLocalGitState: client?.updateLocalState,
         }),
