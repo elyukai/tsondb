@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.12](https://github.com/elyukai/tsondb/compare/v0.7.11...v0.7.12) (2025-10-13)
+
+
+### Bug Fixes
+
+* changes tab needs to be shown in git dialog when sidebar is disabled ([f8ca397](https://github.com/elyukai/tsondb/commit/f8ca397f68643e5427812d81f83bea656497226a))
+
 ## [0.7.11](https://github.com/elyukai/tsondb/compare/v0.7.10...v0.7.11) (2025-10-13)
 
 
