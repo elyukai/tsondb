@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.11](https://github.com/elyukai/tsondb/compare/v0.7.10...v0.7.11) (2025-10-13)
+
+
+### Features
+
+* add appropriate lang attribute to items of locale maps ([2cdff1f](https://github.com/elyukai/tsondb/commit/2cdff1f457fb9b5b883b127e34968d6fd5f1e9ce))
+* add possibility to always show git as dialog instead of only a sidebar in larger viewports ([1587cf4](https://github.com/elyukai/tsondb/commit/1587cf40965706df54e9c01bbfd9042608eb9127))
+* improve markdown preview styling ([d6d8fac](https://github.com/elyukai/tsondb/commit/d6d8fac15accdd51fe2deee57b6b81042448e73f))
+
 ## [0.7.10](https://github.com/elyukai/tsondb/compare/v0.7.9...v0.7.10) (2025-10-13)
 
 
