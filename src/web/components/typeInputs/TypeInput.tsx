@@ -32,6 +32,7 @@ export type TypeInputProps<T, V = unknown> = {
   onChildChange: (index: number, value: unknown) => void
   onChildAdd: (entityName: string, value: unknown) => void
   onChildRemove: (index: number) => void
+  checkIsLocaleEntity: (entityName: string) => boolean
 }
 
 type Props = TypeInputProps<SerializedType>

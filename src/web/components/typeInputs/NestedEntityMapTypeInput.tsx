@@ -11,8 +11,16 @@ import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
 type Props = TypeInputProps<SerializedNestedEntityMapType, Record<string, unknown>>
 
 export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
-  const { type, path, value, instanceNamesByEntity, disabled, getDeclFromDeclName, onChange } =
-    props
+  const {
+    type,
+    path,
+    value,
+    instanceNamesByEntity,
+    disabled,
+    getDeclFromDeclName,
+    checkIsLocaleEntity,
+    onChange,
+  } = props
 
   const [newKey, setNewKey] = useState("")
 
@@ -26,6 +34,8 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
     .filter(instance => !existingKeys.includes(instance.id))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
 
+  const isLocaleEntity = checkIsLocaleEntity(type.secondaryEntity)
+
   return (
     <div class="field field--container field--nestedentitymap">
       {existingKeys.length > 0 && (
@@ -36,7 +46,11 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
                 ?.name ?? key
 
             return (
-              <li class="container-item dict-item" key={key}>
+              <li
+                class="container-item dict-item"
+                key={key}
+                {...(isLocaleEntity ? { lang: key } : {})}
+              >
                 <div className="container-item-header">
                   <div className="container-item-title">
                     <span>

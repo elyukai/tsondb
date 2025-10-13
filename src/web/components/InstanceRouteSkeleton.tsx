@@ -13,6 +13,7 @@ import {
   deleteInstanceByEntityNameAndId,
   getChildInstancesForInstanceByEntityName,
 } from "../api/declarations.ts"
+import { EntitiesContext } from "../context/entities.ts"
 import { GitClientContext } from "../context/gitClient.ts"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
@@ -87,6 +88,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   const [locales] = useSetting("displayedLocales")
   const [getDeclFromDeclName, declsLoaded] = useGetDeclFromDeclName()
   const { declaration: entity, isLocaleEntity } = useEntityFromRoute() ?? {}
+  const { entities } = useContext(EntitiesContext)
   const [instanceNamesByEntity] = useInstanceNamesByEntity()
   const [instanceContent, setInstanceContent] = useState<unknown>()
   const [savedInstanceContent, setSavedInstanceContent] = useState<unknown>()
@@ -142,6 +144,12 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
         })
     }
   }, [entity, declsLoaded, getDeclFromDeclName, id, init, instanceContent, locales, name])
+
+  const checkIsLocaleEntity = useCallback(
+    (entityName: string) =>
+      entities.some(entity => entity.declaration.name === entityName && entity.isLocaleEntity),
+    [entities],
+  )
 
   const handleSubmit = (event: SubmitEvent) => {
     event.preventDefault()
@@ -300,6 +308,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           onChildChange={handleOnChildChange}
           onChildAdd={handleOnChildAdd}
           onChildRemove={handleOnChildRemove}
+          checkIsLocaleEntity={checkIsLocaleEntity}
         />
         <div class="form-footer btns">
           {buttons.map(button => (
