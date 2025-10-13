@@ -6,6 +6,7 @@ import { defaultSettings, SettingsContext } from "../context/settings.ts"
 export type UserSettings = {
   displayedLocales: string[]
   enumDisplay: "select" | "radio"
+  gitSidebar: boolean
 }
 
 const settingsGuards: { [K in keyof UserSettings]: (v: unknown) => v is UserSettings[K] } = {
@@ -13,6 +14,7 @@ const settingsGuards: { [K in keyof UserSettings]: (v: unknown) => v is UserSett
     Array.isArray(v) && v.every(e => typeof e === "string") && v.length > 0,
   enumDisplay: (v): v is "select" | "radio" =>
     typeof v === "string" && ["select", "radio"].includes(v),
+  gitSidebar: (v): v is boolean => typeof v === "boolean",
 }
 
 const defaultSettingsFromConfig = (config: WebConfig): UserSettings => ({

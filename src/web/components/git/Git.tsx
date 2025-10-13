@@ -2,6 +2,7 @@ import type { FunctionComponent } from "preact"
 import { useContext, useState } from "preact/hooks"
 import { GitContext } from "../../context/git.ts"
 import { GitClientContext } from "../../context/gitClient.ts"
+import { useSetting } from "../../hooks/useSettings.ts"
 import { ModalDialog } from "../ModalDialog.tsx"
 import { GitBranchManager } from "./GitBranchManager.tsx"
 import { GitFileManager } from "./GitFileManager.tsx"
@@ -12,6 +13,7 @@ export const Git: FunctionComponent = () => {
   const [isOpen, setIsOpen] = useContext(GitContext)
   const [mode, setMode] = useState<GitMode>("files")
   const client = useContext(GitClientContext)
+  const [isGitAlwaysOpen] = useSetting("gitSidebar")
 
   if (!client || !client.isRepo) {
     return null
@@ -89,7 +91,7 @@ export const Git: FunctionComponent = () => {
           }
         })()}
       </ModalDialog>
-      {isOpen && mode === "files" ? null : (
+      {!isGitAlwaysOpen || (isOpen && mode === "files") ? null : (
         <aside class="git">
           <h2 class="h1-faded">Version Control</h2>
           <GitFileManager

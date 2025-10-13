@@ -934,7 +934,7 @@ aside.git h2 {
     display: block;
   }
 
-  .git-toggle {
+  .git-toggle:not(.git-toggle--no-sidebar) {
     display: none;
   }
 }

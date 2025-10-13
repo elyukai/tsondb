@@ -1,6 +1,7 @@
 import type { ComponentChildren, FunctionComponent } from "preact"
 import { useContext } from "preact/hooks"
 import { GitContext } from "../context/git.ts"
+import { useSetting } from "../hooks/useSettings.ts"
 import { Settings } from "./Settings.tsx"
 
 type Props = {
@@ -9,7 +10,8 @@ type Props = {
 }
 
 export const Layout: FunctionComponent<Props> = ({ breadcrumbs, children }) => {
-  const [_, setIsGitOpen] = useContext(GitContext)
+  const [_1, setIsGitOpen] = useContext(GitContext)
+  const [isGitAlwaysOpen, _2] = useSetting("gitSidebar")
   return (
     <>
       <header>
@@ -24,7 +26,7 @@ export const Layout: FunctionComponent<Props> = ({ breadcrumbs, children }) => {
         </nav>
         <div class="nav-buttons">
           <button
-            class="git-toggle"
+            class={`git-toggle${!isGitAlwaysOpen ? " git-toggle--no-sidebar" : ""}`}
             onClick={() => {
               setIsGitOpen(b => !b)
             }}

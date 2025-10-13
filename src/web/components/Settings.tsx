@@ -14,6 +14,7 @@ const localeMapper = (result: GetAllInstancesOfEntityResponseBody) => result.ins
 export const Settings: FunctionComponent = () => {
   const [locales, setLocales] = useSetting("displayedLocales")
   const [enumDisplay, setEnumDisplay] = useSetting("enumDisplay")
+  const [isGitAlwaysOpen, setIsGitAlwaysOpen] = useSetting("gitSidebar")
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const config = useContext(ConfigContext)
   const [localeInstances] = useMappedAPIResource(
@@ -163,6 +164,19 @@ export const Settings: FunctionComponent = () => {
           <label htmlFor="enum-display-radio">
             Expanded (all nested form fields in radio lists)
           </label>
+        </div>
+        <h3>Version Control</h3>
+        <div className="field--option">
+          <input
+            type="checkbox"
+            name="git-sidebar-always-open"
+            id="git-sidebar-always-open"
+            checked={isGitAlwaysOpen}
+            onChange={() => {
+              setIsGitAlwaysOpen(v => !v)
+            }}
+          />
+          <label htmlFor="git-sidebar-always-open">Display as sidebar in larger viewports</label>
         </div>
       </ModalDialog>
     </>

@@ -5,6 +5,7 @@ import { type UserSettings } from "../hooks/useSettings.ts"
 export const defaultSettings: UserSettings = {
   displayedLocales: [],
   enumDisplay: "select",
+  gitSidebar: true,
 }
 
 export type SettingsContext = {
