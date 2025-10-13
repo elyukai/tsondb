@@ -208,6 +208,18 @@ const attributedRule: InlineRule = {
   },
 }
 
+const footnoteRefRule: InlineRule = {
+  pattern: /(?<!\\)\[\^([a-zA-Z0-9*]+?)\]/,
+  map: ([_match, label = ""]) => ({
+    kind: "footnoteRef",
+    label,
+  }),
+  mapHighlighting: ([match]) => ({
+    kind: "footnoteRef",
+    label: match,
+  }),
+}
+
 const textNode = (content: string): TextNode => ({
   kind: "text",
   content: content,
@@ -235,6 +247,7 @@ const inlineRules: InlineRule[] = [
   italicWithBoldRule,
   boldRule,
   italicRule,
+  footnoteRefRule,
   textRule,
 ]
 
@@ -270,6 +283,11 @@ type AttributedStringMarkdownNode = {
   content: InlineMarkdownNode[]
 }
 
+type FootnoteRefInlineNode = {
+  kind: "footnoteRef"
+  label: string
+}
+
 export type InlineMarkdownNode =
   | BoldMarkdownNode
   | ItalicMarkdownNode
@@ -277,6 +295,7 @@ export type InlineMarkdownNode =
   | LinkMarkdownNode
   | AttributedStringMarkdownNode
   | TextNode
+  | FootnoteRefInlineNode
 
 const parseForInlineRules = (
   rules: InlineRule[],
@@ -324,19 +343,19 @@ const nodesForTrailingWhitespace = (text: string | undefined): InlineMarkdownNod
 }
 
 const listRule: BlockRule = {
-  pattern: /^((?:(?:\d+\.|[-*]) [^\n]+?)(?:\n(?:\d+\.|[-*]) [^\n]+?)*)(\n{2,}|$)/,
+  pattern: /^((?:(?:\d+\.|[-*]) [^\n]+?)(?:\n(?:\d+\.|[-*]) [^\n]+?)*)(\n{2,}|\s*$)/,
   map: result => ({
     kind: "list",
     ordered: /^\d+\. /.test(result[0]),
     content: (result[1] ?? "").split("\n").map(item => ({
-      kind: "listitem",
+      kind: "listItem",
       content: parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, ""), false),
     })),
   }),
   mapHighlighting: result => [
     ...(result[1] ?? "").split("\n").flatMap((item, index, array): BlockSyntaxMarkdownNode[] => [
       {
-        kind: "listitemmarker",
+        kind: "listItemMarker",
         content: /^(\d+\. |[-*] )/.exec(item)?.[1] ?? "",
       },
       ...parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, ""), true),
@@ -366,22 +385,57 @@ const headingRule: BlockRule = {
     content: parseInlineMarkdown(result[3] ?? "", false),
   }),
   mapHighlighting: result => [
-    { kind: "headingmarker", content: (result[1] ?? "") + (result[2] ?? "") },
+    { kind: "headingMarker", content: (result[1] ?? "") + (result[2] ?? "") },
     ...parseInlineMarkdown(result[3] ?? "", true),
     ...nodesForTrailingWhitespace(result[4]),
   ],
 }
 
-const removeSurroundingPipes = (text: string) => text.replace(/^\|/, "").replace(/\|$/, "")
-
 const tableMarker = (text: string): BlockSyntaxMarkdownNode => ({
-  kind: "tablemarker",
+  kind: "tableMarker",
   content: text,
 })
 
+const sectionSeparatorPattern =
+  /^\|? *-{3,} *(?:\| *-{3,} *)+\|?$|^\|? *={3,} *(?:\| *={3,} *)+\|?$/
+const sectionWithHeaderSeparatorPattern = /^\|? *={3,} *(?:\| *={3,} *)+\|?$/
+
+export const checkTableRowsAreSections = (
+  rows: TableRowBlockNode[] | TableSectionBlockNode[],
+): rows is TableSectionBlockNode[] => rows.every(row => row.kind === "tableSection")
+
+const parseContentRow = (row: string): TableCellBlockNode[] =>
+  row
+    .replace(/^\|/, "")
+    .split(/(\|+)/)
+    .reduce<TableCellBlockNode[]>((acc, segment, index, arr) => {
+      if (index % 2 === 0 && segment.trim() !== "") {
+        const colSpan = arr[index + 1]?.length
+        return [
+          ...acc,
+          omitUndefinedKeys({
+            kind: "tableCell",
+            colSpan: colSpan !== undefined && colSpan > 1 ? colSpan : undefined,
+            content: parseInlineMarkdown(segment.trim(), false),
+          }),
+        ]
+      }
+
+      return acc
+    }, [])
+
+const parseContentRowForSyntaxHighlighting = (row: string): BlockSyntaxMarkdownNode[] =>
+  row.split(/(\|+)/).reduce<BlockSyntaxMarkdownNode[]>((acc, segment, index) => {
+    if (index % 2 === 0) {
+      return [...acc, ...parseInlineMarkdown(segment, true)]
+    } else {
+      return [...acc, tableMarker(segment)]
+    }
+  }, [])
+
 const tableRule: BlockRule = {
   pattern:
-    /^(?:(\|#)(.+?)(#\|)\n)?(\|)?(.+?(?:(?<!\\)\|.+?)+)((?<!\\)\|)?\n((?:\| *)?(?:-{3,}|:-{2,}|-{2,}:|:-+:)(?: *\| *(?:-{3,}|:-{2,}|-{2,}:|:-+:))*(?: *\|)?)((?:\n\|?.+?(?:(?<!\\)\|.+?)*(?<!\\)\|?)+)(\n{2,}|$)/,
+    /^(?:(\|#)(.+?)(#\|)\n)?(\|)?(.+?(?:(?<!\\)\|.+?)+)((?<!\\)\|)?\n((?:\| *)?(?:-{3,}|:-{2,}|-{2,}:|:-+:)(?: *\| *(?:-{3,}|:-{2,}|-{2,}:|:-+:))*(?: *\|)?)((?:\n\|?.+?(?:(?<!\\)\|+.+?)*(?:(?<!\\)\|+)?)+)(\n{2,}|$)/,
   map: ([
     _res,
     _captionMarkerStart,
@@ -397,16 +451,78 @@ const tableRule: BlockRule = {
     omitUndefinedKeys({
       kind: "table",
       caption: caption !== undefined ? parseInlineMarkdown(caption.trim(), false) : undefined,
-      header: headers?.split("|").map(th => parseInlineMarkdown(th.trim(), false)) ?? [],
+      header: headers ? parseContentRow(headers) : [],
       rows:
         body
           ?.split("\n")
-          .slice(1)
-          .map(tr =>
-            removeSurroundingPipes(tr)
-              .split("|")
-              .map(tc => parseInlineMarkdown(tc.trim(), false)),
-          ) ?? [],
+          .slice(1) // leading newline due to regex
+          .reduce<TableRowBlockNode[] | TableSectionBlockNode[]>((accRows, row) => {
+            if (sectionSeparatorPattern.test(row)) {
+              const hasHeader = sectionWithHeaderSeparatorPattern.test(row)
+              const newSection: TableSectionBlockNode = omitUndefinedKeys({
+                kind: "tableSection",
+                header: hasHeader ? [] : undefined,
+                rows: [],
+              })
+
+              if (accRows[0] === undefined) {
+                return [newSection]
+              }
+
+              if (checkTableRowsAreSections(accRows)) {
+                return [...accRows, newSection]
+              }
+
+              return [{ kind: "tableSection", rows: accRows }, newSection]
+            }
+
+            const lastRow = accRows[accRows.length - 1]
+            const rowContent = parseContentRow(row)
+
+            if (lastRow === undefined) {
+              return [
+                {
+                  kind: "tableRow",
+                  cells: rowContent,
+                },
+              ]
+            }
+
+            if (checkTableRowsAreSections(accRows)) {
+              const lastSection = lastRow as TableSectionBlockNode
+              if (lastSection.header !== undefined && lastSection.header.length === 0) {
+                return [
+                  ...accRows.slice(0, -1),
+                  {
+                    ...lastSection,
+                    header: rowContent,
+                  },
+                ]
+              }
+
+              return [
+                ...accRows.slice(0, -1),
+                {
+                  ...lastSection,
+                  rows: [
+                    ...lastSection.rows,
+                    {
+                      kind: "tableRow",
+                      cells: rowContent,
+                    },
+                  ],
+                },
+              ]
+            }
+
+            return [
+              ...accRows,
+              {
+                kind: "tableRow",
+                cells: rowContent,
+              },
+            ]
+          }, []) ?? [],
     }),
   mapHighlighting: ([
     _res,
@@ -436,53 +552,207 @@ const tableRule: BlockRule = {
           ? parseInlineMarkdown(th, true)
           : [tableMarker("|"), ...parseInlineMarkdown(th, true)],
       ) ?? []),
-    tableMarker((headerMarkerEnd ?? "") + "\n" + (bodySeparators ?? "")),
+    tableMarker(headerMarkerEnd ?? ""),
+    textNode("\n"),
+    tableMarker(bodySeparators ?? ""),
     ...(body
       ?.split("\n")
       .slice(1)
       .flatMap((tr): BlockSyntaxMarkdownNode[] => [
         textNode("\n"),
-        ...tr
-          .split("|")
-          .flatMap((tc, i): BlockSyntaxMarkdownNode[] =>
-            i === 0
-              ? parseInlineMarkdown(tc, true)
-              : [tableMarker("|"), ...parseInlineMarkdown(tc, true)],
-          ),
+        ...(sectionSeparatorPattern.test(tr)
+          ? [tableMarker(tr)]
+          : parseContentRowForSyntaxHighlighting(tr)),
       ]) ?? []),
     ...nodesForTrailingWhitespace(trailingWhitespace),
   ],
 }
 
-const blockRules: BlockRule[] = [headingRule, tableRule, listRule, paragraphRule]
+const sectionRule: BlockRule = {
+  pattern: /^::: (\w+)?(\n+)(.+?)\n:::(\n{2,}|\s*$)/s,
+  map: ([
+    _match,
+    name,
+    _leadingContentWhitespace,
+    content,
+    _trailingWhitespace,
+  ]): BlockMarkdownNode => ({
+    kind: "section",
+    name: name ?? undefined,
+    content: parseBlockMarkdown(content ?? ""),
+  }),
+  mapHighlighting: ([
+    _match,
+    name,
+    leadingContentWhitespace = "",
+    content,
+    trailingWhitespace,
+  ]): BlockSyntaxMarkdownNode[] => [
+    { kind: "sectionMarker", content: `::: ${name ?? ""}` },
+    textNode(leadingContentWhitespace),
+    ...parseBlockMarkdownForSyntaxHighlighting(content ?? ""),
+    textNode("\n"),
+    { kind: "sectionMarker", content: ":::" },
+    ...nodesForTrailingWhitespace(trailingWhitespace),
+  ],
+}
 
-type ParagraphBlockNode = {
+const removeIndentation = (text: string) =>
+  text
+    .split("\n")
+    .map(line => line.replace(/^ {2}/, ""))
+    .join("\n")
+
+export const syntaxNodeToString = (node: BlockSyntaxMarkdownNode): string => {
+  switch (node.kind) {
+    case "bold":
+    case "italic":
+    case "link":
+    case "attributed":
+      return node.content.map(syntaxNodeToString).join("")
+    case "text":
+    case "code":
+    case "listItemMarker":
+    case "tableMarker":
+    case "headingMarker":
+    case "sectionMarker":
+    case "footnoteMarker":
+      return node.content
+    case "footnoteRef":
+      return node.label
+    default:
+      return assertExhaustive(node)
+  }
+}
+
+const addIndentationToSyntax = <T extends BlockSyntaxMarkdownNode>(
+  nodes: T[],
+  nextUpperNode?: BlockSyntaxMarkdownNode,
+): T[] =>
+  nodes.reduce<T[]>((accNodes, currentNode, index) => {
+    switch (currentNode.kind) {
+      case "bold":
+      case "italic":
+      case "link":
+      case "attributed":
+        return [
+          ...accNodes,
+          {
+            ...currentNode,
+            content: addIndentationToSyntax(currentNode.content, nodes[index + 1] ?? nextUpperNode),
+          },
+        ]
+      case "text":
+      case "code":
+      case "listItemMarker":
+      case "tableMarker":
+      case "headingMarker":
+      case "sectionMarker":
+      case "footnoteMarker": {
+        const nextNode = nodes[index + 1] ?? nextUpperNode
+        const currentContent =
+          currentNode.content.endsWith("\n") &&
+          nextNode &&
+          /^[^\n]*?\S+?/.test(syntaxNodeToString(nextNode))
+            ? currentNode.content + "  "
+            : currentNode.content
+        return [
+          ...accNodes,
+          { ...currentNode, content: currentContent.replace(/\n([^\n]*?\S+?)/g, "\n  $1") },
+        ]
+      }
+      case "footnoteRef":
+        return [...accNodes, currentNode]
+      default:
+        return assertExhaustive(currentNode)
+    }
+  }, [])
+
+const footnoteRule: BlockRule = {
+  pattern: /^\[\^([a-zA-Z0-9*]+?)\]: (.+?(?:\n(?: {2}.+)?)*)(\n{2,}|\s*$)/,
+  map: ([_match, label = "", content = "", _trailingWhitespace]): BlockMarkdownNode => ({
+    kind: "footnote",
+    label: label,
+    content: parseBlockMarkdown(removeIndentation(content)),
+  }),
+  mapHighlighting: ([
+    _match,
+    label = "",
+    content = "",
+    trailingWhitespace,
+  ]): BlockSyntaxMarkdownNode[] => [
+    { kind: "footnoteMarker", content: `[^${label}]:` },
+    textNode(" "),
+    ...addIndentationToSyntax(parseBlockMarkdownForSyntaxHighlighting(removeIndentation(content))),
+    ...nodesForTrailingWhitespace(trailingWhitespace),
+  ],
+}
+
+const blockRules: BlockRule[] = [
+  sectionRule,
+  headingRule,
+  footnoteRule,
+  tableRule,
+  listRule,
+  paragraphRule,
+]
+
+export type ParagraphBlockNode = {
   kind: "paragraph"
   content: InlineMarkdownNode[]
 }
 
-type HeadingBlockNode = {
+export type HeadingBlockNode = {
   kind: "heading"
   level: number
   content: InlineMarkdownNode[]
 }
 
-type ListBlockNode = {
+export type ListBlockNode = {
   kind: "list"
   ordered: boolean
   content: ListItemNode[]
 }
 
-type ListItemNode = {
-  kind: "listitem"
+export type ListItemNode = {
+  kind: "listItem"
   content: InlineMarkdownNode[]
 }
 
-type TableBlockNode = {
+export type TableBlockNode = {
   kind: "table"
   caption?: InlineMarkdownNode[]
-  header: InlineMarkdownNode[][]
-  rows: InlineMarkdownNode[][][]
+  header: TableCellBlockNode[]
+  rows: TableRowBlockNode[] | TableSectionBlockNode[]
+}
+
+export type TableSectionBlockNode = {
+  kind: "tableSection"
+  header?: TableCellBlockNode[]
+  rows: TableRowBlockNode[]
+}
+
+export type TableRowBlockNode = {
+  kind: "tableRow"
+  cells: TableCellBlockNode[]
+}
+
+export type TableCellBlockNode = {
+  kind: "tableCell"
+  colSpan?: number
+  content: InlineMarkdownNode[]
+}
+
+export type SectionBlockNode = {
+  kind: "section"
+  name?: string
+  content: BlockMarkdownNode[]
+}
+
+export type FootnoteBlockNode = {
+  kind: "footnote"
+  label: string
+  content: BlockMarkdownNode[]
 }
 
 export type BlockMarkdownNode =
@@ -490,23 +760,40 @@ export type BlockMarkdownNode =
   | HeadingBlockNode
   | ListBlockNode
   | TableBlockNode
+  | SectionBlockNode
+  | FootnoteBlockNode
 
 type ListItemMarkerSyntaxNode = {
-  kind: "listitemmarker"
+  kind: "listItemMarker"
   content: string
 }
 
 type TableMarkerSyntaxNode = {
-  kind: "tablemarker"
+  kind: "tableMarker"
   content: string
 }
 
 type HeadingMarkerSyntaxNode = {
-  kind: "headingmarker"
+  kind: "headingMarker"
   content: string
 }
 
-type SyntaxNode = ListItemMarkerSyntaxNode | TableMarkerSyntaxNode | HeadingMarkerSyntaxNode
+type SectionMarkerSyntaxNode = {
+  kind: "sectionMarker"
+  content: string
+}
+
+type FootnoteMarkerSyntaxNode = {
+  kind: "footnoteMarker"
+  content: string
+}
+
+type SyntaxNode =
+  | ListItemMarkerSyntaxNode
+  | TableMarkerSyntaxNode
+  | HeadingMarkerSyntaxNode
+  | SectionMarkerSyntaxNode
+  | FootnoteMarkerSyntaxNode
 
 export type BlockSyntaxMarkdownNode = InlineMarkdownNode | SyntaxNode
 
@@ -549,10 +836,13 @@ type BlockSyntaxMarkdownNodeByKind = {
   code: CodeMarkdownNode
   link: LinkMarkdownNode
   attributed: AttributedStringMarkdownNode
+  footnoteRef: FootnoteRefInlineNode
   text: TextNode
-  listitemmarker: ListItemMarkerSyntaxNode
-  tablemarker: TableMarkerSyntaxNode
-  headingmarker: HeadingMarkerSyntaxNode
+  listItemMarker: ListItemMarkerSyntaxNode
+  tableMarker: TableMarkerSyntaxNode
+  headingMarker: HeadingMarkerSyntaxNode
+  sectionMarker: SectionMarkerSyntaxNode
+  footnoteMarker: FootnoteMarkerSyntaxNode
 }
 
 export const parseBlockMarkdown = (text: string): BlockMarkdownNode[] =>
@@ -585,9 +875,12 @@ const reduceSyntaxNode = <T extends BlockSyntaxMarkdownNode>(node: T): T => {
     case "link":
     case "attributed":
     case "text":
-    case "listitemmarker":
-    case "tablemarker":
-    case "headingmarker":
+    case "listItemMarker":
+    case "tableMarker":
+    case "headingMarker":
+    case "sectionMarker":
+    case "footnoteMarker":
+    case "footnoteRef":
       return node
     default:
       return assertExhaustive(node)
@@ -601,9 +894,12 @@ const syntaxNodeMergeRules: {
   italic: (a, b) => ({ ...a, content: [...a.content, ...b.content] }),
   code: (a, b) => ({ ...a, content: a.content + b.content }),
   text: (a, b) => ({ ...a, content: a.content + b.content }),
-  listitemmarker: (a, b) => ({ ...a, content: a.content + b.content }),
-  tablemarker: (a, b) => ({ ...a, content: a.content + b.content }),
-  headingmarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  listItemMarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  tableMarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  headingMarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  sectionMarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  footnoteMarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  footnoteRef: null,
   link: null,
   attributed: null,
 }

@@ -1,5 +1,6 @@
 import { Fragment, type FunctionalComponent } from "preact"
 import type { InlineMarkdownNode } from "../../shared/utils/markdown.ts"
+import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 
 type Props = {
   node: InlineMarkdownNode
@@ -82,7 +83,15 @@ export const InlineMarkdown: FunctionalComponent<Props> = ({ node }) => {
         </span>
       )
     }
+    case "footnoteRef":
+      return /^\*+$/.test(node.label) ? (
+        <span class="footnote-ref">{node.label}</span>
+      ) : (
+        <sup class="footnote-ref">{node.label}</sup>
+      )
     case "text":
       return node.content
+    default:
+      return assertExhaustive(node)
   }
 }

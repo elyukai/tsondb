@@ -63,6 +63,8 @@
   --color-syntax-table-marker: rgb(237, 58, 118);
   --color-syntax-attributed: rgb(48, 81, 228);
   --color-syntax-heading-marker: rgb(62, 189, 191);
+  --color-syntax-footnote: rgb(48, 126, 228);
+  --color-syntax-section: rgb(172, 147, 3);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -105,6 +107,8 @@
     --color-syntax-table-marker: rgb(244, 135, 171);
     --color-syntax-attributed: rgb(137, 157, 244);
     --color-syntax-heading-marker: rgb(140, 229, 231);
+  --color-syntax-footnote: rgb(157, 199, 255);
+  --color-syntax-section: rgb(247, 231, 135);
   }
 }
 
@@ -704,6 +708,7 @@ form > .field--container {
 .editor--markdown input,
 .editor--markdown .textarea-grow-wrap__mirror {
   font-family: var(--font-mono);
+  line-height: 1.5;
 }
 
 .editor--markdown textarea {
@@ -730,6 +735,14 @@ form > .field--container {
 
 .editor-highlighting .heading-marker {
   color: var(--color-syntax-heading-marker);
+}
+
+.editor-highlighting .footnote-marker {
+  color: var(--color-syntax-footnote);
+}
+
+.editor-highlighting .section-marker {
+  color: var(--color-syntax-section);
 }
 
 .preview .attributed {

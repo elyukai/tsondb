@@ -1,4 +1,4 @@
-import { deepEqual } from "assert/strict"
+import { deepEqual, equal } from "assert/strict"
 import { describe, it } from "node:test"
 import type {
   BlockMarkdownNode,
@@ -8,6 +8,7 @@ import {
   parseBlockMarkdown,
   parseBlockMarkdownForSyntaxHighlighting,
   reduceSyntaxNodes,
+  syntaxNodeToString,
 } from "../../../src/shared/utils/markdown.ts"
 
 describe("parseBlockMarkdown", () => {
@@ -286,11 +287,11 @@ This is the final paragraph.`),
           ordered: false,
           content: [
             {
-              kind: "listitem",
+              kind: "listItem",
               content: [{ kind: "text", content: "This is the first unordered list item." }],
             },
             {
-              kind: "listitem",
+              kind: "listItem",
               content: [{ kind: "text", content: "This is the second unordered list item." }],
             },
           ],
@@ -304,7 +305,7 @@ This is the final paragraph.`),
           ordered: true,
           content: [
             {
-              kind: "listitem",
+              kind: "listItem",
               content: [{ kind: "text", content: "This is the first and only ordered list item." }],
             },
           ],
@@ -353,12 +354,24 @@ This was a table.
         {
           kind: "table",
           header: [
-            [{ kind: "text", content: "Header 1" }],
-            [{ kind: "text", content: "Header 2" }],
+            { kind: "tableCell", content: [{ kind: "text", content: "Header 1" }] },
+            { kind: "tableCell", content: [{ kind: "text", content: "Header 2" }] },
           ],
           rows: [
-            [[{ kind: "text", content: "Cell 1" }], [{ kind: "text", content: "Cell 2" }]],
-            [[{ kind: "text", content: "Cell 3" }], [{ kind: "text", content: "Cell 4" }]],
+            {
+              kind: "tableRow",
+              cells: [
+                { kind: "tableCell", content: [{ kind: "text", content: "Cell 1" }] },
+                { kind: "tableCell", content: [{ kind: "text", content: "Cell 2" }] },
+              ],
+            },
+            {
+              kind: "tableRow",
+              cells: [
+                { kind: "tableCell", content: [{ kind: "text", content: "Cell 3" }] },
+                { kind: "tableCell", content: [{ kind: "text", content: "Cell 4" }] },
+              ],
+            },
           ],
         },
         {
@@ -382,23 +395,25 @@ This was a table.
 `),
       [
         { kind: "text", content: "Here is a table:\n\n" },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Header 1 " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Header 2 " },
-        { kind: "tablemarker", content: "|\n|----------|----------|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: "\n" },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|----------|----------|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Cell 1   " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Cell 2   " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: "\n" },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Cell 3   " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Cell 4   " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: "\n\nThis was a table.\n" },
       ],
     )
@@ -425,12 +440,24 @@ This was a table.
           kind: "table",
           caption: [{ kind: "text", content: "Table Caption" }],
           header: [
-            [{ kind: "text", content: "Header 1" }],
-            [{ kind: "text", content: "Header 2" }],
+            { kind: "tableCell", content: [{ kind: "text", content: "Header 1" }] },
+            { kind: "tableCell", content: [{ kind: "text", content: "Header 2" }] },
           ],
           rows: [
-            [[{ kind: "text", content: "Cell 1" }], [{ kind: "text", content: "Cell 2" }]],
-            [[{ kind: "text", content: "Cell 3" }], [{ kind: "text", content: "Cell 4" }]],
+            {
+              kind: "tableRow",
+              cells: [
+                { kind: "tableCell", content: [{ kind: "text", content: "Cell 1" }] },
+                { kind: "tableCell", content: [{ kind: "text", content: "Cell 2" }] },
+              ],
+            },
+            {
+              kind: "tableRow",
+              cells: [
+                { kind: "tableCell", content: [{ kind: "text", content: "Cell 3" }] },
+                { kind: "tableCell", content: [{ kind: "text", content: "Cell 4" }] },
+              ],
+            },
           ],
         },
         {
@@ -455,27 +482,200 @@ This was a table.
 `),
       [
         { kind: "text", content: "Here is a table:\n\n" },
-        { kind: "tablemarker", content: "|#" },
+        { kind: "tableMarker", content: "|#" },
         { kind: "text", content: " Table Caption     " },
-        { kind: "tablemarker", content: "#|" },
+        { kind: "tableMarker", content: "#|" },
         { kind: "text", content: "\n" },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Header 1 " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Header 2 " },
-        { kind: "tablemarker", content: "|\n|----------|----------|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: "\n" },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|----------|----------|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Cell 1   " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Cell 2   " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: "\n" },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Cell 3   " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: " Cell 4   " },
-        { kind: "tablemarker", content: "|" },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: "\n\nThis was a table.\n" },
+      ],
+    )
+  })
+
+  it("parses a table with section headers", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`Here is a table:
+
+| Header 1      | Header 2      |
+|---------------|---------------|
+| Cell 1        | Cell 2        |
+|===============|===============|
+| Subheader 1   | Subheader 2   |
+| Cell 3        | Cell 4        |
+|===============|===============|
+| Subheader 3                  ||
+| Cell 5        | Cell 6        |
+|---------------|---------------|
+| Cell 7        | Cell 8        |
+
+This was a table.
+`),
+      [
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "Here is a table:" }],
+        },
+        {
+          kind: "table",
+          header: [
+            { kind: "tableCell", content: [{ kind: "text", content: "Header 1" }] },
+            { kind: "tableCell", content: [{ kind: "text", content: "Header 2" }] },
+          ],
+          rows: [
+            {
+              kind: "tableSection",
+              rows: [
+                {
+                  kind: "tableRow",
+                  cells: [
+                    { kind: "tableCell", content: [{ kind: "text", content: "Cell 1" }] },
+                    { kind: "tableCell", content: [{ kind: "text", content: "Cell 2" }] },
+                  ],
+                },
+              ],
+            },
+            {
+              kind: "tableSection",
+              header: [
+                { kind: "tableCell", content: [{ kind: "text", content: "Subheader 1" }] },
+                { kind: "tableCell", content: [{ kind: "text", content: "Subheader 2" }] },
+              ],
+              rows: [
+                {
+                  kind: "tableRow",
+                  cells: [
+                    { kind: "tableCell", content: [{ kind: "text", content: "Cell 3" }] },
+                    { kind: "tableCell", content: [{ kind: "text", content: "Cell 4" }] },
+                  ],
+                },
+              ],
+            },
+            {
+              kind: "tableSection",
+              header: [
+                {
+                  kind: "tableCell",
+                  colSpan: 2,
+                  content: [{ kind: "text", content: "Subheader 3" }],
+                },
+              ],
+              rows: [
+                {
+                  kind: "tableRow",
+                  cells: [
+                    { kind: "tableCell", content: [{ kind: "text", content: "Cell 5" }] },
+                    { kind: "tableCell", content: [{ kind: "text", content: "Cell 6" }] },
+                  ],
+                },
+              ],
+            },
+            {
+              kind: "tableSection",
+              rows: [
+                {
+                  kind: "tableRow",
+                  cells: [
+                    { kind: "tableCell", content: [{ kind: "text", content: "Cell 7" }] },
+                    { kind: "tableCell", content: [{ kind: "text", content: "Cell 8" }] },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This was a table." }],
+        },
+      ],
+    )
+  })
+
+  it("parses a table with section headers for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(`Here is a table:
+
+| Header 1      | Header 2      |
+|---------------|---------------|
+| Cell 1        | Cell 2        |
+|===============|===============|
+| Subheader 1   | Subheader 2   |
+| Cell 3        | Cell 4        |
+|===============|===============|
+| Subheader 3                  ||
+| Cell 5        | Cell 6        |
+|---------------|---------------|
+| Cell 7        | Cell 8        |
+
+This was a table.
+`),
+      [
+        { kind: "text", content: "Here is a table:\n\n" },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Header 1      " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Header 2      " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|---------------|---------------|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Cell 1        " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Cell 2        " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|===============|===============|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Subheader 1   " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Subheader 2   " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Cell 3        " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Cell 4        " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|===============|===============|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Subheader 3                  " },
+        { kind: "tableMarker", content: "||" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Cell 5        " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Cell 6        " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|---------------|---------------|" },
+        { kind: "text", content: "\n" },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Cell 7        " },
+        { kind: "tableMarker", content: "|" },
+        { kind: "text", content: " Cell 8        " },
+        { kind: "tableMarker", content: "|" },
         { kind: "text", content: "\n\nThis was a table.\n" },
       ],
     )
@@ -599,12 +799,227 @@ This is a paragraph under heading 2.
 This is a paragraph under heading 3.
 `),
       [
-        { kind: "headingmarker", content: "# " },
+        { kind: "headingMarker", content: "# " },
         { kind: "text", content: "Heading 1\n\nThis is a paragraph under heading 1.\n\n" },
-        { kind: "headingmarker", content: "## " },
+        { kind: "headingMarker", content: "## " },
         { kind: "text", content: "Heading 2\n\nThis is a paragraph under heading 2.\n\n" },
-        { kind: "headingmarker", content: "### " },
+        { kind: "headingMarker", content: "### " },
         { kind: "text", content: "Heading 3\n\nThis is a paragraph under heading 3.\n" },
+      ],
+    )
+  })
+
+  it("parses a single-line footnote", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown("This is a paragraph with a footnote.[^1]\n\n[^1]: This is the footnote."),
+      [
+        {
+          kind: "paragraph",
+          content: [
+            { kind: "text", content: "This is a paragraph with a footnote." },
+            {
+              kind: "footnoteRef",
+              label: "1",
+            },
+          ],
+        },
+        {
+          kind: "footnote",
+          label: "1",
+          content: [
+            {
+              kind: "paragraph",
+              content: [{ kind: "text", content: "This is the footnote." }],
+            },
+          ],
+        },
+      ],
+    )
+  })
+
+  it("parses a single-line footnote for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(
+        "This is a paragraph with a footnote.[^1]\n\n[^1]: This is the footnote.",
+      ),
+      [
+        { kind: "text", content: "This is a paragraph with a footnote." },
+        { kind: "footnoteRef", label: "[^1]" },
+        { kind: "text", content: "\n\n" },
+        { kind: "footnoteMarker", content: "[^1]:" },
+        { kind: "text", content: " This is the footnote." },
+      ],
+    )
+  })
+
+  it("parses a multi-line footnote", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(
+        `This is a paragraph with a footnote.[^1]
+
+[^1]: This is the footnote.
+
+  It has multiple paragraphs.
+
+  - And
+  - A
+  - List
+
+This is not part of the footnote anymore.`,
+      ),
+      [
+        {
+          kind: "paragraph",
+          content: [
+            { kind: "text", content: "This is a paragraph with a footnote." },
+            {
+              kind: "footnoteRef",
+              label: "1",
+            },
+          ],
+        },
+        {
+          kind: "footnote",
+          label: "1",
+          content: [
+            {
+              kind: "paragraph",
+              content: [{ kind: "text", content: "This is the footnote." }],
+            },
+            {
+              kind: "paragraph",
+              content: [{ kind: "text", content: "It has multiple paragraphs." }],
+            },
+            {
+              kind: "list",
+              ordered: false,
+              content: [
+                { kind: "listItem", content: [{ kind: "text", content: "And" }] },
+                { kind: "listItem", content: [{ kind: "text", content: "A" }] },
+                { kind: "listItem", content: [{ kind: "text", content: "List" }] },
+              ],
+            },
+          ],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is not part of the footnote anymore." }],
+        },
+      ],
+    )
+  })
+
+  it("parses a multi-line footnote for syntax highlighting", () => {
+    equal(
+      parseBlockMarkdownForSyntaxHighlighting(`This is a paragraph with a footnote.[^1]
+
+[^1]: This is the footnote.
+
+  It has multiple paragraphs.
+
+  - And
+  - A
+  - List
+
+This is not part of the footnote anymore.`)
+        .map(syntaxNodeToString)
+        .join(""),
+      `This is a paragraph with a footnote.[^1]
+
+[^1]: This is the footnote.
+
+  It has multiple paragraphs.
+
+  - And
+  - A
+  - List
+
+This is not part of the footnote anymore.`,
+    )
+
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(
+        `This is a paragraph with a footnote.[^1]
+
+[^1]: This is the footnote.
+
+  It has multiple paragraphs.
+
+  - And
+  - A
+  - List
+
+This is not part of the footnote anymore.`,
+      ),
+      [
+        { kind: "text", content: "This is a paragraph with a footnote." },
+        { kind: "footnoteRef", label: "[^1]" },
+        { kind: "text", content: "\n\n" },
+        { kind: "footnoteMarker", content: "[^1]:" },
+        { kind: "text", content: " This is the footnote.\n\n  It has multiple paragraphs.\n\n  " },
+        { kind: "listItemMarker", content: "- " },
+        { kind: "text", content: "And\n  " },
+        { kind: "listItemMarker", content: "- " },
+        { kind: "text", content: "A\n  " },
+        { kind: "listItemMarker", content: "- " },
+        { kind: "text", content: "List\n\nThis is not part of the footnote anymore." },
+      ],
+    )
+  })
+
+  it("parses special named sections", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`This is a paragraph.
+
+::: name
+
+This is a special section.
+
+:::
+
+This is another paragraph.
+`),
+      [
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is a paragraph." }],
+        },
+        {
+          kind: "section",
+          name: "name",
+          content: [
+            {
+              kind: "paragraph",
+              content: [{ kind: "text", content: "This is a special section." }],
+            },
+          ],
+        },
+        {
+          kind: "paragraph",
+          content: [{ kind: "text", content: "This is another paragraph." }],
+        },
+      ],
+    )
+  })
+
+  it("parses special named sections for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(`This is a paragraph.
+
+::: name
+
+This is a special section.
+
+:::
+
+This is another paragraph.
+`),
+      [
+        { kind: "text", content: "This is a paragraph.\n\n" },
+        { kind: "sectionMarker", content: "::: name" },
+        { kind: "text", content: "\n\nThis is a special section.\n\n" },
+        { kind: "sectionMarker", content: ":::" },
+        { kind: "text", content: "\n\nThis is another paragraph.\n" },
       ],
     )
   })
@@ -616,7 +1031,7 @@ describe("reduceSyntaxNodes", () => {
       reduceSyntaxNodes([
         {
           content: "# ",
-          kind: "headingmarker",
+          kind: "headingMarker",
         },
         {
           content: "Heading 1\n\n",
@@ -632,7 +1047,7 @@ describe("reduceSyntaxNodes", () => {
         },
         {
           content: "## ",
-          kind: "headingmarker",
+          kind: "headingMarker",
         },
         {
           content: "Heading 2",
@@ -652,7 +1067,7 @@ describe("reduceSyntaxNodes", () => {
         },
         {
           content: "### ",
-          kind: "headingmarker",
+          kind: "headingMarker",
         },
         {
           content: "Heading 3",
@@ -672,11 +1087,11 @@ describe("reduceSyntaxNodes", () => {
         },
       ]),
       [
-        { kind: "headingmarker", content: "# " },
+        { kind: "headingMarker", content: "# " },
         { kind: "text", content: "Heading 1\n\nThis is a paragraph under heading 1.\n\n" },
-        { kind: "headingmarker", content: "## " },
+        { kind: "headingMarker", content: "## " },
         { kind: "text", content: "Heading 2\n\nThis is a paragraph under heading 2.\n\n" },
-        { kind: "headingmarker", content: "### " },
+        { kind: "headingMarker", content: "### " },
         { kind: "text", content: "Heading 3\n\nThis is a paragraph under heading 3.\n" },
       ],
     )
