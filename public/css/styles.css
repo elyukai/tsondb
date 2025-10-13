@@ -196,6 +196,24 @@ h3 {
   line-height: 1.2;
 }
 
+h4 {
+  margin: 1.2rem 0 0.6rem;
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+h5 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+h6 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
 p {
   margin: 0.5rem 0;
 }
@@ -747,9 +765,10 @@ form > .field--container {
   padding: 1rem;
   background: var(--color-background-secondary);
   flex: 1 1 0;
+  line-height: 1.6;
 }
 
-.preview p {
+.preview :is(p, ul, ol, table) {
   margin: 0.5rem 0 0;
 }
 
