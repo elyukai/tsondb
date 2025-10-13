@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.7.10](https://github.com/elyukai/tsondb/compare/v0.7.9...v0.7.10) (2025-10-13)
+
+
+### Features
+
+* show confirmation dialog for navigation with unsaved changes ([41495ed](https://github.com/elyukai/tsondb/commit/41495ed8dbca34e79b3dd48528a5af860562d1f4))
+
 ## [0.7.9](https://github.com/elyukai/tsondb/compare/v0.7.8...v0.7.9) (2025-10-12)
 
 ## [0.7.8](https://github.com/elyukai/tsondb/compare/v0.7.7...v0.7.8) (2025-10-12)
