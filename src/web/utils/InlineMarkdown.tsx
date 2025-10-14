@@ -89,8 +89,9 @@ export const InlineMarkdown: FunctionalComponent<Props> = ({ node }) => {
         <sup
           class={"footnote-ref" + (isNumeric ? " footnote-ref--numeric" : "")}
           data-reference={node.label}
+          style={{ "--label": isNumeric ? Number.parseInt(node.label) : node.label }}
         >
-          {node.label}
+          <span class="footnote-label">{node.label}</span>
         </sup>
       )
     }

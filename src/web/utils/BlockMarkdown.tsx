@@ -125,17 +125,18 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
       const label = (
         <>
           <span
-            class={"footnote-label" + (isNumeric ? " footnote-label--numeric" : "")}
+            class={"footnote__label" + (isNumeric ? " footnote__label--numeric" : "")}
             data-reference={node.label}
+            style={{ "--label": isNumeric ? Number.parseInt(node.label) : node.label }}
           >
-            {node.label}
+            <span class="footnote-label">{node.label}</span>
             {footnoteLabelSuffix}
           </span>{" "}
         </>
       )
 
       return (
-        <div role="note">
+        <div role="note" class="footnote">
           {insertBefore}
           {node.content.map((n, i) => (
             <BlockMarkdown {...inheritableProps} key={i} node={n} insertBefore={label} />
