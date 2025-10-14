@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.8.5](https://github.com/elyukai/tsondb/compare/v0.8.4...v0.8.5) (2025-10-14)
+
+
+### Features
+
+* **editor:** save instances with cmdOrCtrl+S ([1e45f3e](https://github.com/elyukai/tsondb/commit/1e45f3ec00e3b99d5682d49d64f8b510f01482d7))
+
 ## [0.8.4](https://github.com/elyukai/tsondb/compare/v0.8.3...v0.8.4) (2025-10-14)
 
 
