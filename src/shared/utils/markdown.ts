@@ -871,9 +871,9 @@ const reduceSyntaxNode = <T extends BlockSyntaxMarkdownNode>(node: T): T => {
   switch (node.kind) {
     case "bold":
     case "italic":
+    case "link":
       return { ...node, content: reduceSyntaxNodes(node.content) }
     case "code":
-    case "link":
     case "attributed":
     case "text":
     case "listItemMarker":
