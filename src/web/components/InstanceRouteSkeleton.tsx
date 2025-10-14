@@ -322,6 +322,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
               type="submit"
               name={button.name}
               class={button.primary ? "primary" : undefined}
+              disabled={!hasUnsavedChanges}
             >
               {button.label}
             </button>
