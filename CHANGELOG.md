@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.8.1](https://github.com/elyukai/tsondb/compare/v0.8.0...v0.8.1) (2025-10-14)
+
+
+### Features
+
+* disable save buttons when there are no changes ([eff3a88](https://github.com/elyukai/tsondb/commit/eff3a88605d4df361c5e7621c5fad1113f398e0a))
+* markdown definition lists ([045e7ea](https://github.com/elyukai/tsondb/commit/045e7ea9722944a1703a25754f41d45a1f26f38c))
+* resolve referenced types for instance value type in display name customizers ([2ac2b65](https://github.com/elyukai/tsondb/commit/2ac2b659ac1fe6454a37de7fe805a8f67a7e0f94))
+
+
+### Bug Fixes
+
+* multiple adjacent bold and italic formattings were read as nested ([598111f](https://github.com/elyukai/tsondb/commit/598111fc26eac65f88ee66e3cd5f117cbb700ac2))
+* outer heading level was not respected in containers and footnotes ([73c7f44](https://github.com/elyukai/tsondb/commit/73c7f44f336d2fc9b9af7a09de65476fe6712ad8))
+* reduce content nodes of links ([def9fb1](https://github.com/elyukai/tsondb/commit/def9fb16789cba0750f7223d35ca27e3583029f4))
+* remove beforeunload event listener after save and continue ([abd8eb9](https://github.com/elyukai/tsondb/commit/abd8eb9739a1a1f80e7bdeb05eeccaf45dbabe97))
+
 ## [0.8.0](https://github.com/elyukai/tsondb/compare/v0.7.12...v0.8.0) (2025-10-13)
 
 
