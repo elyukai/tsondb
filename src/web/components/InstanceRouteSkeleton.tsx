@@ -1,7 +1,7 @@
 import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute, type LocationHook } from "preact-iso"
 import type { SetStateAction } from "preact/compat"
-import { useCallback, useContext, useEffect, useState, type Dispatch } from "preact/hooks"
+import { useCallback, useContext, useEffect, useMemo, useState, type Dispatch } from "preact/hooks"
 import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../node/utils/childInstances.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import { removeAt } from "../../shared/utils/array.ts"
@@ -100,17 +100,22 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
 
   const { route } = useLocation()
 
+  const hasUnsavedChanges = useMemo(
+    () => !deepEqual(instanceContent, savedInstanceContent),
+    [instanceContent, savedInstanceContent],
+  )
+
   useEffect(() => {
-    if (deepEqual(instanceContent, savedInstanceContent)) {
-      window.removeEventListener("beforeunload", onBeforeUnload)
-    } else {
+    if (hasUnsavedChanges) {
       window.addEventListener("beforeunload", onBeforeUnload)
+    } else {
+      window.removeEventListener("beforeunload", onBeforeUnload)
     }
 
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload)
     }
-  }, [instanceContent, savedInstanceContent])
+  }, [hasUnsavedChanges])
 
   useEffect(() => {
     document.title =

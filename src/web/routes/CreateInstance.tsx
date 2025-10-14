@@ -56,6 +56,7 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
       switch (buttonName) {
         case "saveandcontinue": {
           route(`/entities/${entity.name}/instances/${createdInstance.instance.id}`)
+          setInstanceContent(createdInstance.instance.content)
           break
         }
         case "saveandaddanother": {
