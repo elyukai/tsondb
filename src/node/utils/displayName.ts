@@ -5,7 +5,7 @@ import {
 } from "../../shared/utils/displayName.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import { serializeEntityDecl, type EntityDecl } from "../schema/declarations/EntityDecl.ts"
-import type { AsType, Type } from "../schema/types/Type.ts"
+import type { AsDeepType, Type } from "../schema/types/Type.ts"
 
 export type GetChildInstancesForInstanceId = (
   parentEntityName: string,
@@ -14,7 +14,7 @@ export type GetChildInstancesForInstanceId = (
 ) => { id: string; content: unknown }[]
 
 export type DisplayNameCustomizer<T extends Type> = (params: {
-  instance: AsType<T>
+  instance: AsDeepType<T>
   instanceId: string
   instanceDisplayName: string
   instanceDisplayNameLocaleId: string | undefined

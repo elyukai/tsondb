@@ -1,10 +1,16 @@
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
-import { isTypeAliasDecl, type Decl } from "../index.ts"
+import {
+  isTypeAliasDecl,
+  type Decl,
+  type EnumDecl,
+  type TypeAliasDecl,
+  type TypeParameter,
+} from "../index.ts"
 import type { BaseNode } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { ArrayType } from "./generic/ArrayType.ts"
 import { formatArrayValue, isArrayType } from "./generic/ArrayType.ts"
-import type { EnumType } from "./generic/EnumType.ts"
+import type { EnumCaseDecl, EnumType } from "./generic/EnumType.ts"
 import { formatEnumType } from "./generic/EnumType.ts"
 import type { MemberDecl, ObjectType } from "./generic/ObjectType.ts"
 import { formatObjectValue, isObjectType } from "./generic/ObjectType.ts"
@@ -104,6 +110,54 @@ export function walkTypeNodeTree(
   }
 }
 
+type EnumCaseTypeAsType<Case extends string, T extends Type | null> = T extends object
+  ? { kind: Case } & { [AV in Case]: AsType<T> }
+  : { kind: Case }
+
+export type AsDeepType<T extends Type> =
+  T extends ArrayType<infer I>
+    ? AsType<I>[]
+    : T extends ObjectType<infer P>
+      ? {
+          [K in keyof P]: P[K] extends MemberDecl<Type, true>
+            ? AsType<P[K]["type"]>
+            : AsType<P[K]["type"]> | undefined
+        }
+      : T extends BooleanType
+        ? boolean
+        : T extends DateType
+          ? Date
+          : T extends FloatType
+            ? number
+            : T extends IntegerType
+              ? number
+              : T extends StringType
+                ? string
+                : T extends TypeArgumentType
+                  ? unknown
+                  : T extends IncludeIdentifierType<TypeParameter[], infer Decl>
+                    ? Decl extends TypeAliasDecl<string, infer TA>
+                      ? AsType<TA>
+                      : Decl extends EnumDecl<string, infer EC>
+                        ? AsType<EnumType<EC>>
+                        : unknown
+                    : T extends NestedEntityMapType
+                      ? unknown
+                      : T extends ReferenceIdentifierType
+                        ? string
+                        : T extends ChildEntitiesType
+                          ? string[]
+                          : T extends EnumType<infer EC>
+                            ? EC extends Record<string, EnumCaseDecl>
+                              ? {
+                                  [Case in keyof EC]: EnumCaseTypeAsType<
+                                    Case & string,
+                                    EC[Case]["type"]
+                                  >
+                                }[keyof EC]
+                              : never
+                            : never
+
 export type AsType<T extends Type> =
   T extends ArrayType<infer I>
     ? AsType<I>[]
@@ -133,7 +187,16 @@ export type AsType<T extends Type> =
                         ? string
                         : T extends ChildEntitiesType
                           ? string[]
-                          : never
+                          : T extends EnumType<infer EC>
+                            ? EC extends Record<string, EnumCaseDecl>
+                              ? {
+                                  [Case in keyof EC]: EnumCaseTypeAsType<
+                                    Case & string,
+                                    EC[Case]["type"]
+                                  >
+                                }[keyof EC]
+                              : never
+                            : never
 
 export type AsNode<T> = T extends (infer I)[]
   ? ArrayType<AsNode<I>>
