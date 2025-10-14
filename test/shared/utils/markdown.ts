@@ -236,6 +236,30 @@ describe("parseBlockMarkdown", () => {
     ])
   })
 
+  it("parses multiple adjacent formattings into multiple syntax nodes", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(
+        "This is a **bold** text before an *italic* and a **bold** and another *italic* text.",
+      ),
+      [
+        {
+          kind: "paragraph",
+          content: [
+            { kind: "text", content: "This is a " },
+            { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+            { kind: "text", content: " text before an " },
+            { kind: "italic", content: [{ kind: "text", content: "italic" }] },
+            { kind: "text", content: " and a " },
+            { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+            { kind: "text", content: " and another " },
+            { kind: "italic", content: [{ kind: "text", content: "italic" }] },
+            { kind: "text", content: " text." },
+          ],
+        },
+      ],
+    )
+  })
+
   it("parses a single-line paragraph for syntax highlighting", () => {
     deepEqual<BlockSyntaxMarkdownNode[]>(
       parseBlockMarkdownForSyntaxHighlighting("This is **bold**"),

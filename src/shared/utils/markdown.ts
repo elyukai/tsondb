@@ -27,7 +27,7 @@ const codeRule: InlineRule = {
 }
 
 const boldWithItalicRule: InlineRule = {
-  pattern: /(?<!\\)\*\*((.*?[^\\*])?\*(?!\*).*?[^\\*]\*.*?)(?<!\\)\*\*/,
+  pattern: /(?<!\\|\*\*.*)\*\*(([^\\*]*)?\*(?!\*).*?[^\\*]\*.*?)(?<!\\)\*\*/,
   map: (result, parseInside) => ({
     kind: "bold",
     content: parseInside(result[1] ?? ""),
@@ -39,7 +39,8 @@ const boldWithItalicRule: InlineRule = {
 }
 
 const italicWithBoldRule: InlineRule = {
-  pattern: /(?<![\\*])\*(?=\*\*|[^*])(.*?\*\*.*?\*\*.*?)(?<=[^\\*]|[^\\]\*\*)\*(?!\*)/,
+  pattern:
+    /(?<![\\*]|[\\*]\*.*)\*(?=\*\*|[^*])([^*]*?\*\*[^*]*?\*\*[^*]*?)(?<=[^\\*]|[^\\]\*\*)\*(?!\*)/,
   map: (result, parseInside) => ({
     kind: "italic",
     content: parseInside(result[1] ?? ""),
