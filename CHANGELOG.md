@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.10.0](https://github.com/elyukai/tsondb/compare/v0.9.0...v0.10.0) (2025-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* improve flexibility for custom styling of footnotes
+
+### Features
+
+* improve flexibility for custom styling of footnotes ([00a218d](https://github.com/elyukai/tsondb/commit/00a218d83fb2dd744ec73909b365e9aca3a7ed2a))
+
 ## [0.9.0](https://github.com/elyukai/tsondb/compare/v0.8.5...v0.9.0) (2025-10-14)
 
 
