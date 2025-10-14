@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.9.0](https://github.com/elyukai/tsondb/compare/v0.8.5...v0.9.0) (2025-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* simplify footnote rendering, make label suffix customizable, add more information to rendered html
+
+### Features
+
+* simplify footnote rendering, make label suffix customizable, add more information to rendered html ([4b37f07](https://github.com/elyukai/tsondb/commit/4b37f07264d08da263ca0ccbdf17797202e86966))
+
+
+### Bug Fixes
+
+* italic with bold inside matched unrelated styles ([25e55fb](https://github.com/elyukai/tsondb/commit/25e55fb93179e6c5b884045066cebfd3ef642a11))
+
 ## [0.8.5](https://github.com/elyukai/tsondb/compare/v0.8.4...v0.8.5) (2025-10-14)
 
 
