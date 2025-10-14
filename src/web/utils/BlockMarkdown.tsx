@@ -105,7 +105,7 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
           </table>
         </>
       )
-    case "section":
+    case "container":
       return (
         <div class={node.name}>
           {insertBefore}

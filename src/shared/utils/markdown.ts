@@ -569,8 +569,8 @@ const tableRule: BlockRule = {
   ],
 }
 
-const sectionRule: BlockRule = {
-  pattern: /^::: (\w+)?(\n+)(.+?)\n:::(\n{2,}|\s*$)/s,
+const containerRule: BlockRule = {
+  pattern: /^::: ([\w-_]+)?(\n+)(.+?)\n:::(\n{2,}|\s*$)/s,
   map: ([
     _match,
     name,
@@ -578,7 +578,7 @@ const sectionRule: BlockRule = {
     content,
     _trailingWhitespace,
   ]): BlockMarkdownNode => ({
-    kind: "section",
+    kind: "container",
     name: name ?? undefined,
     content: parseBlockMarkdown(content ?? ""),
   }),
@@ -690,7 +690,7 @@ const footnoteRule: BlockRule = {
 }
 
 const blockRules: BlockRule[] = [
-  sectionRule,
+  containerRule,
   headingRule,
   footnoteRule,
   tableRule,
@@ -745,7 +745,7 @@ export type TableCellBlockNode = {
 }
 
 export type SectionBlockNode = {
-  kind: "section"
+  kind: "container"
   name?: string
   content: BlockMarkdownNode[]
 }

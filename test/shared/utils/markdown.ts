@@ -1009,7 +1009,7 @@ This is another paragraph.
           content: [{ kind: "text", content: "This is a paragraph." }],
         },
         {
-          kind: "section",
+          kind: "container",
           name: "name",
           content: [
             {
