@@ -1,3 +1,4 @@
+import { chunk } from "./array.ts"
 import { omitUndefinedKeys } from "./object.ts"
 import { assertExhaustive } from "./typeSafety.ts"
 
@@ -618,6 +619,7 @@ export const syntaxNodeToString = (node: BlockSyntaxMarkdownNode): string => {
     case "headingMarker":
     case "sectionMarker":
     case "footnoteMarker":
+    case "definitionMarker":
       return node.content
     case "footnoteRef":
       return node.label
@@ -649,7 +651,8 @@ const addIndentationToSyntax = <T extends BlockSyntaxMarkdownNode>(
       case "tableMarker":
       case "headingMarker":
       case "sectionMarker":
-      case "footnoteMarker": {
+      case "footnoteMarker":
+      case "definitionMarker": {
         const nextNode = nodes[index + 1] ?? nextUpperNode
         const currentContent =
           currentNode.content.endsWith("\n") &&
@@ -689,12 +692,66 @@ const footnoteRule: BlockRule = {
   ],
 }
 
+const definitionListItemSeparatorPattern = /(^.+?(?=\n:)|\n\n[^: ].*?(?=\n:))/s
+
+const definitionListRule: BlockRule = {
+  pattern:
+    /((?:[^\n]+?(?:\n[^\n]+?)*)(?:\n: .+?(?:\n {2}.+?)*)+(?:\n\n(?:[^\n]+?(?:\n[^\n]+?)*)(?:\n: .+?(?:\n(?=\n)|\n {2}.+?)*))*)(\n{2,}|\s*$)/,
+  map: ([_res, content = "", _trailingWhitespace]): DefinitionListBlockNode => {
+    const definitionItemPairs = chunk(content.split(definitionListItemSeparatorPattern).slice(1), 2)
+    const items = definitionItemPairs.map(([termsText = "", definitionsText = ""]) => {
+      const terms = termsText
+        .trim()
+        .split("\n")
+        .map(term => parseInlineMarkdown(term.trim(), false))
+      const definitions = definitionsText
+        .split("\n:")
+        .slice(1)
+        .map(definition => parseBlockMarkdown(removeIndentation(definition.trim())))
+      return {
+        kind: "definitionListItem" as const,
+        terms,
+        definitions,
+      }
+    })
+    return {
+      kind: "definitionList",
+      content: items,
+    }
+  },
+  mapHighlighting: ([_res, content = "", trailingWhitespace]): BlockSyntaxMarkdownNode[] => {
+    const items = chunk(content.split(definitionListItemSeparatorPattern).slice(1), 2).flatMap(
+      ([termsText = "", definitionsText = ""]) => {
+        const terms = termsText
+          .split("\n")
+          .flatMap((term, index, termArray) => [
+            ...parseInlineMarkdown(term, true),
+            ...(index < termArray.length - 1 ? [textNode("\n")] : []),
+          ])
+        const definitions = definitionsText
+          .split("\n:")
+          .slice(1)
+          .flatMap((definition, defIndex, defArray): BlockSyntaxMarkdownNode[] => [
+            { kind: "definitionMarker", content: ":" },
+            ...addIndentationToSyntax(
+              parseBlockMarkdownForSyntaxHighlighting(removeIndentation(definition)),
+            ),
+            ...(defIndex < defArray.length - 1 ? [textNode("\n")] : []),
+          ])
+        return [...terms, textNode("\n"), ...definitions]
+      },
+    )
+    return [...items, ...nodesForTrailingWhitespace(trailingWhitespace)]
+  },
+}
+
 const blockRules: BlockRule[] = [
   containerRule,
   headingRule,
   footnoteRule,
   tableRule,
   listRule,
+  definitionListRule,
   paragraphRule,
 ]
 
@@ -756,6 +813,17 @@ export type FootnoteBlockNode = {
   content: BlockMarkdownNode[]
 }
 
+export type DefinitionListBlockNode = {
+  kind: "definitionList"
+  content: DefinitionListItemBlockNode[]
+}
+
+export type DefinitionListItemBlockNode = {
+  kind: "definitionListItem"
+  terms: InlineMarkdownNode[][]
+  definitions: BlockMarkdownNode[][]
+}
+
 export type BlockMarkdownNode =
   | ParagraphBlockNode
   | HeadingBlockNode
@@ -763,6 +831,7 @@ export type BlockMarkdownNode =
   | TableBlockNode
   | SectionBlockNode
   | FootnoteBlockNode
+  | DefinitionListBlockNode
 
 type ListItemMarkerSyntaxNode = {
   kind: "listItemMarker"
@@ -789,12 +858,18 @@ type FootnoteMarkerSyntaxNode = {
   content: string
 }
 
+type DefinitionMarkerSyntaxNode = {
+  kind: "definitionMarker"
+  content: string
+}
+
 type SyntaxNode =
   | ListItemMarkerSyntaxNode
   | TableMarkerSyntaxNode
   | HeadingMarkerSyntaxNode
   | SectionMarkerSyntaxNode
   | FootnoteMarkerSyntaxNode
+  | DefinitionMarkerSyntaxNode
 
 export type BlockSyntaxMarkdownNode = InlineMarkdownNode | SyntaxNode
 
@@ -844,6 +919,7 @@ type BlockSyntaxMarkdownNodeByKind = {
   headingMarker: HeadingMarkerSyntaxNode
   sectionMarker: SectionMarkerSyntaxNode
   footnoteMarker: FootnoteMarkerSyntaxNode
+  definitionMarker: DefinitionMarkerSyntaxNode
 }
 
 export const parseBlockMarkdown = (text: string): BlockMarkdownNode[] =>
@@ -882,6 +958,7 @@ const reduceSyntaxNode = <T extends BlockSyntaxMarkdownNode>(node: T): T => {
     case "sectionMarker":
     case "footnoteMarker":
     case "footnoteRef":
+    case "definitionMarker":
       return node
     default:
       return assertExhaustive(node)
@@ -900,6 +977,7 @@ const syntaxNodeMergeRules: {
   headingMarker: (a, b) => ({ ...a, content: a.content + b.content }),
   sectionMarker: (a, b) => ({ ...a, content: a.content + b.content }),
   footnoteMarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  definitionMarker: (a, b) => ({ ...a, content: a.content + b.content }),
   footnoteRef: null,
   link: null,
   attributed: null,

@@ -1,6 +1,13 @@
 import { deepEqual, throws } from "assert/strict"
 import { describe, it } from "node:test"
-import { difference, insertAt, removeAt, reorder, unique } from "../../../src/shared/utils/array.ts"
+import {
+  chunk,
+  difference,
+  insertAt,
+  removeAt,
+  reorder,
+  unique,
+} from "../../../src/shared/utils/array.ts"
 
 describe("removeAt", () => {
   it("removes an element at the given index", () => {
@@ -81,5 +88,20 @@ describe("reorder", () => {
   it("throws an error if the targetIndex is out of bounds", () => {
     throws(() => reorder([1, 2, 3], 0, -1), RangeError)
     throws(() => reorder([1, 2, 3], 0, 3), RangeError)
+  })
+})
+
+describe("chunk", () => {
+  it("splits the array into chunks of the given size", () => {
+    deepEqual(chunk([1, 2, 3, 4, 5, 6, 7, 8, 9], 4), [[1, 2, 3, 4], [5, 6, 7, 8], [9]])
+  })
+
+  it("returns an empty array when given an empty array", () => {
+    deepEqual(chunk([], 3), [])
+  })
+
+  it("throws an error if the chunk size is less than or equal to zero", () => {
+    throws(() => chunk([1, 2, 3], 0), RangeError)
+    throws(() => chunk([1, 2, 3], -1), RangeError)
   })
 })

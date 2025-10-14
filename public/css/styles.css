@@ -725,7 +725,7 @@ form > .field--container {
   color: var(--color-syntax-italic);
 }
 
-.editor-highlighting .list-item-marker {
+.editor-highlighting :is(.list-item-marker, .definition-description-marker) {
   color: var(--color-syntax-list-item-marker);
 }
 

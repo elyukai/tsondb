@@ -20,6 +20,8 @@ export const BlockMarkdownHighlighting: FunctionalComponent<Props> = ({ node }) 
       return <span class="footnote-marker">{node.content}</span>
     case "footnoteRef":
       return <span class="footnote-marker">{node.label}</span>
+    case "definitionMarker":
+      return <span class="definition-description-marker">{node.content}</span>
     default:
       return <InlineMarkdown node={node} />
   }

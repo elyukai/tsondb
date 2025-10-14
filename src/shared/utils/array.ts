@@ -94,3 +94,21 @@ export const reorder = <T>(arr: T[], sourceIndex: number, targetIndex: number): 
     ...arr.slice(sourceIndex + 1),
   ]
 }
+
+/**
+ * Splits an array into chunks of a specified size.
+ * @param arr The array to be chunked.
+ * @param size The size of each chunk.
+ * @returns An array of chunks, where each chunk is an array of elements. The last chunk may be smaller than the specified size if there are not enough elements left.
+ */
+export const chunk = <T>(arr: T[], size: number): T[][] => {
+  if (size <= 0) {
+    throw new RangeError(`size must be a positive integer, got ${size.toString()}`)
+  }
+
+  return arr.reduce((chunks: T[][], item, index) => {
+    const chunkIndex = Math.floor(index / size)
+    ;(chunks[chunkIndex] ??= []).push(item)
+    return chunks
+  }, [])
+}

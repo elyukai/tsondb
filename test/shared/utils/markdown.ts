@@ -1047,6 +1047,189 @@ This is another paragraph.
       ],
     )
   })
+
+  it("parses definition lists", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`Term 1
+: Definition 1
+
+Term 2
+: Definition 2
+: Definition 3
+
+Term 3
+: Definition 4 line 1
+
+  Definition 4 line 2
+
+Term 4
+: Definition 5 line 1
+
+  Definition 5 line 2
+: Definition 6
+
+Term 5 with **bold**
+: Definition 7 with *italic* and a [link](https://example.com)
+`),
+      [
+        {
+          kind: "definitionList",
+          content: [
+            {
+              kind: "definitionListItem",
+              terms: [[{ kind: "text", content: "Term 1" }]],
+              definitions: [
+                [
+                  {
+                    kind: "paragraph",
+                    content: [{ kind: "text", content: "Definition 1" }],
+                  },
+                ],
+              ],
+            },
+            {
+              kind: "definitionListItem",
+              terms: [[{ kind: "text", content: "Term 2" }]],
+              definitions: [
+                [
+                  {
+                    kind: "paragraph",
+                    content: [{ kind: "text", content: "Definition 2" }],
+                  },
+                ],
+                [
+                  {
+                    kind: "paragraph",
+                    content: [{ kind: "text", content: "Definition 3" }],
+                  },
+                ],
+              ],
+            },
+            {
+              kind: "definitionListItem",
+              terms: [[{ kind: "text", content: "Term 3" }]],
+              definitions: [
+                [
+                  {
+                    kind: "paragraph",
+                    content: [{ kind: "text", content: "Definition 4 line 1" }],
+                  },
+                  {
+                    kind: "paragraph",
+                    content: [{ kind: "text", content: "Definition 4 line 2" }],
+                  },
+                ],
+              ],
+            },
+            {
+              kind: "definitionListItem",
+              terms: [[{ kind: "text", content: "Term 4" }]],
+              definitions: [
+                [
+                  {
+                    kind: "paragraph",
+                    content: [{ kind: "text", content: "Definition 5 line 1" }],
+                  },
+                  {
+                    kind: "paragraph",
+                    content: [{ kind: "text", content: "Definition 5 line 2" }],
+                  },
+                ],
+                [
+                  {
+                    kind: "paragraph",
+                    content: [{ kind: "text", content: "Definition 6" }],
+                  },
+                ],
+              ],
+            },
+            {
+              kind: "definitionListItem",
+              terms: [
+                [
+                  { kind: "text", content: "Term 5 with " },
+                  { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+                ],
+              ],
+              definitions: [
+                [
+                  {
+                    kind: "paragraph",
+                    content: [
+                      { kind: "text", content: "Definition 7 with " },
+                      { kind: "italic", content: [{ kind: "text", content: "italic" }] },
+                      { kind: "text", content: " and a " },
+                      {
+                        kind: "link",
+                        href: "https://example.com",
+                        content: [{ kind: "text", content: "link" }],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+      ],
+    )
+  })
+
+  it("parses definition lists for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(`Term 1
+: Definition 1
+
+Term 2
+: Definition 2
+: Definition 3
+
+Term 3
+: Definition 4 line 1
+
+  Definition 4 line 2
+
+Term 4
+: Definition 5 line 1
+
+  Definition 5 line 2
+: Definition 6
+
+Term 5 with **bold**
+: Definition 7 with *italic* and a [link](https://example.com)
+`),
+      [
+        { kind: "text", content: "Term 1\n" },
+        { kind: "definitionMarker", content: ":" },
+        { kind: "text", content: " Definition 1\n\nTerm 2\n" },
+        { kind: "definitionMarker", content: ":" },
+        { kind: "text", content: " Definition 2\n" },
+        { kind: "definitionMarker", content: ":" },
+        { kind: "text", content: " Definition 3\n\nTerm 3\n" },
+        { kind: "definitionMarker", content: ":" },
+        { kind: "text", content: " Definition 4 line 1\n\n  Definition 4 line 2\n\nTerm 4\n" },
+        { kind: "definitionMarker", content: ":" },
+        { kind: "text", content: " Definition 5 line 1\n\n  Definition 5 line 2\n" },
+        { kind: "definitionMarker", content: ":" },
+        { kind: "text", content: " Definition 6\n\nTerm 5 with " },
+        { kind: "bold", content: [{ kind: "text", content: "**bold**" }] },
+        { kind: "text", content: "\n" },
+        { kind: "definitionMarker", content: ":" },
+        {
+          kind: "text",
+          content: " Definition 7 with ",
+        },
+        { kind: "italic", content: [{ kind: "text", content: "*italic*" }] },
+        { kind: "text", content: " and a " },
+        {
+          kind: "link",
+          href: "https://example.com",
+          content: [{ kind: "text", content: "[link](https://example.com)" }],
+        },
+        { kind: "text", content: "\n" },
+      ],
+    )
+  })
 })
 
 describe("reduceSyntaxNodes", () => {

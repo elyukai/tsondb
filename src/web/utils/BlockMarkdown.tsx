@@ -137,6 +137,32 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
         </div>
       )
     }
+    case "definitionList":
+      return (
+        <>
+          {insertBefore}
+          <dl>
+            {node.content.map((item, ii) => (
+              <div key={ii}>
+                {item.terms.map((term, ti) => (
+                  <dt key={ti}>
+                    {term.map((inline, iii) => (
+                      <InlineMarkdown key={iii} node={inline} />
+                    ))}
+                  </dt>
+                ))}
+                {item.definitions.map((definition, di) => (
+                  <dd key={di}>
+                    {definition.map((n, i) => (
+                      <BlockMarkdown key={i} node={n} outerHeadingLevel={outerHeadingLevel} />
+                    ))}
+                  </dd>
+                ))}
+              </div>
+            ))}
+          </dl>
+        </>
+      )
     default:
       return assertExhaustive(node)
   }
