@@ -8,7 +8,9 @@ import {
 import {
   InstanceRouteSkeleton,
   type InstanceRouteSkeletonInitializer,
+  type InstanceRouteSkeletonOnSaveHandler,
   type InstanceRouteSkeletonOnSubmitHandler,
+  type InstanceRouteSkeletonSubmitHandler,
   type InstanceRouteSkeletonTitleBuilder,
 } from "../components/InstanceRouteSkeleton.tsx"
 
@@ -47,19 +49,19 @@ const titleBuilder: InstanceRouteSkeletonTitleBuilder = ({
   return undefined
 }
 
-const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
+const submit: InstanceRouteSkeletonSubmitHandler<"saveandcontinue" | "save"> = async ({
+  action,
   locales,
   entity,
   instanceId,
   instanceContent,
-  buttonName,
   childInstances,
   route,
   updateLocalGitState,
   setInstanceContent,
 }) => {
   try {
-    if (instanceId && buttonName) {
+    if (instanceId) {
       await updateInstanceByEntityNameAndId(locales, entity.name, instanceId, {
         childInstances,
         entityName: entity.name,
@@ -69,7 +71,7 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
 
       await updateLocalGitState?.()
 
-      switch (buttonName) {
+      switch (action) {
         case "saveandcontinue": {
           setInstanceContent(instanceContent)
           break
@@ -87,6 +89,15 @@ const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({
   }
 }
 
+const onSubmit: InstanceRouteSkeletonOnSubmitHandler = async ({ buttonName, ...other }) => {
+  if (buttonName === "save" || buttonName === "saveandcontinue") {
+    await submit({ ...other, action: buttonName })
+  }
+}
+
+const onSave: InstanceRouteSkeletonOnSaveHandler = other =>
+  submit({ ...other, action: "saveandcontinue" })
+
 export const Instance: FunctionalComponent = () => {
   return (
     <InstanceRouteSkeleton
@@ -98,6 +109,7 @@ export const Instance: FunctionalComponent = () => {
       init={init}
       titleBuilder={titleBuilder}
       onSubmit={onSubmit}
+      onSave={onSave}
     />
   )
 }

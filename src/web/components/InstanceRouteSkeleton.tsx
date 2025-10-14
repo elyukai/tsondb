@@ -37,12 +37,43 @@ export type InstanceRouteSkeletonInitializer = (values: {
   getDeclFromDeclName: GetDeclFromDeclName
 }) => Promise<void>
 
+export type InstanceRouteSkeletonSubmitHandler<A extends string = string> = (values: {
+  locales: string[]
+  entity: SerializedEntityDecl
+  instanceId: string | undefined
+  instanceContent: unknown
+  action: A
+  customId: string
+  isLocaleEntity: boolean | undefined
+  childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
+  route: LocationHook["route"]
+  setInstanceContent: Dispatch<SetStateAction<unknown>>
+  setCustomId: Dispatch<SetStateAction<string>>
+  getDeclFromDeclName: GetDeclFromDeclName
+  updateLocalGitState?: () => Promise<void>
+}) => Promise<void>
+
 export type InstanceRouteSkeletonOnSubmitHandler = (values: {
   locales: string[]
   entity: SerializedEntityDecl
   instanceId: string | undefined
   instanceContent: unknown
   buttonName: string | undefined
+  customId: string
+  isLocaleEntity: boolean | undefined
+  childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
+  route: LocationHook["route"]
+  setInstanceContent: Dispatch<SetStateAction<unknown>>
+  setCustomId: Dispatch<SetStateAction<string>>
+  getDeclFromDeclName: GetDeclFromDeclName
+  updateLocalGitState?: () => Promise<void>
+}) => Promise<void>
+
+export type InstanceRouteSkeletonOnSaveHandler = (values: {
+  locales: string[]
+  entity: SerializedEntityDecl
+  instanceId: string | undefined
+  instanceContent: unknown
   customId: string
   isLocaleEntity: boolean | undefined
   childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
@@ -66,6 +97,7 @@ type Props = {
   init: InstanceRouteSkeletonInitializer
   titleBuilder: InstanceRouteSkeletonTitleBuilder
   onSubmit: InstanceRouteSkeletonOnSubmitHandler
+  onSave: InstanceRouteSkeletonOnSaveHandler
 }
 
 const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -74,12 +106,20 @@ const onBeforeUnload = (event: BeforeUnloadEvent) => {
   event.returnValue = "unsaved changes"
 }
 
+const applePlatformPattern = /(Mac|iPhone|iPod|iPad)/i
+
+// eslint-disable-next-line @typescript-eslint/no-deprecated
+const isApplePlatform = () => applePlatformPattern.test(window.navigator.platform)
+
+const checkCmdOrCtrl = (event: KeyboardEvent) => (isApplePlatform() ? event.metaKey : event.ctrlKey)
+
 export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   mode,
   buttons,
   init,
   titleBuilder,
   onSubmit,
+  onSave,
 }) => {
   const {
     params: { name, id },
@@ -105,6 +145,48 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
     [instanceContent, savedInstanceContent],
   )
 
+  const saveHandler = useCallback(
+    (event: KeyboardEvent) => {
+      if (checkCmdOrCtrl(event) && event.key === "s" && entity && instanceContent !== undefined) {
+        event.preventDefault()
+        runWithLoading(() =>
+          onSave({
+            locales,
+            entity,
+            instanceId: id,
+            instanceContent,
+            route,
+            customId,
+            getDeclFromDeclName,
+            isLocaleEntity,
+            setCustomId,
+            setInstanceContent: value => {
+              setInstanceContent(value)
+              setSavedInstanceContent(value)
+            },
+            childInstances,
+            updateLocalGitState: client?.updateLocalState,
+          }),
+        ).catch((error: unknown) => {
+          console.error("Error submitting instance data:", error)
+        })
+      }
+    },
+    [
+      childInstances,
+      client?.updateLocalState,
+      customId,
+      entity,
+      getDeclFromDeclName,
+      id,
+      instanceContent,
+      isLocaleEntity,
+      locales,
+      onSave,
+      route,
+    ],
+  )
+
   useEffect(() => {
     if (hasUnsavedChanges) {
       window.addEventListener("beforeunload", onBeforeUnload)
@@ -116,6 +198,18 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
       window.removeEventListener("beforeunload", onBeforeUnload)
     }
   }, [hasUnsavedChanges])
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      window.addEventListener("keydown", saveHandler)
+    } else {
+      window.removeEventListener("keydown", saveHandler)
+    }
+
+    return () => {
+      window.removeEventListener("keydown", saveHandler)
+    }
+  }, [hasUnsavedChanges, saveHandler])
 
   useEffect(() => {
     document.title =
