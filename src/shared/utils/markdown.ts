@@ -435,6 +435,21 @@ const parseContentRowForSyntaxHighlighting = (row: string): BlockSyntaxMarkdownN
     }
   }, [])
 
+const trimPipes = (text: string) => text.replace(/^\|/, "").replace(/\|$/, "")
+
+const parseTableAlignment = (text: string): "left" | "center" | "right" | undefined => {
+  const trimmed = text.trim()
+  if (/^:-+:$/.test(trimmed)) {
+    return "center"
+  } else if (/^:-+$/.test(trimmed)) {
+    return "left"
+  } else if (/^-+:$/.test(trimmed)) {
+    return "right"
+  } else {
+    return undefined
+  }
+}
+
 const tableRule: BlockRule = {
   pattern:
     /^(?:(\|#)(.+?)(#\|)\n)?(\|)?(.+?(?:(?<!\\)\|.+?)+)((?<!\\)\|)?\n((?:\| *)?(?:-{3,}|:-{2,}|-{2,}:|:-+:)(?: *\| *(?:-{3,}|:-{2,}|-{2,}:|:-+:))*(?: *\|)?)((?:\n\|?.+?(?:(?<!\\)\|+.+?)*(?:(?<!\\)\|+)?)+)(\n{2,}|$)/,
@@ -446,13 +461,20 @@ const tableRule: BlockRule = {
     _headerMarkerStart,
     headers,
     _headerMarkerEnd,
-    _bodySeparators,
+    bodySeparators = "",
     body,
     _trailingWhitespace,
-  ]) =>
+  ]): TableBlockNode =>
     omitUndefinedKeys({
       kind: "table",
       caption: caption !== undefined ? parseInlineMarkdown(caption.trim(), false) : undefined,
+      columns: trimPipes(bodySeparators)
+        .split("|")
+        .map(col =>
+          omitUndefinedKeys({
+            alignment: parseTableAlignment(col),
+          }),
+        ),
       header: headers ? parseContentRow(headers) : [],
       rows:
         body
@@ -780,8 +802,13 @@ export type ListItemNode = {
 export type TableBlockNode = {
   kind: "table"
   caption?: InlineMarkdownNode[]
+  columns: TableColumnStyleBlockNode[]
   header: TableCellBlockNode[]
   rows: TableRowBlockNode[] | TableSectionBlockNode[]
+}
+
+export type TableColumnStyleBlockNode = {
+  alignment?: "left" | "center" | "right"
 }
 
 export type TableSectionBlockNode = {

@@ -377,6 +377,7 @@ This was a table.
         },
         {
           kind: "table",
+          columns: [{}, {}],
           header: [
             { kind: "tableCell", content: [{ kind: "text", content: "Header 1" }] },
             { kind: "tableCell", content: [{ kind: "text", content: "Header 2" }] },
@@ -463,6 +464,7 @@ This was a table.
         {
           kind: "table",
           caption: [{ kind: "text", content: "Table Caption" }],
+          columns: [{}, {}],
           header: [
             { kind: "tableCell", content: [{ kind: "text", content: "Header 1" }] },
             { kind: "tableCell", content: [{ kind: "text", content: "Header 2" }] },
@@ -559,6 +561,7 @@ This was a table.
         },
         {
           kind: "table",
+          columns: [{}, {}],
           header: [
             { kind: "tableCell", content: [{ kind: "text", content: "Header 1" }] },
             { kind: "tableCell", content: [{ kind: "text", content: "Header 2" }] },

@@ -3,6 +3,7 @@ import {
   checkTableRowsAreSections,
   type BlockMarkdownNode,
   type TableCellBlockNode,
+  type TableColumnStyleBlockNode,
 } from "../../shared/utils/markdown.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import { InlineMarkdown } from "./InlineMarkdown.tsx"
@@ -84,21 +85,23 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
               </caption>
             )}
             <thead>
-              <TableRow cells={node.header} cellType="th" />
+              <TableRow columns={node.columns} cells={node.header} cellType="th" />
             </thead>
             {checkTableRowsAreSections(node.rows) ? (
               node.rows.map((section, si) => (
                 <tbody key={si}>
-                  {section.header && <TableRow cells={section.header} cellType="th" />}
+                  {section.header && (
+                    <TableRow columns={node.columns} cells={section.header} cellType="th" />
+                  )}
                   {section.rows.map((row, ri) => (
-                    <TableRow key={ri} cells={row.cells} />
+                    <TableRow key={ri} columns={node.columns} cells={row.cells} />
                   ))}
                 </tbody>
               ))
             ) : (
               <tbody>
                 {node.rows.map((row, ri) => (
-                  <TableRow key={ri} cells={row.cells} />
+                  <TableRow key={ri} columns={node.columns} cells={row.cells} />
                 ))}
               </tbody>
             )}
@@ -169,9 +172,11 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
 }
 
 const TableRow = ({
+  columns,
   cells,
   cellType = "td",
 }: {
+  columns: TableColumnStyleBlockNode[]
   cells: TableCellBlockNode[]
   cellType?: "td" | "th"
 }) => {
@@ -179,17 +184,29 @@ const TableRow = ({
 
   return (
     <tr>
-      {cells.map((tc, ci) => (
-        <CellTag
-          key={ci}
-          scope={cellType === "th" && cells.length === 1 ? "colgroup" : undefined}
-          colSpan={tc.colSpan}
-        >
-          {tc.content.map((inline, cii) => (
-            <InlineMarkdown key={cii} node={inline} />
-          ))}
-        </CellTag>
-      ))}
+      {cells.reduce<[elements: preact.ComponentChildren[], columnIndex: number]>(
+        ([elements, columnIndex], tc, ci) => [
+          [
+            ...elements,
+            <CellTag
+              key={ci}
+              scope={cellType === "th" && cells.length === 1 ? "colgroup" : undefined}
+              colSpan={tc.colSpan}
+              style={
+                columns[columnIndex]?.alignment
+                  ? { textAlign: columns[columnIndex].alignment }
+                  : undefined
+              }
+            >
+              {tc.content.map((inline, cii) => (
+                <InlineMarkdown key={cii} node={inline} />
+              ))}
+            </CellTag>,
+          ],
+          columnIndex + (tc.colSpan ?? 1),
+        ],
+        [[], 0],
+      )}
     </tr>
   )
 }
