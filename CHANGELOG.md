@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.8.3](https://github.com/elyukai/tsondb/compare/v0.8.2...v0.8.3) (2025-10-14)
+
+
+### Bug Fixes
+
+* **markdown:** apply table column text alignment indicators ([bc905cf](https://github.com/elyukai/tsondb/commit/bc905cf4975189244bada0e297b50971716fc8bc))
+
 ## [0.8.2](https://github.com/elyukai/tsondb/compare/v0.8.1...v0.8.2) (2025-10-14)
 
 
