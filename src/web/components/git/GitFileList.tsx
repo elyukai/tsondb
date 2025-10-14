@@ -41,6 +41,10 @@ export const GitFileList: <A extends string>(props: Props<A>) => ComponentChildr
                   onClick={() => {
                     route(`/entities/${entityName}/instances/${instance.id}`)
                   }}
+                  disabled={
+                    (instance.gitStatus?.index === "D" && instance.gitStatus.workingDir === " ") ||
+                    instance.gitStatus?.workingDir === "D"
+                  }
                 >
                   View
                 </button>
