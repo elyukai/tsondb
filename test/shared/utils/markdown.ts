@@ -1,5 +1,5 @@
 import { deepEqual, equal } from "assert/strict"
-import { describe, it } from "node:test"
+import { describe, it, test } from "node:test"
 import type {
   BlockMarkdownNode,
   BlockSyntaxMarkdownNode,
@@ -237,27 +237,60 @@ describe("parseBlockMarkdown", () => {
   })
 
   it("parses multiple adjacent formattings into multiple syntax nodes", () => {
-    deepEqual<BlockMarkdownNode[]>(
-      parseBlockMarkdown(
-        "This is a **bold** text before an *italic* and a **bold** and another *italic* text.",
-      ),
-      [
-        {
-          kind: "paragraph",
-          content: [
-            { kind: "text", content: "This is a " },
-            { kind: "bold", content: [{ kind: "text", content: "bold" }] },
-            { kind: "text", content: " text before an " },
-            { kind: "italic", content: [{ kind: "text", content: "italic" }] },
-            { kind: "text", content: " and a " },
-            { kind: "bold", content: [{ kind: "text", content: "bold" }] },
-            { kind: "text", content: " and another " },
-            { kind: "italic", content: [{ kind: "text", content: "italic" }] },
-            { kind: "text", content: " text." },
-          ],
-        },
-      ],
-    )
+    test("alternating styles", () => {
+      deepEqual<BlockMarkdownNode[]>(
+        parseBlockMarkdown(
+          "This is a **bold** text before an *italic* and a **bold** and another *italic* text.",
+        ),
+        [
+          {
+            kind: "paragraph",
+            content: [
+              { kind: "text", content: "This is a " },
+              { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+              { kind: "text", content: " text before an " },
+              { kind: "italic", content: [{ kind: "text", content: "italic" }] },
+              { kind: "text", content: " and a " },
+              { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+              { kind: "text", content: " and another " },
+              { kind: "italic", content: [{ kind: "text", content: "italic" }] },
+              { kind: "text", content: " text." },
+            ],
+          },
+        ],
+      )
+    })
+    test("multiple of the same styles adjacent", () => {
+      deepEqual<BlockMarkdownNode[]>(
+        parseBlockMarkdown(
+          "Here is another *italic* text and *another* with a **bold** in between, before it is an *italic* again. **Bold** and **bold** might also come directly after each other and an *italic* might also be followed directly by another **bold** one.",
+        ),
+        [
+          {
+            kind: "paragraph",
+            content: [
+              { kind: "text", content: "Here is another " },
+              { kind: "italic", content: [{ kind: "text", content: "italic" }] },
+              { kind: "text", content: " text and " },
+              { kind: "italic", content: [{ kind: "text", content: "another" }] },
+              { kind: "text", content: " with a " },
+              { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+              { kind: "text", content: " in between, before it is an " },
+              { kind: "italic", content: [{ kind: "text", content: "italic" }] },
+              { kind: "text", content: " again. " },
+              { kind: "bold", content: [{ kind: "text", content: "Bold" }] },
+              { kind: "text", content: " and " },
+              { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+              { kind: "text", content: " might also come directly after each other and an " },
+              { kind: "italic", content: [{ kind: "text", content: "italic" }] },
+              { kind: "text", content: " might also be followed directly by another " },
+              { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+              { kind: "text", content: " one." },
+            ],
+          },
+        ],
+      )
+    })
   })
 
   it("parses a single-line paragraph for syntax highlighting", () => {
