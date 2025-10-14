@@ -83,12 +83,17 @@ export const InlineMarkdown: FunctionalComponent<Props> = ({ node }) => {
         </span>
       )
     }
-    case "footnoteRef":
-      return /^\*+$/.test(node.label) ? (
-        <span class="footnote-ref">{node.label}</span>
-      ) : (
-        <sup class="footnote-ref">{node.label}</sup>
+    case "footnoteRef": {
+      const isNumeric = /^\d+$/.test(node.label)
+      return (
+        <sup
+          class={"footnote-ref" + (isNumeric ? " footnote-ref--numeric" : "")}
+          data-reference={node.label}
+        >
+          {node.label}
+        </sup>
       )
+    }
     case "text":
       return node.content
     default:

@@ -12,13 +12,16 @@ type Props = {
   node: BlockMarkdownNode
   outerHeadingLevel?: number
   insertBefore?: preact.ComponentChildren
+  footnoteLabelSuffix?: string
 }
 
 export const BlockMarkdown: FunctionalComponent<Props> = ({
   node,
   outerHeadingLevel = 0,
   insertBefore,
+  footnoteLabelSuffix = ")",
 }) => {
+  const inheritableProps = { outerHeadingLevel, footnoteLabelSuffix }
   switch (node.kind) {
     case "paragraph":
       return (
@@ -113,29 +116,29 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
         <div class={node.name}>
           {insertBefore}
           {node.content.map((childNode, i) => (
-            <BlockMarkdown key={i} node={childNode} outerHeadingLevel={outerHeadingLevel} />
+            <BlockMarkdown {...inheritableProps} key={i} node={childNode} />
           ))}
         </div>
       )
     case "footnote": {
+      const isNumeric = /^\d+$/.test(node.label)
       const label = (
         <>
-          <span class="footnote-label">
+          <span
+            class={"footnote-label" + (isNumeric ? " footnote-label--numeric" : "")}
+            data-reference={node.label}
+          >
             {node.label}
-            {/^\*+$/.test(node.label) ? ")" : ":"}
+            {footnoteLabelSuffix}
           </span>{" "}
         </>
       )
+
       return (
         <div role="note">
           {insertBefore}
           {node.content.map((n, i) => (
-            <BlockMarkdown
-              key={i}
-              node={n}
-              outerHeadingLevel={outerHeadingLevel}
-              insertBefore={label}
-            />
+            <BlockMarkdown {...inheritableProps} key={i} node={n} insertBefore={label} />
           ))}
         </div>
       )
@@ -157,7 +160,7 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
                 {item.definitions.map((definition, di) => (
                   <dd key={di}>
                     {definition.map((n, i) => (
-                      <BlockMarkdown key={i} node={n} outerHeadingLevel={outerHeadingLevel} />
+                      <BlockMarkdown {...inheritableProps} key={i} node={n} />
                     ))}
                   </dd>
                 ))}

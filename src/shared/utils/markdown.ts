@@ -695,7 +695,7 @@ const addIndentationToSyntax = <T extends BlockSyntaxMarkdownNode>(
   }, [])
 
 const footnoteRule: BlockRule = {
-  pattern: /^\[\^([a-zA-Z0-9*]+?)\]: (.+?(?:\n(?: {2}.+)?)*)(\n{2,}|\s*$)/,
+  pattern: /^\[\^([a-zA-Z0-9]+?)\]: (.+?(?:\n(?: {2}.+)?)*)(\n{2,}|\s*$)/,
   map: ([_match, label = "", content = "", _trailingWhitespace]): BlockMarkdownNode => ({
     kind: "footnote",
     label: label,

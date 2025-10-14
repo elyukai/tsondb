@@ -6,12 +6,14 @@ type Props = {
   class?: string
   string: string
   outerHeadingLevel?: number
+  footnoteLabelSuffix?: string
 }
 
 export const Markdown: FunctionalComponent<Props> = ({
   class: className,
   string,
   outerHeadingLevel,
+  footnoteLabelSuffix,
 }) => {
   const blocks = parseBlockMarkdown(string)
   const blockElements = blocks.map((block, i) => (
@@ -19,6 +21,7 @@ export const Markdown: FunctionalComponent<Props> = ({
       key={`md-block-${i.toString()}`}
       node={block}
       outerHeadingLevel={outerHeadingLevel}
+      footnoteLabelSuffix={footnoteLabelSuffix}
     />
   ))
 
