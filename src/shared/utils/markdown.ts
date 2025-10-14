@@ -696,7 +696,7 @@ const definitionListItemSeparatorPattern = /(^.+?(?=\n:)|\n\n[^: ].*?(?=\n:))/s
 
 const definitionListRule: BlockRule = {
   pattern:
-    /((?:[^\n]+?(?:\n[^\n]+?)*)(?:\n: .+?(?:\n {2}.+?)*)+(?:\n\n(?:[^\n]+?(?:\n[^\n]+?)*)(?:\n: .+?(?:\n(?=\n)|\n {2}.+?)*))*)(\n{2,}|\s*$)/,
+    /^((?:[^\n]+?(?:\n[^\n]+?)*)(?:\n: .+?(?:\n {2}.+?)*)+(?:\n\n(?:[^\n]+?(?:\n[^\n]+?)*)(?:\n: .+?(?:\n(?=\n)|\n {2}.+?)*))*)(\n{2,}|\s*$)/,
   map: ([_res, content = "", _trailingWhitespace]): DefinitionListBlockNode => {
     const definitionItemPairs = chunk(content.split(definitionListItemSeparatorPattern).slice(1), 2)
     const items = definitionItemPairs.map(([termsText = "", definitionsText = ""]) => {
