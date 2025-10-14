@@ -110,7 +110,7 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
         <div class={node.name}>
           {insertBefore}
           {node.content.map((childNode, i) => (
-            <BlockMarkdown key={i} node={childNode} />
+            <BlockMarkdown key={i} node={childNode} outerHeadingLevel={outerHeadingLevel} />
           ))}
         </div>
       )
@@ -127,7 +127,12 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
         <div role="note">
           {insertBefore}
           {node.content.map((n, i) => (
-            <BlockMarkdown key={i} node={n} insertBefore={label} />
+            <BlockMarkdown
+              key={i}
+              node={n}
+              outerHeadingLevel={outerHeadingLevel}
+              insertBefore={label}
+            />
           ))}
         </div>
       )
