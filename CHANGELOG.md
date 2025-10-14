@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.8.4](https://github.com/elyukai/tsondb/compare/v0.8.3...v0.8.4) (2025-10-14)
+
+
+### Bug Fixes
+
+* **markdown:** markdown table should not emit column index ([d4e414a](https://github.com/elyukai/tsondb/commit/d4e414ace23e378a0f96713f142aca9a41154255))
+
 ## [0.8.3](https://github.com/elyukai/tsondb/compare/v0.8.2...v0.8.3) (2025-10-14)
 
 
