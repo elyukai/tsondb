@@ -184,29 +184,31 @@ const TableRow = ({
 
   return (
     <tr>
-      {cells.reduce<[elements: preact.ComponentChildren[], columnIndex: number]>(
-        ([elements, columnIndex], tc, ci) => [
-          [
-            ...elements,
-            <CellTag
-              key={ci}
-              scope={cellType === "th" && cells.length === 1 ? "colgroup" : undefined}
-              colSpan={tc.colSpan}
-              style={
-                columns[columnIndex]?.alignment
-                  ? { textAlign: columns[columnIndex].alignment }
-                  : undefined
-              }
-            >
-              {tc.content.map((inline, cii) => (
-                <InlineMarkdown key={cii} node={inline} />
-              ))}
-            </CellTag>,
+      {
+        cells.reduce<[elements: preact.ComponentChildren[], columnIndex: number]>(
+          ([elements, columnIndex], tc, ci) => [
+            [
+              ...elements,
+              <CellTag
+                key={ci}
+                scope={cellType === "th" && cells.length === 1 ? "colgroup" : undefined}
+                colSpan={tc.colSpan}
+                style={
+                  columns[columnIndex]?.alignment
+                    ? { textAlign: columns[columnIndex].alignment }
+                    : undefined
+                }
+              >
+                {tc.content.map((inline, cii) => (
+                  <InlineMarkdown key={cii} node={inline} />
+                ))}
+              </CellTag>,
+            ],
+            columnIndex + (tc.colSpan ?? 1),
           ],
-          columnIndex + (tc.colSpan ?? 1),
-        ],
-        [[], 0],
-      )}
+          [[], 0],
+        )[0]
+      }
     </tr>
   )
 }
