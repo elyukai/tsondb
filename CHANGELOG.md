@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.8.2](https://github.com/elyukai/tsondb/compare/v0.8.1...v0.8.2) (2025-10-14)
+
+
+### Bug Fixes
+
+* **markdown:** only parse definition lists at the start of the remaining text ([796e04c](https://github.com/elyukai/tsondb/commit/796e04c7397006c5710a9e73d68c05c82f2d5f2e))
+
 ## [0.8.1](https://github.com/elyukai/tsondb/compare/v0.8.0...v0.8.1) (2025-10-14)
 
 
