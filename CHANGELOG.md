@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.10.2](https://github.com/elyukai/tsondb/compare/v0.10.1...v0.10.2) (2025-10-17)
+
+
+### Features
+
+* **markdown:** add support for superscript ([23743d1](https://github.com/elyukai/tsondb/commit/23743d14654dde455acb0600756a21d2b0ea2e33))
+
 ## [0.10.1](https://github.com/elyukai/tsondb/compare/v0.10.0...v0.10.1) (2025-10-17)
 
 
