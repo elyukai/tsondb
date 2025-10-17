@@ -329,8 +329,11 @@ const parseForInlineRules = (
   }
 }
 
-const parseInlineMarkdown = (text: string, forSyntaxHighlighting: boolean): InlineMarkdownNode[] =>
-  parseForInlineRules(inlineRules, text, forSyntaxHighlighting)
+const parseInlineMarkdown = (text: string): InlineMarkdownNode[] =>
+  parseForInlineRules(inlineRules, text, false)
+
+const parseInlineMarkdownForSyntaxHighlighting = (text: string): InlineMarkdownNode[] =>
+  parseForInlineRules(inlineRules, text, true)
 
 type BlockRule = {
   pattern: RegExp
@@ -351,7 +354,7 @@ const listRule: BlockRule = {
     ordered: /^\d+\. /.test(result[0]),
     content: (result[1] ?? "").split("\n").map(item => ({
       kind: "listItem",
-      content: parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, ""), false),
+      content: parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, "")),
     })),
   }),
   mapHighlighting: result => [
@@ -360,7 +363,7 @@ const listRule: BlockRule = {
         kind: "listItemMarker",
         content: /^(\d+\. |[-*] )/.exec(item)?.[1] ?? "",
       },
-      ...parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, ""), true),
+      ...parseInlineMarkdownForSyntaxHighlighting(item.replace(/^\d+\. |[-*] /, "")),
       ...(index < array.length - 1 ? [textNode("\n")] : []),
     ]),
     ...nodesForTrailingWhitespace(result[2]),
@@ -371,10 +374,10 @@ const paragraphRule: BlockRule = {
   pattern: /^((?:[^\n]+?)(?:\n[^\n]+?)*)(\n{2,}|\s*$)/,
   map: ([_res, content = "", _trailingWhitespace]) => ({
     kind: "paragraph",
-    content: parseInlineMarkdown(content, false),
+    content: parseInlineMarkdown(content),
   }),
   mapHighlighting: ([_res, content = "", trailingWhitespace]) => [
-    ...parseInlineMarkdown(content, true),
+    ...parseInlineMarkdownForSyntaxHighlighting(content),
     ...nodesForTrailingWhitespace(trailingWhitespace),
   ],
 }
@@ -384,11 +387,11 @@ const headingRule: BlockRule = {
   map: result => ({
     kind: "heading",
     level: result[1]?.length ?? 1,
-    content: parseInlineMarkdown(result[3] ?? "", false),
+    content: parseInlineMarkdown(result[3] ?? ""),
   }),
   mapHighlighting: result => [
     { kind: "headingMarker", content: (result[1] ?? "") + (result[2] ?? "") },
-    ...parseInlineMarkdown(result[3] ?? "", true),
+    ...parseInlineMarkdownForSyntaxHighlighting(result[3] ?? ""),
     ...nodesForTrailingWhitespace(result[4]),
   ],
 }
@@ -418,7 +421,7 @@ const parseContentRow = (row: string): TableCellBlockNode[] =>
           omitUndefinedKeys({
             kind: "tableCell",
             colSpan: colSpan !== undefined && colSpan > 1 ? colSpan : undefined,
-            content: parseInlineMarkdown(segment.trim(), false),
+            content: parseInlineMarkdown(segment.trim()),
           }),
         ]
       }
@@ -429,7 +432,7 @@ const parseContentRow = (row: string): TableCellBlockNode[] =>
 const parseContentRowForSyntaxHighlighting = (row: string): BlockSyntaxMarkdownNode[] =>
   row.split(/(\|+)/).reduce<BlockSyntaxMarkdownNode[]>((acc, segment, index) => {
     if (index % 2 === 0) {
-      return [...acc, ...parseInlineMarkdown(segment, true)]
+      return [...acc, ...parseInlineMarkdownForSyntaxHighlighting(segment)]
     } else {
       return [...acc, tableMarker(segment)]
     }
@@ -467,7 +470,10 @@ const tableRule: BlockRule = {
   ]): TableBlockNode =>
     omitUndefinedKeys({
       kind: "table",
-      caption: caption !== undefined ? parseInlineMarkdown(caption.trim(), false) : undefined,
+      caption:
+        caption !== undefined
+          ? parseInlineMarkdownForSyntaxHighlighting(caption.trim())
+          : undefined,
       columns: trimPipes(bodySeparators)
         .split("|")
         .map(col =>
@@ -563,7 +569,7 @@ const tableRule: BlockRule = {
     ...(caption !== undefined
       ? [
           tableMarker(captionMarkerStart ?? ""),
-          ...parseInlineMarkdown(caption, true),
+          ...parseInlineMarkdownForSyntaxHighlighting(caption),
           tableMarker(captionMarkerEnd ?? ""),
           textNode("\n"),
         ]
@@ -573,8 +579,8 @@ const tableRule: BlockRule = {
       ?.split("|")
       .flatMap((th, i): BlockSyntaxMarkdownNode[] =>
         i === 0
-          ? parseInlineMarkdown(th, true)
-          : [tableMarker("|"), ...parseInlineMarkdown(th, true)],
+          ? parseInlineMarkdownForSyntaxHighlighting(th)
+          : [tableMarker("|"), ...parseInlineMarkdownForSyntaxHighlighting(th)],
       ) ?? []),
     tableMarker(headerMarkerEnd ?? ""),
     textNode("\n"),
@@ -725,7 +731,7 @@ const definitionListRule: BlockRule = {
       const terms = termsText
         .trim()
         .split("\n")
-        .map(term => parseInlineMarkdown(term.trim(), false))
+        .map(term => parseInlineMarkdown(term.trim()))
       const definitions = definitionsText
         .split("\n:")
         .slice(1)
@@ -747,7 +753,7 @@ const definitionListRule: BlockRule = {
         const terms = termsText
           .split("\n")
           .flatMap((term, index, termArray) => [
-            ...parseInlineMarkdown(term, true),
+            ...parseInlineMarkdownForSyntaxHighlighting(term),
             ...(index < termArray.length - 1 ? [textNode("\n")] : []),
           ])
         const definitions = definitionsText
