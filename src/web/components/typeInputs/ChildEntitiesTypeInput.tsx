@@ -68,6 +68,7 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
                 onChange={newItem => {
                   onChildChange(originalIndex, newItem)
                 }}
+                childInstances={item.childInstances}
               />
             </li>
           ))}
