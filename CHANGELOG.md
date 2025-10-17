@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.10.1](https://github.com/elyukai/tsondb/compare/v0.10.0...v0.10.1) (2025-10-17)
+
+
+### Bug Fixes
+
+* disable viewing a file in the changes list when it has been deleted ([80f5f85](https://github.com/elyukai/tsondb/commit/80f5f85906b52d5a0383d4e058290c9d173bd8ce))
+* display nested child instances ([10214bc](https://github.com/elyukai/tsondb/commit/10214bc97ac01f3e5a9280f74a374a82656b8e18))
+
 ## [0.10.0](https://github.com/elyukai/tsondb/compare/v0.9.0...v0.10.0) (2025-10-14)
 
 
