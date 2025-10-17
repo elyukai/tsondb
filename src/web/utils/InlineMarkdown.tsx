@@ -83,6 +83,14 @@ export const InlineMarkdown: FunctionalComponent<Props> = ({ node }) => {
         </span>
       )
     }
+    case "superscript":
+      return (
+        <sup>
+          {node.content.map((inline, i) => (
+            <InlineMarkdown node={inline} key={i} />
+          ))}
+        </sup>
+      )
     case "footnoteRef": {
       const isNumeric = /^\d+$/.test(node.label)
       return (

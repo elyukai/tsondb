@@ -3,13 +3,37 @@ import { describe, it, test } from "node:test"
 import type {
   BlockMarkdownNode,
   BlockSyntaxMarkdownNode,
+  InlineMarkdownNode,
 } from "../../../src/shared/utils/markdown.ts"
 import {
   parseBlockMarkdown,
   parseBlockMarkdownForSyntaxHighlighting,
+  parseInlineMarkdown,
+  parseInlineMarkdownForSyntaxHighlighting,
   reduceSyntaxNodes,
   syntaxNodeToString,
 } from "../../../src/shared/utils/markdown.ts"
+
+describe("parseInlineMarkdown", () => {
+  it("parses superscript formatting", () => {
+    deepEqual<InlineMarkdownNode[]>(parseInlineMarkdown("This is ^superscript^."), [
+      { kind: "text", content: "This is " },
+      { kind: "superscript", content: [{ kind: "text", content: "superscript" }] },
+      { kind: "text", content: "." },
+    ])
+  })
+
+  it("parses superscript formatting for syntax highlighting", () => {
+    deepEqual<InlineMarkdownNode[]>(
+      parseInlineMarkdownForSyntaxHighlighting("This is ^superscript^."),
+      [
+        { kind: "text", content: "This is " },
+        { kind: "superscript", content: [{ kind: "text", content: "^superscript^" }] },
+        { kind: "text", content: "." },
+      ],
+    )
+  })
+})
 
 describe("parseBlockMarkdown", () => {
   it("parses a single bold Markdown formatting", () => {

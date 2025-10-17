@@ -210,6 +210,18 @@ const attributedRule: InlineRule = {
   },
 }
 
+const superscriptRule: InlineRule = {
+  pattern: /\^(.*?)\^/,
+  map: (result, parseInside) => ({
+    kind: "superscript",
+    content: parseInside(result[1] ?? ""),
+  }),
+  mapHighlighting: (result, parseInside) => ({
+    kind: "superscript",
+    content: [textNode("^"), ...parseInside(result[1] ?? ""), textNode("^")],
+  }),
+}
+
 const footnoteRefRule: InlineRule = {
   pattern: /(?<!\\)\[\^([a-zA-Z0-9*]+?)\]/,
   map: ([_match, label = ""]) => ({
@@ -249,6 +261,7 @@ const inlineRules: InlineRule[] = [
   italicWithBoldRule,
   boldRule,
   italicRule,
+  superscriptRule,
   footnoteRefRule,
   textRule,
 ]
@@ -285,6 +298,11 @@ type AttributedStringMarkdownNode = {
   content: InlineMarkdownNode[]
 }
 
+type SuperscriptInlineNode = {
+  kind: "superscript"
+  content: InlineMarkdownNode[]
+}
+
 type FootnoteRefInlineNode = {
   kind: "footnoteRef"
   label: string
@@ -297,6 +315,7 @@ export type InlineMarkdownNode =
   | LinkMarkdownNode
   | AttributedStringMarkdownNode
   | TextNode
+  | SuperscriptInlineNode
   | FootnoteRefInlineNode
 
 const parseForInlineRules = (
@@ -329,11 +348,11 @@ const parseForInlineRules = (
   }
 }
 
-const parseInlineMarkdown = (text: string): InlineMarkdownNode[] =>
+export const parseInlineMarkdown = (text: string): InlineMarkdownNode[] =>
   parseForInlineRules(inlineRules, text, false)
 
-const parseInlineMarkdownForSyntaxHighlighting = (text: string): InlineMarkdownNode[] =>
-  parseForInlineRules(inlineRules, text, true)
+export const parseInlineMarkdownForSyntaxHighlighting = (text: string): InlineMarkdownNode[] =>
+  reduceSyntaxNodes(parseForInlineRules(inlineRules, text, true))
 
 type BlockRule = {
   pattern: RegExp
@@ -639,6 +658,7 @@ export const syntaxNodeToString = (node: BlockSyntaxMarkdownNode): string => {
     case "italic":
     case "link":
     case "attributed":
+    case "superscript":
       return node.content.map(syntaxNodeToString).join("")
     case "text":
     case "code":
@@ -666,6 +686,7 @@ const addIndentationToSyntax = <T extends BlockSyntaxMarkdownNode>(
       case "italic":
       case "link":
       case "attributed":
+      case "superscript":
         return [
           ...accNodes,
           {
@@ -952,6 +973,7 @@ type BlockSyntaxMarkdownNodeByKind = {
   headingMarker: HeadingMarkerSyntaxNode
   sectionMarker: SectionMarkerSyntaxNode
   footnoteMarker: FootnoteMarkerSyntaxNode
+  superscript: SuperscriptInlineNode
   definitionMarker: DefinitionMarkerSyntaxNode
 }
 
@@ -981,6 +1003,7 @@ const reduceSyntaxNode = <T extends BlockSyntaxMarkdownNode>(node: T): T => {
     case "bold":
     case "italic":
     case "link":
+    case "superscript":
       return { ...node, content: reduceSyntaxNodes(node.content) }
     case "code":
     case "attributed":
@@ -1010,6 +1033,7 @@ const syntaxNodeMergeRules: {
   headingMarker: (a, b) => ({ ...a, content: a.content + b.content }),
   sectionMarker: (a, b) => ({ ...a, content: a.content + b.content }),
   footnoteMarker: (a, b) => ({ ...a, content: a.content + b.content }),
+  superscript: (a, b) => ({ ...a, content: [...a.content, ...b.content] }),
   definitionMarker: (a, b) => ({ ...a, content: a.content + b.content }),
   footnoteRef: null,
   link: null,
