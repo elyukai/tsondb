@@ -1,10 +1,11 @@
 import Debug from "debug"
+import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import type { Decl } from "./declarations/Declaration.ts"
 import { getParameterNames, walkNodeTree } from "./declarations/Declaration.ts"
 import type { EntityDecl } from "./declarations/EntityDecl.ts"
 import { isEntityDecl } from "./declarations/EntityDecl.ts"
 import { cases, isEnumDecl } from "./declarations/EnumDecl.ts"
-import { getNestedDeclarations, type NestedDecl } from "./Node.ts"
+import { getNestedDeclarations, NodeKind, type NestedDecl, type Node } from "./Node.ts"
 import type { EnumCaseDecl } from "./types/generic/EnumType.ts"
 import { isObjectType } from "./types/generic/ObjectType.ts"
 import { isStringType } from "./types/primitives/StringType.ts"
@@ -241,6 +242,82 @@ const checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType = (dec
   }
 }
 
+const isDeclarationRecursive = (declToCheck: Decl): boolean => {
+  const isDeclarationIncludedInNode = (visitedDecls: Decl[], node: Node): boolean => {
+    switch (node.kind) {
+      case NodeKind.EntityDecl:
+      case NodeKind.EnumDecl:
+      case NodeKind.TypeAliasDecl:
+        return visitedDecls.includes(node)
+          ? false
+          : declToCheck === node ||
+              isDeclarationIncludedInNode([...visitedDecls, node], node.type.value)
+      case NodeKind.BooleanType:
+      case NodeKind.DateType:
+      case NodeKind.FloatType:
+      case NodeKind.IntegerType:
+      case NodeKind.StringType:
+      case NodeKind.TypeArgumentType:
+      case NodeKind.ReferenceIdentifierType:
+      case NodeKind.TypeParameter:
+      case NodeKind.ChildEntitiesType:
+        return false
+      case NodeKind.ArrayType:
+        return isDeclarationIncludedInNode(visitedDecls, node.items)
+      case NodeKind.ObjectType:
+        return Object.entries(node.properties).some(([_, memberDecl]) =>
+          isDeclarationIncludedInNode(visitedDecls, memberDecl.type),
+        )
+      case NodeKind.IncludeIdentifierType:
+        return (
+          declToCheck === node.reference ||
+          isDeclarationIncludedInNode(visitedDecls, node.reference)
+        )
+      case NodeKind.NestedEntityMapType:
+        return isDeclarationIncludedInNode(visitedDecls, node.type.value)
+      case NodeKind.EnumType:
+        return Object.entries(node.values).some(
+          ([_, caseDecl]) =>
+            caseDecl.type !== null && isDeclarationIncludedInNode(visitedDecls, caseDecl.type),
+        )
+      default:
+        return assertExhaustive(node)
+    }
+  }
+
+  return isDeclarationIncludedInNode([declToCheck], declToCheck.type.value)
+}
+
+const checkRecursiveGenericTypeAliasesAndEnumerationsAreOnlyParameterizedDirectlyInTypeAliases = (
+  declarations: Decl[],
+) => {
+  const genericRecursiveDeclarations = declarations.filter(
+    decl => isDeclarationRecursive(decl) && decl.parameters.length > 0,
+  )
+
+  for (const decl of declarations) {
+    walkNodeTree((node, parentTypes) => {
+      if (
+        isIncludeIdentifierType(node) &&
+        genericRecursiveDeclarations.includes(node.reference) &&
+        decl !== node.reference
+      ) {
+        if (parentTypes.length > 0) {
+          throw TypeError(
+            `generic recursive type "${node.reference.name}", referenced in declaration "${decl.name}", may only be included as a direct descendant of a type alias. This is required for resolving generics for outputs without support for generics, as well as internal type validation.`,
+          )
+        }
+
+        if (decl.parameters.length > 0) {
+          throw TypeError(
+            `generic recursive type "${node.reference.name}", referenced in declaration "${decl.name}", may only be included in a non-generic type alias. This is required for resolving generics for outputs without support for generics, as well as internal type validation.`,
+          )
+        }
+      }
+    }, decl)
+  }
+}
+
 const addDeclarations = (existingDecls: NestedDecl[], declsToAdd: NestedDecl[]): NestedDecl[] =>
   declsToAdd.reduce((accDecls, decl) => {
     if (!accDecls.includes(decl)) {
@@ -278,6 +355,10 @@ export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema 
   checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType(allDeclsWithoutNestedEntities)
   debug("checking child entity types ...")
   checkChildEntityTypes(localeEntity, allDeclsWithoutNestedEntities)
+  debug("checking generic recursive types ...")
+  checkRecursiveGenericTypeAliasesAndEnumerationsAreOnlyParameterizedDirectlyInTypeAliases(
+    allDeclsWithoutNestedEntities,
+  )
 
   debug("created schema, no integrity violations found")
 
