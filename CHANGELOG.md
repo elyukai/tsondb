@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.11.0](https://github.com/elyukai/tsondb/compare/v0.10.2...v0.11.0) (2025-10-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* handle self-recursive generic declarations
+
+### Features
+
+* handle self-recursive generic declarations ([f1a4633](https://github.com/elyukai/tsondb/commit/f1a46334447a766b70a8635b38dcc0acb98c5eb9))
+
+
+### Bug Fixes
+
+* check generic recursive types to be able to be fully resolved ([c2b1b93](https://github.com/elyukai/tsondb/commit/c2b1b93a587f018cbd53b62de4ce7fb2d75ded61))
+
 ## [0.10.2](https://github.com/elyukai/tsondb/compare/v0.10.1...v0.10.2) (2025-10-17)
 
 
