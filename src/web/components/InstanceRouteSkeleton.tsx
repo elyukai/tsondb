@@ -4,7 +4,6 @@ import type { SetStateAction } from "preact/compat"
 import { useCallback, useContext, useEffect, useMemo, useState, type Dispatch } from "preact/hooks"
 import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../node/utils/childInstances.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
-import { removeAt } from "../../shared/utils/array.ts"
 import { deepEqual } from "../../shared/utils/compare.ts"
 import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
@@ -279,23 +278,6 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
     }
   }
 
-  const handleOnChildChange = useCallback((index: number, value: unknown) => {
-    setChildInstances(old =>
-      old[index] ? old.with(index, { ...old[index], content: value }) : old,
-    )
-  }, [])
-
-  const handleOnChildAdd = useCallback((entityName: string, value: unknown) => {
-    setChildInstances(old => [
-      ...old,
-      { entityName, childInstances: [], id: undefined, content: value },
-    ])
-  }, [])
-
-  const handleOnChildRemove = useCallback((index: number) => {
-    setChildInstances(old => removeAt(old, index))
-  }, [])
-
   if (!name || (mode === "edit" && !id)) {
     return <NotFound />
   }
@@ -404,9 +386,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           childInstances={childInstances}
           getDeclFromDeclName={getDeclFromDeclName}
           onChange={setInstanceContent}
-          onChildChange={handleOnChildChange}
-          onChildAdd={handleOnChildAdd}
-          onChildRemove={handleOnChildRemove}
+          setChildInstances={setChildInstances}
           checkIsLocaleEntity={checkIsLocaleEntity}
         />
         <div class="form-footer btns">

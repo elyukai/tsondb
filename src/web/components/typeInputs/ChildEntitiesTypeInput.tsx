@@ -1,23 +1,16 @@
 import type { FunctionComponent } from "preact"
+import { useCallback } from "preact/hooks"
 import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../../node/utils/childInstances.ts"
 import { isSerializedEntityDecl } from "../../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedChildEntitiesType } from "../../../shared/schema/types/ChildEntitiesType.ts"
+import { removeAt } from "../../../shared/utils/array.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
 
 type Props = TypeInputProps<SerializedChildEntitiesType>
 
 export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
-  const {
-    type,
-    path,
-    childInstances,
-    disabled,
-    getDeclFromDeclName,
-    onChildAdd,
-    onChildChange,
-    onChildRemove,
-  } = props
+  const { type, path, childInstances, disabled, getDeclFromDeclName, setChildInstances } = props
 
   const childEntity = getDeclFromDeclName(type.entity)
 
@@ -29,6 +22,51 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
       ],
     )
     .filter(([childInstance]) => childInstance.entityName === type.entity)
+
+  const onChildChange = useCallback(
+    (index: number, value: unknown) => {
+      setChildInstances(old =>
+        old[index] ? old.with(index, { ...old[index], content: value }) : old,
+      )
+    },
+    [setChildInstances],
+  )
+
+  const onGrandChildrenChange = useCallback(
+    (
+      index: number,
+      newChildren: (
+        oldInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[],
+      ) => UnsafeEntityTaggedInstanceContainerWithChildInstances[],
+    ) => {
+      setChildInstances(old =>
+        old[index]
+          ? old.with(index, {
+              ...old[index],
+              childInstances: newChildren(old[index].childInstances),
+            })
+          : old,
+      )
+    },
+    [setChildInstances],
+  )
+
+  const onChildAdd = useCallback(
+    (entityName: string, value: unknown) => {
+      setChildInstances(old => [
+        ...old,
+        { entityName, childInstances: [], id: undefined, content: value },
+      ])
+    },
+    [setChildInstances],
+  )
+
+  const onChildRemove = useCallback(
+    (index: number) => {
+      setChildInstances(old => removeAt(old, index))
+    },
+    [setChildInstances],
+  )
 
   if (childEntity === undefined || !isSerializedEntityDecl(childEntity)) {
     return (
@@ -69,6 +107,9 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
                   onChildChange(originalIndex, newItem)
                 }}
                 childInstances={item.childInstances}
+                setChildInstances={newChildInstances => {
+                  onGrandChildrenChange(originalIndex, newChildInstances)
+                }}
               />
             </li>
           ))}

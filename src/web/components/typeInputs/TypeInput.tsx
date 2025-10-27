@@ -29,9 +29,11 @@ export type TypeInputProps<T, V = unknown> = {
   disabled?: boolean
   getDeclFromDeclName: GetDeclFromDeclName
   onChange: (value: V) => void
-  onChildChange: (index: number, value: unknown) => void
-  onChildAdd: (entityName: string, value: unknown) => void
-  onChildRemove: (index: number) => void
+  setChildInstances: (
+    newInstances: (
+      oldInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[],
+    ) => UnsafeEntityTaggedInstanceContainerWithChildInstances[],
+  ) => void
   checkIsLocaleEntity: (entityName: string) => boolean
 }
 
