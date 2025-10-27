@@ -936,14 +936,37 @@ const parseActiveBlockSyntaxRule = (
   res: RegExpExecArray,
 ): BlockSyntaxMarkdownNode[] => rule.mapHighlighting(res)
 
+const leadingNewlinesPattern = /^((?:[ \t]*\n)*)/
+
 const parseForBlockRules = <R>(
   rules: BlockRule[],
   text: string,
   ruleParser: (rule: BlockRule, res: RegExpExecArray) => R[],
+  trimLeadingWhitespace?: true | ((text: string) => R[]),
   remainingRules: BlockRule[] = rules,
 ): R[] => {
   if (text.length === 0 || remainingRules[0] === undefined) {
     return []
+  } else if (trimLeadingWhitespace === true) {
+    return parseForBlockRules(
+      rules,
+      text.replace(leadingNewlinesPattern, ""),
+      ruleParser,
+      undefined,
+      remainingRules,
+    )
+  } else if (trimLeadingWhitespace) {
+    const matchedText = text.match(leadingNewlinesPattern)?.[0]
+    return [
+      ...(matchedText ? trimLeadingWhitespace(matchedText) : []),
+      ...parseForBlockRules(
+        rules,
+        text.replace(leadingNewlinesPattern, ""),
+        ruleParser,
+        undefined,
+        remainingRules,
+      ),
+    ]
   }
 
   const activeRule = remainingRules[0]
@@ -956,7 +979,13 @@ const parseForBlockRules = <R>(
       ...(after.length > 0 ? parseForBlockRules(rules, after, ruleParser) : []),
     ]
   } else {
-    return parseForBlockRules(rules, text, ruleParser, remainingRules.slice(1))
+    return parseForBlockRules(
+      rules,
+      text,
+      ruleParser,
+      trimLeadingWhitespace,
+      remainingRules.slice(1),
+    )
   }
 }
 
@@ -978,10 +1007,12 @@ type BlockSyntaxMarkdownNodeByKind = {
 }
 
 export const parseBlockMarkdown = (text: string): BlockMarkdownNode[] =>
-  parseForBlockRules(blockRules, text, parseActiveBlockRule)
+  parseForBlockRules(blockRules, text, parseActiveBlockRule, true)
 
 export const parseBlockMarkdownForSyntaxHighlighting = (text: string): BlockSyntaxMarkdownNode[] =>
-  reduceSyntaxNodes(parseForBlockRules(blockRules, text, parseActiveBlockSyntaxRule))
+  reduceSyntaxNodes(
+    parseForBlockRules(blockRules, text, parseActiveBlockSyntaxRule, text => [textNode(text)]),
+  )
 
 export const reduceSyntaxNodes = <T extends BlockSyntaxMarkdownNode>(nodes: T[]): T[] =>
   nodes.reduce<T[]>((reducedNodes, node, index) => {

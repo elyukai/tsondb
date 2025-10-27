@@ -48,6 +48,28 @@ describe("parseBlockMarkdown", () => {
     ])
   })
 
+  it("ignores leading newlines", () => {
+    deepEqual<BlockMarkdownNode[]>(parseBlockMarkdown("\n\nThis is **bold**"), [
+      {
+        kind: "paragraph",
+        content: [
+          { kind: "text", content: "This is " },
+          { kind: "bold", content: [{ kind: "text", content: "bold" }] },
+        ],
+      },
+    ])
+  })
+
+  it("preserves leading newlines for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting("\n\nThis is **bold**"),
+      [
+        { kind: "text", content: "\n\nThis is " },
+        { kind: "bold", content: [{ kind: "text", content: "**bold**" }] },
+      ],
+    )
+  })
+
   it("parses multiple bold Markdown formattings", () => {
     deepEqual<BlockMarkdownNode[]>(
       parseBlockMarkdown("This is **bold** and this is also **bold**."),
