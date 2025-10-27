@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.11.1](https://github.com/elyukai/tsondb/compare/v0.11.0...v0.11.1) (2025-10-27)
+
+
+### Bug Fixes
+
+* edit child entities at any level ([7f36761](https://github.com/elyukai/tsondb/commit/7f367610cf76d41649be361280ad279a665ebccd))
+* **markdown:** empty output on leading newlines ([196b804](https://github.com/elyukai/tsondb/commit/196b8045d90774af8a66823e2e0322cbc3beb125))
+
 ## [0.11.0](https://github.com/elyukai/tsondb/compare/v0.10.2...v0.11.0) (2025-10-27)
 
 
