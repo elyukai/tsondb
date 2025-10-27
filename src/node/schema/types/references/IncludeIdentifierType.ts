@@ -1,9 +1,12 @@
 import type { SerializedTypeArguments } from "../../../../shared/schema/declarations/Declaration.ts"
 import type { SerializedIncludeIdentifierType } from "../../../../shared/schema/types/IncludeIdentifierType.ts"
-import type { IncludableDeclP, TypeArguments } from "../../declarations/Declaration.ts"
-import { getTypeArgumentsRecord } from "../../declarations/Declaration.ts"
+import type { Decl, IncludableDeclP, TypeArguments } from "../../declarations/Declaration.ts"
+import {
+  getTypeArgumentsRecord,
+  isDeclWithoutTypeParameters,
+} from "../../declarations/Declaration.ts"
 import type { EnumDecl } from "../../declarations/EnumDecl.ts"
-import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.ts"
+import { isTypeAliasDecl, type TypeAliasDecl } from "../../declarations/TypeAliasDecl.ts"
 import type {
   GetNestedDeclarations,
   GetReferences,
@@ -26,6 +29,7 @@ import type { EnumCaseDecl } from "../generic/EnumType.ts"
 import { formatEnumType } from "../generic/EnumType.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
 import { formatValue } from "../Type.ts"
+import { isTypeArgumentType } from "./TypeArgumentType.ts"
 
 type TConstraint<Params extends TypeParameter[]> =
   | TypeAliasDecl<string, Type, Params>
@@ -84,25 +88,64 @@ export const getNestedDeclarationsInIncludeIdentifierType: GetNestedDeclarations
 
 export const validateIncludeIdentifierType: Validator<IncludeIdentifierType> = (
   helpers,
+  inDecls,
   type,
   value,
-) => validateDecl(helpers, type.reference, type.args, value)
+) => validateDecl(helpers, inDecls, type.reference, type.args, value)
 
 export const resolveTypeArgumentsInIncludeIdentifierType = (<T extends IncludeIdentifierType>(
   args: Record<string, Type>,
   type: T,
-) =>
-  (isNoGenericIncludeIdentifierType(type)
-    ? type
-    : resolveTypeArguments(
-        getTypeArgumentsRecord(
-          type.reference,
-          type.args.map(arg => resolveTypeArguments(args, arg)),
+  inDecl: Decl[],
+) => {
+  if (isNoGenericIncludeIdentifierType(type)) {
+    return type
+  } else {
+    type ReturnType = T extends IncludeIdentifierType<[], IncludableDeclP<[]>> ? T : Type
+
+    const parentDecl = inDecl[inDecl.length - 1]
+    const grandParentDecl = inDecl[inDecl.length - 2]
+
+    if (grandParentDecl?.name === "AdventurePointsDependingOnActiveInstancesMultiplier") {
+      console.log(
+        type.args.every(
+          (arg, argIndex) =>
+            isTypeArgumentType(arg) && parentDecl?.parameters[argIndex] === arg.argument,
         ),
+      )
+    }
+
+    if (
+      type.reference === parentDecl &&
+      parentDecl.parameters.length > 0 &&
+      grandParentDecl &&
+      isDeclWithoutTypeParameters(grandParentDecl) &&
+      isTypeAliasDecl(grandParentDecl) &&
+      type.args.every(
+        (arg, argIndex) =>
+          isTypeArgumentType(arg) && parentDecl.parameters[argIndex] === arg.argument,
+      )
+    ) {
+      const grandParentDeclType = grandParentDecl.type.value
+
+      if (
+        isIncludeIdentifierType(grandParentDeclType) &&
+        grandParentDeclType.reference === type.reference
+      ) {
+        return IncludeIdentifierType(grandParentDecl) as ReturnType
+      }
+    }
+
+    return resolveTypeArguments(
+      getTypeArgumentsRecord(
         type.reference,
-      ).type.value) as T extends IncludeIdentifierType<[], IncludableDeclP<[]>>
-    ? T
-    : Type) satisfies TypeArgumentsResolver<IncludeIdentifierType>
+        type.args.map(arg => resolveTypeArguments(args, arg, inDecl)),
+      ),
+      type.reference,
+      inDecl,
+    ).type.value as ReturnType
+  }
+}) satisfies TypeArgumentsResolver<IncludeIdentifierType>
 
 export const serializeIncludeIdentifierType = (<
   Params extends TypeParameter[] = TypeParameter[],
@@ -120,10 +163,12 @@ export const serializeIncludeIdentifierType = (<
 export const getReferencesForIncludeIdentifierType: GetReferences<IncludeIdentifierType> = (
   type,
   value,
+  inDecl,
 ) =>
   getReferences(
-    resolveTypeArguments(getTypeArgumentsRecord(type.reference, type.args), type.reference),
+    resolveTypeArguments(getTypeArgumentsRecord(type.reference, type.args), type.reference, inDecl),
     value,
+    inDecl,
   )
 
 export const formatIncludeIdentifierValue: StructureFormatter<IncludeIdentifierType> = (

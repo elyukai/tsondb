@@ -35,10 +35,11 @@ export const getNestedDeclarationsInReferenceIdentifierType: GetNestedDeclaratio
 
 export const validateReferenceIdentifierType: Validator<ReferenceIdentifierType> = (
   helpers,
+  inDecls,
   type,
   value,
 ) =>
-  validateType(helpers, createEntityIdentifierType(), value).concat(
+  validateType(helpers, inDecls, createEntityIdentifierType(), value).concat(
     helpers.checkReferentialIntegrity({
       name: type.entity.name,
       value: value,

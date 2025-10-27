@@ -19,7 +19,7 @@ export const isBooleanType: Predicate<BooleanType> = node => node.kind === NodeK
 export const getNestedDeclarationsInBooleanType: GetNestedDeclarations<BooleanType> = addedDecls =>
   addedDecls
 
-export const validateBooleanType: Validator<BooleanType> = (helpers, _type, value) => {
+export const validateBooleanType: Validator<BooleanType> = (helpers, _inDecls, _type, value) => {
   if (typeof value !== "boolean") {
     return [TypeError(`expected a boolean value, but got ${json(value, helpers.useStyling)}`)]
   }

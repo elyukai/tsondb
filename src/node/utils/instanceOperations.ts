@@ -66,6 +66,7 @@ export const checkUpdateInstancePossible = (
 ): Result<void, [code: number, message: string]> => {
   const validationErrors = validateEntityDecl(
     createValidators(instancesByEntityName, false),
+    [],
     entity,
     instanceContent,
   )

@@ -68,7 +68,7 @@ export const isDeclWithoutTypeParameters = (decl: Decl): decl is DeclP<[]> =>
   decl.parameters.length === 0
 
 export const resolveTypeArgumentsInDecls = (decls: readonly Decl[]): Decl[] =>
-  decls.filter(isDeclWithoutTypeParameters).map(decl => resolveTypeArguments({}, decl))
+  decls.filter(isDeclWithoutTypeParameters).map(decl => resolveTypeArguments({}, decl, []))
 
 export function walkNodeTree(
   callbackFn: (node: Node, parentTypes: Type[], parentDecl: Decl) => void,

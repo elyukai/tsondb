@@ -87,7 +87,7 @@ export const getNestedDeclarationsInObjectType: GetNestedDeclarations<ObjectType
     addedDecls,
   )
 
-export const validateObjectType: Validator<ObjectType> = (helpers, type, value) => {
+export const validateObjectType: Validator<ObjectType> = (helpers, inDecls, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return [TypeError(`expected an object, but got ${json(value, helpers.useStyling)}`)]
   }
@@ -107,7 +107,7 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
       } else if (prop.isRequired || (value as Record<string, unknown>)[key] !== undefined) {
         return wrapErrorsIfAny(
           `at object key ${keyColor(`"${key}"`, helpers.useStyling)}`,
-          validateType(helpers, prop.type, (value as Record<string, unknown>)[key]),
+          validateType(helpers, inDecls, prop.type, (value as Record<string, unknown>)[key]),
         )
       }
 
@@ -116,12 +116,16 @@ export const validateObjectType: Validator<ObjectType> = (helpers, type, value) 
   ])
 }
 
-export const resolveTypeArgumentsInObjectType: TypeArgumentsResolver<ObjectType> = (args, type) =>
+export const resolveTypeArgumentsInObjectType: TypeArgumentsResolver<ObjectType> = (
+  args,
+  type,
+  inDecl,
+) =>
   ObjectType(
     Object.fromEntries(
       Object.entries(type.properties).map(
         ([key, config]) =>
-          [key, { ...config, type: resolveTypeArguments(args, config.type) }] as const,
+          [key, { ...config, type: resolveTypeArguments(args, config.type, inDecl) }] as const,
       ),
     ),
     {
@@ -177,10 +181,10 @@ export const serializeObjectType = <P extends TConstraint>(
   ) as SerializedMemberDeclObject<P>,
 })
 
-export const getReferencesForObjectType: GetReferences<ObjectType> = (type, value) =>
+export const getReferencesForObjectType: GetReferences<ObjectType> = (type, value, inDecl) =>
   typeof value === "object" && value !== null
     ? Object.entries(value).flatMap(([key, propValue]) =>
-        type.properties[key] ? getReferences(type.properties[key].type, propValue) : [],
+        type.properties[key] ? getReferences(type.properties[key].type, propValue, inDecl) : [],
       )
     : []
 

@@ -28,7 +28,7 @@ export const isDateType: Predicate<DateType> = node => node.kind === NodeKind.Da
 export const getNestedDeclarationsInDateType: GetNestedDeclarations<DateType> = addedDecls =>
   addedDecls
 
-export const validateDateType: Validator<DateType> = (helpers, type, value) => {
+export const validateDateType: Validator<DateType> = (helpers, _inDecls, type, value) => {
   if (typeof value !== "string") {
     return [TypeError(`expected a string, but got ${json(value, helpers.useStyling)}`)]
   }

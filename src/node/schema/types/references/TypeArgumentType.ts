@@ -32,7 +32,7 @@ export const getNestedDeclarationsInTypeArgumentType: GetNestedDeclarations<
   TypeArgumentType
 > = addedDecls => addedDecls
 
-export const validateTypeArgumentType: Validator<TypeArgumentType> = (_helpers, type) => {
+export const validateTypeArgumentType: Validator<TypeArgumentType> = (_helpers, _inDecls, type) => {
   throw new TypeError(
     `generic argument "${type.argument.name}" has not been replaced with a concrete type`,
   )

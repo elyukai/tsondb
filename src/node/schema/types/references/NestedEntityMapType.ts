@@ -109,6 +109,7 @@ export const getNestedDeclarationsInNestedEntityMapType: GetNestedDeclarations<
 
 export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
   helpers,
+  inDecls,
   type,
   value,
 ) => {
@@ -120,7 +121,7 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
     Object.keys(value).map(key =>
       wrapErrorsIfAny(
         `at nested entity map ${entity(`"${type.name}"`, helpers.useStyling)} at key ${keyColor(`"${key}"`, helpers.useStyling)}`,
-        validateType(helpers, type.type.value, value[key as keyof typeof value]).concat(
+        validateType(helpers, inDecls, type.type.value, value[key as keyof typeof value]).concat(
           helpers.checkReferentialIntegrity({
             name: type.secondaryEntity.name,
             value: key,
@@ -133,10 +134,10 @@ export const validateNestedEntityMapType: Validator<NestedEntityMapType> = (
 
 export const resolveTypeArgumentsInNestedEntityMapType: TypeArgumentsResolver<
   NestedEntityMapType
-> = (args, type) =>
+> = (args, type, inDecl) =>
   _NestedEntityMapType({
     ...type,
-    type: () => resolveTypeArguments(args, type.type.value),
+    type: () => resolveTypeArguments(args, type.type.value, inDecl),
   })
 
 export const serializeNestedEntityMapType: Serializer<NestedEntityMapType> = type => ({
@@ -150,13 +151,14 @@ export const serializeNestedEntityMapType: Serializer<NestedEntityMapType> = typ
 export const getReferencesForNestedEntityMapType: GetReferences<NestedEntityMapType> = (
   type,
   value,
+  inDecl,
 ) =>
   typeof value === "object" && value !== null && !Array.isArray(value)
     ? Object.values(value)
         .flatMap(item =>
           isObjectType(type.type.value)
-            ? getReferencesForObjectType(type.type.value, item)
-            : getReferencesForIncludeIdentifierType(type.type.value, item),
+            ? getReferencesForObjectType(type.type.value, item, inDecl)
+            : getReferencesForIncludeIdentifierType(type.type.value, item, inDecl),
         )
         .concat(Object.keys(value))
     : []

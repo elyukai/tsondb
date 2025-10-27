@@ -63,7 +63,7 @@ export const getNestedDeclarationsInArrayType: GetNestedDeclarations<ArrayType> 
   parentDecl,
 ) => getNestedDeclarations(addedDecls, type.items, parentDecl)
 
-export const validateArrayType: Validator<ArrayType> = (helpers, type, value) => {
+export const validateArrayType: Validator<ArrayType> = (helpers, inDecls, type, value) => {
   if (!Array.isArray(value)) {
     return [TypeError(`expected an array, but got ${json(value, helpers.useStyling)}`)]
   }
@@ -73,14 +73,18 @@ export const validateArrayType: Validator<ArrayType> = (helpers, type, value) =>
     ...value.map((item, index) =>
       wrapErrorsIfAny(
         `at index ${key(index.toString(), helpers.useStyling)}`,
-        validateType(helpers, type.items, item),
+        validateType(helpers, inDecls, type.items, item),
       ),
     ),
   ])
 }
 
-export const resolveTypeArgumentsInArrayType: TypeArgumentsResolver<ArrayType> = (args, type) =>
-  ArrayType(resolveTypeArguments(args, type.items), {
+export const resolveTypeArgumentsInArrayType: TypeArgumentsResolver<ArrayType> = (
+  args,
+  type,
+  inDecl,
+) =>
+  ArrayType(resolveTypeArguments(args, type.items, inDecl), {
     ...type,
   })
 
@@ -89,8 +93,8 @@ export const serializeArrayType: Serializer<ArrayType> = type => ({
   items: serializeNode(type.items),
 })
 
-export const getReferencesForArrayType: GetReferences<ArrayType> = (type, value) =>
-  Array.isArray(value) ? value.flatMap(item => getReferences(type.items, item)) : []
+export const getReferencesForArrayType: GetReferences<ArrayType> = (type, value, inDecl) =>
+  Array.isArray(value) ? value.flatMap(item => getReferences(type.items, item, inDecl)) : []
 
 export const formatArrayValue: StructureFormatter<ArrayType> = (type, value) =>
   Array.isArray(value) ? value.map(item => formatValue(type.items, item)) : value

@@ -420,58 +420,66 @@ export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node, p
 
 export type Validator<T extends Node = Node> = (
   helpers: Validators,
+  inDecls: Decl[],
   node: T,
   value: unknown,
 ) => Error[]
 
 export type ValidatorOfParamDecl<T extends Node = Node> = (
   helpers: Validators,
+  inDecls: Decl[],
   node: T,
   typeArgs: Type[],
   value: unknown,
 ) => Error[]
 
-export const validateDecl: ValidatorOfParamDecl<Decl> = (helpers, decl, typeArgs, value) => {
+export const validateDecl: ValidatorOfParamDecl<Decl> = (
+  helpers,
+  inDecls,
+  decl,
+  typeArgs,
+  value,
+) => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
-      return validateEntityDecl(helpers, decl, value)
+      return validateEntityDecl(helpers, inDecls, decl, value)
     case NodeKind.EnumDecl:
-      return validateEnumDecl(helpers, decl, typeArgs, value)
+      return validateEnumDecl(helpers, inDecls, decl, typeArgs, value)
     case NodeKind.TypeAliasDecl:
-      return validateTypeAliasDecl(helpers, decl, typeArgs, value)
+      return validateTypeAliasDecl(helpers, inDecls, decl, typeArgs, value)
     default:
       return assertExhaustive(decl)
   }
 }
 
-export const validateType: Validator<Type> = (helpers, type, value) => {
+export const validateType: Validator<Type> = (helpers, inDecls, type, value) => {
   switch (type.kind) {
     case NodeKind.ArrayType:
-      return validateArrayType(helpers, type, value)
+      return validateArrayType(helpers, inDecls, type, value)
     case NodeKind.ObjectType:
-      return validateObjectType(helpers, type, value)
+      return validateObjectType(helpers, inDecls, type, value)
     case NodeKind.BooleanType:
-      return validateBooleanType(helpers, type, value)
+      return validateBooleanType(helpers, inDecls, type, value)
     case NodeKind.DateType:
-      return validateDateType(helpers, type, value)
+      return validateDateType(helpers, inDecls, type, value)
     case NodeKind.FloatType:
-      return validateFloatType(helpers, type, value)
+      return validateFloatType(helpers, inDecls, type, value)
     case NodeKind.IntegerType:
-      return validateIntegerType(helpers, type, value)
+      return validateIntegerType(helpers, inDecls, type, value)
     case NodeKind.StringType:
-      return validateStringType(helpers, type, value)
+      return validateStringType(helpers, inDecls, type, value)
     case NodeKind.TypeArgumentType:
-      return validateTypeArgumentType(helpers, type, value)
+      return validateTypeArgumentType(helpers, inDecls, type, value)
     case NodeKind.ReferenceIdentifierType:
-      return validateReferenceIdentifierType(helpers, type, value)
+      return validateReferenceIdentifierType(helpers, inDecls, type, value)
     case NodeKind.IncludeIdentifierType:
-      return validateIncludeIdentifierType(helpers, type, value)
+      return validateIncludeIdentifierType(helpers, inDecls, type, value)
     case NodeKind.NestedEntityMapType:
-      return validateNestedEntityMapType(helpers, type, value)
+      return validateNestedEntityMapType(helpers, inDecls, type, value)
     case NodeKind.EnumType:
-      return validateEnumType(helpers, type, value)
+      return validateEnumType(helpers, inDecls, type, value)
     case NodeKind.ChildEntitiesType:
-      return validateChildEntitiesType(helpers, type, value)
+      return validateChildEntitiesType(helpers, inDecls, type, value)
     default:
       return assertExhaustive(type)
   }
@@ -547,49 +555,51 @@ export type NodeWithResolvedTypeArguments<T extends Node | null> = T extends
 export type TypeArgumentsResolver<T extends Node = Node> = (
   args: Record<string, Type>,
   node: T,
+  inDecl: Decl[],
 ) => NodeWithResolvedTypeArguments<T>
 
 export const resolveTypeArguments = <T extends Node = Node>(
   args: Record<string, Type>,
   node: T,
+  inDecl: Decl[],
 ): NodeWithResolvedTypeArguments<T> => {
   type NT = NodeWithResolvedTypeArguments<T>
 
   switch (node.kind) {
     case NodeKind.EntityDecl:
-      return resolveTypeArgumentsInEntityDecl(args, node) as NT
+      return resolveTypeArgumentsInEntityDecl(args, node, inDecl) as NT
     case NodeKind.EnumDecl:
-      return resolveTypeArgumentsInEnumDecl(args, node) as NT
+      return resolveTypeArgumentsInEnumDecl(args, node, inDecl) as NT
     case NodeKind.TypeAliasDecl:
-      return resolveTypeArgumentsInTypeAliasDecl(args, node) as NT
+      return resolveTypeArgumentsInTypeAliasDecl(args, node, inDecl) as NT
     case NodeKind.ArrayType:
-      return resolveTypeArgumentsInArrayType(args, node) as NT
+      return resolveTypeArgumentsInArrayType(args, node, inDecl) as NT
     case NodeKind.ObjectType:
-      return resolveTypeArgumentsInObjectType(args, node) as NT
+      return resolveTypeArgumentsInObjectType(args, node, inDecl) as NT
     case NodeKind.BooleanType:
-      return resolveTypeArgumentsInBooleanType(args, node) as NT
+      return resolveTypeArgumentsInBooleanType(args, node, inDecl) as NT
     case NodeKind.DateType:
-      return resolveTypeArgumentsInDateType(args, node) as NT
+      return resolveTypeArgumentsInDateType(args, node, inDecl) as NT
     case NodeKind.FloatType:
-      return resolveTypeArgumentsInFloatType(args, node) as NT
+      return resolveTypeArgumentsInFloatType(args, node, inDecl) as NT
     case NodeKind.IntegerType:
-      return resolveTypeArgumentsInIntegerType(args, node) as NT
+      return resolveTypeArgumentsInIntegerType(args, node, inDecl) as NT
     case NodeKind.StringType:
-      return resolveTypeArgumentsInStringType(args, node) as NT
+      return resolveTypeArgumentsInStringType(args, node, inDecl) as NT
     case NodeKind.TypeArgumentType:
       return resolveTypeArgumentsInTypeArgumentType(args, node) as NT
     case NodeKind.ReferenceIdentifierType:
-      return resolveTypeArgumentsInReferenceIdentifierType(args, node) as NT
+      return resolveTypeArgumentsInReferenceIdentifierType(args, node, inDecl) as NT
     case NodeKind.IncludeIdentifierType:
-      return resolveTypeArgumentsInIncludeIdentifierType(args, node) as NT
+      return resolveTypeArgumentsInIncludeIdentifierType(args, node, inDecl) as NT
     case NodeKind.NestedEntityMapType:
-      return resolveTypeArgumentsInNestedEntityMapType(args, node) as NT
+      return resolveTypeArgumentsInNestedEntityMapType(args, node, inDecl) as NT
     case NodeKind.EnumType:
-      return resolveTypeArgumentsInEnumType(args, node) as NT
+      return resolveTypeArgumentsInEnumType(args, node, inDecl) as NT
     case NodeKind.TypeParameter:
-      return resolveTypeArgumentsInTypeParameter(args, node) as NT
+      return resolveTypeArgumentsInTypeParameter(args, node, inDecl) as NT
     case NodeKind.ChildEntitiesType:
-      return resolveTypeArgumentsInChildEntitiesType(args, node) as NT
+      return resolveTypeArgumentsInChildEntitiesType(args, node, inDecl) as NT
     default:
       return assertExhaustive(node)
   }
@@ -700,44 +710,48 @@ export const serializeNode = <T extends Node>(node: T): Serialized<T> => {
   }
 }
 
-export type GetReferences<T extends Node = Node> = (node: T, value: unknown) => string[]
+export type GetReferences<T extends Node = Node> = (
+  node: T,
+  value: unknown,
+  inDecl: Decl[],
+) => string[]
 
-export const getReferences: GetReferences = (node, value) => {
+export const getReferences: GetReferences = (node, value, inDecl) => {
   switch (node.kind) {
     case NodeKind.EntityDecl:
-      return getReferencesForEntityDecl(node, value)
+      return getReferencesForEntityDecl(node, value, inDecl)
     case NodeKind.EnumDecl:
-      return getReferencesForEnumDecl(node, value)
+      return getReferencesForEnumDecl(node, value, inDecl)
     case NodeKind.TypeAliasDecl:
-      return getReferencesForTypeAliasDecl(node, value)
+      return getReferencesForTypeAliasDecl(node, value, inDecl)
     case NodeKind.ArrayType:
-      return getReferencesForArrayType(node, value)
+      return getReferencesForArrayType(node, value, inDecl)
     case NodeKind.ObjectType:
-      return getReferencesForObjectType(node, value)
+      return getReferencesForObjectType(node, value, inDecl)
     case NodeKind.BooleanType:
-      return getReferencesForBooleanType(node, value)
+      return getReferencesForBooleanType(node, value, inDecl)
     case NodeKind.DateType:
-      return getReferencesForDateType(node, value)
+      return getReferencesForDateType(node, value, inDecl)
     case NodeKind.FloatType:
-      return getReferencesForFloatType(node, value)
+      return getReferencesForFloatType(node, value, inDecl)
     case NodeKind.IntegerType:
-      return getReferencesForIntegerType(node, value)
+      return getReferencesForIntegerType(node, value, inDecl)
     case NodeKind.StringType:
-      return getReferencesForStringType(node, value)
+      return getReferencesForStringType(node, value, inDecl)
     case NodeKind.TypeArgumentType:
-      return getReferencesForTypeArgumentType(node, value)
+      return getReferencesForTypeArgumentType(node, value, inDecl)
     case NodeKind.ReferenceIdentifierType:
-      return getReferencesForReferenceIdentifierType(node, value)
+      return getReferencesForReferenceIdentifierType(node, value, inDecl)
     case NodeKind.IncludeIdentifierType:
-      return getReferencesForIncludeIdentifierType(node, value)
+      return getReferencesForIncludeIdentifierType(node, value, inDecl)
     case NodeKind.NestedEntityMapType:
-      return getReferencesForNestedEntityMapType(node, value)
+      return getReferencesForNestedEntityMapType(node, value, inDecl)
     case NodeKind.EnumType:
-      return getReferencesForEnumType(node, value)
+      return getReferencesForEnumType(node, value, inDecl)
     case NodeKind.TypeParameter:
-      return getReferencesForTypeParameter(node, value)
+      return getReferencesForTypeParameter(node, value, inDecl)
     case NodeKind.ChildEntitiesType:
-      return getReferencesForChildEntitiesType(node, value)
+      return getReferencesForChildEntitiesType(node, value, inDecl)
     default:
       return assertExhaustive(node)
   }

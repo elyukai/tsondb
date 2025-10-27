@@ -47,7 +47,7 @@ export const getNestedDeclarationsInEnumType: GetNestedDeclarations<EnumType> = 
     addedDecls,
   )
 
-export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
+export const validateEnumType: Validator<EnumType> = (helpers, inDecls, type, value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return [TypeError(`expected an object, but got ${json(value, helpers.useStyling)}`)]
   }
@@ -102,6 +102,7 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
         `at enum case ${key(`"${caseName}"`, helpers.useStyling)}`,
         validateType(
           helpers,
+          inDecls,
           associatedType,
           (value as Record<typeof caseName, unknown>)[caseName],
         ),
@@ -112,14 +113,18 @@ export const validateEnumType: Validator<EnumType> = (helpers, type, value) => {
   return []
 }
 
-export const resolveTypeArgumentsInEnumType: TypeArgumentsResolver<EnumType> = (args, type) =>
+export const resolveTypeArgumentsInEnumType: TypeArgumentsResolver<EnumType> = (
+  args,
+  type,
+  inDecl,
+) =>
   EnumType(
     Object.fromEntries(
       Object.entries(type.values).map(([key, { type, ...caseMember }]) => [
         key,
         {
           ...caseMember,
-          type: type === null ? null : resolveTypeArguments(args, type),
+          type: type === null ? null : resolveTypeArguments(args, type, inDecl),
         },
       ]),
     ),
@@ -156,7 +161,7 @@ export const serializeEnumType: Serializer<EnumType> = type => ({
   ),
 })
 
-export const getReferencesForEnumType: GetReferences<EnumType> = (type, value) => {
+export const getReferencesForEnumType: GetReferences<EnumType> = (type, value, inDecl) => {
   if (
     typeof value !== "object" ||
     value === null ||
@@ -173,7 +178,11 @@ export const getReferencesForEnumType: GetReferences<EnumType> = (type, value) =
     type.values[enumCase] !== undefined &&
     type.values[enumCase].type !== null &&
     enumCase in value
-    ? getReferences(type.values[enumCase].type, (value as Record<string, unknown>)[enumCase])
+    ? getReferences(
+        type.values[enumCase].type,
+        (value as Record<string, unknown>)[enumCase],
+        inDecl,
+      )
     : []
 }
 

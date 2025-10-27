@@ -8,6 +8,7 @@ import {
   NodeKind,
   serializeBooleanType,
   StringType,
+  TypeAliasDecl,
   validateBooleanType,
 } from "../../../../../src/node/schema/index.ts"
 import { json } from "../../../../../src/node/utils/errorFormatting.ts"
@@ -34,6 +35,7 @@ describe("validateBooleanType", () => {
     deepEqual(
       validateBooleanType(
         { checkReferentialIntegrity: () => [], useStyling: true },
+        [],
         BooleanType(),
         false,
       ),
@@ -42,6 +44,7 @@ describe("validateBooleanType", () => {
     deepEqual(
       validateBooleanType(
         { checkReferentialIntegrity: () => [], useStyling: true },
+        [],
         BooleanType(),
         "true",
       ),
@@ -65,8 +68,10 @@ describe("serializeBooleanType", () => {
 
 describe("getReferencesForBooleanType", () => {
   it("returns the references in the value", () => {
-    deepEqual(getReferencesForBooleanType(BooleanType(), false), [])
-    deepEqual(getReferencesForBooleanType(BooleanType(), true), [])
+    const type = BooleanType()
+    const inDecl = [TypeAliasDecl(import.meta.url, { name: "Decl", type: () => type })]
+    deepEqual(getReferencesForBooleanType(BooleanType(), false, inDecl), [])
+    deepEqual(getReferencesForBooleanType(BooleanType(), true, inDecl), [])
   })
 })
 

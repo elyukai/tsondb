@@ -94,19 +94,33 @@ export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = 
   decl,
 ) => getNestedDeclarationsInEnumType(addedDecls, decl.type.value, decl)
 
-export const validateEnumDecl: ValidatorOfParamDecl<EnumDecl> = (helpers, decl, args, value) =>
+export const validateEnumDecl: ValidatorOfParamDecl<EnumDecl> = (
+  helpers,
+  inDecls,
+  decl,
+  args,
+  value,
+) =>
   validateEnumType(
     helpers,
-    resolveTypeArgumentsInEnumType(getTypeArgumentsRecord(decl, args), decl.type.value),
+    [...inDecls, decl],
+    resolveTypeArgumentsInEnumType(getTypeArgumentsRecord(decl, args), decl.type.value, [
+      ...inDecls,
+      decl,
+    ]),
     value,
   )
 
-export const resolveTypeArgumentsInEnumDecl: TypeArgumentsResolver<EnumDecl> = (args, decl) =>
+export const resolveTypeArgumentsInEnumDecl: TypeArgumentsResolver<EnumDecl> = (
+  args,
+  decl,
+  inDecl,
+) =>
   EnumDecl(decl.sourceUrl, {
     name: decl.name,
     comment: decl.comment,
     isDeprecated: decl.isDeprecated,
-    values: () => resolveTypeArgumentsInEnumType(args, decl.type.value).values,
+    values: () => resolveTypeArgumentsInEnumType(args, decl.type.value, [...inDecl, decl]).values,
   })
 
 export const serializeEnumDecl: Serializer<EnumDecl> = decl => ({
@@ -115,8 +129,8 @@ export const serializeEnumDecl: Serializer<EnumDecl> = decl => ({
   parameters: decl.parameters.map(param => serializeTypeParameter(param)),
 })
 
-export const getReferencesForEnumDecl: GetReferences<EnumDecl> = (decl, value) =>
-  getReferencesForEnumType(decl.type.value, value)
+export const getReferencesForEnumDecl: GetReferences<EnumDecl> = (decl, value, inDecl) =>
+  getReferencesForEnumType(decl.type.value, value, [...inDecl, decl])
 
 export const cases = <T extends TConstraint>(
   decl: EnumDecl<string, T>,

@@ -8,6 +8,7 @@ import {
   NodeKind,
   serializeFloatType,
   StringType,
+  TypeAliasDecl,
   validateFloatType,
 } from "../../../../../src/node/schema/index.ts"
 import { json } from "../../../../../src/node/utils/errorFormatting.ts"
@@ -35,6 +36,7 @@ describe("validateFloatType", () => {
     deepEqual(
       validateFloatType(
         { checkReferentialIntegrity: () => [], useStyling: true },
+        [],
         FloatType(),
         1.0,
       ),
@@ -43,6 +45,7 @@ describe("validateFloatType", () => {
     deepEqual(
       validateFloatType(
         { checkReferentialIntegrity: () => [], useStyling: true },
+        [],
         FloatType(),
         "true",
       ),
@@ -66,8 +69,10 @@ describe("serializeFloatType", () => {
 
 describe("getReferencesForFloatType", () => {
   it("returns the references in the value", () => {
-    deepEqual(getReferencesForFloatType(FloatType(), 1.0), [])
-    deepEqual(getReferencesForFloatType(FloatType(), -1.0), [])
+    const type = FloatType()
+    const inDecl = [TypeAliasDecl(import.meta.url, { name: "Decl", type: () => type })]
+    deepEqual(getReferencesForFloatType(type, 1.0, inDecl), [])
+    deepEqual(getReferencesForFloatType(type, -1.0, inDecl), [])
   })
 })
 

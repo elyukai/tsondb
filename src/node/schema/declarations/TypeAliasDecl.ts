@@ -19,7 +19,7 @@ import {
 import type { TypeParameter } from "../TypeParameter.ts"
 import { serializeTypeParameter } from "../TypeParameter.ts"
 import type { Type } from "../types/Type.ts"
-import type { BaseDecl, TypeArguments } from "./Declaration.ts"
+import type { BaseDecl, Decl, TypeArguments } from "./Declaration.ts"
 import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
 
 export interface TypeAliasDecl<
@@ -94,23 +94,26 @@ export const getNestedDeclarationsInTypeAliasDecl: GetNestedDeclarations<TypeAli
 
 export const validateTypeAliasDecl = (<Params extends TypeParameter[]>(
   helpers: Validators,
+  inDecls: Decl[],
   decl: TypeAliasDecl<string, Type, Params>,
   args: TypeArguments<Params>,
   value: unknown,
 ) =>
   validateType(
     helpers,
-    resolveTypeArguments(getTypeArgumentsRecord(decl, args), decl.type.value),
+    [...inDecls, decl],
+    resolveTypeArguments(getTypeArgumentsRecord(decl, args), decl.type.value, [...inDecls, decl]),
     value,
   )) satisfies ValidatorOfParamDecl<TypeAliasDecl>
 
 export const resolveTypeArgumentsInTypeAliasDecl: TypeArgumentsResolver<TypeAliasDecl> = (
   args,
   decl,
+  inDecl,
 ) =>
   TypeAliasDecl(decl.sourceUrl, {
     ...decl,
-    type: () => resolveTypeArguments(args, decl.type.value),
+    type: () => resolveTypeArguments(args, decl.type.value, [...inDecl, decl]),
   })
 
 export const serializeTypeAliasDecl: Serializer<TypeAliasDecl> = type => ({
@@ -119,5 +122,5 @@ export const serializeTypeAliasDecl: Serializer<TypeAliasDecl> = type => ({
   parameters: type.parameters.map(param => serializeTypeParameter(param)),
 })
 
-export const getReferencesForTypeAliasDecl: GetReferences<TypeAliasDecl> = (decl, value) =>
-  getReferences(decl.type.value, value)
+export const getReferencesForTypeAliasDecl: GetReferences<TypeAliasDecl> = (decl, value, inDecl) =>
+  getReferences(decl.type.value, value, [...inDecl, decl])

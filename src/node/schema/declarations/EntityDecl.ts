@@ -158,13 +158,17 @@ export const getNestedDeclarationsInEntityDecl: GetNestedDeclarations<EntityDecl
   decl,
 ) => getNestedDeclarationsInObjectType(isDeclAdded, decl.type.value, decl)
 
-export const validateEntityDecl: Validator<EntityDecl> = (helpers, decl, value) =>
-  validateType(helpers, decl.type.value, value)
+export const validateEntityDecl: Validator<EntityDecl> = (helpers, inDecls, decl, value) =>
+  validateType(helpers, inDecls, decl.type.value, value)
 
-export const resolveTypeArgumentsInEntityDecl: TypeArgumentsResolver<EntityDecl> = (_args, decl) =>
+export const resolveTypeArgumentsInEntityDecl: TypeArgumentsResolver<EntityDecl> = (
+  _args,
+  decl,
+  inDecl,
+) =>
   EntityDecl(decl.sourceUrl, {
     ...decl,
-    type: () => resolveTypeArguments({}, decl.type.value),
+    type: () => resolveTypeArguments({}, decl.type.value, [...inDecl, decl]),
   })
 
 const createEntityIdentifierComment = () =>
@@ -212,5 +216,5 @@ export const serializeEntityDecl: Serializer<EntityDecl> = <
   displayNameCustomizer: type.displayNameCustomizer !== undefined,
 })
 
-export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value) =>
-  getReferencesForObjectType(decl.type.value, value)
+export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value, inDecl) =>
+  getReferencesForObjectType(decl.type.value, value, [...inDecl, decl])

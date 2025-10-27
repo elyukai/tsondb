@@ -34,7 +34,7 @@ export const isIntegerType: Predicate<IntegerType> = node => node.kind === NodeK
 export const getNestedDeclarationsInIntegerType: GetNestedDeclarations<IntegerType> = addedDecls =>
   addedDecls
 
-export const validateIntegerType: Validator<IntegerType> = (helpers, type, value) => {
+export const validateIntegerType: Validator<IntegerType> = (helpers, _inDecls, type, value) => {
   if (typeof value !== "number" || !Number.isInteger(value)) {
     return [TypeError(`expected an integer, but got ${json(value, helpers.useStyling)}`)]
   }

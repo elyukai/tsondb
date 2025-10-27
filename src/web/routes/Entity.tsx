@@ -42,7 +42,7 @@ export const Entity: FunctionalComponent = () => {
     getInstancesByEntityName,
     mapInstances,
     locales,
-    name ?? "",
+    entity?.name ?? "",
   )
   const [localeInstances] = useMappedAPIResource(
     getLocaleInstances,
@@ -64,15 +64,15 @@ export const Entity: FunctionalComponent = () => {
     }
   }, [created])
 
-  if (!name) {
+  if (entity?.name === undefined) {
     return <NotFound />
   }
 
-  if (!entity || !instances) {
+  if (!instances) {
     return (
       <Layout breadcrumbs={[{ url: "/", label: homeTitle }]}>
         <div class="header-with-btns">
-          <h1>{toTitleCase(entity?.namePlural ?? name)}</h1>
+          <h1>{toTitleCase(entity.namePlural)}</h1>
           <a class="btn btn--primary" aria-disabled>
             Add
           </a>

@@ -132,7 +132,7 @@ export const updateReferencesToInstances = (
     if (oldInstance === undefined) {
       return addReferences(
         referencesToInstances,
-        getReferencesForEntityDecl(entity, newInstance),
+        getReferencesForEntityDecl(entity, newInstance, []),
         instanceId,
       )
     }
@@ -140,13 +140,13 @@ export const updateReferencesToInstances = (
     if (newInstance === undefined) {
       return removeReferences(
         referencesToInstances,
-        getReferencesForEntityDecl(entity, oldInstance),
+        getReferencesForEntityDecl(entity, oldInstance, []),
         instanceId,
       )
     }
 
-    const oldReferences = getReferencesForEntityDecl(entity, oldInstance)
-    const newReferences = getReferencesForEntityDecl(entity, newInstance)
+    const oldReferences = getReferencesForEntityDecl(entity, oldInstance, [])
+    const newReferences = getReferencesForEntityDecl(entity, newInstance, [])
 
     const { added, removed } = difference(oldReferences, newReferences)
 

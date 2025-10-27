@@ -28,7 +28,7 @@ export const isFloatType: Predicate<FloatType> = node => node.kind === NodeKind.
 export const getNestedDeclarationsInFloatType: GetNestedDeclarations<FloatType> = addedDecls =>
   addedDecls
 
-export const validateFloatType: Validator<FloatType> = (helpers, type, value) => {
+export const validateFloatType: Validator<FloatType> = (helpers, _inDecls, type, value) => {
   if (typeof value !== "number") {
     return [
       TypeError(`expected a floating-point number, but got ${json(value, helpers.useStyling)}`),

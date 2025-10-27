@@ -63,7 +63,7 @@ const _validate = (
         instancesByEntityName[entity.name]?.map(instance =>
           wrapErrorsIfAny(
             `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
-            validateEntityDecl(validationHelpers, entity, instance.content),
+            validateEntityDecl(validationHelpers, [], entity, instance.content),
           ),
         ) ?? [],
       ),

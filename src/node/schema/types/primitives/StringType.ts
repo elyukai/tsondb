@@ -36,7 +36,7 @@ export const isStringType: Predicate<StringType> = node => node.kind === NodeKin
 export const getNestedDeclarationsInStringType: GetNestedDeclarations<StringType> = addedDecls =>
   addedDecls
 
-export const validateStringType: Validator<StringType> = (helpers, type, value) => {
+export const validateStringType: Validator<StringType> = (helpers, _inDecls, type, value) => {
   if (typeof value !== "string") {
     return [TypeError(`expected a string, but got ${json(value, helpers.useStyling)}`)]
   }
