@@ -1,4 +1,5 @@
 import { chunk } from "./array.ts"
+import { detectIndentation, removeIndentation } from "./markdown/indentation.ts"
 import { omitUndefinedKeys } from "./object.ts"
 import { assertExhaustive } from "./typeSafety.ts"
 
@@ -367,26 +368,70 @@ const nodesForTrailingWhitespace = (text: string | undefined): InlineMarkdownNod
 }
 
 const listRule: BlockRule = {
-  pattern: /^((?:(?:\d+\.|[-*]) [^\n]+?)(?:\n(?:\d+\.|[-*]) [^\n]+?)*)(\n{2,}|\s*$)/,
-  map: result => ({
-    kind: "list",
-    ordered: /^\d+\. /.test(result[0]),
-    content: (result[1] ?? "").split("\n").map(item => ({
-      kind: "listItem",
-      content: parseInlineMarkdown(item.replace(/^\d+\. |[-*] /, "")),
-    })),
-  }),
-  mapHighlighting: result => [
-    ...(result[1] ?? "").split("\n").flatMap((item, index, array): BlockSyntaxMarkdownNode[] => [
-      {
-        kind: "listItemMarker",
-        content: /^(\d+\. |[-*] )/.exec(item)?.[1] ?? "",
+  // pattern: /^((?:(?:\d+\.|[-*]) [^\n]+?)(?:\n(?:\d+\.|[-*]) [^\n]+?)*)(\n{2,}|\s*$)/,
+  pattern:
+    /^((?:(?:\d+\. +[^\n]+(?:\n\d+\. +[^\n]+|\n {2,}[^\n]+|\n)*)|(?:- +[^\n]+(?:\n- +[^\n]+|\n {2,}[^\n]+|\n)*)))(\n{2,}|\s*$)/,
+  map: result => {
+    const listItemPairs = (result[1] ?? "").split(/(?:^|\n)(?:\d+\.|-)/).slice(1)
+    const listItems = listItemPairs.map((itemText): ListItemNode => {
+      const [primaryContent = "", _separator, ...additionalContents] = itemText.split(
+        /(\n *\n|\n(?= +(?:\d+\.|-) ))/,
+      )
+      const additionalContent = additionalContents.join("")
+      const primaryContentNodes = parseInlineMarkdown(primaryContent.trim())
+      const additionalContentNodes = additionalContent
+        ? parseBlockMarkdown(removeIndentation(additionalContent))
+        : []
+      if (
+        additionalContentNodes.length < 2 &&
+        (additionalContentNodes[0] === undefined || additionalContentNodes[0].kind === "list")
+      ) {
+        return omitUndefinedKeys({
+          kind: "listItem",
+          inlineLabel: primaryContentNodes,
+          content: [additionalContentNodes[0] as ListBlockNode | undefined].filter(
+            element => element !== undefined,
+          ),
+        })
+      } else {
+        return omitUndefinedKeys({
+          kind: "listItem",
+          content: additionalContentNodes,
+        })
+      }
+    })
+    return {
+      kind: "list",
+      ordered: /^\d+\. /.test(result[0]),
+      content: listItems,
+    }
+  },
+  mapHighlighting: result => {
+    const listItemPairs = chunk((result[1] ?? "").split(/(?:^|\n)(\d+\.|-)/).slice(1), 2)
+    const listItems = listItemPairs.flatMap(
+      ([marker = "", itemText = ""], itemIndex, itemArray): BlockSyntaxMarkdownNode[] => {
+        const [primaryContent = "", separator, ...additionalContents] = itemText.split(
+          /(\n *\n|\n(?= +(?:\d+\.|-) ))/,
+        )
+        const additionalContent = additionalContents.join("")
+        return [
+          {
+            kind: "listItemMarker",
+            content: marker,
+          },
+          ...parseInlineMarkdownForSyntaxHighlighting(primaryContent),
+          ...(separator ? [textNode(separator)] : []),
+          ...addIndentationToSyntax(
+            parseBlockMarkdownForSyntaxHighlighting(removeIndentation(additionalContent)),
+            detectIndentation(additionalContent),
+          ),
+          ...(itemIndex < itemArray.length - 1 ? [textNode("\n")] : []),
+        ]
       },
-      ...parseInlineMarkdownForSyntaxHighlighting(item.replace(/^\d+\. |[-*] /, "")),
-      ...(index < array.length - 1 ? [textNode("\n")] : []),
-    ]),
-    ...nodesForTrailingWhitespace(result[2]),
-  ],
+    )
+
+    return [...listItems, ...nodesForTrailingWhitespace(result[2])]
+  },
 }
 
 const paragraphRule: BlockRule = {
@@ -646,12 +691,6 @@ const containerRule: BlockRule = {
   ],
 }
 
-const removeIndentation = (text: string) =>
-  text
-    .split("\n")
-    .map(line => line.replace(/^ {2}/, ""))
-    .join("\n")
-
 export const syntaxNodeToString = (node: BlockSyntaxMarkdownNode): string => {
   switch (node.kind) {
     case "bold":
@@ -677,56 +716,56 @@ export const syntaxNodeToString = (node: BlockSyntaxMarkdownNode): string => {
 }
 
 const addIndentationToSyntax = <T extends BlockSyntaxMarkdownNode>(
-  nodes: T[],
-  nextUpperNode?: BlockSyntaxMarkdownNode,
-): T[] =>
-  nodes.reduce<T[]>((accNodes, currentNode, index) => {
-    switch (currentNode.kind) {
-      case "bold":
-      case "italic":
-      case "link":
-      case "attributed":
-      case "superscript":
-        return [
-          ...accNodes,
-          {
-            ...currentNode,
-            content: addIndentationToSyntax(currentNode.content, nodes[index + 1] ?? nextUpperNode),
-          },
-        ]
-      case "text":
-      case "code":
-      case "listItemMarker":
-      case "tableMarker":
-      case "headingMarker":
-      case "sectionMarker":
-      case "footnoteMarker":
-      case "definitionMarker": {
-        const nextNode = nodes[index + 1] ?? nextUpperNode
-        const currentContent =
-          currentNode.content.endsWith("\n") &&
-          nextNode &&
-          /^[^\n]*?\S+?/.test(syntaxNodeToString(nextNode))
-            ? currentNode.content + "  "
-            : currentNode.content
-        return [
-          ...accNodes,
-          { ...currentNode, content: currentContent.replace(/\n([^\n]*?\S+?)/g, "\n  $1") },
-        ]
+  nodes: (TextNode | T)[],
+  indentation: number,
+  excludeFirstLine = false,
+): (TextNode | T)[] =>
+  nodes.reduce<(TextNode | T)[]>(
+    (accNodes, currentNode) => {
+      switch (currentNode.kind) {
+        case "bold":
+        case "italic":
+        case "link":
+        case "attributed":
+        case "superscript":
+          return [
+            ...accNodes,
+            {
+              ...currentNode,
+              content: addIndentationToSyntax(currentNode.content, indentation, excludeFirstLine),
+            },
+          ]
+        case "text":
+        case "code":
+        case "listItemMarker":
+        case "tableMarker":
+        case "headingMarker":
+        case "sectionMarker":
+        case "footnoteMarker":
+        case "definitionMarker": {
+          return [
+            ...accNodes,
+            {
+              ...currentNode,
+              content: currentNode.content.replace(/\n(?!\n)/g, "\n" + " ".repeat(indentation)),
+            },
+          ]
+        }
+        case "footnoteRef":
+          return [...accNodes, currentNode]
+        default:
+          return assertExhaustive(currentNode)
       }
-      case "footnoteRef":
-        return [...accNodes, currentNode]
-      default:
-        return assertExhaustive(currentNode)
-    }
-  }, [])
+    },
+    excludeFirstLine ? [] : [textNode(" ".repeat(indentation))],
+  )
 
 const footnoteRule: BlockRule = {
   pattern: /^\[\^([a-zA-Z0-9]+?)\]: (.+?(?:\n(?: {2}.+)?)*)(\n{2,}|\s*$)/,
   map: ([_match, label = "", content = "", _trailingWhitespace]): BlockMarkdownNode => ({
     kind: "footnote",
     label: label,
-    content: parseBlockMarkdown(removeIndentation(content)),
+    content: parseBlockMarkdown(removeIndentation(content, true)),
   }),
   mapHighlighting: ([
     _match,
@@ -736,7 +775,11 @@ const footnoteRule: BlockRule = {
   ]): BlockSyntaxMarkdownNode[] => [
     { kind: "footnoteMarker", content: `[^${label}]:` },
     textNode(" "),
-    ...addIndentationToSyntax(parseBlockMarkdownForSyntaxHighlighting(removeIndentation(content))),
+    ...addIndentationToSyntax(
+      parseBlockMarkdownForSyntaxHighlighting(removeIndentation(content, true)),
+      detectIndentation(content, true),
+      true,
+    ),
     ...nodesForTrailingWhitespace(trailingWhitespace),
   ],
 }
@@ -756,7 +799,7 @@ const definitionListRule: BlockRule = {
       const definitions = definitionsText
         .split("\n:")
         .slice(1)
-        .map(definition => parseBlockMarkdown(removeIndentation(definition.trim())))
+        .map(definition => parseBlockMarkdown(removeIndentation(definition.trim(), true)))
       return {
         kind: "definitionListItem" as const,
         terms,
@@ -783,7 +826,9 @@ const definitionListRule: BlockRule = {
           .flatMap((definition, defIndex, defArray): BlockSyntaxMarkdownNode[] => [
             { kind: "definitionMarker", content: ":" },
             ...addIndentationToSyntax(
-              parseBlockMarkdownForSyntaxHighlighting(removeIndentation(definition)),
+              parseBlockMarkdownForSyntaxHighlighting(removeIndentation(definition, true)),
+              detectIndentation(definition, true),
+              true,
             ),
             ...(defIndex < defArray.length - 1 ? [textNode("\n")] : []),
           ])
@@ -823,7 +868,8 @@ export type ListBlockNode = {
 
 export type ListItemNode = {
   kind: "listItem"
-  content: InlineMarkdownNode[]
+  inlineLabel?: InlineMarkdownNode[]
+  content: BlockMarkdownNode[]
 }
 
 export type TableBlockNode = {

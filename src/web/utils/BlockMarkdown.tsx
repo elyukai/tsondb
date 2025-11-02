@@ -43,38 +43,28 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
           ))}
         </Tag>
       )
-    case "list":
-      if (node.ordered) {
-        return (
-          <>
-            {insertBefore}
-            <ol>
-              {node.content.map((item, ii) => (
-                <li key={ii}>
-                  {item.content.map((inline, iii) => (
-                    <InlineMarkdown key={iii} node={inline} />
-                  ))}
-                </li>
-              ))}
-            </ol>
-          </>
-        )
-      } else {
-        return (
-          <>
-            {insertBefore}
-            <ul>
-              {node.content.map((item, ii) => (
-                <li key={ii}>
-                  {item.content.map((inline, iii) => (
-                    <InlineMarkdown key={iii} node={inline} />
-                  ))}
-                </li>
-              ))}
-            </ul>
-          </>
-        )
-      }
+    case "list": {
+      const Tag = node.ordered ? "ol" : "ul"
+      return (
+        <>
+          {insertBefore}
+          <Tag>
+            {node.content.map((item, ii) => (
+              <li key={ii}>
+                {item.inlineLabel && item.inlineLabel.length > 0
+                  ? item.inlineLabel.map((inline, iii) => (
+                      <InlineMarkdown key={iii} node={inline} />
+                    ))
+                  : null}
+                {item.content.map((content, iii) => (
+                  <BlockMarkdown key={iii} node={content} />
+                ))}
+              </li>
+            ))}
+          </Tag>
+        </>
+      )
+    }
     case "table":
       return (
         <>

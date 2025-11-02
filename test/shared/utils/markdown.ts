@@ -391,11 +391,13 @@ This is the final paragraph.`),
           content: [
             {
               kind: "listItem",
-              content: [{ kind: "text", content: "This is the first unordered list item." }],
+              inlineLabel: [{ kind: "text", content: "This is the first unordered list item." }],
+              content: [],
             },
             {
               kind: "listItem",
-              content: [{ kind: "text", content: "This is the second unordered list item." }],
+              inlineLabel: [{ kind: "text", content: "This is the second unordered list item." }],
+              content: [],
             },
           ],
         },
@@ -409,7 +411,10 @@ This is the final paragraph.`),
           content: [
             {
               kind: "listItem",
-              content: [{ kind: "text", content: "This is the first and only ordered list item." }],
+              inlineLabel: [
+                { kind: "text", content: "This is the first and only ordered list item." },
+              ],
+              content: [],
             },
           ],
         },
@@ -417,6 +422,270 @@ This is the final paragraph.`),
           kind: "paragraph",
           content: [{ kind: "text", content: "This is the final paragraph." }],
         },
+      ],
+    )
+  })
+
+  it("parses a multi-dimensional unordered list", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`- Item 1
+  - Subitem 1.1
+    - Subsubitem 1.1.1
+    - Subsubitem 1.1.2
+  - Subitem 1.2
+- Item 2`),
+      [
+        {
+          kind: "list",
+          ordered: false,
+          content: [
+            {
+              kind: "listItem",
+              inlineLabel: [{ kind: "text", content: "Item 1" }],
+              content: [
+                {
+                  kind: "list",
+                  ordered: false,
+                  content: [
+                    {
+                      kind: "listItem",
+                      inlineLabel: [{ kind: "text", content: "Subitem 1.1" }],
+                      content: [
+                        {
+                          kind: "list",
+                          ordered: false,
+                          content: [
+                            {
+                              kind: "listItem",
+                              inlineLabel: [{ kind: "text", content: "Subsubitem 1.1.1" }],
+                              content: [],
+                            },
+                            {
+                              kind: "listItem",
+                              inlineLabel: [{ kind: "text", content: "Subsubitem 1.1.2" }],
+                              content: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      kind: "listItem",
+                      inlineLabel: [{ kind: "text", content: "Subitem 1.2" }],
+                      content: [],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              kind: "listItem",
+              inlineLabel: [{ kind: "text", content: "Item 2" }],
+              content: [],
+            },
+          ],
+        },
+      ],
+    )
+  })
+
+  it("parses a multi-dimensional unordered list for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(`- Item 1
+  - Subitem 1.1
+    - Subsubitem 1.1.1
+    - Subsubitem 1.1.2
+  - Subitem 1.2
+- Item 2`),
+      [
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Item 1\n  " },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Subitem 1.1\n    " },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Subsubitem 1.1.1\n    " },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Subsubitem 1.1.2\n  " },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Subitem 1.2\n" },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Item 2" },
+      ],
+    )
+  })
+
+  it("parses a multi-dimensional ordered list", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`1. Item 1
+  1. Subitem 1.1
+    1. Subsubitem 1.1.1
+    2. Subsubitem 1.1.2
+  2. Subitem 1.2
+2. Item 2`),
+      [
+        {
+          kind: "list",
+          ordered: true,
+          content: [
+            {
+              kind: "listItem",
+              inlineLabel: [{ kind: "text", content: "Item 1" }],
+              content: [
+                {
+                  kind: "list",
+                  ordered: true,
+                  content: [
+                    {
+                      kind: "listItem",
+                      inlineLabel: [{ kind: "text", content: "Subitem 1.1" }],
+                      content: [
+                        {
+                          kind: "list",
+                          ordered: true,
+                          content: [
+                            {
+                              kind: "listItem",
+                              inlineLabel: [{ kind: "text", content: "Subsubitem 1.1.1" }],
+                              content: [],
+                            },
+                            {
+                              kind: "listItem",
+                              inlineLabel: [{ kind: "text", content: "Subsubitem 1.1.2" }],
+                              content: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      kind: "listItem",
+                      inlineLabel: [{ kind: "text", content: "Subitem 1.2" }],
+                      content: [],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              kind: "listItem",
+              inlineLabel: [{ kind: "text", content: "Item 2" }],
+              content: [],
+            },
+          ],
+        },
+      ],
+    )
+  })
+
+  it("parses a multi-dimensional ordered list for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(`1. Item 1
+  1. Subitem 1.1
+    1. Subsubitem 1.1.1
+    2. Subsubitem 1.1.2
+  2. Subitem 1.2
+2. Item 2`),
+      [
+        { kind: "listItemMarker", content: "1." },
+        { kind: "text", content: " Item 1\n  " },
+        { kind: "listItemMarker", content: "1." },
+        { kind: "text", content: " Subitem 1.1\n    " },
+        { kind: "listItemMarker", content: "1." },
+        { kind: "text", content: " Subsubitem 1.1.1\n    " },
+        { kind: "listItemMarker", content: "2." },
+        { kind: "text", content: " Subsubitem 1.1.2\n  " },
+        { kind: "listItemMarker", content: "2." },
+        { kind: "text", content: " Subitem 1.2\n" },
+        { kind: "listItemMarker", content: "2." },
+        { kind: "text", content: " Item 2" },
+      ],
+    )
+  })
+
+  it("parses a multi-dimensional mixed list", () => {
+    deepEqual<BlockMarkdownNode[]>(
+      parseBlockMarkdown(`- Item 1
+  1. Subitem 1.1
+    - Subsubitem 1.1.1
+    - Subsubitem 1.1.2
+  2. Subitem 1.2
+- Item 2`),
+      [
+        {
+          kind: "list",
+          ordered: false,
+          content: [
+            {
+              kind: "listItem",
+              inlineLabel: [{ kind: "text", content: "Item 1" }],
+              content: [
+                {
+                  kind: "list",
+                  ordered: true,
+                  content: [
+                    {
+                      kind: "listItem",
+                      inlineLabel: [{ kind: "text", content: "Subitem 1.1" }],
+                      content: [
+                        {
+                          kind: "list",
+                          ordered: false,
+                          content: [
+                            {
+                              kind: "listItem",
+                              inlineLabel: [{ kind: "text", content: "Subsubitem 1.1.1" }],
+                              content: [],
+                            },
+                            {
+                              kind: "listItem",
+                              inlineLabel: [{ kind: "text", content: "Subsubitem 1.1.2" }],
+                              content: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      kind: "listItem",
+                      inlineLabel: [{ kind: "text", content: "Subitem 1.2" }],
+                      content: [],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              kind: "listItem",
+              inlineLabel: [{ kind: "text", content: "Item 2" }],
+              content: [],
+            },
+          ],
+        },
+      ],
+    )
+  })
+
+  it("parses a multi-dimensional mixed list for syntax highlighting", () => {
+    deepEqual<BlockSyntaxMarkdownNode[]>(
+      parseBlockMarkdownForSyntaxHighlighting(`- Item 1
+  1. Subitem 1.1
+    - Subsubitem 1.1.1
+    - Subsubitem 1.1.2
+  2. Subitem 1.2
+- Item 2`),
+      [
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Item 1\n  " },
+        { kind: "listItemMarker", content: "1." },
+        { kind: "text", content: " Subitem 1.1\n    " },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Subsubitem 1.1.1\n    " },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Subsubitem 1.1.2\n  " },
+        { kind: "listItemMarker", content: "2." },
+        { kind: "text", content: " Subitem 1.2\n" },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " Item 2" },
       ],
     )
   })
@@ -1000,9 +1269,9 @@ This is not part of the footnote anymore.`,
               kind: "list",
               ordered: false,
               content: [
-                { kind: "listItem", content: [{ kind: "text", content: "And" }] },
-                { kind: "listItem", content: [{ kind: "text", content: "A" }] },
-                { kind: "listItem", content: [{ kind: "text", content: "List" }] },
+                { kind: "listItem", inlineLabel: [{ kind: "text", content: "And" }], content: [] },
+                { kind: "listItem", inlineLabel: [{ kind: "text", content: "A" }], content: [] },
+                { kind: "listItem", inlineLabel: [{ kind: "text", content: "List" }], content: [] },
               ],
             },
           ],
@@ -1063,12 +1332,12 @@ This is not part of the footnote anymore.`,
         { kind: "text", content: "\n\n" },
         { kind: "footnoteMarker", content: "[^1]:" },
         { kind: "text", content: " This is the footnote.\n\n  It has multiple paragraphs.\n\n  " },
-        { kind: "listItemMarker", content: "- " },
-        { kind: "text", content: "And\n  " },
-        { kind: "listItemMarker", content: "- " },
-        { kind: "text", content: "A\n  " },
-        { kind: "listItemMarker", content: "- " },
-        { kind: "text", content: "List\n\nThis is not part of the footnote anymore." },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " And\n  " },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " A\n  " },
+        { kind: "listItemMarker", content: "-" },
+        { kind: "text", content: " List\n\nThis is not part of the footnote anymore." },
       ],
     )
   })
