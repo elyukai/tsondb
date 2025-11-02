@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.11.3](https://github.com/elyukai/tsondb/compare/v0.11.2...v0.11.3) (2025-11-02)
+
+
+### Features
+
+* **markdown:** support nested lists ([955ed33](https://github.com/elyukai/tsondb/commit/955ed335b35b38915b571ec9b378347dcbbca3a4))
+
 ## [0.11.2](https://github.com/elyukai/tsondb/compare/v0.11.1...v0.11.2) (2025-11-02)
 
 ## [0.11.1](https://github.com/elyukai/tsondb/compare/v0.11.0...v0.11.1) (2025-10-27)
