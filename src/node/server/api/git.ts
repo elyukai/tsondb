@@ -280,6 +280,7 @@ gitApi.post("/pull", async (req, res) => {
     const status = await req.git.status()
     const remotes = await req.git.getRemotes()
     await req.git.pull(remotes[0]?.name, status.current ?? undefined)
+    await reinit(req)
     res.set("Content-Type", "text/plain")
     res.status(200).send("Pull successful")
   } catch (error) {
