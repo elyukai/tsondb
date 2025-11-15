@@ -46,6 +46,7 @@ export type TypeScriptRendererOptions = {
   objectTypeKeyword: "interface" | "type"
   preserveFiles: boolean
   generateEntityMapType: boolean
+  addIdentifierToEntities: boolean
 }
 
 const defaultOptions: TypeScriptRendererOptions = {
@@ -53,6 +54,7 @@ const defaultOptions: TypeScriptRendererOptions = {
   objectTypeKeyword: "interface",
   preserveFiles: false,
   generateEntityMapType: false,
+  addIdentifierToEntities: false,
 }
 
 type RenderFn<T> = (options: TypeScriptRendererOptions, node: T) => RenderResult
@@ -199,7 +201,7 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
     options.objectTypeKeyword
   } ${decl.name} ${options.objectTypeKeyword === "type" ? "= " : ""}${renderType(
     options,
-    addEphemeralUUIDToType(decl),
+    options.addIdentifierToEntities ? addEphemeralUUIDToType(decl) : decl.type.value,
   )}`
 
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
