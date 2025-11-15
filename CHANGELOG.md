@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.11.4](https://github.com/elyukai/tsondb/compare/v0.11.3...v0.11.4) (2025-11-15)
+
+
+### Features
+
+* make config more flexible if only a subset of commands is to be executed ([ea80de8](https://github.com/elyukai/tsondb/commit/ea80de8ed9696b9f675617dbf16ccc0846974741))
+
+
+### Bug Fixes
+
+* reinit server state after pulling ([cc8e1ab](https://github.com/elyukai/tsondb/commit/cc8e1ab4bb6dd6952ee2b5fe6ecdf141a5b98997))
+
 ## [0.11.3](https://github.com/elyukai/tsondb/compare/v0.11.2...v0.11.3) (2025-11-02)
 
 
