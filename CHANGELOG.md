@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.0](https://github.com/elyukai/tsondb/compare/v0.11.4...v0.12.0) (2025-11-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **ts-renderer:** make setting of additional id property of entities optional
+
+### Features
+
+* add pragma to generated typescript types ([ce383ab](https://github.com/elyukai/tsondb/commit/ce383abd386a43ed5cb8be14f882eb3bf2c72781))
+* **ts-renderer:** add option to generate an entity map ([0ce5489](https://github.com/elyukai/tsondb/commit/0ce5489314d51d17972b8c90dd0901cc1511cd95))
+* **ts-renderer:** make setting of additional id property of entities optional ([e396b5d](https://github.com/elyukai/tsondb/commit/e396b5d93a8fe5e9f98f57d4b7ad9b3beb68c474))
+
 ## [0.11.4](https://github.com/elyukai/tsondb/compare/v0.11.3...v0.11.4) (2025-11-15)
 
 
