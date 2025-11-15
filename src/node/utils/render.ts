@@ -19,7 +19,7 @@ export const joinSyntax = (...syntaxes: (string | undefined)[]): string =>
 
 export type RenderResult = [imports: { [sourcePath: string]: string[] }, syntax: string]
 
-const emptyRenderResult: RenderResult = [{}, ""]
+export const emptyRenderResult: RenderResult = [{}, ""]
 
 export const combineSyntaxes = (
   syntaxes: (RenderResult | string | undefined)[],

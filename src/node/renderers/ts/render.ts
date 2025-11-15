@@ -33,18 +33,26 @@ import type { TypeArgumentType } from "../../schema/types/references/TypeArgumen
 import type { Type } from "../../schema/types/Type.ts"
 import { ensureSpecialDirStart } from "../../utils/path.ts"
 import type { RenderResult } from "../../utils/render.ts"
-import { combineSyntaxes, indent, prefixLines, syntax } from "../../utils/render.ts"
+import {
+  combineSyntaxes,
+  emptyRenderResult,
+  indent,
+  prefixLines,
+  syntax,
+} from "../../utils/render.ts"
 
 export type TypeScriptRendererOptions = {
   indentation: number
   objectTypeKeyword: "interface" | "type"
   preserveFiles: boolean
+  generateEntityMapType: boolean
 }
 
 const defaultOptions: TypeScriptRendererOptions = {
   indentation: 2,
   objectTypeKeyword: "interface",
   preserveFiles: false,
+  generateEntityMapType: false,
 }
 
 type RenderFn<T> = (options: TypeScriptRendererOptions, node: T) => RenderResult
@@ -248,11 +256,27 @@ const renderImports = (currentUrl: string, imports: { [sourceUrl: string]: strin
   return importsSyntax.length > 0 ? importsSyntax + EOL + EOL : ""
 }
 
+const renderEntityMapType: RenderFn<readonly Decl[]> = (options, declarations) =>
+  syntax`export type EntityMap = {${EOL}${indent(
+    options.indentation,
+    1,
+    combineSyntaxes(
+      declarations
+        .filter(isEntityDecl)
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(decl => syntax`${decl.name}: ${decl.name}`),
+      EOL,
+    ),
+  )}${EOL}}${EOL + EOL}`
+
 export const render = (
   options: Partial<TypeScriptRendererOptions> = defaultOptions,
   declarations: readonly Decl[],
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
+  const [_, entityMap] = finalOptions.generateEntityMapType
+    ? renderEntityMapType(finalOptions, declarations)
+    : emptyRenderResult
   const [imports, content] = renderDeclarations(
     finalOptions,
     flatMapAuxiliaryDecls((parentNodes, node) => {
@@ -269,8 +293,11 @@ export const render = (
       return undefined
     }, declarations),
   )
-  return finalOptions.preserveFiles
-    ? (declarations[0] === undefined ? "" : renderImports(declarations[0].sourceUrl, imports)) +
+  return (
+    entityMap +
+    (finalOptions.preserveFiles
+      ? (declarations[0] === undefined ? "" : renderImports(declarations[0].sourceUrl, imports)) +
         content
-    : content
+      : content)
+  )
 }
