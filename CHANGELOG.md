@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.1](https://github.com/elyukai/tsondb/compare/v0.12.0...v0.12.1) (2025-11-15)
+
+
+### Features
+
+* translation object type ([d75cec5](https://github.com/elyukai/tsondb/commit/d75cec58702ddafd96ef742443a8ddb579eaae82))
+
 ## [0.12.0](https://github.com/elyukai/tsondb/compare/v0.11.4...v0.12.0) (2025-11-15)
 
 
