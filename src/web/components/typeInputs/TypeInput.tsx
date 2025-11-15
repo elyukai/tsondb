@@ -18,6 +18,7 @@ import { NestedEntityMapTypeInput } from "./NestedEntityMapTypeInput.tsx"
 import { ObjectTypeInput } from "./ObjectTypeInput.tsx"
 import { ReferenceIdentifierTypeInput } from "./ReferenceIdentifierTypeInput.tsx"
 import { StringTypeInput } from "./StringTypeInput.tsx"
+import { TranslationObjectTypeInput } from "./TranslationObjectTypeInput.tsx"
 
 export type TypeInputProps<T, V = unknown> = {
   type: T
@@ -27,6 +28,7 @@ export type TypeInputProps<T, V = unknown> = {
   parentKey?: string
   childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   disabled?: boolean
+  inTranslationObject?: boolean
   getDeclFromDeclName: GetDeclFromDeclName
   onChange: (value: V) => void
   setChildInstances: (
@@ -81,6 +83,9 @@ const TypeInput: FunctionComponent<Props> = props => {
 
     case "ChildEntitiesType":
       return <ChildEntitiesTypeInput {...props} type={props.type} />
+
+    case "TranslationObjectType":
+      return <TranslationObjectTypeInput {...props} type={props.type} />
 
     default:
       return assertExhaustive(props.type)

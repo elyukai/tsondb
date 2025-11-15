@@ -19,11 +19,13 @@ import { ArrayType } from "../../schema/types/generic/ArrayType.ts"
 import type { EnumType } from "../../schema/types/generic/EnumType.ts"
 import type { MemberDecl, ObjectType } from "../../schema/types/generic/ObjectType.ts"
 import { isObjectType } from "../../schema/types/generic/ObjectType.ts"
+import type { TranslationObjectType } from "../../schema/types/generic/TranslationObjectType.js"
+import { getTypeOfKey } from "../../schema/types/generic/TranslationObjectType.js"
 import type { BooleanType } from "../../schema/types/primitives/BooleanType.ts"
 import type { DateType } from "../../schema/types/primitives/DateType.ts"
 import type { FloatType } from "../../schema/types/primitives/FloatType.ts"
 import type { IntegerType } from "../../schema/types/primitives/IntegerType.ts"
-import type { StringType } from "../../schema/types/primitives/StringType.ts"
+import type { StringType } from "../../schema/types/primitives/StringType.js"
 import type { ChildEntitiesType } from "../../schema/types/references/ChildEntitiesType.ts"
 import type { IncludeIdentifierType } from "../../schema/types/references/IncludeIdentifierType.ts"
 import type { NestedEntityMapType } from "../../schema/types/references/NestedEntityMapType.ts"
@@ -163,6 +165,21 @@ const renderEnumType: RenderFn<EnumType> = (options, type) =>
 const renderChildEntitiesType: RenderFn<ChildEntitiesType> = (options, type) =>
   renderType(options, ArrayType(ReferenceIdentifierType(type.entity), { uniqueItems: true }))
 
+const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, type) => {
+  return wrapAsObject(
+    options,
+    combineSyntaxes(
+      Object.entries(type.properties).map(
+        ([name, config]) =>
+          syntax`"${name.replace('"', '\\"')}"${
+            type.allKeysAreRequired ? "" : "?"
+          }: ${renderType(options, getTypeOfKey(config, type))}`,
+      ),
+      EOL,
+    ),
+  )
+}
+
 const renderType: RenderFn<Type> = (options, type) => {
   switch (type.kind) {
     case NodeKind.ArrayType:
@@ -191,6 +208,8 @@ const renderType: RenderFn<Type> = (options, type) => {
       return renderEnumType(options, type)
     case NodeKind.ChildEntitiesType:
       return renderChildEntitiesType(options, type)
+    case NodeKind.TranslationObjectType:
+      return renderTranslationObjectType(options, type)
     default:
       return assertExhaustive(type, "Unknown type")
   }

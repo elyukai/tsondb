@@ -14,6 +14,10 @@ import type { EnumCaseDecl, EnumType } from "./generic/EnumType.ts"
 import { formatEnumType } from "./generic/EnumType.ts"
 import type { MemberDecl, ObjectType } from "./generic/ObjectType.ts"
 import { formatObjectValue, isObjectType } from "./generic/ObjectType.ts"
+import {
+  formatTranslationObjectValue,
+  type TranslationObjectType,
+} from "./generic/TranslationObjectType.ts"
 import type { BooleanType } from "./primitives/BooleanType.ts"
 import { formatBooleanValue } from "./primitives/BooleanType.ts"
 import type { DateType } from "./primitives/DateType.ts"
@@ -53,6 +57,7 @@ export type Type =
   | NestedEntityMapType
   | EnumType
   | ChildEntitiesType
+  | TranslationObjectType
 
 export function walkTypeNodeTree(
   callbackFn: (type: Type, parentTypes: Type[], parentDecl: Decl) => void,
@@ -85,7 +90,8 @@ export function walkTypeNodeTree(
     case NodeKind.StringType:
     case NodeKind.TypeArgumentType:
     case NodeKind.ReferenceIdentifierType:
-    case NodeKind.ChildEntitiesType: {
+    case NodeKind.ChildEntitiesType:
+    case NodeKind.TranslationObjectType: {
       callbackFn(type, parentTypes, parentDecl)
       return
     }
@@ -280,6 +286,8 @@ export const formatValue: StructureFormatter<Type> = (type, value) => {
       return formatEnumType(type, value)
     case NodeKind.ChildEntitiesType:
       return formatChildEntitiesValue(type, value)
+    case NodeKind.TranslationObjectType:
+      return formatTranslationObjectValue(type, value)
     default:
       return assertExhaustive(type)
   }

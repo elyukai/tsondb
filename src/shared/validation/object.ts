@@ -18,11 +18,14 @@ export const validateObjectConstraints = (
     validateLengthRangeBound("lower", label, constraints.minProperties, actualKeys),
     validateLengthRangeBound("upper", label, constraints.maxProperties, actualKeys),
     ...(constraints.additionalProperties !== true
-      ? actualKeys.flatMap(valueKey =>
-          expectedKeys.includes(valueKey)
-            ? []
-            : [TypeError(`object does not allow unknown keys and key "${valueKey}" is not known`)],
-        )
+      ? validateUnknownKeys(expectedKeys, actualKeys)
       : []),
   ])
 }
+
+export const validateUnknownKeys = (expectedKeys: string[], actualKeys: string[]) =>
+  actualKeys.flatMap(valueKey =>
+    expectedKeys.includes(valueKey)
+      ? []
+      : [TypeError(`object does not allow unknown keys and key "${valueKey}" is not known`)],
+  )

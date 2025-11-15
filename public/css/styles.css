@@ -704,9 +704,9 @@ form > .field--container {
   flex: 1 1 0;
 }
 
-.editor--markdown textarea,
-.editor--markdown input,
-.editor--markdown .textarea-grow-wrap__mirror {
+:is(.editor--markdown, .editor--translation) textarea,
+:is(.editor--markdown, .editor--translation) input,
+:is(.editor--markdown, .editor--translation) .textarea-grow-wrap__mirror {
   font-family: var(--font-mono);
   line-height: 1.5;
 }
@@ -1179,4 +1179,29 @@ dialog[open] > .loading-overlay--open {
 
 dialog[open]:has(> .loading-overlay--open)::backdrop {
   background: rgba(0, 0, 0, 0.75);
+}
+
+.field--container > ul > .object-item--translation {
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.object-item--translation .container-item-title {
+  flex: none;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+  max-width: 40%;
+  padding: calc(0.5rem + 1px) 0;
+  display: block;
+}
+
+.object-item--translation > .field {
+  margin-top: 0;
+  flex: 1 1 0;
+}
+
+.object-item--translation button {
+  align-self: center;
 }

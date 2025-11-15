@@ -83,6 +83,11 @@ import {
   resolveTypeArgumentsInSerializedStringType,
   type SerializedStringType,
 } from "./types/StringType.ts"
+import {
+  getReferencesForSerializedTranslationObjectType,
+  resolveTypeArgumentsInSerializedTranslationObjectType,
+  type SerializedTranslationObjectType,
+} from "./types/TranslationObjectType.ts"
 import type { SerializedType } from "./types/Type.ts"
 import {
   getReferencesForSerializedTypeArgumentType,
@@ -111,6 +116,7 @@ export interface NodeKind {
   NestedEntityMapType: "NestedEntityMapType"
   EnumType: "EnumType"
   ChildEntitiesType: "ChildEntitiesType"
+  TranslationObjectType: "TranslationObjectType"
 }
 
 export const NodeKind: NodeKind = enumOfObject({
@@ -134,6 +140,7 @@ export const NodeKind: NodeKind = enumOfObject({
   NestedEntityMapType: null,
   EnumType: null,
   ChildEntitiesType: null,
+  TranslationObjectType: null,
 })
 
 export interface BaseNode {
@@ -149,6 +156,8 @@ export type SerializedNodeWithResolvedTypeArguments<T extends SerializedNode | n
   | SerializedIntegerType
   | SerializedStringType
   | SerializedReferenceIdentifierType
+  | SerializedChildEntitiesType
+  | SerializedTranslationObjectType
   ? T
   : T extends SerializedEntityDecl<infer N, infer P, infer FK>
     ? SerializedEntityDecl<
@@ -203,11 +212,9 @@ export type SerializedNodeWithResolvedTypeArguments<T extends SerializedNode | n
                         >
                       : T extends SerializedTypeParameter<infer N, infer C>
                         ? SerializedTypeParameter<N, SerializedNodeWithResolvedTypeArguments<C>>
-                        : T extends SerializedChildEntitiesType
-                          ? SerializedChildEntitiesType
-                          : T extends null
-                            ? null
-                            : never
+                        : T extends null
+                          ? null
+                          : never
 
 export type SerializedTypeArgumentsResolver<T extends SerializedNode = SerializedNode> = (
   decls: Record<string, SerializedDecl>,
@@ -257,6 +264,8 @@ export const resolveSerializedTypeArguments = <T extends SerializedNode = Serial
       return resolveTypeArgumentsInSerializedTypeParameter(decls, args, node) as NT
     case NodeKind.ChildEntitiesType:
       return resolveTypeArgumentsInSerializedChildEntitiesType(decls, args, node) as NT
+    case NodeKind.TranslationObjectType:
+      return resolveTypeArgumentsInSerializedTranslationObjectType(decls, args, node) as NT
     default:
       return assertExhaustive(node)
   }
@@ -304,6 +313,8 @@ export const getReferencesSerialized: GetReferencesSerialized = (decls, node, va
       return getReferencesForSerializedTypeParameter(decls, node, value)
     case NodeKind.ChildEntitiesType:
       return getReferencesForSerializedChildEntitiesType(decls, node, value)
+    case NodeKind.TranslationObjectType:
+      return getReferencesForSerializedTranslationObjectType(decls, node, value)
     default:
       return assertExhaustive(node)
   }

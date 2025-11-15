@@ -2,7 +2,7 @@ import { styleText } from "node:util"
 
 export const json = (value: unknown, useStyling: boolean) =>
   useStyling
-    ? styleText("blue", JSON.stringify(value, undefined, 2))
+    ? styleText("blue", value === undefined ? "undefined" : JSON.stringify(value, undefined, 2))
     : JSON.stringify(value, undefined, 2)
 
 export const key = (str: string, useStyling: boolean) =>

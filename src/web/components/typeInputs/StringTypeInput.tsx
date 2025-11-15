@@ -9,7 +9,13 @@ import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = TypeInputProps<SerializedStringType, string>
 
-export const StringTypeInput: FunctionComponent<Props> = ({ type, value, disabled, onChange }) => {
+export const StringTypeInput: FunctionComponent<Props> = ({
+  type,
+  value,
+  disabled,
+  onChange,
+  inTranslationObject,
+}) => {
   if (typeof value !== "string") {
     return <MismatchingTypeError expected="string" actual={value} />
   }
@@ -20,11 +26,32 @@ export const StringTypeInput: FunctionComponent<Props> = ({ type, value, disable
 
   return (
     <div class="field field--string">
-      {isMarkdown ? (
+      {inTranslationObject ? (
+        <>
+          <div class="editor editor--translation">
+            <div class="textarea-grow-wrap">
+              <textarea
+                rows={1}
+                value={value}
+                minLength={minLength}
+                maxLength={maxLength}
+                onInput={event => {
+                  onChange(event.currentTarget.value)
+                }}
+                aria-invalid={errors.length > 0}
+                disabled={disabled}
+              />
+              <div class="textarea-grow-wrap__mirror">{value + " "}</div>
+            </div>
+            <ValidationErrors disabled={disabled} errors={errors} />
+          </div>
+        </>
+      ) : isMarkdown ? (
         <>
           <div class="editor editor--markdown">
             <div class="textarea-grow-wrap">
               <textarea
+                rows={1}
                 value={value}
                 minLength={minLength}
                 maxLength={maxLength}

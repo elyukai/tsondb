@@ -261,6 +261,7 @@ const isDeclarationRecursive = (declToCheck: Decl): boolean => {
       case NodeKind.ReferenceIdentifierType:
       case NodeKind.TypeParameter:
       case NodeKind.ChildEntitiesType:
+      case NodeKind.TranslationObjectType:
         return false
       case NodeKind.ArrayType:
         return isDeclarationIncludedInNode(visitedDecls, node.items)

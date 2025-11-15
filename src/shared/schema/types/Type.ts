@@ -11,6 +11,7 @@ import type { SerializedNestedEntityMapType } from "./NestedEntityMapType.ts"
 import type { SerializedMemberDecl, SerializedObjectType } from "./ObjectType.ts"
 import type { SerializedReferenceIdentifierType } from "./ReferenceIdentifierType.ts"
 import type { SerializedStringType } from "./StringType.ts"
+import type { SerializedTranslationObjectType } from "./TranslationObjectType.ts"
 import type { SerializedTypeArgumentType } from "./TypeArgumentType.ts"
 
 export interface SerializedBaseType extends BaseNode {}
@@ -29,6 +30,7 @@ export type SerializedType =
   | SerializedNestedEntityMapType
   | SerializedEnumType
   | SerializedChildEntitiesType
+  | SerializedTranslationObjectType
 
 export type SerializedAsType<T extends SerializedType> =
   T extends SerializedArrayType<infer I>
@@ -59,4 +61,6 @@ export type SerializedAsType<T extends SerializedType> =
                         ? unknown
                         : T extends SerializedChildEntitiesType
                           ? unknown
-                          : never
+                          : T extends SerializedTranslationObjectType
+                            ? unknown
+                            : never

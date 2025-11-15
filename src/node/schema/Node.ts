@@ -21,6 +21,7 @@ import type {
 } from "../../shared/schema/types/ObjectType.ts"
 import type { SerializedReferenceIdentifierType } from "../../shared/schema/types/ReferenceIdentifierType.ts"
 import type { SerializedStringType } from "../../shared/schema/types/StringType.ts"
+import type { SerializedTranslationObjectType } from "../../shared/schema/types/TranslationObjectType.ts"
 import type { SerializedTypeArgumentType } from "../../shared/schema/types/TypeArgumentType.ts"
 import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
@@ -83,6 +84,14 @@ import {
   type MemberDecl,
   type ObjectType,
 } from "./types/generic/ObjectType.ts"
+import {
+  getNestedDeclarationsInTranslationObjectType,
+  getReferencesForTranslationObjectType,
+  resolveTypeArgumentsInTranslationObjectType,
+  serializeTranslationObjectType,
+  validateTranslationObjectType,
+  type TranslationObjectType,
+} from "./types/generic/TranslationObjectType.ts"
 import {
   getNestedDeclarationsInBooleanType,
   getReferencesForBooleanType,
@@ -273,6 +282,7 @@ export const reduceNodes = <R>(
       case NodeKind.ReferenceIdentifierType:
       case NodeKind.NestedEntityMapType:
       case NodeKind.TypeParameter:
+      case NodeKind.TranslationObjectType:
         return { results: reducer(parentNodes, node, collectedResults), reducedDecls }
 
       default:
@@ -413,6 +423,8 @@ export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node, p
       return getNestedDeclarationsInTypeParameter(addedDecls, node, parentDecl)
     case NodeKind.ChildEntitiesType:
       return getNestedDeclarationsInChildEntitiesType(addedDecls, node, parentDecl)
+    case NodeKind.TranslationObjectType:
+      return getNestedDeclarationsInTranslationObjectType(addedDecls, node, parentDecl)
     default:
       return assertExhaustive(node)
   }
@@ -480,6 +492,8 @@ export const validateType: Validator<Type> = (helpers, inDecls, type, value) => 
       return validateEnumType(helpers, inDecls, type, value)
     case NodeKind.ChildEntitiesType:
       return validateChildEntitiesType(helpers, inDecls, type, value)
+    case NodeKind.TranslationObjectType:
+      return validateTranslationObjectType(helpers, inDecls, type, value)
     default:
       return assertExhaustive(type)
   }
@@ -492,6 +506,8 @@ export type NodeWithResolvedTypeArguments<T extends Node | null> = T extends
   | IntegerType
   | StringType
   | ReferenceIdentifierType
+  | ChildEntitiesType
+  | TranslationObjectType
   ? T
   : T extends EntityDecl<infer N, infer P, infer FK>
     ? EntityDecl<
@@ -546,11 +562,9 @@ export type NodeWithResolvedTypeArguments<T extends Node | null> = T extends
                         >
                       : T extends TypeParameter<infer N, infer C>
                         ? TypeParameter<N, NodeWithResolvedTypeArguments<C>>
-                        : T extends ChildEntitiesType<infer E>
-                          ? ChildEntitiesType<E>
-                          : T extends null
-                            ? null
-                            : never
+                        : T extends null
+                          ? null
+                          : never
 
 export type TypeArgumentsResolver<T extends Node = Node> = (
   args: Record<string, Type>,
@@ -600,6 +614,8 @@ export const resolveTypeArguments = <T extends Node = Node>(
       return resolveTypeArgumentsInTypeParameter(args, node, inDecl) as NT
     case NodeKind.ChildEntitiesType:
       return resolveTypeArgumentsInChildEntitiesType(args, node, inDecl) as NT
+    case NodeKind.TranslationObjectType:
+      return resolveTypeArgumentsInTranslationObjectType(args, node, inDecl) as NT
     default:
       return assertExhaustive(node)
   }
@@ -623,6 +639,7 @@ export type SerializedNodeMap = {
   [NodeKind.EnumType]: [EnumType, SerializedEnumType]
   [NodeKind.TypeParameter]: [TypeParameter, SerializedTypeParameter]
   [NodeKind.ChildEntitiesType]: [ChildEntitiesType, SerializedChildEntitiesType]
+  [NodeKind.TranslationObjectType]: [TranslationObjectType, SerializedTranslationObjectType]
 }
 
 export type SerializedTypeParameters<T extends TypeParameter[]> = {
@@ -662,6 +679,7 @@ export type Serialized<T extends Node> =
   T extends EnumType<infer T> ? SerializedEnumType<SerializedEnumCaseDeclObject<T>> :
   T extends TypeParameter<infer N, infer C> ? SerializedTypeParameter<N, C extends Type ? Serialized<C> : undefined> :
   T extends ChildEntitiesType ? SerializedChildEntitiesType :
+  T extends TranslationObjectType<infer E> ? SerializedTranslationObjectType<E> :
   never
 
 export type SerializedOf<T extends Node> = SerializedNodeMap[T["kind"]][1]
@@ -705,6 +723,8 @@ export const serializeNode = <T extends Node>(node: T): Serialized<T> => {
       return serializeTypeParameter(node) as SN
     case NodeKind.ChildEntitiesType:
       return serializeChildEntitiesType(node) as SN
+    case NodeKind.TranslationObjectType:
+      return serializeTranslationObjectType(node) as SN
     default:
       return assertExhaustive(node)
   }
@@ -752,6 +772,8 @@ export const getReferences: GetReferences = (node, value, inDecl) => {
       return getReferencesForTypeParameter(node, value, inDecl)
     case NodeKind.ChildEntitiesType:
       return getReferencesForChildEntitiesType(node, value, inDecl)
+    case NodeKind.TranslationObjectType:
+      return getReferencesForTranslationObjectType(node, value, inDecl)
     default:
       return assertExhaustive(node)
   }

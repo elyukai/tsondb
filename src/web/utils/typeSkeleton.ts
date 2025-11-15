@@ -1,3 +1,4 @@
+import type { TranslationObjectTypeConstraint } from "../../node/schema/types/generic/TranslationObjectType.ts"
 import type { SerializedType } from "../../shared/schema/types/Type.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import type { GetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
@@ -72,6 +73,18 @@ export const createTypeSkeleton = (
 
     case "ChildEntitiesType":
       return undefined
+
+    case "TranslationObjectType": {
+      const createObject = (type: TranslationObjectTypeConstraint): Record<string, unknown> =>
+        Object.fromEntries(
+          Object.entries(type).map(([key, propType]) => [
+            key,
+            propType === null ? "" : createObject(propType),
+          ]),
+        )
+
+      return createObject(type.properties)
+    }
 
     default:
       return assertExhaustive(type)
