@@ -6,7 +6,13 @@ import { join } from "node:path"
 import { cwd } from "node:process"
 import { pathToFileURL } from "node:url"
 import { parseArguments } from "simple-cli-args"
-import type { Config } from "../node/config.ts"
+import {
+  validateConfigForFormatting,
+  validateConfigForGeneration,
+  validateConfigForServer,
+  validateConfigForTesting,
+  type Config,
+} from "../node/config.ts"
 import { format, generateOutputs, serve, validate } from "../node/index.ts"
 
 const debug = Debug("tsondb:cli")
@@ -85,10 +91,12 @@ if (passedArguments.command === undefined) {
 switch (passedArguments.command.name) {
   case "generate":
     debug(`running command: generate`)
+    validateConfigForGeneration(config)
     await generateOutputs(config.schema, config.outputs)
     break
   case "serve":
     debug(`running command: serve`)
+    validateConfigForServer(config)
     await serve(
       config.schema,
       config.dataRootPath,
@@ -100,6 +108,7 @@ switch (passedArguments.command.name) {
     break
   case "validate":
     debug(`running command: validate`)
+    validateConfigForTesting(config)
     if (passedArguments.command.options?.checkReferentialIntegrity !== undefined) {
       debug(
         `check referential integrity: ${passedArguments.command.options.checkReferentialIntegrity ? "yes" : "no"}`,
@@ -116,6 +125,7 @@ switch (passedArguments.command.name) {
     break
   case "format":
     debug(`running command: format`)
+    validateConfigForFormatting(config)
     await format(config.schema, config.dataRootPath)
     break
 }
