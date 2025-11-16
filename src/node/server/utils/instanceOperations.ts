@@ -103,11 +103,13 @@ export const createInstance = async (
     return res
   }
 
+  const newInstanceId = res.value
+
   const treeRes = await unsafeApplyInstanceTree(
     locals.dataRoot,
     locals.entitiesByName,
     locals.instancesByEntityName,
-    instance.id,
+    newInstanceId,
     instance.entityName,
     [],
     instance.childInstances,
@@ -117,7 +119,6 @@ export const createInstance = async (
     return treeRes
   }
 
-  const newInstanceId = res.value
   const instanceContainer = await updateLocalsAfterInstanceChangeToReflectDiskState(
     locals,
     entity.name,
