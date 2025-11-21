@@ -131,6 +131,9 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   const [instanceNamesByEntity] = useInstanceNamesByEntity()
   const [instanceContent, setInstanceContent] = useState<unknown>()
   const [savedInstanceContent, setSavedInstanceContent] = useState<unknown>()
+  const [savedChildInstances, setSavedChildInstances] = useState<
+    UnsafeEntityTaggedInstanceContainerWithChildInstances[]
+  >([])
   const [childInstances, setChildInstances] = useState<
     UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   >([])
@@ -140,8 +143,10 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   const { route } = useLocation()
 
   const hasUnsavedChanges = useMemo(
-    () => !deepEqual(instanceContent, savedInstanceContent),
-    [instanceContent, savedInstanceContent],
+    () =>
+      !deepEqual(instanceContent, savedInstanceContent) ||
+      !deepEqual(childInstances, savedChildInstances),
+    [childInstances, instanceContent, savedChildInstances, savedInstanceContent],
   )
 
   const saveHandler = useCallback(
@@ -234,6 +239,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           id
             ? getChildInstancesForInstanceByEntityName(locales, entity.name, id).then(result => {
                 setChildInstances(result.instances)
+                setSavedChildInstances(result.instances)
               })
             : Promise.resolve(),
         )
@@ -268,6 +274,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           setInstanceContent: value => {
             setInstanceContent(value)
             setSavedInstanceContent(value)
+            setSavedChildInstances(childInstances)
           },
           childInstances,
           updateLocalGitState: client?.updateLocalState,
