@@ -125,7 +125,6 @@ export const useGitClient = (): GitClient => {
         )
         setIsDetached(branchesData.isDetached)
         setLatestCommit(statusData.latestCommit)
-        console.log(statusData.latestCommit)
       } catch (error) {
         logAndAlertError(error, "Error updating git status: ")
       }

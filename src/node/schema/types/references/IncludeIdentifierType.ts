@@ -106,15 +106,6 @@ export const resolveTypeArgumentsInIncludeIdentifierType = (<T extends IncludeId
     const parentDecl = inDecl[inDecl.length - 1]
     const grandParentDecl = inDecl[inDecl.length - 2]
 
-    if (grandParentDecl?.name === "AdventurePointsDependingOnActiveInstancesMultiplier") {
-      console.log(
-        type.args.every(
-          (arg, argIndex) =>
-            isTypeArgumentType(arg) && parentDecl?.parameters[argIndex] === arg.argument,
-        ),
-      )
-    }
-
     if (
       type.reference === parentDecl &&
       parentDecl.parameters.length > 0 &&

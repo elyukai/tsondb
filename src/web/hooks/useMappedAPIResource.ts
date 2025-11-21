@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "preact/hooks"
+import { logAndAlertError } from "../utils/debug.ts"
 
 export const useMappedAPIResource = <T, A extends unknown[], U>(
   apiFn: (...args: A) => Promise<T>,
@@ -17,10 +18,7 @@ export const useMappedAPIResource = <T, A extends unknown[], U>(
   )
 
   useEffect(() => {
-    fetchData().catch((err: unknown) => {
-      console.log(err)
-      alert(err)
-    })
+    fetchData().catch(logAndAlertError)
   }, [fetchData])
 
   const reload = useCallback(fetchData, [fetchData])
