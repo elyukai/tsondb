@@ -57,6 +57,7 @@ export type GitClient = {
   currentBranch: string
   branches: Record<string, GitBranchSummary>
   isDetached: boolean
+  latestCommit: string
   updateLocalState: () => Promise<void>
   getGitStatusOfInstance: (entityName: string, instanceId: string) => GitFileStatus | undefined
   fetch: () => Promise<void>
@@ -83,6 +84,7 @@ export const useGitClient = (): GitClient => {
   const [workingTreeFiles, setWorkingTreeFiles] = useState<GitEntityOverview[]>([])
   const [allBranches, setAllBranches] = useState<string[]>([])
   const [currentBranch, setCurrentBranch] = useState("")
+  const [latestCommit, setLatestCommit] = useState("")
   const [branches, setBranches] = useState<Record<string, GitBranchSummary>>({})
   const [isDetached, setIsDetached] = useState(false)
 
@@ -122,6 +124,8 @@ export const useGitClient = (): GitClient => {
           ),
         )
         setIsDetached(branchesData.isDetached)
+        setLatestCommit(statusData.latestCommit)
+        console.log(statusData.latestCommit)
       } catch (error) {
         logAndAlertError(error, "Error updating git status: ")
       }
@@ -386,6 +390,7 @@ export const useGitClient = (): GitClient => {
       currentBranch,
       branches,
       isDetached,
+      latestCommit,
       getGitStatusOfInstance,
       updateLocalState: updateGitStatus,
       fetch,
@@ -415,6 +420,7 @@ export const useGitClient = (): GitClient => {
       indexFiles,
       isDetached,
       isRepo,
+      latestCommit,
       pull,
       push,
       reset,

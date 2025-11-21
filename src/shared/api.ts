@@ -75,6 +75,7 @@ export interface GitStatusResponseBody {
   instances: {
     [entity: string]: InstanceContainerOverview[]
   }
+  latestCommit: string
 }
 
 export interface GetAllGitBranchesResponseBodyBranchSummary {

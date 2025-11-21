@@ -71,6 +71,7 @@ gitApi.get("/status", async (req, res) => {
           ),
       ]),
     ),
+    latestCommit: await req.git.revparse(["HEAD"]),
   }
 
   res.json(body)

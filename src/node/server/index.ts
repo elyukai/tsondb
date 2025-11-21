@@ -39,6 +39,10 @@ export interface TSONDBRequestLocals {
   locales: string[]
   homeLayoutSections?: HomeLayoutSection[]
   getInstanceById: GetInstanceById
+  setLocal: <K extends keyof Omit<TSONDBRequestLocals, "setLocal">>(
+    key: K,
+    value: TSONDBRequestLocals[K],
+  ) => void
 }
 
 export type GetInstanceById = (
@@ -81,7 +85,7 @@ export const createServer = async (
   app.use("/js/shared", express.static(join(import.meta.dirname, "../../../../dist/src/shared")))
   app.use(express.json())
 
-  const requestLocals: TSONDBRequestLocals = await init(
+  const requestLocals = await init(
     schema,
     dataRootPath,
     Object.assign({}, instancesByEntityName),
@@ -91,6 +95,9 @@ export const createServer = async (
 
   app.use((req, _res, next) => {
     debug("%s %s", req.method, req.originalUrl)
+    ;(requestLocals as TSONDBRequestLocals).setLocal = (key, value) => {
+      requestLocals[key] = (req as TSONDBRequestLocals)[key] = value
+    }
     Object.assign(req, requestLocals)
     req.locales = getLocalesFromRequest(req) ?? defaultLocales
     next()

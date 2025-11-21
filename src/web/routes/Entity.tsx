@@ -18,6 +18,7 @@ import { GitClientContext } from "../context/gitClient.ts"
 import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"
 import { useSetting } from "../hooks/useSettings.ts"
+import { logAndAlertError } from "../utils/debug.ts"
 import { Markdown } from "../utils/Markdown.tsx"
 import { homeTitle } from "./Home.tsx"
 import { NotFound } from "./NotFound.tsx"
@@ -42,14 +43,22 @@ export const Entity: FunctionalComponent = () => {
     getInstancesByEntityName,
     mapInstances,
     locales,
-    entity?.name ?? "",
+    entity?.name ?? name ?? "",
   )
-  const [localeInstances] = useMappedAPIResource(
+  const [localeInstances, reloadLocaleInstances] = useMappedAPIResource(
     getLocaleInstances,
     localeMapper,
     locales,
     config.localeEntityName,
   )
+
+  const { latestCommit } = useContext(GitClientContext) ?? {}
+
+  useEffect(() => {
+    reloadInstances()
+      .then(() => reloadLocaleInstances())
+      .catch(logAndAlertError)
+  }, [latestCommit, reloadInstances, reloadLocaleInstances])
 
   useEffect(() => {
     document.title = toTitleCase(entity?.namePlural ?? name ?? "") + " — TSONDB"

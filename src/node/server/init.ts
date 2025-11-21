@@ -36,7 +36,7 @@ export const init = async (
   instancesByEntityName: InstancesByEntityName,
   defaultLocales: string[],
   homeLayoutSections?: HomeLayoutSection[],
-): Promise<TSONDBRequestLocals> => {
+): Promise<Omit<TSONDBRequestLocals, "setLocal">> => {
   const { git, root: gitRoot, status: gitStatus } = await getGit(dataRootPath)
 
   const declarations = resolveTypeArgumentsInDecls(schema.declarations)
@@ -53,8 +53,6 @@ export const init = async (
     declarations.map(decl => [decl.name, serializeNode(decl)]),
   )
 
-  const instancesByEntityNameInMemory = Object.assign({}, instancesByEntityName)
-
   const referencesToInstances = await getReferencesToInstances(
     instancesByEntityName,
     serializedDeclarationsByName,
@@ -67,23 +65,23 @@ export const init = async (
   }
 
   const getInstanceById: GetInstanceById = id => {
-    for (const entityName in instancesByEntityNameInMemory) {
-      const instance = instancesByEntityNameInMemory[entityName]?.find(i => i.id === id)
-      if (instance && entitiesByName[entityName]) {
-        return { entity: entitiesByName[entityName], instance }
+    for (const entityName in requestLocals.instancesByEntityName) {
+      const instance = requestLocals.instancesByEntityName[entityName]?.find(i => i.id === id)
+      if (instance && requestLocals.entitiesByName[entityName]) {
+        return { entity: requestLocals.entitiesByName[entityName], instance }
       }
     }
 
     return undefined
   }
 
-  const requestLocals: TSONDBRequestLocals = {
+  const requestLocals: Omit<TSONDBRequestLocals, "setLocal"> = {
     git: git,
     gitRoot: gitRoot,
     dataRoot: dataRootPath,
     declarations: declarations,
     entities: entities,
-    instancesByEntityName: instancesByEntityNameInMemory,
+    instancesByEntityName: Object.assign({}, instancesByEntityName),
     entitiesByName: entitiesByName,
     serializedDeclarationsByName,
     localeEntity: schema.localeEntity,
@@ -98,10 +96,16 @@ export const init = async (
 }
 
 export const reinit = async (locals: TSONDBRequestLocals) => {
-  locals.instancesByEntityName = await getInstancesByEntityName(locals.dataRoot, locals.entities)
-  locals.referencesToInstances = await getReferencesToInstances(
-    locals.instancesByEntityName,
-    locals.serializedDeclarationsByName,
+  locals.setLocal(
+    "instancesByEntityName",
+    await getInstancesByEntityName(locals.dataRoot, locals.entities),
+  )
+  locals.setLocal(
+    "referencesToInstances",
+    await getReferencesToInstances(
+      locals.instancesByEntityName,
+      locals.serializedDeclarationsByName,
+    ),
   )
 
   const gitStatus = (await locals.git.checkIsRepo()) ? await locals.git.status() : undefined
