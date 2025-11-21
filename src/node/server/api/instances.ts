@@ -22,21 +22,23 @@ instancesApi.get("/", (req, res) => {
         .filter(([entityName]) => Object.hasOwn(req.entitiesByName, entityName))
         .map(([entityName, instances]) => [
           entityName,
-          instances.map(instance => {
-            const { name, localeId } = getDisplayNameFromEntityInstance(
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              req.entitiesByName[entityName]!,
-              instance,
-              req.getInstanceById,
-              getChildInstancesForInstanceId,
-              req.locales,
-            )
-            return {
-              id: instance.id,
-              name,
-              displayNameLocaleId: localeId,
-            }
-          }),
+          instances
+            .map(instance => {
+              const { name, localeId } = getDisplayNameFromEntityInstance(
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                req.entitiesByName[entityName]!,
+                instance,
+                req.getInstanceById,
+                getChildInstancesForInstanceId,
+                req.locales,
+              )
+              return {
+                id: instance.id,
+                name,
+                displayNameLocaleId: localeId,
+              }
+            })
+            .toSorted((a, b) => a.name.localeCompare(b.name, a.displayNameLocaleId)),
         ]),
     ),
   }

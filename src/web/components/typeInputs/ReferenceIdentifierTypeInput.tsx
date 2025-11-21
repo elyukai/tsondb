@@ -18,9 +18,7 @@ export const ReferenceIdentifierTypeInput: FunctionComponent<Props> = ({
     return <MismatchingTypeError expected="string identifier" actual={value} />
   }
 
-  const instances = (instanceNamesByEntity[type.entity] ?? [])
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+  const instances = instanceNamesByEntity[type.entity] ?? []
 
   return (
     <div class="field">
