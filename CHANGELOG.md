@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.3](https://github.com/elyukai/tsondb/compare/v0.12.2...v0.12.3) (2025-11-21)
+
+
+### Bug Fixes
+
+* changes in child instances do not enable save button ([df5716e](https://github.com/elyukai/tsondb/commit/df5716e8f35d898cb238acfbbebe33fb20c5fbbb))
+* create child instances immediately with new instance ([44f1963](https://github.com/elyukai/tsondb/commit/44f19637b82e327c90650d935e62ba83205158f0)), closes [#44](https://github.com/elyukai/tsondb/issues/44)
+* server state should correctly update and be reflected in the editor after switching branches or pulling new commits ([22699b7](https://github.com/elyukai/tsondb/commit/22699b76d8e41f862c7cda6dcf805b6206bb8806)), closes [#45](https://github.com/elyukai/tsondb/issues/45)
+
 ## [0.12.2](https://github.com/elyukai/tsondb/compare/v0.12.1...v0.12.2) (2025-11-15)
 
 
