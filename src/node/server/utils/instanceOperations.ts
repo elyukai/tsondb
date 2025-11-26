@@ -1,138 +1,58 @@
-import { removeAt } from "../../../shared/utils/array.ts"
 import type { InstanceContainer } from "../../../shared/utils/instances.ts"
 import { error, isError, ok, type Result } from "../../../shared/utils/result.ts"
 import {
-  checkWriteInstanceTreePossible,
   getChildInstances,
-  unsafeApplyInstanceTree,
+  saveInstanceTree,
   type CreatedEntityTaggedInstanceContainerWithChildInstances,
   type UpdatedEntityTaggedInstanceContainerWithChildInstances,
 } from "../../utils/childInstances.ts"
-import { getFileNameForId } from "../../utils/files.ts"
-import { getGitFileStatusFromStatusResult } from "../../utils/git.ts"
-import * as Instances from "../../utils/instanceOperations.ts"
-import { updateReferencesToInstances } from "../../utils/references.ts"
+import { getInstanceOfEntityFromDatabaseInMemory } from "../../utils/databaseInMemory.ts"
+import { runDatabaseTransaction } from "../../utils/databaseTransactions.ts"
+import { HTTPError } from "../../utils/error.ts"
 import type { TSONDBRequestLocals } from "../index.ts"
-import { updateLocalsAfterInstanceTreeChangeToReflectDiskState } from "./childInstances.ts"
-
-export const updateLocalsAfterInstanceChangeToReflectDiskState = async (
-  locals: TSONDBRequestLocals,
-  entityName: string,
-  instanceId: string,
-  newInstanceContent: unknown,
-) => {
-  const oldInstances = locals.instancesByEntityName[entityName] ?? []
-  const oldInstanceContainerIndex = oldInstances.findIndex(instance => instance.id === instanceId)
-  const oldInstanceContainer =
-    oldInstanceContainerIndex > -1 ? oldInstances[oldInstanceContainerIndex] : undefined
-
-  const instanceContainer: InstanceContainer = oldInstanceContainer ?? {
-    id: instanceId,
-    content: undefined,
-  }
-
-  // old content as alternative if instance is deleted to restore old instance container
-  instanceContainer.content = newInstanceContent ?? instanceContainer.content
-  instanceContainer.gitStatus =
-    locals.gitRoot === undefined
-      ? undefined
-      : getGitFileStatusFromStatusResult(
-          await locals.git.status(),
-          locals.gitRoot,
-          locals.dataRoot,
-          entityName,
-          getFileNameForId(instanceId),
-        )
-
-  if (oldInstanceContainer === undefined) {
-    locals.instancesByEntityName[entityName] = [...oldInstances, instanceContainer]
-  } else if (newInstanceContent === undefined) {
-    locals.instancesByEntityName[entityName] = removeAt(oldInstances, oldInstanceContainerIndex)
-  }
-
-  Object.assign(
-    locals.referencesToInstances,
-    updateReferencesToInstances(
-      locals.entitiesByName,
-      locals.referencesToInstances,
-      entityName,
-      instanceId,
-      oldInstanceContainer?.content,
-      newInstanceContent,
-    ),
-  )
-
-  return instanceContainer
-}
 
 export const createInstance = async (
   locals: TSONDBRequestLocals,
   instance: CreatedEntityTaggedInstanceContainerWithChildInstances,
   idQueryParam: unknown,
-): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
+): Promise<Result<InstanceContainer, Error>> => {
   const entity = locals.entitiesByName[instance.entityName]
 
   if (entity === undefined) {
-    return error([400, "Entity not found"])
+    return error(new HTTPError(400, "Entity not found"))
   }
 
-  const checkTreeResult = checkWriteInstanceTreePossible(
+  const databaseTransactionResult = await runDatabaseTransaction(
+    locals.dataRoot,
+    locals.gitRoot ? locals.git : undefined,
     locals.entitiesByName,
-    locals.instancesByEntityName,
+    locals.databaseInMemory,
     locals.referencesToInstances,
-    instance.id,
-    entity.name,
-    [],
-    instance.childInstances,
+    res =>
+      saveInstanceTree(
+        locals.entitiesByName,
+        undefined,
+        locals.localeEntity,
+        instance.entityName,
+        undefined,
+        instance,
+        idQueryParam,
+        res,
+      ),
   )
 
-  if (isError(checkTreeResult)) {
-    return checkTreeResult
+  if (isError(databaseTransactionResult)) {
+    return databaseTransactionResult
   }
 
-  const res = await Instances.createInstance(
-    locals.dataRoot,
-    locals.localeEntity,
-    locals.instancesByEntityName,
-    entity,
-    instance.content,
-    idQueryParam,
-  )
+  const {
+    db: newDatabaseInMemory,
+    refs: newReferencesToInstances,
+    instanceContainer,
+  } = databaseTransactionResult.value
 
-  if (isError(res)) {
-    return res
-  }
-
-  const newInstanceId = res.value
-
-  const treeRes = await unsafeApplyInstanceTree(
-    locals.dataRoot,
-    locals.entitiesByName,
-    locals.instancesByEntityName,
-    newInstanceId,
-    instance.entityName,
-    [],
-    instance.childInstances,
-  )
-
-  if (isError(treeRes)) {
-    return treeRes
-  }
-
-  const instanceContainer = await updateLocalsAfterInstanceChangeToReflectDiskState(
-    locals,
-    entity.name,
-    newInstanceId,
-    instance.content,
-  )
-
-  await updateLocalsAfterInstanceTreeChangeToReflectDiskState(
-    locals,
-    newInstanceId,
-    entity.name,
-    [],
-    instance.childInstances,
-  )
+  locals.setLocal("databaseInMemory", newDatabaseInMemory)
+  locals.setLocal("referencesToInstances", newReferencesToInstances)
 
   return ok(instanceContainer)
 }
@@ -140,77 +60,61 @@ export const createInstance = async (
 export const updateInstance = async (
   locals: TSONDBRequestLocals,
   instance: UpdatedEntityTaggedInstanceContainerWithChildInstances,
-): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
-  const instanceContainer = locals.instancesByEntityName[instance.entityName]?.find(
-    instance => instance.id === instance.id,
+): Promise<Result<InstanceContainer, Error>> => {
+  const instanceContainer = getInstanceOfEntityFromDatabaseInMemory(
+    locals.databaseInMemory,
+    instance.entityName,
+    instance.id,
   )
 
   if (instanceContainer === undefined) {
-    return error([404, "Instance not found"])
+    return error(new HTTPError(400, "Instance not found"))
   }
 
   const entity = locals.entitiesByName[instance.entityName]
 
   if (entity === undefined) {
-    return error([400, "Entity not found"])
+    return error(new HTTPError(400, "Entity not found"))
   }
 
-  const oldChildInstances = getChildInstances(locals.instancesByEntityName, entity, instance.id)
+  const oldChildInstances = getChildInstances(locals.databaseInMemory, entity, instance.id, true)
 
-  const checkTreeResult = checkWriteInstanceTreePossible(
+  const databaseTransactionResult = await runDatabaseTransaction(
+    locals.dataRoot,
+    locals.gitRoot ? locals.git : undefined,
     locals.entitiesByName,
-    locals.instancesByEntityName,
+    locals.databaseInMemory,
     locals.referencesToInstances,
-    instance.id,
-    entity.name,
-    oldChildInstances,
-    instance.childInstances,
+    res =>
+      saveInstanceTree(
+        locals.entitiesByName,
+        undefined,
+        locals.localeEntity,
+        instance.entityName,
+        {
+          id: instance.id,
+          content: instanceContainer.content,
+          childInstances: oldChildInstances,
+          entityName: instance.entityName,
+        },
+        instance,
+        undefined,
+        res,
+      ),
   )
 
-  if (isError(checkTreeResult)) {
-    return checkTreeResult
+  if (isError(databaseTransactionResult)) {
+    return databaseTransactionResult
   }
 
-  const res = await Instances.updateInstance(
-    locals.dataRoot,
-    locals.instancesByEntityName,
-    entity,
-    instance.id,
-    instance.content,
-  )
+  const {
+    db: newDatabaseInMemory,
+    refs: newReferencesToInstances,
+    instanceContainer: newInstanceContainer,
+  } = databaseTransactionResult.value
 
-  if (isError(res)) {
-    return res
-  }
-
-  const treeRes = await unsafeApplyInstanceTree(
-    locals.dataRoot,
-    locals.entitiesByName,
-    locals.instancesByEntityName,
-    instance.id,
-    instance.entityName,
-    oldChildInstances,
-    instance.childInstances,
-  )
-
-  if (isError(treeRes)) {
-    return treeRes
-  }
-
-  const newInstanceContainer = await updateLocalsAfterInstanceChangeToReflectDiskState(
-    locals,
-    entity.name,
-    instance.id,
-    instance.content,
-  )
-
-  await updateLocalsAfterInstanceTreeChangeToReflectDiskState(
-    locals,
-    instance.id,
-    instance.entityName,
-    oldChildInstances,
-    instance.childInstances,
-  )
+  locals.setLocal("databaseInMemory", newDatabaseInMemory)
+  locals.setLocal("referencesToInstances", newReferencesToInstances)
 
   return ok(newInstanceContainer)
 }
@@ -219,80 +123,61 @@ export const deleteInstance = async (
   locals: TSONDBRequestLocals,
   entityName: string,
   instanceId: string,
-): Promise<Result<InstanceContainer, [code: number, message: string]>> => {
-  const instances = locals.instancesByEntityName[entityName] ?? []
-  const instanceContainerIndex = instances.findIndex(instance => instance.id === instanceId)
-  const instanceContainer = instances[instanceContainerIndex]
+): Promise<Result<InstanceContainer, Error>> => {
+  const instanceContainer = getInstanceOfEntityFromDatabaseInMemory(
+    locals.databaseInMemory,
+    entityName,
+    instanceId,
+  )
 
   if (instanceContainer === undefined) {
-    return error([404, "Instance not found"])
+    return error(new HTTPError(400, "Instance not found"))
   }
 
   const entity = locals.entitiesByName[entityName]
 
   if (entity === undefined) {
-    return error([400, "Entity not found"])
+    return error(new HTTPError(400, "Entity not found"))
   }
 
-  const oldChildInstances = getChildInstances(
-    locals.instancesByEntityName,
-    entity,
-    instanceContainer.id,
-  )
+  const oldChildInstances = getChildInstances(locals.databaseInMemory, entity, instanceId, true)
 
-  const checkTreeResult = checkWriteInstanceTreePossible(
-    locals.entitiesByName,
-    locals.instancesByEntityName,
-    locals.referencesToInstances,
-    instanceContainer.id,
-    entityName,
-    oldChildInstances,
-    [],
-  )
-
-  if (isError(checkTreeResult)) {
-    return checkTreeResult
-  }
-
-  const res = await Instances.deleteInstance(
+  const databaseTransactionResult = await runDatabaseTransaction(
     locals.dataRoot,
-    locals.referencesToInstances,
-    entityName,
-    instanceId,
-  )
-
-  if (isError(res)) {
-    return res
-  }
-
-  const treeRes = await unsafeApplyInstanceTree(
-    locals.dataRoot,
+    locals.gitRoot ? locals.git : undefined,
     locals.entitiesByName,
-    locals.instancesByEntityName,
-    instanceContainer.id,
-    entityName,
-    oldChildInstances,
-    [],
+    locals.databaseInMemory,
+    locals.referencesToInstances,
+    res =>
+      saveInstanceTree(
+        locals.entitiesByName,
+        undefined,
+        locals.localeEntity,
+        entityName,
+        {
+          id: instanceId,
+          content: instanceContainer.content,
+          childInstances: oldChildInstances,
+          entityName,
+        },
+        undefined,
+        undefined,
+        res,
+      ),
   )
 
-  if (isError(treeRes)) {
-    return treeRes
+  if (isError(databaseTransactionResult)) {
+    return databaseTransactionResult
   }
 
-  const oldInstanceContainer = await updateLocalsAfterInstanceChangeToReflectDiskState(
-    locals,
-    entity.name,
-    instanceContainer.id,
-    undefined,
-  )
+  const {
+    db: newDatabaseInMemory,
+    refs: newReferencesToInstances,
+    instanceContainer: oldInstanceContainer,
+  } = databaseTransactionResult.value
 
-  await updateLocalsAfterInstanceTreeChangeToReflectDiskState(
-    locals,
-    instanceContainer.id,
-    entityName,
-    oldChildInstances,
-    [],
-  )
+  locals.setLocal("databaseInMemory", newDatabaseInMemory)
+  locals.setLocal("referencesToInstances", newReferencesToInstances)
 
   return ok(oldInstanceContainer)
 }

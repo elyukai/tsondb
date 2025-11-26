@@ -10,7 +10,7 @@ import type {
 } from "../../../shared/api.ts"
 import { hasFileChanges, splitBranchName } from "../../../shared/utils/git.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
-import { attachGitStatusToInstancesByEntityName } from "../../utils/instances.ts"
+import { getGroupedInstancesFromDatabaseInMemory } from "../../utils/databaseInMemory.ts"
 import { reinit } from "../init.ts"
 import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
 
@@ -39,14 +39,6 @@ gitApi.get("/", (req, res) => {
 gitApi.get("/status", async (req, res) => {
   const status = await req.git.status()
 
-  attachGitStatusToInstancesByEntityName(
-    req.instancesByEntityName,
-    req.dataRoot,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    req.gitRoot!,
-    status,
-  )
-
   const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
 
   const body: GitStatusResponseBody = {
@@ -55,21 +47,23 @@ gitApi.get("/status", async (req, res) => {
     commitsAhead: status.ahead,
     commitsBehind: status.behind,
     instances: Object.fromEntries(
-      Object.entries(req.instancesByEntityName).map(([entityName, instances]) => [
-        entityName,
-        instances
-          .filter(instance => hasFileChanges(instance.gitStatus))
-          .map(instance =>
-            getInstanceContainerOverview(
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              req.entitiesByName[entityName]!,
-              instance,
-              req.getInstanceById,
-              getChildInstancesForInstanceId,
-              req.locales,
+      getGroupedInstancesFromDatabaseInMemory(req.databaseInMemory).map(
+        ([entityName, instances]) => [
+          entityName,
+          instances
+            .filter(instance => hasFileChanges(instance.gitStatus))
+            .map(instance =>
+              getInstanceContainerOverview(
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                req.entitiesByName[entityName]!,
+                instance,
+                req.getInstanceById,
+                getChildInstancesForInstanceId,
+                req.locales,
+              ),
             ),
-          ),
-      ]),
+        ],
+      ),
     ),
     latestCommit: await req.git.revparse(["HEAD"]),
   }

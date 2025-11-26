@@ -20,6 +20,12 @@ import { isEnumDecl } from "../../schema/declarations/EnumDecl.ts"
 import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
 import { serializeNode } from "../../schema/index.ts"
 import { getChildInstances } from "../../utils/childInstances.ts"
+import {
+  countInstancesOfEntityInDatabaseInMemory,
+  getInstanceOfEntityFromDatabaseInMemory,
+  getInstancesOfEntityFromDatabaseInMemory,
+} from "../../utils/databaseInMemory.ts"
+import { HTTPError } from "../../utils/error.ts"
 import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
 import { createInstance, deleteInstance, updateInstance } from "../utils/instanceOperations.ts"
 
@@ -52,7 +58,7 @@ declarationsApi.get("/", (req, res) => {
   const body: GetAllDeclarationsResponseBody = {
     declarations: filteredEntities.map(decl => ({
       declaration: serializeNode(decl),
-      instanceCount: req.instancesByEntityName[decl.name]?.length ?? 0,
+      instanceCount: countInstancesOfEntityInDatabaseInMemory(req.databaseInMemory, decl.name),
     })),
     localeEntity: req.localeEntity?.name,
   }
@@ -70,7 +76,7 @@ declarationsApi.get("/:name", (req, res) => {
 
   const body: GetDeclarationResponseBody = {
     declaration: serializeNode(decl),
-    instanceCount: req.instancesByEntityName[decl.name]?.length ?? 0,
+    instanceCount: countInstancesOfEntityInDatabaseInMemory(req.databaseInMemory, decl.name),
     isLocaleEntity: decl === req.localeEntity,
   }
 
@@ -93,20 +99,17 @@ declarationsApi.get("/:name/instances", (req, res) => {
   const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
 
   const body: GetAllInstancesOfEntityResponseBody = {
-    instances:
-      req.instancesByEntityName[req.params.name]
-        ?.map(instanceContainer =>
-          getInstanceContainerOverview(
-            decl,
-            instanceContainer,
-            req.getInstanceById,
-            getChildInstancesForInstanceId,
-            req.locales,
-          ),
-        )
-        .toSorted((a, b) =>
-          a.displayName.localeCompare(b.displayName, undefined, { numeric: true }),
-        ) ?? [],
+    instances: getInstancesOfEntityFromDatabaseInMemory(req.databaseInMemory, decl.name)
+      .map(instanceContainer =>
+        getInstanceContainerOverview(
+          decl,
+          instanceContainer,
+          req.getInstanceById,
+          getChildInstancesForInstanceId,
+          req.locales,
+        ),
+      )
+      .toSorted((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true })),
     isLocaleEntity: decl === req.localeEntity,
   }
 
@@ -137,7 +140,11 @@ declarationsApi.post("/:name/instances", async (req, res) => {
 
     res.json(body)
   } else {
-    res.status(result.error[0]).send(result.error[1])
+    if (result.error instanceof HTTPError) {
+      res.status(result.error.code).send(result.error.message)
+    } else {
+      res.status(500).send(result.error.message)
+    }
   }
 })
 
@@ -154,8 +161,10 @@ declarationsApi.get("/:name/instances/:id", (req, res) => {
     return
   }
 
-  const instance = req.instancesByEntityName[decl.name]?.find(
-    instance => instance.id === req.params.id,
+  const instance = getInstanceOfEntityFromDatabaseInMemory(
+    req.databaseInMemory,
+    decl.name,
+    req.params.id,
   )
 
   if (instance === undefined) {
@@ -195,7 +204,11 @@ declarationsApi.put("/:name/instances/:id", async (req, res) => {
 
     res.json(body)
   } else {
-    res.status(result.error[0]).send(result.error[1])
+    if (result.error instanceof HTTPError) {
+      res.status(result.error.code).send(result.error.message)
+    } else {
+      res.status(500).send(result.error.message)
+    }
   }
 })
 
@@ -222,7 +235,11 @@ declarationsApi.delete("/:name/instances/:id", async (req, res) => {
 
     res.json(body)
   } else {
-    res.status(result.error[0]).send(result.error[1])
+    if (result.error instanceof HTTPError) {
+      res.status(result.error.code).send(result.error.message)
+    } else {
+      res.status(500).send(result.error.message)
+    }
   }
 })
 
@@ -240,7 +257,7 @@ declarationsApi.get("/:name/instances/:id/children", (req, res) => {
   }
 
   const body: GetAllChildInstancesOfInstanceResponseBody = {
-    instances: getChildInstances(req.instancesByEntityName, decl, req.params.id),
+    instances: getChildInstances(req.databaseInMemory, decl, req.params.id),
   }
 
   res.json(body)

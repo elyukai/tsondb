@@ -1,33 +1,31 @@
 import type { GitFileStatus } from "../../shared/utils/git.ts"
-import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.ts"
+import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import { hasKey } from "../../shared/utils/object.ts"
-import { error, isError, ok, type Result } from "../../shared/utils/result.ts"
+import { error, isError, map, ok, type Result } from "../../shared/utils/result.ts"
 import type {
   EntityDecl,
   EntityDeclWithParentReference,
 } from "../schema/declarations/EntityDecl.ts"
-import { reduceNodes } from "../schema/index.ts"
+import { isEntityDeclWithParentReference, reduceNodes } from "../schema/index.ts"
 import { isChildEntitiesType } from "../schema/types/references/ChildEntitiesType.ts"
 import {
-  checkCreateNonLocaleInstancePossible,
-  checkDeleteInstancePossible,
-  checkUpdateInstancePossible,
-  createNewId,
-  unsafeDeleteInstance,
-  unsafeWriteInstance,
-} from "./instanceOperations.ts"
-import { type ReferencesToInstances } from "./references.ts"
+  getInstancesOfEntityFromDatabaseInMemory,
+  type DatabaseInMemory,
+} from "./databaseInMemory.ts"
+import type { TransactionResult } from "./databaseTransactions.ts"
+import { HTTPError } from "./error.ts"
+import { createInstance, deleteInstance, updateInstance } from "./instanceTransactionSteps.ts"
 
 export interface ChildInstanceContainer {
   id?: string
-  content: unknown
+  content: InstanceContent
   gitStatus?: GitFileStatus
 }
 
 export interface EntityTaggedInstanceContainer {
   entityName: string
   id: string
-  content: unknown
+  content: InstanceContent
 }
 
 export interface CreatedEntityTaggedInstanceContainerWithChildInstances
@@ -60,7 +58,7 @@ export interface GenEntityTaggedInstanceContainerWithChildInstances<
 > {
   entityName: string
   id: ID
-  content: unknown
+  content: InstanceContent
   childInstances: C[]
 }
 
@@ -83,25 +81,23 @@ const isParentReferenceReferencingParent = (
 }
 
 export const getChildInstancesFromEntity = (
-  instancesByEntityName: InstancesByEntityName,
+  databaseInMemory: DatabaseInMemory,
   parentEntity: EntityDecl,
   parentId: string,
   childEntity: EntityDeclWithParentReference,
 ): InstanceContainer[] =>
-  instancesByEntityName[childEntity.name]?.filter(
+  getInstancesOfEntityFromDatabaseInMemory(databaseInMemory, childEntity.name).filter(
     instanceContainer =>
-      typeof instanceContainer.content === "object" &&
-      instanceContainer.content !== null &&
       hasKey(instanceContainer.content, childEntity.parentReferenceKey) &&
       isParentReferenceReferencingParent(
         instanceContainer.content[childEntity.parentReferenceKey],
         parentEntity.name,
         parentId,
       ),
-  ) ?? []
+  )
 
 export const getChildInstances = (
-  instancesByEntityName: InstancesByEntityName,
+  databaseInMemory: DatabaseInMemory,
   parentEntity: EntityDecl,
   parentId: string,
   recursive: boolean = true,
@@ -115,7 +111,7 @@ export const getChildInstances = (
 
   return childEntities.flatMap(childEntity =>
     getChildInstancesFromEntity(
-      instancesByEntityName,
+      databaseInMemory,
       parentEntity,
       parentId,
       childEntity,
@@ -123,254 +119,147 @@ export const getChildInstances = (
       ...container,
       entityName: childEntity.name,
       childInstances: recursive
-        ? getChildInstances(instancesByEntityName, childEntity, container.id)
+        ? getChildInstances(databaseInMemory, childEntity, container.id)
         : [],
     })),
   )
 }
 
-export const checkWriteInstanceTreePossible = (
-  entitiesByName: Record<string, EntityDecl>,
-  instancesByEntityName: InstancesByEntityName,
-  referencesToInstances: ReferencesToInstances,
+const prepareNewChildInstanceContent = (
+  entity: EntityDecl,
   parentId: string | undefined,
-  parentEntityName: string,
-  oldChildInstances: EntityTaggedInstanceContainerWithChildInstances[],
-  childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[],
-): Result<void, [code: number, message: string]> => {
-  const parentEntity = entitiesByName[parentEntityName]
-
-  if (parentEntity === undefined) {
-    return error([400, `Unknown entity "${parentEntityName}"`])
-  }
-
-  if (parentId !== undefined) {
-    // existing parent, some child instances may already exist
-    for (const oldChildInstance of oldChildInstances) {
-      const newChildInstance = childInstances.find(ci => ci.id === oldChildInstance.id)
-
-      if (newChildInstance === undefined) {
-        const prerequisiteCheckResult = checkDeleteInstancePossible(
-          referencesToInstances,
-          oldChildInstance.id,
-        )
-
-        if (isError(prerequisiteCheckResult)) {
-          return prerequisiteCheckResult
-        }
-      } else {
-        const entity = entitiesByName[newChildInstance.entityName]
-
-        if (entity === undefined) {
-          return error([400, `Unknown entity "${newChildInstance.entityName}"`])
-        }
-
-        const prerequisiteCheckResult = checkUpdateInstancePossible(
-          instancesByEntityName,
-          entity,
-          newChildInstance.content,
-        )
-
-        if (isError(prerequisiteCheckResult)) {
-          return prerequisiteCheckResult
-        }
-      }
-    }
-
-    for (const newChildInstance of childInstances.filter(predicate => predicate.id === undefined)) {
-      const entity = entitiesByName[newChildInstance.entityName]
-
-      if (entity === undefined) {
-        return error([400, `Unknown entity "${newChildInstance.entityName}"`])
-      }
-
-      const prerequisiteCheckResult = checkCreateNonLocaleInstancePossible(
-        instancesByEntityName,
-        entity,
-        newChildInstance.content,
+  content: InstanceContent,
+): Result<InstanceContent, HTTPError> => {
+  if (isEntityDeclWithParentReference(entity)) {
+    if (parentId === undefined) {
+      return error(
+        new HTTPError(
+          400,
+          `Cannot create instance of child entity "${entity.name}" without parent reference`,
+        ),
       )
-
-      if (isError(prerequisiteCheckResult)) {
-        return prerequisiteCheckResult
-      }
     }
+
+    return ok({
+      ...content,
+      [entity.parentReferenceKey]: parentId,
+    })
   } else {
-    // new parent, all child instances are new
-    for (const newChildInstance of childInstances) {
-      const entity = entitiesByName[newChildInstance.entityName]
-
-      if (entity === undefined) {
-        return error([400, `Unknown entity "${newChildInstance.entityName}"`])
-      }
-
-      const prerequisiteCheckResult = checkCreateNonLocaleInstancePossible(
-        instancesByEntityName,
-        entity,
-        newChildInstance.content,
-      )
-
-      if (isError(prerequisiteCheckResult)) {
-        return prerequisiteCheckResult
-      }
-    }
+    return ok(content)
   }
-
-  // check recursively for child instances of child instances
-  for (const childInstance of childInstances) {
-    const oldChildInstance = childInstance.id
-      ? oldChildInstances.find(ci => ci.id === childInstance.id)
-      : undefined
-
-    const prerequisiteCheckResult = checkWriteInstanceTreePossible(
-      entitiesByName,
-      instancesByEntityName,
-      referencesToInstances,
-      childInstance.id,
-      childInstance.entityName,
-      oldChildInstance ? oldChildInstance.childInstances : [],
-      childInstance.childInstances,
-    )
-
-    if (isError(prerequisiteCheckResult)) {
-      return prerequisiteCheckResult
-    }
-  }
-
-  return ok()
 }
 
-export const unsafeApplyInstanceTree = async (
-  dataRoot: string,
+export const saveInstanceTree = (
   entitiesByName: Record<string, EntityDecl>,
-  instancesByEntityName: InstancesByEntityName,
   parentId: string | undefined,
-  parentEntityName: string,
-  oldChildInstances: EntityTaggedInstanceContainerWithChildInstances[],
-  childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[],
-): Promise<Result<void, [code: number, message: string]>> => {
-  const parentEntity = entitiesByName[parentEntityName]
-
-  if (parentEntity === undefined) {
-    return error([400, `Unknown entity "${parentEntityName}"`])
+  localeEntity: EntityDecl | undefined,
+  entityName: string,
+  oldInstance: EntityTaggedInstanceContainerWithChildInstances | undefined,
+  newInstance: UnsafeEntityTaggedInstanceContainerWithChildInstances | undefined,
+  customId: unknown,
+  res: TransactionResult,
+): TransactionResult<{ instanceContainer: InstanceContainer }> => {
+  if (isError(res)) {
+    return res
   }
 
-  if (parentId !== undefined) {
-    // existing parent, some child instances may already exist
-    for (const oldChildInstance of oldChildInstances) {
-      const newChildInstance = childInstances.find(ci => ci.id === oldChildInstance.id)
+  const entity = entitiesByName[entityName]
 
-      if (newChildInstance === undefined) {
-        const oldGrandChildInstancesResult = await unsafeApplyInstanceTree(
-          dataRoot,
-          entitiesByName,
-          instancesByEntityName,
-          oldChildInstance.id,
-          oldChildInstance.entityName,
-          oldChildInstance.childInstances,
-          [],
-        )
-
-        if (isError(oldGrandChildInstancesResult)) {
-          return oldGrandChildInstancesResult
-        }
-
-        const prerequisiteCheckResult = await unsafeDeleteInstance(
-          dataRoot,
-          oldChildInstance.entityName,
-          oldChildInstance.id,
-        )
-
-        if (isError(prerequisiteCheckResult)) {
-          return prerequisiteCheckResult
-        }
-      } else {
-        const entity = entitiesByName[newChildInstance.entityName]
-
-        if (entity === undefined) {
-          return error([400, `Unknown entity "${newChildInstance.entityName}"`])
-        }
-
-        const prerequisiteCheckResult = await unsafeWriteInstance(
-          dataRoot,
-          entity,
-          oldChildInstance.id,
-          newChildInstance.content,
-        )
-
-        if (isError(prerequisiteCheckResult)) {
-          return prerequisiteCheckResult
-        }
-      }
-    }
-
-    for (const newChildInstance of childInstances.filter(predicate => predicate.id === undefined)) {
-      const entity = entitiesByName[newChildInstance.entityName]
-
-      if (entity === undefined) {
-        return error([400, `Unknown entity "${newChildInstance.entityName}"`])
-      }
-
-      const newInstanceID = createNewId()
-
-      const prerequisiteCheckResult = await unsafeWriteInstance(
-        dataRoot,
-        entity,
-        newInstanceID,
-        newChildInstance.content,
-      )
-
-      if (isError(prerequisiteCheckResult)) {
-        return prerequisiteCheckResult
-      }
-
-      newChildInstance.id = newInstanceID
-    }
-  } else {
-    // new parent, all child instances are new
-    for (const newChildInstance of childInstances) {
-      const entity = entitiesByName[newChildInstance.entityName]
-
-      if (entity === undefined) {
-        return error([400, `Unknown entity "${newChildInstance.entityName}"`])
-      }
-
-      const newInstanceID = createNewId()
-
-      const prerequisiteCheckResult = await unsafeWriteInstance(
-        dataRoot,
-        entity,
-        newInstanceID,
-        newChildInstance.content,
-      )
-
-      if (isError(prerequisiteCheckResult)) {
-        return prerequisiteCheckResult
-      }
-
-      newChildInstance.id = newInstanceID
-    }
+  if (entity === undefined) {
+    return error(new HTTPError(400, `Unknown entity "${entityName}"`))
   }
 
-  // check recursively for child instances of child instances
-  for (const childInstance of childInstances) {
-    const oldChildInstance = childInstance.id
-      ? oldChildInstances.find(ci => ci.id === childInstance.id)
-      : undefined
+  if (newInstance === undefined) {
+    if (oldInstance === undefined) {
+      // no-op
+      return map(res, data => ({ ...data, instanceContainer: { id: "", content: {} } }))
+    }
 
-    const prerequisiteCheckResult = await unsafeApplyInstanceTree(
-      dataRoot,
-      entitiesByName,
-      instancesByEntityName,
-      childInstance.id,
-      childInstance.entityName,
-      oldChildInstance ? oldChildInstance.childInstances : [],
-      childInstance.childInstances,
+    // delete all child instances recursively
+    const deletedRes = deleteInstance(res, entity, oldInstance.id)
+    return map(
+      oldInstance.childInstances.reduce(
+        (resAcc: TransactionResult, oldChildInstance) =>
+          saveInstanceTree(
+            entitiesByName,
+            oldInstance.id,
+            localeEntity,
+            oldInstance.entityName,
+            oldChildInstance,
+            undefined,
+            undefined,
+            resAcc,
+          ),
+        deletedRes,
+      ),
+      data => ({
+        ...data,
+        instanceContainer: { id: oldInstance.id, content: oldInstance.content },
+      }),
     )
+  } else {
+    const preparedContent =
+      newInstance.id === undefined
+        ? prepareNewChildInstanceContent(entity, parentId, newInstance.content)
+        : ok(newInstance.content)
 
-    if (isError(prerequisiteCheckResult)) {
-      return prerequisiteCheckResult
+    if (isError(preparedContent)) {
+      return preparedContent
     }
-  }
 
-  return ok()
+    const setRes: TransactionResult<{ instanceId: string }> =
+      newInstance.id === undefined
+        ? createInstance(res, localeEntity, entity, preparedContent.value, customId)
+        : map(updateInstance(res, entity, newInstance.id, preparedContent.value), data => ({
+            ...data,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            instanceId: newInstance.id!,
+          }))
+
+    if (isError(setRes)) {
+      return setRes
+    }
+
+    const instanceId = setRes.value.instanceId
+
+    const setResWithoutInfo = ok({ ...setRes.value, additionalInformation: undefined })
+
+    return map(
+      newInstance.childInstances
+        .filter(newChildInstance => newChildInstance.id === undefined)
+        .reduce(
+          (resAcc: TransactionResult, newChildInstance) =>
+            saveInstanceTree(
+              entitiesByName,
+              instanceId,
+              localeEntity,
+              newChildInstance.entityName,
+              undefined,
+              newChildInstance,
+              undefined,
+              resAcc,
+            ),
+          oldInstance
+            ? oldInstance.childInstances.reduce(
+                (resAcc: TransactionResult, oldChildInstance) =>
+                  saveInstanceTree(
+                    entitiesByName,
+                    instanceId,
+                    localeEntity,
+                    oldChildInstance.entityName,
+                    oldChildInstance,
+                    newInstance.childInstances.find(ci => ci.id === oldChildInstance.id),
+                    undefined,
+                    resAcc,
+                  ),
+                setResWithoutInfo,
+              )
+            : setResWithoutInfo,
+        ),
+      data => ({
+        ...data,
+        instanceContainer: { id: instanceId, content: preparedContent.value },
+      }),
+    )
+  }
 }

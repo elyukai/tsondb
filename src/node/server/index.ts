@@ -4,11 +4,12 @@ import { findPackageJSON } from "node:module"
 import { dirname, join } from "node:path"
 import type { SimpleGit } from "simple-git"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
-import type { InstanceContainer, InstancesByEntityName } from "../../shared/utils/instances.ts"
+import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import type { HomeLayoutSection } from "../config.ts"
 import type { Decl } from "../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import type { Schema } from "../schema/Schema.ts"
+import type { DatabaseInMemory } from "../utils/databaseInMemory.ts"
 import type { ReferencesToInstances } from "../utils/references.ts"
 import { api } from "./api/index.ts"
 import { init } from "./init.ts"
@@ -30,7 +31,7 @@ export interface TSONDBRequestLocals {
   dataRoot: string
   declarations: readonly Decl[]
   entities: readonly EntityDecl[]
-  instancesByEntityName: InstancesByEntityName
+  databaseInMemory: DatabaseInMemory
   entitiesByName: Record<string, EntityDecl>
   serializedDeclarationsByName: Record<string, SerializedDecl>
   localeEntity?: EntityDecl
@@ -66,7 +67,7 @@ const staticNodeModule = (moduleName: string) => {
 export const createServer = async (
   schema: Schema,
   dataRootPath: string,
-  instancesByEntityName: InstancesByEntityName,
+  databaseInMemory: DatabaseInMemory,
   defaultLocales: string[],
   homeLayoutSections?: HomeLayoutSection[],
   options?: Partial<ServerOptions>,
@@ -88,7 +89,7 @@ export const createServer = async (
   const requestLocals = await init(
     schema,
     dataRootPath,
-    Object.assign({}, instancesByEntityName),
+    databaseInMemory,
     defaultLocales,
     homeLayoutSections,
   )

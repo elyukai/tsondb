@@ -3,7 +3,6 @@ import { mkdir } from "fs/promises"
 import { join, sep } from "path"
 import { styleText } from "util"
 import type { Output } from "../shared/output.ts"
-import type { InstancesByEntityName } from "../shared/utils/instances.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
 import type { HomeLayoutSection } from "./config.ts"
 import { validateEntityDecl, type EntityDecl } from "./schema/declarations/EntityDecl.ts"
@@ -11,9 +10,14 @@ import { createValidators } from "./schema/Node.ts"
 import { getEntities, type Schema } from "./schema/Schema.ts"
 import type { ServerOptions } from "./server/index.ts"
 import { createServer } from "./server/index.ts"
+import {
+  asyncForEachInstanceInDatabaseInMemory,
+  createDatabaseInMemory,
+  getInstancesOfEntityFromDatabaseInMemory,
+  type DatabaseInMemory,
+} from "./utils/databaseInMemory.ts"
 import { countErrors, getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
 import { getFileNameForId, writeInstance } from "./utils/files.ts"
-import { getInstancesByEntityName } from "./utils/instances.ts"
 
 const debug = Debug("tsondb:jsapi")
 
@@ -40,7 +44,7 @@ type ValidationOptions = {
 const _validate = (
   dataRootPath: string,
   entities: EntityDecl[],
-  instancesByEntityName: InstancesByEntityName,
+  databaseInMemory: DatabaseInMemory,
   options: Partial<ValidationOptions> = {},
 ): void => {
   const { checkReferentialIntegrity = true, checkOnlyEntities = [] } = options
@@ -51,7 +55,7 @@ const _validate = (
     }
   }
 
-  const validationHelpers = createValidators(instancesByEntityName, true, checkReferentialIntegrity)
+  const validationHelpers = createValidators(databaseInMemory, true, checkReferentialIntegrity)
 
   const errors = (
     checkOnlyEntities.length > 0
@@ -60,12 +64,12 @@ const _validate = (
   )
     .flatMap(entity =>
       parallelizeErrors(
-        instancesByEntityName[entity.name]?.map(instance =>
+        getInstancesOfEntityFromDatabaseInMemory(databaseInMemory, entity.name).map(instance =>
           wrapErrorsIfAny(
             `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
             validateEntityDecl(validationHelpers, [], entity, instance.content),
           ),
-        ) ?? [],
+        ),
       ),
     )
     .toSorted((a, b) => a.message.localeCompare(b.message))
@@ -87,8 +91,8 @@ export const validate = async (
 ) => {
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
-  const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-  _validate(dataRootPath, entities, instancesByEntityName, options)
+  const databaseInMemory = await createDatabaseInMemory(dataRootPath, entities)
+  _validate(dataRootPath, entities, databaseInMemory, options)
 }
 
 export const generateAndValidate = async (
@@ -100,8 +104,8 @@ export const generateAndValidate = async (
   await generateOutputs(schema, outputs)
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
-  const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-  _validate(dataRootPath, entities, instancesByEntityName, validationOptions)
+  const databaseInMemory = await createDatabaseInMemory(dataRootPath, entities)
+  _validate(dataRootPath, entities, databaseInMemory, validationOptions)
 }
 
 export const serve = async (
@@ -118,12 +122,12 @@ export const serve = async (
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   debug("prepared folders")
-  const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
+  const databaseInMemory = await createDatabaseInMemory(dataRootPath, entities)
   debug("loaded instances")
   await createServer(
     schema,
     dataRootPath,
-    instancesByEntityName,
+    databaseInMemory,
     defaultLocales,
     homeLayoutSections,
     serverOptions,
@@ -143,12 +147,12 @@ export const generateValidateAndServe = async (
   await generateOutputs(schema, outputs)
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
-  const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-  _validate(dataRootPath, entities, instancesByEntityName, validationOptions)
+  const databaseInMemory = await createDatabaseInMemory(dataRootPath, entities)
+  _validate(dataRootPath, entities, databaseInMemory, validationOptions)
   await createServer(
     schema,
     dataRootPath,
-    instancesByEntityName,
+    databaseInMemory,
     defaultLocales,
     homeLayoutSections,
     serverOptions,
@@ -158,14 +162,10 @@ export const generateValidateAndServe = async (
 export const format = async (schema: Schema, dataRootPath: string) => {
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
-  const instancesByEntityName = await getInstancesByEntityName(dataRootPath, entities)
-
-  for (const entityName in instancesByEntityName) {
+  const databaseInMemory = await createDatabaseInMemory(dataRootPath, entities)
+  await asyncForEachInstanceInDatabaseInMemory(databaseInMemory, async (entityName, instance) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const entity = entities.find(entity => entity.name === entityName)!
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    for (const instance of instancesByEntityName[entityName]!) {
-      await writeInstance(dataRootPath, entity, instance.id, instance.content)
-    }
-  }
+    await writeInstance(dataRootPath, entity, instance.id, instance.content)
+  })
 }

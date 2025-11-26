@@ -6,9 +6,11 @@ import {
 } from "../../node/utils/displayName.ts"
 import type { GitFileStatus } from "./git.ts"
 
+export type InstanceContent = object
+
 export interface InstanceContainer {
   id: string
-  content: unknown
+  content: InstanceContent
   gitStatus?: GitFileStatus
 }
 
@@ -41,5 +43,3 @@ export const getInstanceContainerOverview = (
     displayNameLocaleId,
   }
 }
-
-export type InstancesByEntityName = Record<string, InstanceContainer[]>

@@ -34,3 +34,12 @@ export const wrapErrorsIfAny = (message: string, errors: Error[]): AggregateErro
 
   return new AggregateError(errors, message)
 }
+
+export class HTTPError extends Error {
+  public code: number
+  constructor(code: number, message: string) {
+    super(message)
+    this.code = code
+    this.name = "HTTPError"
+  }
+}

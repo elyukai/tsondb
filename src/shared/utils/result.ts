@@ -61,6 +61,12 @@ export const map = <T, U, E>(result: Result<T, E>, f: (value: T) => U): Result<U
   isOk(result) ? ok(f(result.value)) : result
 
 /**
+ * Chains a result to a new result.
+ */
+export const then = <T, U, E>(result: Result<T, E>, f: (value: T) => Result<U, E>): Result<U, E> =>
+  isOk(result) ? f(result.value) : result
+
+/**
  * Maps an error to a new error.
  */
 export const mapError = <T, E, F>(result: Result<T, E>, f: (value: E) => F): Result<T, F> =>

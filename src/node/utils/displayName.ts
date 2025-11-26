@@ -3,7 +3,7 @@ import {
   getSerializedDisplayNameFromEntityInstance,
   type DisplayNameResult,
 } from "../../shared/utils/displayName.ts"
-import type { InstanceContainer } from "../../shared/utils/instances.ts"
+import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import { serializeEntityDecl, type EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import type { AsDeepType, Type } from "../schema/types/Type.ts"
 
@@ -11,7 +11,7 @@ export type GetChildInstancesForInstanceId = (
   parentEntityName: string,
   parentId: string,
   childEntityName: string,
-) => { id: string; content: unknown }[]
+) => { id: string; content: InstanceContent }[]
 
 export type DisplayNameCustomizer<T extends Type> = (params: {
   instance: AsDeepType<T>
@@ -19,7 +19,7 @@ export type DisplayNameCustomizer<T extends Type> = (params: {
   instanceDisplayName: string
   instanceDisplayNameLocaleId: string | undefined
   locales: string[]
-  getInstanceById: (id: string) => unknown
+  getInstanceById: (id: string) => InstanceContent | undefined
   getDisplayNameForInstanceId: (id: string) => DisplayNameResult | undefined
   getChildInstancesForInstanceId: GetChildInstancesForInstanceId
 }) => DisplayNameResult
@@ -45,7 +45,7 @@ export const getDisplayNameFromEntityInstance = (
     )
 
     return entity.displayNameCustomizer({
-      instance: instanceContainer.content as { [x: string]: unknown },
+      instance: instanceContainer.content as { [x: string]: InstanceContent },
       instanceId: instanceContainer.id,
       instanceDisplayName: calculatedName.name,
       instanceDisplayNameLocaleId: calculatedName.localeId,

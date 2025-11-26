@@ -2,10 +2,14 @@ import Debug from "debug"
 import { resolve } from "node:path"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import { difference, removeAt } from "../../shared/utils/array.ts"
-import type { InstanceContainer } from "../../shared/utils/instances.ts"
+import type { InstanceContent } from "../../shared/utils/instances.ts"
 import { isOk } from "../../shared/utils/result.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.ts"
+import {
+  getGroupedInstancesFromDatabaseInMemory,
+  type DatabaseInMemory,
+} from "./databaseInMemory.ts"
 import type { ReferencesWorkerTask } from "./referencesWorker.ts"
 import { WorkerPool } from "./workers.ts"
 
@@ -80,7 +84,7 @@ const removeReferences = (
   references.reduce((acc1, reference) => removeReference(acc1, reference, instanceId), acc)
 
 export const getReferencesToInstances = async (
-  instancesByEntityName: Record<string, InstanceContainer[]>,
+  databaseInMemory: DatabaseInMemory,
   serializedDeclarationsByName: Record<string, SerializedDecl>,
 ) => {
   debug("creating reference worker pool ...")
@@ -92,7 +96,7 @@ export const getReferencesToInstances = async (
 
   debug("collecting references ...")
   const separateResults = await Promise.all(
-    Object.entries(instancesByEntityName).map(
+    getGroupedInstancesFromDatabaseInMemory(databaseInMemory).map(
       ([entityName, instances]) =>
         new Promise<ReferencesToInstances>((resolve, reject) => {
           pool.runTask({ entityName, instances }, result => {
@@ -124,8 +128,8 @@ export const updateReferencesToInstances = (
   referencesToInstances: ReferencesToInstances,
   entityName: string,
   instanceId: string,
-  oldInstance: unknown,
-  newInstance: unknown,
+  oldInstance: InstanceContent | undefined,
+  newInstance: InstanceContent | undefined,
 ): ReferencesToInstances => {
   const entity = entitiesByName[entityName]
   if (entity) {

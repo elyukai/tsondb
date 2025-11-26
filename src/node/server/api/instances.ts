@@ -1,6 +1,7 @@
 import Debug from "debug"
 import express from "express"
 import type { GetAllInstancesResponseBody } from "../../../shared/api.ts"
+import { getGroupedInstancesFromDatabaseInMemory } from "../../utils/databaseInMemory.ts"
 import { getDisplayNameFromEntityInstance } from "../../utils/displayName.ts"
 import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
 
@@ -18,9 +19,8 @@ instancesApi.get("/", (req, res) => {
 
   const body: GetAllInstancesResponseBody = {
     instances: Object.fromEntries(
-      Object.entries(req.instancesByEntityName)
-        .filter(([entityName]) => Object.hasOwn(req.entitiesByName, entityName))
-        .map(([entityName, instances]) => [
+      getGroupedInstancesFromDatabaseInMemory(req.databaseInMemory).map(
+        ([entityName, instances]) => [
           entityName,
           instances
             .map(instance => {
@@ -39,7 +39,8 @@ instancesApi.get("/", (req, res) => {
               }
             })
             .toSorted((a, b) => a.name.localeCompare(b.name, a.displayNameLocaleId)),
-        ]),
+        ],
+      ),
     ),
   }
 

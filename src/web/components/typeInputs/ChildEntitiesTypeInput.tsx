@@ -4,6 +4,7 @@ import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../.
 import { isSerializedEntityDecl } from "../../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedChildEntitiesType } from "../../../shared/schema/types/ChildEntitiesType.ts"
 import { removeAt } from "../../../shared/utils/array.ts"
+import type { InstanceContent } from "../../../shared/utils/instances.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
 
@@ -24,7 +25,7 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
     .filter(([childInstance]) => childInstance.entityName === type.entity)
 
   const onChildChange = useCallback(
-    (index: number, value: unknown) => {
+    (index: number, value: InstanceContent) => {
       setChildInstances(old =>
         old[index] ? old.with(index, { ...old[index], content: value }) : old,
       )
@@ -52,7 +53,7 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
   )
 
   const onChildAdd = useCallback(
-    (entityName: string, value: unknown) => {
+    (entityName: string, value: InstanceContent) => {
       setChildInstances(old => [
         ...old,
         { entityName, childInstances: [], id: undefined, content: value },
@@ -104,7 +105,7 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
                 value={item.content}
                 parentKey={childEntity.parentReferenceKey}
                 onChange={newItem => {
-                  onChildChange(originalIndex, newItem)
+                  onChildChange(originalIndex, newItem as InstanceContent) // guaranteed to be an object because of the ObjectType in the child entity
                 }}
                 childInstances={item.childInstances}
                 setChildInstances={newChildInstances => {

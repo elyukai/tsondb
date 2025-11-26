@@ -1,15 +1,16 @@
 import Debug from "debug"
 import { simpleGit } from "simple-git"
-import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import type { HomeLayoutSection } from "../config.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { resolveTypeArgumentsInDecls, serializeNode } from "../schema/index.ts"
 import type { Schema } from "../schema/Schema.ts"
 import {
-  attachGitStatusToInstancesByEntityName,
-  getInstancesByEntityName,
-} from "../utils/instances.ts"
+  createDatabaseInMemory,
+  getInstanceFromDatabaseInMemory,
+  type DatabaseInMemory,
+} from "../utils/databaseInMemory.ts"
+import { attachGitStatusToDatabaseInMemory } from "../utils/git.ts"
 import { getReferencesToInstances } from "../utils/references.ts"
 import type { GetInstanceById, TSONDBRequestLocals } from "./index.ts"
 
@@ -33,7 +34,7 @@ const getGit = async (dataRootPath: string) => {
 export const init = async (
   schema: Schema,
   dataRootPath: string,
-  instancesByEntityName: InstancesByEntityName,
+  databaseInMemory: DatabaseInMemory,
   defaultLocales: string[],
   homeLayoutSections?: HomeLayoutSection[],
 ): Promise<Omit<TSONDBRequestLocals, "setLocal">> => {
@@ -54,24 +55,29 @@ export const init = async (
   )
 
   const referencesToInstances = await getReferencesToInstances(
-    instancesByEntityName,
+    databaseInMemory,
     serializedDeclarationsByName,
   )
   debug("created references cache")
 
   if (gitStatus) {
-    attachGitStatusToInstancesByEntityName(instancesByEntityName, dataRootPath, gitRoot, gitStatus)
+    databaseInMemory = attachGitStatusToDatabaseInMemory(
+      databaseInMemory,
+      dataRootPath,
+      gitRoot,
+      gitStatus,
+    )
     debug("retrieved git status to instances")
   }
 
   const getInstanceById: GetInstanceById = id => {
-    for (const entityName in requestLocals.instancesByEntityName) {
-      const instance = requestLocals.instancesByEntityName[entityName]?.find(i => i.id === id)
-      if (instance && requestLocals.entitiesByName[entityName]) {
+    const res = getInstanceFromDatabaseInMemory(requestLocals.databaseInMemory, id)
+    if (res) {
+      const [entityName, instance] = res
+      if (requestLocals.entitiesByName[entityName]) {
         return { entity: requestLocals.entitiesByName[entityName], instance }
       }
     }
-
     return undefined
   }
 
@@ -81,7 +87,7 @@ export const init = async (
     dataRoot: dataRootPath,
     declarations: declarations,
     entities: entities,
-    instancesByEntityName: Object.assign({}, instancesByEntityName),
+    databaseInMemory,
     entitiesByName: entitiesByName,
     serializedDeclarationsByName,
     localeEntity: schema.localeEntity,
@@ -96,25 +102,22 @@ export const init = async (
 }
 
 export const reinit = async (locals: TSONDBRequestLocals) => {
-  locals.setLocal(
-    "instancesByEntityName",
-    await getInstancesByEntityName(locals.dataRoot, locals.entities),
-  )
-  locals.setLocal(
-    "referencesToInstances",
-    await getReferencesToInstances(
-      locals.instancesByEntityName,
-      locals.serializedDeclarationsByName,
-    ),
-  )
+  let databaseInMemory = await createDatabaseInMemory(locals.dataRoot, locals.entities)
 
   const gitStatus = (await locals.git.checkIsRepo()) ? await locals.git.status() : undefined
+
   if (locals.gitRoot && gitStatus) {
-    attachGitStatusToInstancesByEntityName(
-      locals.instancesByEntityName,
+    databaseInMemory = attachGitStatusToDatabaseInMemory(
+      databaseInMemory,
       locals.dataRoot,
       locals.gitRoot,
       gitStatus,
     )
   }
+
+  locals.setLocal("databaseInMemory", databaseInMemory)
+  locals.setLocal(
+    "referencesToInstances",
+    await getReferencesToInstances(databaseInMemory, locals.serializedDeclarationsByName),
+  )
 }

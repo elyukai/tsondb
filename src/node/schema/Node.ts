@@ -23,8 +23,11 @@ import type { SerializedReferenceIdentifierType } from "../../shared/schema/type
 import type { SerializedStringType } from "../../shared/schema/types/StringType.ts"
 import type { SerializedTranslationObjectType } from "../../shared/schema/types/TranslationObjectType.ts"
 import type { SerializedTypeArgumentType } from "../../shared/schema/types/TypeArgumentType.ts"
-import type { InstancesByEntityName } from "../../shared/utils/instances.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
+import {
+  getInstancesOfEntityFromDatabaseInMemory,
+  type DatabaseInMemory,
+} from "../utils/databaseInMemory.ts"
 import { entity, json } from "../utils/errorFormatting.ts"
 import { isDecl, type Decl, type IncludableDeclP } from "./declarations/Declaration.ts"
 import {
@@ -331,19 +334,15 @@ export interface Validators {
 }
 
 export const createValidators = (
-  instancesByEntityName: InstancesByEntityName,
+  databaseInMemory: DatabaseInMemory,
   useStyling: boolean,
   checkReferentialIntegrity: boolean = true,
 ): Validators => ({
   useStyling,
   checkReferentialIntegrity: checkReferentialIntegrity
     ? ({ name, value }) =>
-        instancesByEntityName[name]?.some(
-          instance =>
-            typeof instance.content === "object" &&
-            instance.content !== null &&
-            !Array.isArray(instance.content) &&
-            instance.id === value,
+        getInstancesOfEntityFromDatabaseInMemory(databaseInMemory, name).some(
+          instance => instance.id === value,
         )
           ? []
           : [

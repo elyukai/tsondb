@@ -6,6 +6,7 @@ import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../.
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import { deepEqual } from "../../shared/utils/compare.ts"
 import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
+import type { InstanceContent } from "../../shared/utils/instances.ts"
 import { toTitleCase } from "../../shared/utils/string.ts"
 import { validateLocaleIdentifier } from "../../shared/validation/identifier.ts"
 import {
@@ -32,7 +33,7 @@ export type InstanceRouteSkeletonInitializer = (values: {
   locales: string[]
   entity: SerializedEntityDecl
   instanceId: string | undefined
-  setInstanceContent: Dispatch<SetStateAction<unknown>>
+  setInstanceContent: Dispatch<SetStateAction<InstanceContent>>
   getDeclFromDeclName: GetDeclFromDeclName
 }) => Promise<void>
 
@@ -40,13 +41,13 @@ export type InstanceRouteSkeletonSubmitHandler<A extends string = string> = (val
   locales: string[]
   entity: SerializedEntityDecl
   instanceId: string | undefined
-  instanceContent: unknown
+  instanceContent: InstanceContent
   action: A
   customId: string
   isLocaleEntity: boolean | undefined
   childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   route: LocationHook["route"]
-  setInstanceContent: Dispatch<SetStateAction<unknown>>
+  setInstanceContent: Dispatch<SetStateAction<InstanceContent>>
   setCustomId: Dispatch<SetStateAction<string>>
   getDeclFromDeclName: GetDeclFromDeclName
   updateLocalGitState?: () => Promise<void>
@@ -56,13 +57,13 @@ export type InstanceRouteSkeletonOnSubmitHandler = (values: {
   locales: string[]
   entity: SerializedEntityDecl
   instanceId: string | undefined
-  instanceContent: unknown
+  instanceContent: InstanceContent
   buttonName: string | undefined
   customId: string
   isLocaleEntity: boolean | undefined
   childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   route: LocationHook["route"]
-  setInstanceContent: Dispatch<SetStateAction<unknown>>
+  setInstanceContent: Dispatch<SetStateAction<InstanceContent>>
   setCustomId: Dispatch<SetStateAction<string>>
   getDeclFromDeclName: GetDeclFromDeclName
   updateLocalGitState?: () => Promise<void>
@@ -72,12 +73,12 @@ export type InstanceRouteSkeletonOnSaveHandler = (values: {
   locales: string[]
   entity: SerializedEntityDecl
   instanceId: string | undefined
-  instanceContent: unknown
+  instanceContent: InstanceContent
   customId: string
   isLocaleEntity: boolean | undefined
   childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   route: LocationHook["route"]
-  setInstanceContent: Dispatch<SetStateAction<unknown>>
+  setInstanceContent: Dispatch<SetStateAction<InstanceContent>>
   setCustomId: Dispatch<SetStateAction<string>>
   getDeclFromDeclName: GetDeclFromDeclName
   updateLocalGitState?: () => Promise<void>
@@ -87,7 +88,7 @@ export type InstanceRouteSkeletonTitleBuilder = (values: {
   locales: string[]
   entity: SerializedEntityDecl
   instanceId: string | undefined
-  instanceContent: unknown
+  instanceContent: InstanceContent | undefined
 }) => string | undefined
 
 type Props = {
@@ -129,7 +130,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   const { declaration: entity, isLocaleEntity } = useEntityFromRoute() ?? {}
   const { entities } = useContext(EntitiesContext)
   const [instanceNamesByEntity] = useInstanceNamesByEntity()
-  const [instanceContent, setInstanceContent] = useState<unknown>()
+  const [instanceContent, setInstanceContent] = useState<InstanceContent>()
   const [savedInstanceContent, setSavedInstanceContent] = useState<unknown>()
   const [savedChildInstances, setSavedChildInstances] = useState<
     UnsafeEntityTaggedInstanceContainerWithChildInstances[]
@@ -392,7 +393,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           instanceNamesByEntity={instanceNamesByEntity}
           childInstances={childInstances}
           getDeclFromDeclName={getDeclFromDeclName}
-          onChange={setInstanceContent}
+          onChange={setInstanceContent as Dispatch<SetStateAction<unknown>>} // guaranteed to be an object because of the ObjectType in the entity
           setChildInstances={setChildInstances}
           checkIsLocaleEntity={checkIsLocaleEntity}
         />
