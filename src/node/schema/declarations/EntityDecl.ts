@@ -51,7 +51,7 @@ type TConstraint = Record<string, MemberDecl>
 export interface EntityDecl<
   Name extends string = string,
   T extends TConstraint = TConstraint,
-  FK extends (keyof T & string) | undefined = (keyof T & string) | undefined,
+  FK extends Extract<keyof T, string> | undefined = Extract<keyof T, string> | undefined,
 > extends BaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
   namePlural: string
@@ -68,7 +68,7 @@ export interface EntityDecl<
 export interface EntityDeclWithParentReference<
   Name extends string = string,
   T extends TConstraint = TConstraint,
-  FK extends keyof T & string = keyof T & string,
+  FK extends Extract<keyof T, string> = Extract<keyof T, string>,
 > extends EntityDecl<Name, T, FK> {}
 
 export const EntityDecl: {
@@ -87,7 +87,7 @@ export const EntityDecl: {
       isDeprecated?: boolean
     },
   ): EntityDecl<Name, T, undefined>
-  <Name extends string, T extends TConstraint, FK extends keyof T & string>(
+  <Name extends string, T extends TConstraint, FK extends Extract<keyof T, string>>(
     sourceUrl: string,
     options: {
       name: Name
@@ -103,7 +103,7 @@ export const EntityDecl: {
       isDeprecated?: boolean
     },
   ): EntityDecl<Name, T, FK>
-} = <Name extends string, T extends TConstraint, FK extends (keyof T & string) | undefined>(
+} = <Name extends string, T extends TConstraint, FK extends Extract<keyof T, string> | undefined>(
   sourceUrl: string,
   options: {
     name: Name
@@ -148,7 +148,7 @@ export const isEntityDecl: Predicate<EntityDecl> = node => node.kind === NodeKin
 export const isEntityDeclWithParentReference = <
   Name extends string,
   T extends TConstraint,
-  FK extends (keyof T & string) | undefined,
+  FK extends Extract<keyof T, string> | undefined,
 >(
   decl: EntityDecl<Name, T, FK>,
 ): decl is EntityDecl<Name, T, NonNullable<FK>> => decl.parentReferenceKey !== undefined
@@ -201,7 +201,7 @@ export const createEntityIdentifierTypeAsDecl = <Name extends string>(decl: Enti
 export const serializeEntityDecl: Serializer<EntityDecl> = <
   Name extends string,
   T extends TConstraint,
-  FK extends (keyof T & string) | undefined,
+  FK extends Extract<keyof T, string> | undefined,
 >(
   type: EntityDecl<Name, T, FK>,
 ): Serialized<EntityDecl<Name, T, FK>> => ({

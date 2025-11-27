@@ -33,7 +33,7 @@ type TConstraint = Record<string, SerializedMemberDecl>
 export interface SerializedEntityDecl<
   Name extends string = string,
   T extends TConstraint = TConstraint,
-  FK extends (keyof T & string) | undefined = (keyof T & string) | undefined,
+  FK extends Extract<keyof T, string> | undefined = Extract<keyof T, string> | undefined,
 > extends SerializedBaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
   namePlural: string
@@ -53,7 +53,7 @@ export const isSerializedEntityDecl = (node: SerializedNode): node is Serialized
 export const isSerializedEntityDeclWithParentReference = <
   Name extends string,
   T extends TConstraint,
-  FK extends (keyof T & string) | undefined,
+  FK extends Extract<keyof T, string> | undefined,
 >(
   decl: SerializedEntityDecl<Name, T, FK>,
 ): decl is SerializedEntityDecl<Name, T, NonNullable<FK>> => decl.parentReferenceKey !== undefined
