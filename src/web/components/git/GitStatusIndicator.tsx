@@ -11,9 +11,9 @@ type Props = {
 
 export const GitStatusIndicator: FunctionComponent<Props> = ({ status }) => {
   const gitStatusForDisplay = getGitStatusForDisplay(status)
-  return (
+  return gitStatusForDisplay === undefined ? null : (
     <span
-      class={`git-status git-status--${gitStatusForDisplay ?? ""}`}
+      class={`git-status git-status--${gitStatusForDisplay}`}
       title={getLabelForGitStatus(gitStatusForDisplay)}
     >
       {gitStatusForDisplay}

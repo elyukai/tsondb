@@ -589,6 +589,12 @@ select {
   }
 }
 
+.entries-item__title-entity {
+  font-weight: 400;
+  color: var(--color-foreground-secondary);
+  padding-left: 0.5em;
+}
+
 .entries-item__subtitle--id {
   font-family: var(--font-mono);
 }
@@ -1204,4 +1210,8 @@ dialog[open]:has(> .loading-overlay--open)::backdrop {
 
 .object-item--translation button {
   align-self: center;
+}
+
+section.search-results {
+  margin-top: 3.6rem;
 }

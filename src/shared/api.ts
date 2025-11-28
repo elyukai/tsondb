@@ -102,3 +102,8 @@ export interface CreateCommitRequestBody {
 export interface CreateBranchRequestBody {
   branchName: string
 }
+
+export interface SearchResponseBody {
+  query: string
+  results: [entityName: string, instane: InstanceContainerOverview][]
+}

@@ -22,6 +22,7 @@ import { Entity } from "./routes/Entity.tsx"
 import { Home } from "./routes/Home.tsx"
 import { Instance } from "./routes/Instance.tsx"
 import { NotFound } from "./routes/NotFound.tsx"
+import { Search } from "./routes/Search.tsx"
 
 const mapEntities = (data: GetAllDeclarationsResponseBody<SerializedEntityDecl>) =>
   data.declarations
@@ -60,6 +61,7 @@ const App: FunctionComponent<Props> = ({ config }) => {
                 <LoadingOverlay />
                 <Router>
                   <Route path="/" component={Home} />
+                  <Route path="/search" component={Search} />
                   <Route path="/entities/:name" component={Entity} />
                   <Route path="/entities/:name/instances/create" component={CreateInstance} />
                   <Route path="/entities/:name/instances/:id" component={Instance} />

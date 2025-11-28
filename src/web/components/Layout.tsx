@@ -25,6 +25,9 @@ export const Layout: FunctionComponent<Props> = ({ breadcrumbs, children }) => {
           </ol>
         </nav>
         <div class="nav-buttons">
+          <a href="/search" class="btn">
+            Search
+          </a>
           <button
             class={`git-toggle${!isGitAlwaysOpen ? " git-toggle--no-sidebar" : ""}`}
             onClick={() => {
