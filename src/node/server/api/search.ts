@@ -13,7 +13,7 @@ const debug = Debug("tsondb:server:api:search")
 export const searchApi = express.Router()
 
 searchApi.get("/", (req, res) => {
-  const query = getQueryParamString(req.query, "q") ?? ""
+  const query = getQueryParamString(req.query, "q")?.toLowerCase() ?? ""
   debug('search for items containing "%s"', query)
   const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
 
