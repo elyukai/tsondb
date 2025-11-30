@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.7](https://github.com/elyukai/tsondb/compare/v0.12.6...v0.12.7) (2025-11-30)
+
+
+### Features
+
+* improve display name typing ([0521599](https://github.com/elyukai/tsondb/commit/052159938069294fedfa0a61a582071ae343a386))
+* provide function to extract enum value ([431dd50](https://github.com/elyukai/tsondb/commit/431dd5005d4567dd47f6c34c1e6e29318661564a))
+
 ## [0.12.6](https://github.com/elyukai/tsondb/compare/v0.12.5...v0.12.6) (2025-11-30)
 
 
