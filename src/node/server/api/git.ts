@@ -11,6 +11,7 @@ import type {
 import { hasFileChanges, splitBranchName } from "../../../shared/utils/git.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
 import { getGroupedInstancesFromDatabaseInMemory } from "../../utils/databaseInMemory.ts"
+import { attachGitStatusToDatabaseInMemory } from "../../utils/git.ts"
 import { reinit } from "../init.ts"
 import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
 
@@ -38,6 +39,17 @@ gitApi.get("/", (req, res) => {
 
 gitApi.get("/status", async (req, res) => {
   const status = await req.git.status()
+
+  req.setLocal(
+    "databaseInMemory",
+    attachGitStatusToDatabaseInMemory(
+      req.databaseInMemory,
+      req.dataRoot,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      req.gitRoot!,
+      status,
+    ),
+  )
 
   const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
 
