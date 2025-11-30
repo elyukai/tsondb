@@ -1,3 +1,7 @@
+import {
+  ENUM_DISCRIMINATOR_KEY,
+  type EnumValue,
+} from "../../../shared/schema/declarations/EnumDecl.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import { onlyKeys } from "../../../shared/utils/object.ts"
 import type {
@@ -135,3 +139,7 @@ export const getReferencesForEnumDecl: GetReferences<EnumDecl> = (decl, value, i
 export const cases = <T extends TConstraint>(
   decl: EnumDecl<string, T>,
 ): EnumCaseDecl<T[keyof T]["type"]>[] => Object.values(decl.type.value.values)
+
+export const getAnyEnumCaseValue = <K extends string, V>(
+  enumValue: { [Key in K]: EnumValue<Key, V> }[K],
+): V => enumValue[enumValue[ENUM_DISCRIMINATOR_KEY]]
