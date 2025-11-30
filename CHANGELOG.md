@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.6](https://github.com/elyukai/tsondb/compare/v0.12.5...v0.12.6) (2025-11-30)
+
+
+### Features
+
+* configurable fraction digits for float types ([fad2cd0](https://github.com/elyukai/tsondb/commit/fad2cd034d4ede20e5d06d1f143d9d36d7b96a62))
+* global search ([c5a5003](https://github.com/elyukai/tsondb/commit/c5a5003f1cb563814d9e20eae8ead1da33319ba6)), closes [#49](https://github.com/elyukai/tsondb/issues/49)
+
+
+### Bug Fixes
+
+* reflect git status in database in memory ([4d07011](https://github.com/elyukai/tsondb/commit/4d070114c0e57fcffe8aa5d1f17dc7e247e167fd)), closes [#54](https://github.com/elyukai/tsondb/issues/54)
+* search should be case-insensitive ([e47e5df](https://github.com/elyukai/tsondb/commit/e47e5dfa7bb6b2b774124acdd8696d34110466bd))
+* wrong polymorphic parent reference format ([188fa99](https://github.com/elyukai/tsondb/commit/188fa992518c07025662294adc6b5dcb3fc88428)), closes [#55](https://github.com/elyukai/tsondb/issues/55)
+
 ## [0.12.5](https://github.com/elyukai/tsondb/compare/v0.12.4...v0.12.5) (2025-11-27)
 
 ## [0.12.4](https://github.com/elyukai/tsondb/compare/v0.12.3...v0.12.4) (2025-11-27)
