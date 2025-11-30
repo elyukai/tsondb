@@ -120,15 +120,28 @@ type EnumCaseTypeAsType<Case extends string, T extends Type | null> = T extends 
   ? { kind: Case } & { [AV in Case]: AsType<T> }
   : { kind: Case }
 
+type EnumCaseTypeAsDeepType<Case extends string, T extends Type | null> = T extends object
+  ? { kind: Case } & { [AV in Case]: AsDeepType<T> }
+  : { kind: Case }
+
+type MemberDeclsAsType<P extends Record<string, MemberDecl>> = {
+  [K in keyof P]: P[K] extends MemberDecl<Type, true>
+    ? AsType<P[K]["type"]>
+    : AsType<P[K]["type"]> | undefined
+}
+
+type MemberDeclsAsDeepType<P extends Record<string, MemberDecl>> = {
+  [K in keyof P]: P[K] extends MemberDecl<Type, true>
+    ? AsDeepType<P[K]["type"]>
+    : // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- it does make a difference here
+      AsDeepType<P[K]["type"]> | undefined
+}
+
 export type AsDeepType<T extends Type> =
   T extends ArrayType<infer I>
-    ? AsType<I>[]
+    ? AsDeepType<I>[]
     : T extends ObjectType<infer P>
-      ? {
-          [K in keyof P]: P[K] extends MemberDecl<Type, true>
-            ? AsType<P[K]["type"]>
-            : AsType<P[K]["type"]> | undefined
-        }
+      ? MemberDeclsAsDeepType<P>
       : T extends BooleanType
         ? boolean
         : T extends DateType
@@ -143,20 +156,20 @@ export type AsDeepType<T extends Type> =
                   ? unknown
                   : T extends IncludeIdentifierType<TypeParameter[], infer Decl>
                     ? Decl extends TypeAliasDecl<string, infer TA>
-                      ? AsType<TA>
+                      ? AsDeepType<TA>
                       : Decl extends EnumDecl<string, infer EC>
-                        ? AsType<EnumType<EC>>
+                        ? AsDeepType<EnumType<EC>>
                         : unknown
-                    : T extends NestedEntityMapType
-                      ? unknown
+                    : T extends NestedEntityMapType<string, infer TC>
+                      ? { [id: string]: MemberDeclsAsDeepType<TC> }
                       : T extends ReferenceIdentifierType
                         ? string
                         : T extends ChildEntitiesType
-                          ? string[]
+                          ? never
                           : T extends EnumType<infer EC>
                             ? EC extends Record<string, EnumCaseDecl>
                               ? {
-                                  [Case in keyof EC]: EnumCaseTypeAsType<
+                                  [Case in keyof EC]: EnumCaseTypeAsDeepType<
                                     Case & string,
                                     EC[Case]["type"]
                                   >
@@ -168,11 +181,7 @@ export type AsType<T extends Type> =
   T extends ArrayType<infer I>
     ? AsType<I>[]
     : T extends ObjectType<infer P>
-      ? {
-          [K in keyof P]: P[K] extends MemberDecl<Type, true>
-            ? AsType<P[K]["type"]>
-            : AsType<P[K]["type"]> | undefined
-        }
+      ? MemberDeclsAsType<P>
       : T extends BooleanType
         ? boolean
         : T extends DateType
@@ -187,8 +196,8 @@ export type AsType<T extends Type> =
                   ? unknown
                   : T extends IncludeIdentifierType
                     ? unknown
-                    : T extends NestedEntityMapType
-                      ? unknown
+                    : T extends NestedEntityMapType<string, infer TC>
+                      ? { [id: string]: MemberDeclsAsType<TC> }
                       : T extends ReferenceIdentifierType
                         ? string
                         : T extends ChildEntitiesType

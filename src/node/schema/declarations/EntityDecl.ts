@@ -1,7 +1,5 @@
 import type { SerializedEntityDisplayName } from "../../../shared/schema/declarations/EntityDecl.ts"
-import type { SerializedObjectType } from "../../../shared/schema/types/ObjectType.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
-import type { Leaves } from "../../../shared/utils/object.ts"
 import type { DisplayNameCustomizer } from "../../utils/displayName.ts"
 import type {
   GetNestedDeclarations,
@@ -22,7 +20,7 @@ import {
   serializeObjectType,
 } from "../types/generic/ObjectType.ts"
 import { StringType } from "../types/primitives/StringType.ts"
-import type { AsType } from "../types/Type.ts"
+import type { NestedEntityMapType } from "../types/references/NestedEntityMapType.ts"
 import type { BaseDecl } from "./Declaration.ts"
 import { validateDeclName } from "./Declaration.ts"
 import { TypeAliasDecl } from "./TypeAliasDecl.ts"
@@ -33,12 +31,12 @@ export type GenericEntityDisplayName =
   | null
 
 export type EntityDisplayName<T extends TConstraint> =
-  | Leaves<AsType<ObjectType<T>>>
+  | PathTo<T, StringType>
   | {
       /**
        * @default "translations"
        */
-      pathToLocaleMap?: Leaves<AsType<ObjectType<T>>>
+      pathToLocaleMap?: PathTo<T, NestedEntityMapType>
       /**
        * @default "name"
        */
@@ -47,6 +45,18 @@ export type EntityDisplayName<T extends TConstraint> =
   | null
 
 type TConstraint = Record<string, MemberDecl>
+
+type PathTo<T extends TConstraint, R> = {
+  [K in keyof T]: T[K] extends MemberDecl<infer V>
+    ? V extends R
+      ? K
+      : R extends V
+        ? string
+        : T[K] extends ObjectType<infer P>
+          ? `${Extract<K, string>}.${PathTo<P, R>}`
+          : never
+    : never
+}[Extract<keyof T, string>]
 
 export interface EntityDecl<
   Name extends string = string,
@@ -60,7 +70,7 @@ export interface EntityDecl<
   /**
    * @default "name"
    */
-  displayName?: EntityDisplayName<T>
+  displayName?: GenericEntityDisplayName
   displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
   isDeprecated?: boolean
 }
@@ -198,7 +208,7 @@ export const createEntityIdentifierTypeAsDecl = <Name extends string>(decl: Enti
     type: createEntityIdentifierType,
   })
 
-export const serializeEntityDecl: Serializer<EntityDecl> = <
+export const serializeEntityDecl = (<
   Name extends string,
   T extends TConstraint,
   FK extends Extract<keyof T, string> | undefined,
@@ -210,11 +220,9 @@ export const serializeEntityDecl: Serializer<EntityDecl> = <
   displayName:
     typeof type.displayName === "function"
       ? null
-      : (type.displayName as SerializedEntityDisplayName<
-          SerializedObjectType<SerializedMemberDeclObject<T>>
-        >),
+      : (type.displayName as SerializedEntityDisplayName<SerializedMemberDeclObject<T>>),
   displayNameCustomizer: type.displayNameCustomizer !== undefined,
-})
+})) satisfies Serializer<EntityDecl>
 
 export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value, inDecl) =>
   getReferencesForObjectType(decl.type.value, value, [...inDecl, decl])

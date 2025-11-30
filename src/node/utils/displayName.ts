@@ -45,7 +45,8 @@ export const getDisplayNameFromEntityInstance = (
     )
 
     return entity.displayNameCustomizer({
-      instance: instanceContainer.content as { [x: string]: InstanceContent },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment -- otherwise type instiatiation too deep
+      instance: instanceContainer.content as any,
       instanceId: instanceContainer.id,
       instanceDisplayName: calculatedName.name,
       instanceDisplayNameLocaleId: calculatedName.localeId,

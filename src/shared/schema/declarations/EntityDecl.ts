@@ -1,4 +1,4 @@
-import type { Leaves } from "../../../shared/utils/object.ts"
+import type { GenericEntityDisplayName } from "../../../node/schema/index.ts"
 import {
   NodeKind,
   resolveSerializedTypeArguments,
@@ -6,21 +6,22 @@ import {
   type SerializedNode,
   type SerializedTypeArgumentsResolver,
 } from "../Node.ts"
+import type { SerializedNestedEntityMapType } from "../types/NestedEntityMapType.ts"
 import {
   getReferencesForSerializedObjectType,
   type SerializedMemberDecl,
   type SerializedObjectType,
 } from "../types/ObjectType.ts"
-import type { SerializedAsType } from "../types/Type.ts"
+import type { SerializedStringType } from "../types/StringType.ts"
 import type { SerializedBaseDecl } from "./Declaration.ts"
 
-export type SerializedEntityDisplayName<T extends SerializedObjectType> =
-  | Leaves<SerializedAsType<T>>
+export type SerializedEntityDisplayName<T extends TSerializedConstraint> =
+  | SerializedPathTo<T, SerializedStringType>
   | {
       /**
        * @default "translations"
        */
-      pathToLocaleMap?: Leaves<SerializedAsType<T>>
+      pathToLocaleMap?: SerializedPathTo<T, SerializedNestedEntityMapType>
       /**
        * @default "name"
        */
@@ -28,11 +29,23 @@ export type SerializedEntityDisplayName<T extends SerializedObjectType> =
     }
   | null
 
-type TConstraint = Record<string, SerializedMemberDecl>
+type TSerializedConstraint = Record<string, SerializedMemberDecl>
+
+type SerializedPathTo<T extends TSerializedConstraint, R> = {
+  [K in keyof T]: T[K] extends SerializedMemberDecl<infer V>
+    ? V extends R
+      ? K
+      : R extends V
+        ? string
+        : T[K] extends SerializedObjectType<infer P>
+          ? `${Extract<K, string>}.${SerializedPathTo<P, R>}`
+          : never
+    : never
+}[Extract<keyof T, string>]
 
 export interface SerializedEntityDecl<
   Name extends string = string,
-  T extends TConstraint = TConstraint,
+  T extends TSerializedConstraint = TSerializedConstraint,
   FK extends Extract<keyof T, string> | undefined = Extract<keyof T, string> | undefined,
 > extends SerializedBaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
@@ -42,7 +55,7 @@ export interface SerializedEntityDecl<
   /**
    * @default "name"
    */
-  displayName?: SerializedEntityDisplayName<SerializedObjectType<T>>
+  displayName?: GenericEntityDisplayName
   displayNameCustomizer: boolean
   isDeprecated?: boolean
 }
@@ -52,7 +65,7 @@ export const isSerializedEntityDecl = (node: SerializedNode): node is Serialized
 
 export const isSerializedEntityDeclWithParentReference = <
   Name extends string,
-  T extends TConstraint,
+  T extends TSerializedConstraint,
   FK extends Extract<keyof T, string> | undefined,
 >(
   decl: SerializedEntityDecl<Name, T, FK>,
@@ -60,7 +73,7 @@ export const isSerializedEntityDeclWithParentReference = <
 
 export const isSerializedEntityDeclWithoutParentReference = <
   Name extends string,
-  T extends TConstraint,
+  T extends TSerializedConstraint,
 >(
   decl: SerializedEntityDecl<Name, T>,
 ): decl is SerializedEntityDecl<Name, T, undefined> => decl.parentReferenceKey === undefined
