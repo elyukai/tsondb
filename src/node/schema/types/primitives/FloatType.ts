@@ -12,14 +12,27 @@ import type {
 import { NodeKind } from "../../Node.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
 
-export interface FloatType extends BaseType, NumberConstraints {
+export interface FloatConstraints extends NumberConstraints {
+  fractionDigits?: number
+}
+
+export interface FloatType extends BaseType, FloatConstraints {
   kind: NodeKind["FloatType"]
 }
 
-export const FloatType = (options: NumberConstraints = {}): FloatType => ({
-  ...options,
-  kind: NodeKind.FloatType,
-})
+export const FloatType = (options: FloatConstraints = {}): FloatType => {
+  if (
+    options.fractionDigits !== undefined &&
+    (!Number.isInteger(options.fractionDigits) || options.fractionDigits < 1)
+  ) {
+    throw new TypeError("The fractionDigits option must be a positive integer")
+  }
+
+  return {
+    ...options,
+    kind: NodeKind.FloatType,
+  }
+}
 
 export { FloatType as Float }
 

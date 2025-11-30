@@ -1,6 +1,9 @@
 import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
-import type { SerializedFloatType } from "../../../shared/schema/types/FloatType.ts"
+import {
+  DEFAULT_FRACTION_DIGITS,
+  type SerializedFloatType,
+} from "../../../shared/schema/types/FloatType.ts"
 import { validateNumberConstraints } from "../../../shared/validation/number.ts"
 import type { TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
@@ -29,7 +32,7 @@ export const FloatTypeInput: FunctionComponent<Props> = ({ type, value, disabled
             onChange(numericValue)
           }
         }}
-        step={0.01}
+        step={1 / Math.pow(10, type.fractionDigits ?? DEFAULT_FRACTION_DIGITS)}
         aria-invalid={errors.length > 0}
         disabled={disabled}
       />
