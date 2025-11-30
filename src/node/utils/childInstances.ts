@@ -1,3 +1,4 @@
+import { createEnumCaseValue } from "../../shared/schema/declarations/EnumDecl.ts"
 import type { GitFileStatus } from "../../shared/utils/git.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import { hasKey } from "../../shared/utils/object.ts"
@@ -6,7 +7,12 @@ import type {
   EntityDecl,
   EntityDeclWithParentReference,
 } from "../schema/declarations/EntityDecl.ts"
-import { isEntityDeclWithParentReference, reduceNodes } from "../schema/index.ts"
+import {
+  isEntityDeclWithParentReference,
+  isEnumDecl,
+  isIncludeIdentifierType,
+  reduceNodes,
+} from "../schema/index.ts"
 import { isChildEntitiesType } from "../schema/types/references/ChildEntitiesType.ts"
 import {
   getInstancesOfEntityFromDatabaseInMemory,
@@ -127,11 +133,12 @@ export const getChildInstances = (
 
 const prepareNewChildInstanceContent = (
   entity: EntityDecl,
+  parentEntityName: string | undefined,
   parentId: string | undefined,
   content: InstanceContent,
 ): Result<InstanceContent, HTTPError> => {
   if (isEntityDeclWithParentReference(entity)) {
-    if (parentId === undefined) {
+    if (parentEntityName === undefined || parentId === undefined) {
       return error(
         new HTTPError(
           400,
@@ -140,9 +147,16 @@ const prepareNewChildInstanceContent = (
       )
     }
 
+    const parentReferenceType = entity.type.value.properties[entity.parentReferenceKey]?.type
+
     return ok({
       ...content,
-      [entity.parentReferenceKey]: parentId,
+      [entity.parentReferenceKey]:
+        parentReferenceType &&
+        isIncludeIdentifierType(parentReferenceType) &&
+        isEnumDecl(parentReferenceType.reference)
+          ? createEnumCaseValue(parentEntityName, parentId)
+          : parentId,
     })
   } else {
     return ok(content)
@@ -151,6 +165,7 @@ const prepareNewChildInstanceContent = (
 
 export const saveInstanceTree = (
   entitiesByName: Record<string, EntityDecl>,
+  parentEntityName: string | undefined,
   parentId: string | undefined,
   localeEntity: EntityDecl | undefined,
   entityName: string,
@@ -182,9 +197,10 @@ export const saveInstanceTree = (
         (resAcc: TransactionResult, oldChildInstance) =>
           saveInstanceTree(
             entitiesByName,
+            oldInstance.entityName,
             oldInstance.id,
             localeEntity,
-            oldInstance.entityName,
+            oldChildInstance.entityName,
             oldChildInstance,
             undefined,
             undefined,
@@ -200,7 +216,7 @@ export const saveInstanceTree = (
   } else {
     const preparedContent =
       newInstance.id === undefined
-        ? prepareNewChildInstanceContent(entity, parentId, newInstance.content)
+        ? prepareNewChildInstanceContent(entity, parentEntityName, parentId, newInstance.content)
         : ok(newInstance.content)
 
     if (isError(preparedContent)) {
@@ -231,6 +247,7 @@ export const saveInstanceTree = (
           (resAcc: TransactionResult, newChildInstance) =>
             saveInstanceTree(
               entitiesByName,
+              newInstance.entityName,
               instanceId,
               localeEntity,
               newChildInstance.entityName,
@@ -244,6 +261,7 @@ export const saveInstanceTree = (
                 (resAcc: TransactionResult, oldChildInstance) =>
                   saveInstanceTree(
                     entitiesByName,
+                    oldInstance.entityName,
                     instanceId,
                     localeEntity,
                     oldChildInstance.entityName,

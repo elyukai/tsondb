@@ -41,3 +41,17 @@ export const getReferencesForSerializedEnumDecl: GetReferencesSerialized<Seriali
   decl,
   value,
 ) => getReferencesForSerializedEnumType(decls, decl.type, value)
+
+export const ENUM_DISCRIMINATOR_KEY = "kind"
+export type ENUM_DISCRIMINATOR_KEY = typeof ENUM_DISCRIMINATOR_KEY
+
+export type EnumValue<K extends string, V> = { [ENUM_DISCRIMINATOR_KEY]: K } & { [Key2 in K]: V }
+
+export const createEnumCaseValue = <K extends string, V>(
+  caseName: K,
+  caseValue: V,
+): EnumValue<K, V> =>
+  ({
+    [ENUM_DISCRIMINATOR_KEY]: caseName,
+    [caseName]: caseValue,
+  }) as EnumValue<K, V>
