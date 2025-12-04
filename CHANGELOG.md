@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.9](https://github.com/elyukai/tsondb/compare/v0.12.8...v0.12.9) (2025-12-04)
+
+
+### Features
+
+* validate translation messages ([1887a91](https://github.com/elyukai/tsondb/commit/1887a9105a330bf2b96aec00ba382c82a1e7a71f))
+
 ## [0.12.8](https://github.com/elyukai/tsondb/compare/v0.12.7...v0.12.8) (2025-12-04)
 
 
