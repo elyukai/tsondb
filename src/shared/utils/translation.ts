@@ -54,6 +54,25 @@ const extractParametersFromDeclarations = (
     {},
   )
 
+const ignoreLocalVariables = (
+  decls: Model.Declaration[],
+  acc: Record<string, string | null>,
+): Record<string, string | null> =>
+  decls.reduce<Record<string, string | null>>(
+    (acc, decl) =>
+      reduceADT(
+        {
+          local: (acc, localDecl) => {
+            const { [localDecl.name]: _, ...rest } = acc
+            return rest
+          },
+        },
+        acc,
+        decl,
+      ),
+    acc,
+  )
+
 const reduceParametersFromPattern = (acc: Record<string, string | null>, pattern: Model.Pattern) =>
   pattern.reduce((acc, element) => {
     if (typeof element === "string") {
@@ -89,17 +108,23 @@ export const extractParameterTypeNamesFromMessage = (
     const dataModel = parseMessage(message)
     switch (dataModel.type) {
       case "message":
-        return reduceParametersFromPattern(
-          extractParametersFromDeclarations(dataModel.declarations),
-          dataModel.pattern,
+        return ignoreLocalVariables(
+          dataModel.declarations,
+          reduceParametersFromPattern(
+            extractParametersFromDeclarations(dataModel.declarations),
+            dataModel.pattern,
+          ),
         )
 
       case "select": {
-        return dataModel.selectors.reduce(
-          (acc, variable) => mergeAssoc(acc, variable.name, null),
-          dataModel.variants.reduce(
-            (acc, variant) => reduceParametersFromPattern(acc, variant.value),
-            extractParametersFromDeclarations(dataModel.declarations),
+        return ignoreLocalVariables(
+          dataModel.declarations,
+          dataModel.selectors.reduce(
+            (acc, variable) => mergeAssoc(acc, variable.name, null),
+            dataModel.variants.reduce(
+              (acc, variant) => reduceParametersFromPattern(acc, variant.value),
+              extractParametersFromDeclarations(dataModel.declarations),
+            ),
           ),
         )
       }
@@ -123,3 +148,29 @@ export const mapParameterTypeNames = <T>(
   Object.fromEntries(
     Object.entries(typeMap).map(([key, typeName]): [string, T] => [key, map(typeName)]),
   )
+
+/**
+ * Checks whether one set of parameter types (`ext`) is a subset of (or equals)
+ * another (`base`).
+ */
+export const extendsParameterTypes = (
+  base: Record<string, string | null>,
+  ext: Record<string, string | null>,
+): boolean => {
+  for (const [key, typeName] of Object.entries(ext)) {
+    if (typeName === null || typeof typeName === "string") {
+      const baseTypeName = base[key]
+      if (baseTypeName === undefined) {
+        // extra parameter not in base
+        return false
+      }
+
+      if (typeof typeName === "string" && baseTypeName !== typeName) {
+        // type in extension is neither null (any) nor matches the base type
+        return false
+      }
+    }
+  }
+
+  return true
+}

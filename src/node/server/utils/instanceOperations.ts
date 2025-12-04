@@ -30,6 +30,7 @@ export const createInstance = async (
     locals.referencesToInstances,
     res =>
       saveInstanceTree(
+        locals.validationOptions,
         locals.entitiesByName,
         undefined,
         undefined,
@@ -88,6 +89,7 @@ export const updateInstance = async (
     locals.referencesToInstances,
     res =>
       saveInstanceTree(
+        locals.validationOptions,
         locals.entitiesByName,
         undefined,
         undefined,
@@ -152,6 +154,7 @@ export const deleteInstance = async (
     locals.referencesToInstances,
     res =>
       saveInstanceTree(
+        locals.validationOptions,
         locals.entitiesByName,
         undefined,
         undefined,

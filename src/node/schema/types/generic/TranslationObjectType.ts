@@ -1,5 +1,10 @@
+import { MessageError, parseMessage, validate } from "messageformat"
 import type { SerializedTranslationObjectType } from "../../../../shared/schema/types/TranslationObjectType.ts"
 import { sortObjectKeys } from "../../../../shared/utils/object.ts"
+import {
+  extendsParameterTypes,
+  extractParameterTypeNamesFromMessage,
+} from "../../../../shared/utils/translation.ts"
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { validateUnknownKeys } from "../../../../shared/validation/object.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
@@ -10,8 +15,8 @@ import type {
   Predicate,
   Serialized,
   TypeArgumentsResolver,
+  ValidationContext,
   Validator,
-  Validators,
 } from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { StringType } from "../primitives/StringType.ts"
@@ -53,13 +58,13 @@ export const getNestedDeclarationsInTranslationObjectType: GetNestedDeclarations
 > = addedDecls => addedDecls
 
 const validateRecursively = (
-  helpers: Validators,
+  context: ValidationContext,
   allKeysAreRequired: boolean,
   type: TConstraint,
   value: unknown,
 ): Error[] => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [TypeError(`expected an object, but got ${json(value, helpers.useStyling)}`)]
+    return [TypeError(`expected an object, but got ${json(value, context.useStyling)}`)]
   }
 
   const expectedKeys = Object.keys(type).filter(key => type[key] !== undefined)
@@ -71,14 +76,14 @@ const validateRecursively = (
       const propValue = (value as Record<string, unknown>)[key]
 
       if (allKeysAreRequired && propValue === undefined) {
-        return TypeError(`missing required translation ${keyColor(`"${key}"`, helpers.useStyling)}`)
+        return TypeError(`missing required translation ${keyColor(`"${key}"`, context.useStyling)}`)
       }
 
       if (propType === null && propValue !== undefined && typeof propValue !== "string") {
         return TypeError(
-          `expected a string at translation key ${keyColor(`"${key}"`, helpers.useStyling)}, but got ${json(
+          `expected a string at translation key ${keyColor(`"${key}"`, context.useStyling)}, but got ${json(
             propValue,
-            helpers.useStyling,
+            context.useStyling,
           )}`,
         )
       }
@@ -90,14 +95,46 @@ const validateRecursively = (
         propValue.length === 0
       ) {
         return TypeError(
-          `expected a non-empty string at translation key ${keyColor(`"${key}"`, helpers.useStyling)}`,
+          `expected a non-empty string at translation key ${keyColor(`"${key}"`, context.useStyling)}`,
         )
+      }
+
+      if (typeof propValue === "string" && context.checkTranslations) {
+        try {
+          validate(parseMessage(propValue))
+        } catch (err) {
+          if (err instanceof MessageError) {
+            return TypeError(
+              `invalid translation string at key ${keyColor(
+                `"${key}"`,
+                context.useStyling,
+              )}: ${err.message} in message ${json(propValue, context.useStyling)}`,
+            )
+          }
+        }
+
+        if (context.checkTranslations.matchParametersInKeys) {
+          const expectedParams = extractParameterTypeNamesFromMessage(key)
+          const actualParams = extractParameterTypeNamesFromMessage(propValue)
+
+          if (!extendsParameterTypes(expectedParams, actualParams)) {
+            return TypeError(
+              `parameter types in translation string at key ${keyColor(
+                `"${key}"`,
+                context.useStyling,
+              )} do not match the expected parameter types. Expected: ${json(
+                expectedParams,
+                context.useStyling,
+              )} Actual: ${json(actualParams, context.useStyling)}`,
+            )
+          }
+        }
       }
 
       if (propType !== null && propValue !== undefined) {
         return wrapErrorsIfAny(
-          `at translation object key ${keyColor(`"${key}"`, helpers.useStyling)}`,
-          validateRecursively(helpers, allKeysAreRequired, propType, propValue),
+          `at translation object key ${keyColor(`"${key}"`, context.useStyling)}`,
+          validateRecursively(context, allKeysAreRequired, propType, propValue),
         )
       }
 

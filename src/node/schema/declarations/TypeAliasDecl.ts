@@ -5,8 +5,8 @@ import type {
   Predicate,
   Serializer,
   TypeArgumentsResolver,
+  ValidationContext,
   ValidatorOfParamDecl,
-  Validators,
 } from "../Node.ts"
 import {
   getNestedDeclarations,
@@ -93,7 +93,7 @@ export const getNestedDeclarationsInTypeAliasDecl: GetNestedDeclarations<TypeAli
 ) => getNestedDeclarations(addedDecls, decl.type.value, decl)
 
 export const validateTypeAliasDecl = (<Params extends TypeParameter[]>(
-  helpers: Validators,
+  helpers: ValidationContext,
   inDecls: Decl[],
   decl: TypeAliasDecl<string, Type, Params>,
   args: TypeArguments<Params>,

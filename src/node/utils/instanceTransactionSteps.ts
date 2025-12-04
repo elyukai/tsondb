@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
 import { error, map, ok, then, type Result } from "../../shared/utils/result.ts"
+import type { ValidationOptions } from "../index.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
-import { createValidators, validateEntityDecl } from "../schema/index.ts"
+import { createValidationContext, validateEntityDecl } from "../schema/index.ts"
 import {
   getInstanceOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
@@ -14,6 +15,7 @@ import { isReferencedByOtherInstances, type ReferencesToInstances } from "./refe
 export const createNewId = () => randomUUID()
 
 const checkCreateInstancePossible = (
+  validationOptions: Partial<ValidationOptions>,
   localeEntity: EntityDecl | undefined,
   databaseInMemory: DatabaseInMemory,
   entity: EntityDecl,
@@ -35,12 +37,13 @@ const checkCreateInstancePossible = (
   }
 
   return map(
-    checkUpdateInstancePossible(databaseInMemory, entity, instanceContent),
+    checkUpdateInstancePossible(validationOptions, databaseInMemory, entity, instanceContent),
     () => newInstanceId,
   )
 }
 
 export const createInstance = (
+  validationOptions: Partial<ValidationOptions>,
   res: TransactionResult,
   localeEntity: EntityDecl | undefined,
   entity: EntityDecl,
@@ -49,7 +52,14 @@ export const createInstance = (
 ): TransactionResult<{ instanceId: string }> =>
   then(res, data =>
     then(
-      checkCreateInstancePossible(localeEntity, data.db, entity, instanceContent, customId),
+      checkCreateInstancePossible(
+        validationOptions,
+        localeEntity,
+        data.db,
+        entity,
+        instanceContent,
+        customId,
+      ),
       newInstanceId =>
         map(
           setInstanceT(ok(data), entity, { id: newInstanceId, content: instanceContent }),
@@ -59,12 +69,13 @@ export const createInstance = (
   )
 
 const checkUpdateInstancePossible = (
+  validationOptions: Partial<ValidationOptions>,
   databaseInMemory: DatabaseInMemory,
   entity: EntityDecl,
   instanceContent: InstanceContent,
 ): Result<void, HTTPError> => {
   const validationErrors = validateEntityDecl(
-    createValidators(databaseInMemory, false),
+    createValidationContext(validationOptions, databaseInMemory, false),
     [],
     entity,
     instanceContent,
@@ -78,13 +89,14 @@ const checkUpdateInstancePossible = (
 }
 
 export const updateInstance = (
+  validationOptions: Partial<ValidationOptions>,
   res: TransactionResult,
   entity: EntityDecl,
   instanceId: string,
   instanceContent: InstanceContent,
 ): TransactionResult =>
   then(res, data =>
-    then(checkUpdateInstancePossible(data.db, entity, instanceContent), () =>
+    then(checkUpdateInstancePossible(validationOptions, data.db, entity, instanceContent), () =>
       setInstanceT(ok(data), entity, { id: instanceId, content: instanceContent }),
     ),
   )

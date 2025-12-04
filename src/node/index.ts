@@ -6,7 +6,7 @@ import type { Output } from "../shared/output.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
 import type { HomeLayoutSection } from "./config.ts"
 import { validateEntityDecl, type EntityDecl } from "./schema/declarations/EntityDecl.ts"
-import { createValidators } from "./schema/Node.ts"
+import { createValidationContext } from "./schema/Node.ts"
 import { getEntities, type Schema } from "./schema/Schema.ts"
 import type { ServerOptions } from "./server/index.ts"
 import { createServer } from "./server/index.ts"
@@ -36,9 +36,17 @@ export const generateOutputs = async (schema: Schema, outputs: Output[]): Promis
   }
 }
 
-type ValidationOptions = {
+export type ValidationOptions = {
   checkReferentialIntegrity: boolean
   checkOnlyEntities: string[]
+  checkTranslations?: {
+    format: "mf2"
+
+    /**
+     * If set to `true`, translation keys will be treated as message format strings and their parameters must match the ones in the values.
+     */
+    matchParametersInKeys?: boolean
+  }
 }
 
 const _validate = (
@@ -55,7 +63,12 @@ const _validate = (
     }
   }
 
-  const validationHelpers = createValidators(databaseInMemory, true, checkReferentialIntegrity)
+  const validationContext = createValidationContext(
+    options,
+    databaseInMemory,
+    true,
+    checkReferentialIntegrity,
+  )
 
   const errors = (
     checkOnlyEntities.length > 0
@@ -67,7 +80,7 @@ const _validate = (
         getInstancesOfEntityFromDatabaseInMemory(databaseInMemory, entity.name).map(instance =>
           wrapErrorsIfAny(
             `in file ${styleText("white", `"${dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
-            validateEntityDecl(validationHelpers, [], entity, instance.content),
+            validateEntityDecl(validationContext, [], entity, instance.content),
           ),
         ),
       ),
@@ -114,6 +127,7 @@ export const serve = async (
   defaultLocales: string[],
   homeLayoutSections?: HomeLayoutSection[],
   serverOptions?: Partial<ServerOptions>,
+  validationOptions?: Partial<ValidationOptions>,
   customStylesheetPath?: string,
 ) => {
   if (defaultLocales.length === 0) {
@@ -131,6 +145,7 @@ export const serve = async (
     defaultLocales,
     homeLayoutSections,
     serverOptions,
+    validationOptions,
     customStylesheetPath,
   )
 }
@@ -143,6 +158,7 @@ export const generateValidateAndServe = async (
   homeLayoutSections?: HomeLayoutSection[],
   serverOptions?: Partial<ServerOptions>,
   validationOptions?: Partial<ValidationOptions>,
+  customStylesheetPath?: string,
 ) => {
   await generateOutputs(schema, outputs)
   const entities = getEntities(schema)
@@ -156,6 +172,8 @@ export const generateValidateAndServe = async (
     defaultLocales,
     homeLayoutSections,
     serverOptions,
+    validationOptions,
+    customStylesheetPath,
   )
 }
 

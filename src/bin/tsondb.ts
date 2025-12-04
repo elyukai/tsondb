@@ -13,7 +13,9 @@ import {
   validateConfigForTesting,
   type Config,
 } from "../node/config.ts"
+import type { ValidationOptions } from "../node/index.ts"
 import { format, generateOutputs, serve, validate } from "../node/index.ts"
+import { omitUndefinedKeys } from "../shared/utils/object.ts"
 
 const debug = Debug("tsondb:cli")
 
@@ -26,7 +28,11 @@ const passedArguments = parseArguments({
           name: "check-referential-integrity",
           type: Boolean,
         },
-        entities: {
+        checkTranslationParameters: {
+          name: "check-translation-parameters",
+          type: Boolean,
+        },
+        checkOnlyEntities: {
           name: "entities",
           alias: "e",
           multiple: true,
@@ -103,6 +109,7 @@ switch (passedArguments.command.name) {
       config.defaultLocales,
       config.homeLayoutSections,
       config.serverOptions,
+      config.validationOptions,
       config.customStylesheetPath,
     )
     break
@@ -114,13 +121,13 @@ switch (passedArguments.command.name) {
         `check referential integrity: ${passedArguments.command.options.checkReferentialIntegrity ? "yes" : "no"}`,
       )
     }
-    if (passedArguments.command.options?.entities !== undefined) {
-      const entities: string[] = passedArguments.command.options.entities
+    if (passedArguments.command.options?.checkOnlyEntities !== undefined) {
+      const entities: string[] = passedArguments.command.options.checkOnlyEntities
       debug(`only check the following entities: ${entities.join(", ")}`)
     }
     await validate(config.schema, config.dataRootPath, {
-      checkReferentialIntegrity: passedArguments.command.options?.checkReferentialIntegrity,
-      checkOnlyEntities: passedArguments.command.options?.entities,
+      ...config.validationOptions,
+      ...omitUndefinedKeys<Partial<ValidationOptions>>(passedArguments.command.options ?? {}),
     })
     break
   case "format":

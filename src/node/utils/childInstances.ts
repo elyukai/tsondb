@@ -3,6 +3,7 @@ import type { GitFileStatus } from "../../shared/utils/git.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import { hasKey } from "../../shared/utils/object.ts"
 import { error, isError, map, ok, type Result } from "../../shared/utils/result.ts"
+import type { ValidationOptions } from "../index.ts"
 import type {
   EntityDecl,
   EntityDeclWithParentReference,
@@ -164,6 +165,7 @@ const prepareNewChildInstanceContent = (
 }
 
 export const saveInstanceTree = (
+  validationOptions: Partial<ValidationOptions>,
   entitiesByName: Record<string, EntityDecl>,
   parentEntityName: string | undefined,
   parentId: string | undefined,
@@ -196,6 +198,7 @@ export const saveInstanceTree = (
       oldInstance.childInstances.reduce(
         (resAcc: TransactionResult, oldChildInstance) =>
           saveInstanceTree(
+            validationOptions,
             entitiesByName,
             oldInstance.entityName,
             oldInstance.id,
@@ -225,12 +228,22 @@ export const saveInstanceTree = (
 
     const setRes: TransactionResult<{ instanceId: string }> =
       newInstance.id === undefined
-        ? createInstance(res, localeEntity, entity, preparedContent.value, customId)
-        : map(updateInstance(res, entity, newInstance.id, preparedContent.value), data => ({
-            ...data,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            instanceId: newInstance.id!,
-          }))
+        ? createInstance(
+            validationOptions,
+            res,
+            localeEntity,
+            entity,
+            preparedContent.value,
+            customId,
+          )
+        : map(
+            updateInstance(validationOptions, res, entity, newInstance.id, preparedContent.value),
+            data => ({
+              ...data,
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              instanceId: newInstance.id!,
+            }),
+          )
 
     if (isError(setRes)) {
       return setRes
@@ -246,6 +259,7 @@ export const saveInstanceTree = (
         .reduce(
           (resAcc: TransactionResult, newChildInstance) =>
             saveInstanceTree(
+              validationOptions,
               entitiesByName,
               newInstance.entityName,
               instanceId,
@@ -260,6 +274,7 @@ export const saveInstanceTree = (
             ? oldInstance.childInstances.reduce(
                 (resAcc: TransactionResult, oldChildInstance) =>
                   saveInstanceTree(
+                    validationOptions,
                     entitiesByName,
                     oldInstance.entityName,
                     instanceId,

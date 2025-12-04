@@ -6,6 +6,7 @@ import type { SimpleGit } from "simple-git"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import type { HomeLayoutSection } from "../config.ts"
+import type { ValidationOptions } from "../index.ts"
 import type { Decl } from "../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import type { Schema } from "../schema/Schema.ts"
@@ -39,6 +40,7 @@ export interface TSONDBRequestLocals {
   defaultLocales: string[]
   locales: string[]
   homeLayoutSections?: HomeLayoutSection[]
+  validationOptions: Partial<ValidationOptions>
   getInstanceById: GetInstanceById
   setLocal: <K extends keyof Omit<TSONDBRequestLocals, "setLocal">>(
     key: K,
@@ -71,6 +73,7 @@ export const createServer = async (
   defaultLocales: string[],
   homeLayoutSections?: HomeLayoutSection[],
   options?: Partial<ServerOptions>,
+  validationOptions?: Partial<ValidationOptions>,
   customStylesheetPath?: string,
 ): Promise<void> => {
   const { port } = { ...defaultOptions, ...options }
@@ -91,6 +94,7 @@ export const createServer = async (
     dataRootPath,
     databaseInMemory,
     defaultLocales,
+    validationOptions,
     homeLayoutSections,
   )
 

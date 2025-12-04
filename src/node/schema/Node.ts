@@ -24,6 +24,7 @@ import type { SerializedStringType } from "../../shared/schema/types/StringType.
 import type { SerializedTranslationObjectType } from "../../shared/schema/types/TranslationObjectType.ts"
 import type { SerializedTypeArgumentType } from "../../shared/schema/types/TypeArgumentType.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
+import type { ValidationOptions } from "../index.ts"
 import {
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
@@ -328,16 +329,18 @@ export const flatMapAuxiliaryDecls = (
 
 export type IdentifierToCheck = { name: string; value: unknown }
 
-export interface Validators {
+export interface ValidationContext {
   useStyling: boolean
   checkReferentialIntegrity: (identifier: IdentifierToCheck) => Error[]
+  checkTranslations?: ValidationOptions["checkTranslations"]
 }
 
-export const createValidators = (
+export const createValidationContext = (
+  options: Partial<ValidationOptions>,
   databaseInMemory: DatabaseInMemory,
   useStyling: boolean,
   checkReferentialIntegrity: boolean = true,
-): Validators => ({
+): ValidationContext => ({
   useStyling,
   checkReferentialIntegrity: checkReferentialIntegrity
     ? ({ name, value }) =>
@@ -354,6 +357,7 @@ export const createValidators = (
               ),
             ]
     : () => [],
+  checkTranslations: options.checkTranslations,
 })
 
 export type Predicate<T extends Node> = (node: Node) => node is T
@@ -430,14 +434,14 @@ export const getNestedDeclarations: GetNestedDeclarations = (addedDecls, node, p
 }
 
 export type Validator<T extends Node = Node> = (
-  helpers: Validators,
+  helpers: ValidationContext,
   inDecls: Decl[],
   node: T,
   value: unknown,
 ) => Error[]
 
 export type ValidatorOfParamDecl<T extends Node = Node> = (
-  helpers: Validators,
+  helpers: ValidationContext,
   inDecls: Decl[],
   node: T,
   typeArgs: Type[],

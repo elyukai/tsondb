@@ -1,6 +1,7 @@
 import Debug from "debug"
 import { simpleGit } from "simple-git"
 import type { HomeLayoutSection } from "../config.ts"
+import type { ValidationOptions } from "../index.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { resolveTypeArgumentsInDecls, serializeNode } from "../schema/index.ts"
@@ -36,6 +37,7 @@ export const init = async (
   dataRootPath: string,
   databaseInMemory: DatabaseInMemory,
   defaultLocales: string[],
+  validationOptions: Partial<ValidationOptions> = {},
   homeLayoutSections?: HomeLayoutSection[],
 ): Promise<Omit<TSONDBRequestLocals, "setLocal">> => {
   const { git, root: gitRoot, status: gitStatus } = await getGit(dataRootPath)
@@ -96,6 +98,7 @@ export const init = async (
     defaultLocales,
     locales: defaultLocales,
     homeLayoutSections,
+    validationOptions,
   }
 
   return requestLocals
