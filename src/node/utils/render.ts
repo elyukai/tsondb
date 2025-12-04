@@ -59,7 +59,10 @@ export const syntax = (
     }
   }, emptyRenderResult)
 
+export const getIndentation = (spaces: number, indentLevel: number): string =>
+  " ".repeat(spaces * indentLevel)
+
 export const indent = (spaces: number, indentLevel: number, text: RenderResult): RenderResult => [
   text[0],
-  prefixLines(" ".repeat(spaces * indentLevel), text[1]),
+  prefixLines(getIndentation(spaces, indentLevel), text[1]),
 ]

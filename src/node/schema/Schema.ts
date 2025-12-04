@@ -20,6 +20,8 @@ import { findTypeAtPath } from "./types/Type.ts"
 
 const debug = Debug("tsondb:schema")
 
+// const RESERVED_DECLARATION_IDENTIFIER = ["EntityMap", "StringableTranslationParameter"]
+
 export interface Schema {
   declarations: readonly Decl[]
   localeEntity?: EntityDecl
@@ -38,6 +40,14 @@ const checkDuplicateIdentifier = (existingDecls: NestedDecl[], decl: NestedDecl)
     )
   }
 }
+
+// const checkReservedIdentifier = (decl: NestedDecl) => {
+//   if (RESERVED_DECLARATION_IDENTIFIER.includes(decl.name)) {
+//     throw new Error(
+//       `Declaration "${decl.name}" in "${decl.sourceUrl}" uses a reserved identifier name.`,
+//     )
+//   }
+// }
 
 const checkParameterNamesShadowing = (decls: Decl[]) => {
   for (const decl of decls) {
@@ -341,9 +351,10 @@ export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema 
   )
   debug("found %d nested declarations", allDecls.length)
 
-  debug("checking for duplicate identifiers ...")
+  debug("checking for duplicate identifiers ...") // debug("checking for duplicate or reserved identifiers ...")
   allDecls.forEach((decl, declIndex) => {
     checkDuplicateIdentifier(allDecls.slice(0, declIndex), decl)
+    // checkReservedIdentifier(decl)
   })
 
   const allDeclsWithoutNestedEntities = allDecls.filter(decl => decl.kind !== "NestedEntity")

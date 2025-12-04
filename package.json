@@ -50,6 +50,7 @@
     "@preact/signals": "^2.5.1",
     "debug": "^4.4.3",
     "express": "^5.1.0",
+    "messageformat": "^4.0.0",
     "preact": "^10.27.2",
     "preact-iso": "^2.11.0",
     "simple-cli-args": "^0.1.3",

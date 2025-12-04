@@ -3,6 +3,10 @@ import { dirname, relative } from "node:path"
 import { discriminatorKey } from "../../../shared/enum.ts"
 import { unique } from "../../../shared/utils/array.ts"
 import { toCamelCase } from "../../../shared/utils/string.ts"
+import {
+  extractParameterTypeNamesFromMessage,
+  mapParameterTypeNames,
+} from "../../../shared/utils/translation.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import { asDecl, type Decl } from "../../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../../schema/declarations/EntityDecl.ts"
@@ -38,6 +42,7 @@ import type { RenderResult } from "../../utils/render.ts"
 import {
   combineSyntaxes,
   emptyRenderResult,
+  getIndentation,
   indent,
   prefixLines,
   syntax,
@@ -49,6 +54,12 @@ export type TypeScriptRendererOptions = {
   preserveFiles: boolean
   generateEntityMapType: boolean
   addIdentifierToEntities: boolean
+  /**
+   * Infer translation parameter types from the message strings in a {@link TranslationObjectType TranslationObject} as branded types.
+   */
+  inferTranslationParameters?: {
+    format: "mf2"
+  }
 }
 
 const defaultOptions: TypeScriptRendererOptions = {
@@ -165,6 +176,34 @@ const renderEnumType: RenderFn<EnumType> = (options, type) =>
 const renderChildEntitiesType: RenderFn<ChildEntitiesType> = (options, type) =>
   renderType(options, ArrayType(ReferenceIdentifierType(type.entity), { uniqueItems: true }))
 
+const mapTypeNameToType = (typeName: string | null): string => {
+  switch (typeName) {
+    case "string":
+      return "string"
+    case "number":
+    case "integer":
+      return "number"
+    case "date":
+    case "datetime":
+    case "time":
+      return "Date"
+    case null:
+    default:
+      return "StringableTranslationParameter"
+  }
+}
+
+const renderTranslationParameterBrand: RenderFn<Record<string, string>> = (options, params) => {
+  if (options.inferTranslationParameters === undefined) {
+    return emptyRenderResult
+  }
+  const entries = Object.entries(params)
+  if (entries.length === 0) {
+    return emptyRenderResult
+  }
+  return syntax` & { __params: { ${entries.map(([name, type]) => `"${name}": ${type}`).join("; ")} } }`
+}
+
 const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, type) => {
   return wrapAsObject(
     options,
@@ -173,7 +212,10 @@ const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, t
         ([name, config]) =>
           syntax`"${name.replace('"', '\\"')}"${
             type.allKeysAreRequired ? "" : "?"
-          }: ${renderType(options, getTypeOfKey(config, type))}`,
+          }: ${renderType(options, getTypeOfKey(config, type))}${renderTranslationParameterBrand(
+            options,
+            mapParameterTypeNames(extractParameterTypeNamesFromMessage(name), mapTypeNameToType),
+          )}`,
       ),
       EOL,
     ),
@@ -290,6 +332,13 @@ const renderEntityMapType: RenderFn<readonly Decl[]> = (options, declarations) =
     ),
   )}${EOL}}${EOL + EOL}`
 
+const renderStringableTranslationParameterType = (options: TypeScriptRendererOptions) =>
+  options.inferTranslationParameters?.format === "mf2"
+    ? "export type StringableTranslationParameter = {\n" +
+      prefixLines(getIndentation(options.indentation, 1), "toString(): string") +
+      "\n}\n\n"
+    : ""
+
 export const render = (
   options: Partial<TypeScriptRendererOptions> = defaultOptions,
   declarations: readonly Decl[],
@@ -316,6 +365,7 @@ export const render = (
   )
   return (
     entityMap +
+    renderStringableTranslationParameterType(finalOptions) +
     (finalOptions.preserveFiles
       ? (declarations[0] === undefined ? "" : renderImports(declarations[0].sourceUrl, imports)) +
         content
