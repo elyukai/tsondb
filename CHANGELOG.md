@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.8](https://github.com/elyukai/tsondb/compare/v0.12.7...v0.12.8) (2025-12-04)
+
+
+### Features
+
+* **ts-renderer:** derive translation parameters ([d4b202a](https://github.com/elyukai/tsondb/commit/d4b202ae06383194b5d2fcc470e363141b814ee7))
+
 ## [0.12.7](https://github.com/elyukai/tsondb/compare/v0.12.6...v0.12.7) (2025-11-30)
 
 
