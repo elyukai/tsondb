@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.13.0](https://github.com/elyukai/tsondb/compare/v0.12.9...v0.13.0) (2025-12-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* **ts-renderer:** The config for the normal entity map is now in an
+object.
+
+### Features
+
+* **ts-renderer:** child entity map helper type ([636cfd7](https://github.com/elyukai/tsondb/commit/636cfd7d4bd858f78537de83266b5ec680e1f8c3))
+* unique constraints ([bb8d173](https://github.com/elyukai/tsondb/commit/bb8d173f96e5d8d7fc7add24d65b384e5f00dd22)), closes [#14](https://github.com/elyukai/tsondb/issues/14)
+
 ## [0.12.9](https://github.com/elyukai/tsondb/compare/v0.12.8...v0.12.9) (2025-12-04)
 
 
