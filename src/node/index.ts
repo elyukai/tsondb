@@ -17,7 +17,7 @@ import {
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
 } from "./utils/databaseInMemory.ts"
-import { countErrors, getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
+import { getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
 import { getFileNameForId, writeInstance } from "./utils/files.ts"
 import { checkUniqueConstraintsForAllEntities } from "./utils/unique.ts"
 
@@ -56,7 +56,7 @@ const _validate = (
   entities: EntityDecl[],
   databaseInMemory: DatabaseInMemory,
   options: Partial<ValidationOptions> = {},
-): void => {
+): boolean => {
   const { checkReferentialIntegrity = true, checkOnlyEntities = [] } = options
 
   for (const onlyEntity of checkOnlyEntities) {
@@ -117,12 +117,14 @@ const _validate = (
   }
 
   if (errors.length === 0) {
-    debug("All entities are valid")
+    console.log("All entities are valid")
+    return true
   } else {
     console.error(
-      styleText("red", "\n" + errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")),
+      `${errors.length.toString()} validation error${errors.length === 1 ? "" : "s"} found\n\n${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}`,
     )
-    throw new Error(`Validation failed with ${countErrors(errors).toString()} errors`)
+    process.exitCode = 1
+    return false
   }
 }
 
@@ -193,17 +195,21 @@ export const generateValidateAndServe = async (
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const databaseInMemory = await createDatabaseInMemory(dataRootPath, entities)
-  _validate(dataRootPath, entities, databaseInMemory, validationOptions)
-  await createServer(
-    schema,
-    dataRootPath,
-    databaseInMemory,
-    defaultLocales,
-    homeLayoutSections,
-    serverOptions,
-    validationOptions,
-    customStylesheetPath,
-  )
+  const isValid = _validate(dataRootPath, entities, databaseInMemory, validationOptions)
+  if (isValid) {
+    await createServer(
+      schema,
+      dataRootPath,
+      databaseInMemory,
+      defaultLocales,
+      homeLayoutSections,
+      serverOptions,
+      validationOptions,
+      customStylesheetPath,
+    )
+  } else {
+    console.error("Not starting server due to invalid database")
+  }
 }
 
 export const format = async (schema: Schema, dataRootPath: string) => {
