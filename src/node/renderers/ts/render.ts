@@ -14,6 +14,7 @@ import {
   addEphemeralUUIDToType,
   createEntityIdentifierTypeAsDecl,
   isEntityDecl,
+  isEntityDeclWithParentReference,
 } from "../../schema/declarations/EntityDecl.ts"
 import type { EnumDecl } from "../../schema/declarations/EnumDecl.ts"
 import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
@@ -52,7 +53,17 @@ export type TypeScriptRendererOptions = {
   indentation: number
   objectTypeKeyword: "interface" | "type"
   preserveFiles: boolean
-  generateEntityMapType: boolean
+  generateHelpers: Partial<{
+    /**
+     * If `true` or a string, generates an object type with all names of the entities as the key and their corresponding generated type as their respective value. Uses `EntityMap` as a default name when using `true` or the string if set to a string.
+     */
+    entityMap: boolean | string
+
+    /**
+     * If `true` or a string, generates an object type with all names of entities with parent references as the key and their corresponding generated type as well as their parent reference key as their respective value. Uses `ChildEntityMap` as a default name when using `true` or the string if set to a string.
+     */
+    childEntityMap: boolean | string
+  }>
   addIdentifierToEntities: boolean
   /**
    * Infer translation parameter types from the message strings in a {@link TranslationObjectType TranslationObject} as branded types.
@@ -66,7 +77,7 @@ const defaultOptions: TypeScriptRendererOptions = {
   indentation: 2,
   objectTypeKeyword: "interface",
   preserveFiles: false,
-  generateEntityMapType: false,
+  generateHelpers: {},
   addIdentifierToEntities: false,
 }
 
@@ -319,34 +330,89 @@ const renderImports = (currentUrl: string, imports: { [sourceUrl: string]: strin
   return importsSyntax.length > 0 ? importsSyntax + EOL + EOL : ""
 }
 
-const renderEntityMapType: RenderFn<readonly Decl[]> = (options, declarations) =>
-  syntax`export type EntityMap = {${EOL}${indent(
-    options.indentation,
-    1,
-    combineSyntaxes(
-      declarations
-        .filter(isEntityDecl)
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map(decl => syntax`${decl.name}: ${decl.name}`),
-      EOL,
-    ),
-  )}${EOL}}${EOL + EOL}`
+const renderEntityMapType = (options: TypeScriptRendererOptions, declarations: readonly Decl[]) =>
+  options.generateHelpers.entityMap
+    ? `export type ${options.generateHelpers.entityMap === true ? "EntityMap" : options.generateHelpers.entityMap} = {${EOL}${prefixLines(
+        getIndentation(options.indentation, 1),
+        declarations
+          .filter(isEntityDecl)
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(decl => `${decl.name}: ${decl.name}`)
+          .join(EOL),
+      )}${EOL}}${EOL + EOL}`
+    : ""
+
+const renderChildEntityMapType = (
+  options: TypeScriptRendererOptions,
+  declarations: readonly Decl[],
+) =>
+  options.generateHelpers.childEntityMap
+    ? `export type ${options.generateHelpers.childEntityMap === true ? "ChildEntityMap" : options.generateHelpers.childEntityMap} = {${EOL}${prefixLines(
+        getIndentation(options.indentation, 1),
+        declarations
+          .filter(isEntityDecl)
+          .filter(isEntityDeclWithParentReference)
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(
+            decl =>
+              `${decl.name}: [${decl.name}, "${decl.parentReferenceKey}", ${decl.name}["${decl.parentReferenceKey}"]]`,
+          )
+          .join(EOL),
+      )}${EOL}}${EOL + EOL}`
+    : ""
 
 const renderStringableTranslationParameterType = (options: TypeScriptRendererOptions) =>
   options.inferTranslationParameters?.format === "mf2"
-    ? "export type StringableTranslationParameter = {\n" +
+    ? "export type StringableTranslationParameter = {" +
+      EOL +
       prefixLines(getIndentation(options.indentation, 1), "toString(): string") +
-      "\n}\n\n"
+      EOL +
+      "}" +
+      EOL +
+      EOL
     : ""
+
+// const renderGetterConstruct = (
+//   config: GetterOptions | undefined,
+//   getterType: "all" | "byId",
+//   defaultReturnTypeBuilder: (entity: EntityDecl) => string,
+//   declarations: readonly Decl[],
+// ) => {
+//   if (!config) {
+//     return ""
+//   }
+
+//   const { returnTypeBuilder = defaultReturnTypeBuilder } = config
+
+//   const getLine: (decl: EntityDecl) => string = decl =>
+//     `export type ${decl.name} = (${getterType === "byId" ? `id: ${decl.name}_ID` : ""}) => ${returnTypeBuilder(decl)}`
+
+//   return (declarations.filter(isEntityDecl).map(getLine).join(EOL), EOL + EOL)
+// }
+
+// const renderGetters = (
+//   config:
+//     | Partial<{
+//         byId: GetterOptions
+//         all: GetterOptions
+//       }>
+//     | undefined,
+//   declarations: readonly Decl[],
+// ): string =>
+//   (
+//     [
+//       ["all", (entity: EntityDecl) => entity.name + "[]"],
+//       ["byId", (entity: EntityDecl) => entity.name + " | undefined"],
+//     ] as const
+//   )
+//     .map(key => renderGetterConstruct(config?.[key[0]], key[0], key[1], declarations))
+//     .join("")
 
 export const render = (
   options: Partial<TypeScriptRendererOptions> = defaultOptions,
   declarations: readonly Decl[],
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
-  const [_, entityMap] = finalOptions.generateEntityMapType
-    ? renderEntityMapType(finalOptions, declarations)
-    : emptyRenderResult
   const [imports, content] = renderDeclarations(
     finalOptions,
     flatMapAuxiliaryDecls((parentNodes, node) => {
@@ -364,7 +430,8 @@ export const render = (
     }, declarations),
   )
   return (
-    entityMap +
+    renderEntityMapType(finalOptions, declarations) +
+    renderChildEntityMapType(finalOptions, declarations) +
     renderStringableTranslationParameterType(finalOptions) +
     (finalOptions.preserveFiles
       ? (declarations[0] === undefined ? "" : renderImports(declarations[0].sourceUrl, imports)) +
