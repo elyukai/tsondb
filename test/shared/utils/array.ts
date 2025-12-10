@@ -1,8 +1,11 @@
 import { deepEqual, throws } from "assert/strict"
 import { describe, it } from "node:test"
 import {
+  anySame,
+  anySameIndices,
   chunk,
   difference,
+  flatCombine,
   insertAt,
   removeAt,
   reorder,
@@ -68,6 +71,62 @@ describe("unique", () => {
     const arr = [{ id: 1 }, { id: 2 }, { id: 1 }]
     const equalityCheck = (a: { id: number }, b: { id: number }) => a.id === b.id
     deepEqual(unique(arr, equalityCheck), [{ id: 1 }, { id: 2 }])
+  })
+})
+
+describe("anySame", () => {
+  it("returns false when given an empty array", () => {
+    deepEqual(anySame([]), false)
+  })
+
+  it("checks for duplicate values from the array using shallow equality checks", () => {
+    deepEqual(anySame([1, 2, 2, 3, 4, 4]), true)
+  })
+
+  it("checks for duplicate values from the array using custom equality checks", () => {
+    const arr = [{ id: 1 }, { id: 2 }, { id: 1 }]
+    const equalityCheck = (a: { id: number }, b: { id: number }) => a.id === b.id
+    deepEqual(anySame(arr, equalityCheck), true)
+  })
+})
+
+describe("anySameIndices", () => {
+  it("returns an empty array when given an empty array", () => {
+    deepEqual(anySameIndices([]), [])
+  })
+
+  it("checks for duplicate values from the array using shallow equality checks", () => {
+    deepEqual(anySameIndices([1, 2, 2, 3, 4, 4]), [
+      [1, 2],
+      [4, 5],
+    ])
+  })
+
+  it("checks for duplicate values from the array using custom equality checks", () => {
+    const arr = [{ id: 1 }, { id: 2 }, { id: 1 }]
+    const equalityCheck = (a: { id: number }, b: { id: number }) => a.id === b.id
+    deepEqual(anySameIndices(arr, equalityCheck), [[0, 2]])
+  })
+})
+
+describe("flatCombine", () => {
+  it("returns the possibilities of all the combinations of nested array values.", () => {
+    deepEqual(flatCombine([["a", "b"], ["c"]]), [
+      ["a", "c"],
+      ["b", "c"],
+    ])
+    deepEqual(
+      flatCombine([
+        ["a", "b"],
+        ["c", "d"],
+      ]),
+      [
+        ["a", "c"],
+        ["b", "c"],
+        ["a", "d"],
+        ["b", "d"],
+      ],
+    )
   })
 })
 

@@ -10,6 +10,7 @@ import {
 import { applyStepsToDisk } from "./databaseOnDisk.ts"
 import { attachGitStatusToDatabaseInMemory } from "./git.ts"
 import { updateReferencesToInstances, type ReferencesToInstances } from "./references.ts"
+import { checkUniqueConstraintsForAllEntities } from "./unique.ts"
 
 export type TransactionStep =
   | {
@@ -72,6 +73,16 @@ export const runDatabaseTransaction = async (
   }
 
   const { db: newDb, refs: newRefs, steps, instanceContainer } = result.value
+
+  const constraintResult = checkUniqueConstraintsForAllEntities(
+    newDb,
+    Object.values(entitiesByName),
+  )
+
+  if (isError(constraintResult)) {
+    return constraintResult
+  }
+
   const diskResult = await applyStepsToDisk(root, steps)
 
   if (isError(diskResult)) {

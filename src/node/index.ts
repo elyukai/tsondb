@@ -3,6 +3,7 @@ import { mkdir } from "fs/promises"
 import { join, sep } from "path"
 import { styleText } from "util"
 import type { Output } from "../shared/output.ts"
+import { isError } from "../shared/utils/result.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
 import type { HomeLayoutSection } from "./config.ts"
 import { validateEntityDecl, type EntityDecl } from "./schema/declarations/EntityDecl.ts"
@@ -18,6 +19,7 @@ import {
 } from "./utils/databaseInMemory.ts"
 import { countErrors, getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
 import { getFileNameForId, writeInstance } from "./utils/files.ts"
+import { checkUniqueConstraintsForAllEntities } from "./utils/unique.ts"
 
 const debug = Debug("tsondb:jsapi")
 
@@ -70,6 +72,8 @@ const _validate = (
     checkReferentialIntegrity,
   )
 
+  debug("Checking structural integrity ...")
+
   const errors = (
     checkOnlyEntities.length > 0
       ? entities.filter(entity => checkOnlyEntities.includes(entity.name))
@@ -86,6 +90,31 @@ const _validate = (
       ),
     )
     .toSorted((a, b) => a.message.localeCompare(b.message))
+
+  if (errors.length > 0) {
+    debug(
+      `${errors.length.toString()} structural integrity violation${errors.length === 1 ? "" : "s"} found`,
+    )
+  } else {
+    debug("No structural integrity violations found")
+  }
+
+  if (errors.length === 0) {
+    debug("Checking unique constraints ...")
+
+    const constraintResult = checkUniqueConstraintsForAllEntities(databaseInMemory, entities)
+
+    if (isError(constraintResult)) {
+      debug(
+        `${constraintResult.error.errors.length.toString()} unique constraint violation${constraintResult.error.errors.length === 1 ? "" : "s"} found`,
+      )
+      errors.push(constraintResult.error)
+    } else {
+      debug("No unique constraint violations found")
+    }
+  } else {
+    debug("Skipping unique constraint checks due to previous structural integrity errors")
+  }
 
   if (errors.length === 0) {
     debug("All entities are valid")

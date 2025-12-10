@@ -1,4 +1,12 @@
 import Debug from "debug"
+import {
+  normalizeKeyPath,
+  renderKeyPath,
+  type KeyPath,
+  type UniquingElement,
+} from "../../shared/schema/declarations/EntityDecl.ts"
+import { anySame } from "../../shared/utils/array.ts"
+import { deepEqual } from "../../shared/utils/compare.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import type { Decl } from "./declarations/Declaration.ts"
 import { getParameterNames, walkNodeTree } from "./declarations/Declaration.ts"
@@ -7,7 +15,7 @@ import { isEntityDecl } from "./declarations/EntityDecl.ts"
 import { cases, isEnumDecl } from "./declarations/EnumDecl.ts"
 import { getNestedDeclarations, NodeKind, type NestedDecl, type Node } from "./Node.ts"
 import type { EnumCaseDecl } from "./types/generic/EnumType.ts"
-import { isObjectType } from "./types/generic/ObjectType.ts"
+import { isObjectType, type ObjectType } from "./types/generic/ObjectType.ts"
 import { isStringType } from "./types/primitives/StringType.ts"
 import { isChildEntitiesType } from "./types/references/ChildEntitiesType.ts"
 import { isIncludeIdentifierType } from "./types/references/IncludeIdentifierType.ts"
@@ -16,7 +24,7 @@ import {
   isReferenceIdentifierType,
   type ReferenceIdentifierType,
 } from "./types/references/ReferenceIdentifierType.ts"
-import { findTypeAtPath } from "./types/Type.ts"
+import { findTypeAtPath, type Type } from "./types/Type.ts"
 
 const debug = Debug("tsondb:schema")
 
@@ -329,6 +337,103 @@ const checkRecursiveGenericTypeAliasesAndEnumerationsAreOnlyParameterizedDirectl
   }
 }
 
+const getNodeAtKeyPath = (
+  decl: EntityDecl,
+  objectType: ObjectType,
+  keyPath: KeyPath,
+  parent?: string,
+  parentPath: string[] = [],
+): Type => {
+  const [key, ...keyPathRest] = normalizeKeyPath(keyPath)
+  if (key === undefined) {
+    return objectType
+  }
+
+  const memberDecl = objectType.properties[key]
+
+  if (memberDecl === undefined) {
+    throw TypeError(
+      `key "${key}"${parentPath.length === 0 ? "" : " in " + renderKeyPath(parentPath)} in unique constraint of entity "${decl.name}" does not exist in the entity`,
+    )
+  }
+
+  const value = memberDecl.type
+  const actualValue = isIncludeIdentifierType(value) ? value.reference.type.value : value
+
+  if (keyPathRest.length > 0) {
+    if (isObjectType(actualValue)) {
+      return getNodeAtKeyPath(decl, actualValue, keyPathRest, parent, [...parentPath, key])
+    }
+
+    throw TypeError(
+      `value at key "${key}"${parentPath.length === 0 ? "" : ' in "' + renderKeyPath(parentPath) + '"'}${parent ? " " + parent : ""} in unique constraint of entity "${decl.name}" does not contain an object type`,
+    )
+  }
+
+  return value
+}
+
+const checkUniqueConstraintElement = (decl: EntityDecl, element: UniquingElement) => {
+  if ("keyPath" in element) {
+    getNodeAtKeyPath(decl, decl.type.value, element.keyPath)
+
+    if (element.keyPathFallback !== undefined) {
+      getNodeAtKeyPath(decl, decl.type.value, element.keyPathFallback)
+    }
+  } else {
+    const entityMapType = getNodeAtKeyPath(decl, decl.type.value, element.entityMapKeyPath)
+
+    if (!isNestedEntityMapType(entityMapType)) {
+      throw TypeError(
+        `value at key "${renderKeyPath(element.entityMapKeyPath)}" is not a nested entity map as required by the unique constraint of entity "${decl.name}"`,
+      )
+    }
+
+    const nestedType = entityMapType.type.value
+    const actualType = isIncludeIdentifierType(nestedType)
+      ? nestedType.reference.type.value
+      : nestedType
+
+    getNodeAtKeyPath(
+      decl,
+      actualType,
+      element.keyPathInEntityMap,
+      `in entity map "${renderKeyPath(element.entityMapKeyPath)}"`,
+    )
+
+    if (element.keyPathInEntityMapFallback !== undefined) {
+      getNodeAtKeyPath(
+        decl,
+        actualType,
+        element.keyPathInEntityMapFallback,
+        `in entity map "${renderKeyPath(element.entityMapKeyPath)}"`,
+      )
+    }
+  }
+}
+
+const checkUniqueConstraints = (declarations: Decl[]) => {
+  for (const decl of declarations) {
+    if (isEntityDecl(decl)) {
+      for (const constraint of decl.uniqueConstraints ?? []) {
+        if (Array.isArray(constraint)) {
+          for (const constraintPart of constraint) {
+            checkUniqueConstraintElement(decl, constraintPart)
+          }
+
+          if (anySame(constraint, deepEqual)) {
+            throw TypeError(
+              `there are duplicate key descriptions in a combined constraint of entity "${decl.name}"`,
+            )
+          }
+        } else {
+          checkUniqueConstraintElement(decl, constraint)
+        }
+      }
+    }
+  }
+}
+
 const addDeclarations = (existingDecls: NestedDecl[], declsToAdd: NestedDecl[]): NestedDecl[] =>
   declsToAdd.reduce((accDecls, decl) => {
     if (!accDecls.includes(decl)) {
@@ -371,6 +476,8 @@ export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema 
   checkRecursiveGenericTypeAliasesAndEnumerationsAreOnlyParameterizedDirectlyInTypeAliases(
     allDeclsWithoutNestedEntities,
   )
+  debug("checking unique constraints ...")
+  checkUniqueConstraints(allDeclsWithoutNestedEntities)
 
   debug("created schema, no integrity violations found")
 

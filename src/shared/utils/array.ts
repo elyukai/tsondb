@@ -57,6 +57,49 @@ export const unique = <T>(arr: T[], equalityCheck: (a: T, b: T) => boolean = (a,
   arr.filter((item, index) => arr.findIndex(other => equalityCheck(item, other)) === index)
 
 /**
+ * Checks if there are any duplicate elements in the array.
+ */
+export const anySame = <T>(arr: T[], equalityCheck: (a: T, b: T) => boolean = (a, b) => a === b) =>
+  arr.some((item, index) => arr.findIndex(other => equalityCheck(item, other)) !== index)
+
+/**
+ * Checks if there are any duplicate elements in the array and returns an array
+ * of found duplicates where the values are the indices of these values.
+ */
+export const anySameIndices = <T>(
+  arr: T[],
+  equalityCheck: (a: T, b: T) => boolean = (a, b) => a === b,
+): number[][] =>
+  arr.reduce((acc: number[][], item, index) => {
+    const firstIndex = arr.findIndex(other => equalityCheck(item, other))
+    if (firstIndex === index) {
+      return acc
+    }
+    const accIndex = acc.findIndex(accElem => accElem[0] === firstIndex)
+    return accIndex === -1
+      ? [...acc, [firstIndex, index]]
+      : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The index must exist according to the findIndex above
+        acc.with(accIndex, [...acc[accIndex]!, index])
+  }, [])
+
+/**
+ * Returns the possibilities of all the combinations of nested array values.
+ *
+ * @example
+ *
+ * flatCombine([["a", "b"], ["c"]]) // [["a", "c"], ["b", "c"]]
+ * flatCombine([["a", "b"], ["c", "d"]]) // [["a", "c"], ["b", "c"], ["a", "d"], ["b", "d"]]
+ */
+export const flatCombine = <T>(arr: T[][]): T[][] =>
+  arr.length === 0
+    ? []
+    : arr.slice(1).reduce<T[][]>(
+        (acc, elem) => elem.flatMap(elemInner => acc.map(accElem => [...accElem, elemInner])),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- it is checked before if the array is empty
+        arr[0]!.map(elem => [elem]),
+      )
+
+/**
  * Moves an element from one position to another within the array.
  */
 export const reorder = <T>(arr: T[], sourceIndex: number, targetIndex: number): T[] => {

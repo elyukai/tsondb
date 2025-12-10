@@ -1,4 +1,7 @@
-import type { SerializedEntityDisplayName } from "../../../shared/schema/declarations/EntityDecl.ts"
+import type {
+  SerializedEntityDisplayName,
+  UniqueConstraints,
+} from "../../../shared/schema/declarations/EntityDecl.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { DisplayNameCustomizer } from "../../utils/displayName.ts"
 import type {
@@ -73,6 +76,7 @@ export interface EntityDecl<
   displayName?: GenericEntityDisplayName
   displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
   isDeprecated?: boolean
+  uniqueConstraints?: UniqueConstraints
 }
 
 export interface EntityDeclWithParentReference<
@@ -95,6 +99,7 @@ export const EntityDecl: {
       displayName?: EntityDisplayName<T>
       displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
       isDeprecated?: boolean
+      uniqueConstraints?: UniqueConstraints
     },
   ): EntityDecl<Name, T, undefined>
   <Name extends string, T extends TConstraint, FK extends Extract<keyof T, string>>(
@@ -111,6 +116,7 @@ export const EntityDecl: {
       displayName?: EntityDisplayName<T>
       displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
       isDeprecated?: boolean
+      uniqueConstraints?: UniqueConstraints
     },
   ): EntityDecl<Name, T, FK>
 } = <Name extends string, T extends TConstraint, FK extends Extract<keyof T, string> | undefined>(
@@ -127,6 +133,7 @@ export const EntityDecl: {
     displayName?: EntityDisplayName<T>
     displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
     isDeprecated?: boolean
+    uniqueConstraints?: UniqueConstraints
   },
 ): EntityDecl<Name, T, FK> => {
   validateDeclName(options.name)

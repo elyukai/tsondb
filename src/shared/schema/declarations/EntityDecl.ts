@@ -43,6 +43,35 @@ type SerializedPathTo<T extends TSerializedConstraint, R> = {
     : never
 }[Extract<keyof T, string>]
 
+export type KeyPath = string | string[]
+
+export const normalizeKeyPath = (keyPath: KeyPath): string[] =>
+  Array.isArray(keyPath) ? keyPath : [keyPath]
+
+export const renderKeyPath = (keyPath: KeyPath): string => normalizeKeyPath(keyPath).join(".")
+
+/**
+ * A uniquing element can be the full value of a key or the value of a key in a nested entity map.
+ */
+export type UniquingElement =
+  | { keyPath: KeyPath; keyPathFallback?: KeyPath }
+  | { entityMapKeyPath: KeyPath; keyPathInEntityMap: KeyPath; keyPathInEntityMapFallback?: KeyPath }
+
+export type UniqueConstraint = UniquingElement | UniquingElement[]
+
+/**
+ * A list of keys or key descriptions whose values need to be unique across all instances in the entity.
+ *
+ * One or more constraints may be provided. A nested array indicates that the combination of described values must be unique.
+ *
+ * @example
+ *
+ * ["name"] // all `name` keys must be unique across the entity
+ * ["name", "age"] // all `name` keys and all `age` keys must be unique across the entity
+ * [["name", "age"]] // the combination of `name` and `age` must be unique across the entity
+ */
+export type UniqueConstraints = UniqueConstraint[]
+
 export interface SerializedEntityDecl<
   Name extends string = string,
   T extends TSerializedConstraint = TSerializedConstraint,
@@ -58,6 +87,7 @@ export interface SerializedEntityDecl<
   displayName?: GenericEntityDisplayName
   displayNameCustomizer: boolean
   isDeprecated?: boolean
+  uniqueConstraints?: UniqueConstraints
 }
 
 export const isSerializedEntityDecl = (node: SerializedNode): node is SerializedEntityDecl =>
