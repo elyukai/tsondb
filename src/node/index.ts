@@ -17,7 +17,12 @@ import {
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
 } from "./utils/databaseInMemory.ts"
-import { getErrorMessageForDisplay, wrapErrorsIfAny } from "./utils/error.ts"
+import {
+  countError,
+  countErrors,
+  getErrorMessageForDisplay,
+  wrapErrorsIfAny,
+} from "./utils/error.ts"
 import { getFileNameForId, writeInstance } from "./utils/files.ts"
 import { checkUniqueConstraintsForAllEntities } from "./utils/unique.ts"
 
@@ -92,8 +97,9 @@ const _validate = (
     .toSorted((a, b) => a.message.localeCompare(b.message))
 
   if (errors.length > 0) {
+    const errorCount = countErrors(errors)
     debug(
-      `${errors.length.toString()} structural integrity violation${errors.length === 1 ? "" : "s"} found`,
+      `${errorCount.toString()} structural integrity violation${errorCount === 1 ? "" : "s"} found`,
     )
   } else {
     debug("No structural integrity violations found")
@@ -105,8 +111,9 @@ const _validate = (
     const constraintResult = checkUniqueConstraintsForAllEntities(databaseInMemory, entities)
 
     if (isError(constraintResult)) {
+      const errorCount = countError(constraintResult.error)
       debug(
-        `${constraintResult.error.errors.length.toString()} unique constraint violation${constraintResult.error.errors.length === 1 ? "" : "s"} found`,
+        `${errorCount.toString()} unique constraint violation${errorCount === 1 ? "" : "s"} found`,
       )
       errors.push(constraintResult.error)
     } else {
@@ -120,8 +127,9 @@ const _validate = (
     console.log("All entities are valid")
     return true
   } else {
+    const errorCount = countErrors(errors)
     console.error(
-      `${errors.length.toString()} validation error${errors.length === 1 ? "" : "s"} found\n\n${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}`,
+      `${errorCount.toString()} validation error${errorCount === 1 ? "" : "s"} found\n\n${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}`,
     )
     process.exitCode = 1
     return false
