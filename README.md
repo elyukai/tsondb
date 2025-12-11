@@ -48,6 +48,13 @@ export default {
 
 See the following sections for details on how the different parts come together.
 
+## Terms
+
+The following list will define common terms used in TSONDB.
+
+- **Entity:** The type of group of values, e.g. employees.
+- **Instance:** A singular group of values of an *entity*, e.g. Jane Doe.
+
 ## Define a Schema
 
 You define a schema by declarations that consist of types.
