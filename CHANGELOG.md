@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.13.2](https://github.com/elyukai/tsondb/compare/v0.13.1...v0.13.2) (2025-12-11)
+
+
+### Bug Fixes
+
+* display correct validation error count ([c7ebda3](https://github.com/elyukai/tsondb/commit/c7ebda317af4f328d71d101d861db22a65176b9a))
+
 ## [0.13.1](https://github.com/elyukai/tsondb/compare/v0.13.0...v0.13.1) (2025-12-10)
 
 
