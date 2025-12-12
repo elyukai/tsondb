@@ -1,11 +1,21 @@
-import type { GetInstanceById } from "../../node/server/index.ts"
 import {
   getSerializedDisplayNameFromEntityInstance,
   type DisplayNameResult,
 } from "../../shared/utils/displayName.ts"
-import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
+import type {
+  InstanceContainer,
+  InstanceContainerOverview,
+  InstanceContent,
+} from "../../shared/utils/instances.ts"
 import { serializeEntityDecl, type EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import type { AsDeepType, Type } from "../schema/types/Type.ts"
+import { createChildInstancesForInstanceIdGetter } from "../server/utils/childInstances.ts"
+import {
+  createInstanceFromDatabaseInMemoryGetter,
+  getGroupedInstancesFromDatabaseInMemory,
+  type DatabaseInMemory,
+  type InstanceFromDatabaseInMemoryGetter,
+} from "./databaseInMemory.ts"
 
 export type GetChildInstancesForInstanceId = (
   parentEntityName: string,
@@ -27,7 +37,7 @@ export type DisplayNameCustomizer<T extends Type> = (params: {
 export const getDisplayNameFromEntityInstance = (
   entity: EntityDecl,
   instanceContainer: InstanceContainer,
-  getInstanceById: GetInstanceById,
+  getInstanceById: InstanceFromDatabaseInMemoryGetter,
   getChildInstancesForInstanceId: GetChildInstancesForInstanceId,
   locales: string[],
   defaultName: string = "",
@@ -78,4 +88,40 @@ export const getDisplayNameFromEntityInstance = (
       locales,
     )
   }
+}
+
+export const getAllInstanceOverviewsByEntityName = (
+  entitiesByName: Record<string, EntityDecl>,
+  databaseInMemory: DatabaseInMemory,
+  locales: string[],
+): Record<string, InstanceContainerOverview[]> => {
+  const getInstanceById = createInstanceFromDatabaseInMemoryGetter(databaseInMemory, entitiesByName)
+  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(
+    entitiesByName,
+    databaseInMemory,
+  )
+
+  return Object.fromEntries(
+    getGroupedInstancesFromDatabaseInMemory(databaseInMemory).map(([entityName, instances]) => [
+      entityName,
+      instances
+        .map((instance): InstanceContainerOverview => {
+          const { name, localeId } = getDisplayNameFromEntityInstance(
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            entitiesByName[entityName]!,
+            instance,
+            getInstanceById,
+            getChildInstancesForInstanceId,
+            locales,
+          )
+          return {
+            id: instance.id,
+            displayName: name,
+            displayNameLocaleId: localeId,
+            gitStatus: instance.gitStatus,
+          }
+        })
+        .toSorted((a, b) => a.displayName.localeCompare(b.displayName, a.displayNameLocaleId)),
+    ]),
+  )
 }

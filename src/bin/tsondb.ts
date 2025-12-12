@@ -106,7 +106,7 @@ switch (passedArguments.command.name) {
     await serve(
       config.schema,
       config.dataRootPath,
-      config.defaultLocales,
+      config.locales,
       config.homeLayoutSections,
       config.serverOptions,
       config.validationOptions,
@@ -125,7 +125,7 @@ switch (passedArguments.command.name) {
       const entities: string[] = passedArguments.command.options.checkOnlyEntities
       debug(`only check the following entities: ${entities.join(", ")}`)
     }
-    await validate(config.schema, config.dataRootPath, {
+    await validate(config.schema, config.dataRootPath, config.locales, {
       ...config.validationOptions,
       ...omitUndefinedKeys<Partial<ValidationOptions>>(passedArguments.command.options ?? {}),
     })

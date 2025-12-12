@@ -41,7 +41,7 @@ export const ReferenceIdentifierTypeInput: FunctionComponent<Props> = ({
         )}
         {instances.map(instance => (
           <option key={instance.id} value={instance.id}>
-            {instance.name}
+            {instance.displayName}
           </option>
         ))}
       </Select>

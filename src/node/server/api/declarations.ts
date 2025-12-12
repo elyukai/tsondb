@@ -22,6 +22,7 @@ import { serializeNode } from "../../schema/index.ts"
 import { getChildInstances } from "../../utils/childInstances.ts"
 import {
   countInstancesOfEntityInDatabaseInMemory,
+  createInstanceFromDatabaseInMemoryGetter,
   getInstanceOfEntityFromDatabaseInMemory,
   getInstancesOfEntityFromDatabaseInMemory,
 } from "../../utils/databaseInMemory.ts"
@@ -96,7 +97,14 @@ declarationsApi.get("/:name/instances", (req, res) => {
     return
   }
 
-  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
+  const getInstanceById = createInstanceFromDatabaseInMemoryGetter(
+    req.databaseInMemory,
+    req.entitiesByName,
+  )
+  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(
+    req.entitiesByName,
+    req.databaseInMemory,
+  )
 
   const body: GetAllInstancesOfEntityResponseBody = {
     instances: getInstancesOfEntityFromDatabaseInMemory(req.databaseInMemory, decl.name)
@@ -104,7 +112,7 @@ declarationsApi.get("/:name/instances", (req, res) => {
         getInstanceContainerOverview(
           decl,
           instanceContainer,
-          req.getInstanceById,
+          getInstanceById,
           getChildInstancesForInstanceId,
           req.locales,
         ),

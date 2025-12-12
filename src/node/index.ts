@@ -1,6 +1,7 @@
 import Debug from "debug"
 import { mkdir } from "fs/promises"
 import { join, sep } from "path"
+import { stderr } from "process"
 import { styleText } from "util"
 import type { Output } from "../shared/output.ts"
 import { isError } from "../shared/utils/result.ts"
@@ -13,6 +14,7 @@ import type { ServerOptions } from "./server/index.ts"
 import { createServer } from "./server/index.ts"
 import {
   asyncForEachInstanceInDatabaseInMemory,
+  countInstancesInDatabaseInMemory,
   createDatabaseInMemory,
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
@@ -60,6 +62,7 @@ const _validate = (
   dataRootPath: string,
   entities: EntityDecl[],
   databaseInMemory: DatabaseInMemory,
+  locales: string[],
   options: Partial<ValidationOptions> = {},
 ): boolean => {
   const { checkReferentialIntegrity = true, checkOnlyEntities = [] } = options
@@ -108,7 +111,11 @@ const _validate = (
   if (errors.length === 0) {
     debug("Checking unique constraints ...")
 
-    const constraintResult = checkUniqueConstraintsForAllEntities(databaseInMemory, entities)
+    const constraintResult = checkUniqueConstraintsForAllEntities(
+      databaseInMemory,
+      Object.fromEntries(entities.map(entity => [entity.name, entity])),
+      locales,
+    )
 
     if (isError(constraintResult)) {
       const errorCount = countError(constraintResult.error)
@@ -123,13 +130,22 @@ const _validate = (
     debug("Skipping unique constraint checks due to previous structural integrity errors")
   }
 
+  const totalInstanceCount = countInstancesInDatabaseInMemory(databaseInMemory)
+  console.log(
+    `${totalInstanceCount.toString()} instance${totalInstanceCount === 1 ? "" : "s"} checked`,
+  )
+
   if (errors.length === 0) {
-    console.log("All entities are valid")
+    console.log(styleText("green", "All entities are valid"))
     return true
   } else {
     const errorCount = countErrors(errors)
     console.error(
-      `${errorCount.toString()} validation error${errorCount === 1 ? "" : "s"} found\n\n${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}`,
+      styleText(
+        "red",
+        `${errorCount.toString()} validation error${errorCount === 1 ? "" : "s"} found\n\n${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}`,
+        { stream: stderr },
+      ),
     )
     process.exitCode = 1
     return false
@@ -139,37 +155,39 @@ const _validate = (
 export const validate = async (
   schema: Schema,
   dataRootPath: string,
+  locales: string[],
   options?: Partial<ValidationOptions>,
 ) => {
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const databaseInMemory = await createDatabaseInMemory(dataRootPath, entities)
-  _validate(dataRootPath, entities, databaseInMemory, options)
+  _validate(dataRootPath, entities, databaseInMemory, locales, options)
 }
 
 export const generateAndValidate = async (
   schema: Schema,
   outputs: Output[],
   dataRootPath: string,
+  locales: string[],
   validationOptions?: Partial<ValidationOptions>,
 ) => {
   await generateOutputs(schema, outputs)
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const databaseInMemory = await createDatabaseInMemory(dataRootPath, entities)
-  _validate(dataRootPath, entities, databaseInMemory, validationOptions)
+  _validate(dataRootPath, entities, databaseInMemory, locales, validationOptions)
 }
 
 export const serve = async (
   schema: Schema,
   dataRootPath: string,
-  defaultLocales: string[],
+  locales: string[],
   homeLayoutSections?: HomeLayoutSection[],
   serverOptions?: Partial<ServerOptions>,
   validationOptions?: Partial<ValidationOptions>,
   customStylesheetPath?: string,
 ) => {
-  if (defaultLocales.length === 0) {
+  if (locales.length === 0) {
     throw new Error("At least one default locale must be specified to start the server.")
   }
   const entities = getEntities(schema)
@@ -181,7 +199,7 @@ export const serve = async (
     schema,
     dataRootPath,
     databaseInMemory,
-    defaultLocales,
+    locales,
     homeLayoutSections,
     serverOptions,
     validationOptions,
@@ -193,7 +211,7 @@ export const generateValidateAndServe = async (
   schema: Schema,
   outputs: Output[],
   dataRootPath: string,
-  defaultLocales: string[],
+  locales: string[],
   homeLayoutSections?: HomeLayoutSection[],
   serverOptions?: Partial<ServerOptions>,
   validationOptions?: Partial<ValidationOptions>,
@@ -203,13 +221,13 @@ export const generateValidateAndServe = async (
   const entities = getEntities(schema)
   await prepareFolders(dataRootPath, entities)
   const databaseInMemory = await createDatabaseInMemory(dataRootPath, entities)
-  const isValid = _validate(dataRootPath, entities, databaseInMemory, validationOptions)
+  const isValid = _validate(dataRootPath, entities, databaseInMemory, locales, validationOptions)
   if (isValid) {
     await createServer(
       schema,
       dataRootPath,
       databaseInMemory,
-      defaultLocales,
+      locales,
       homeLayoutSections,
       serverOptions,
       validationOptions,

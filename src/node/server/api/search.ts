@@ -3,7 +3,10 @@ import express from "express"
 import type { SearchResponseBody } from "../../../shared/api.ts"
 import type { InstanceContainerOverview } from "../../../shared/utils/instances.ts"
 import { isEntityDeclWithParentReference } from "../../schema/index.ts"
-import { getGroupedInstancesFromDatabaseInMemory } from "../../utils/databaseInMemory.ts"
+import {
+  createInstanceFromDatabaseInMemoryGetter,
+  getGroupedInstancesFromDatabaseInMemory,
+} from "../../utils/databaseInMemory.ts"
 import { getDisplayNameFromEntityInstance } from "../../utils/displayName.ts"
 import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
 import { getQueryParamString } from "../utils/query.ts"
@@ -15,7 +18,14 @@ export const searchApi = express.Router()
 searchApi.get("/", (req, res) => {
   const query = getQueryParamString(req.query, "q")?.toLowerCase() ?? ""
   debug('search for items containing "%s"', query)
-  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
+  const getInstanceById = createInstanceFromDatabaseInMemoryGetter(
+    req.databaseInMemory,
+    req.entitiesByName,
+  )
+  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(
+    req.entitiesByName,
+    req.databaseInMemory,
+  )
 
   const body: SearchResponseBody = {
     query,
@@ -34,7 +44,7 @@ searchApi.get("/", (req, res) => {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     req.entitiesByName[entityName]!,
                     instance,
-                    req.getInstanceById,
+                    getInstanceById,
                     getChildInstancesForInstanceId,
                     req.locales,
                   )

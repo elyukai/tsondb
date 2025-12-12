@@ -10,7 +10,11 @@ export type Config = {
   serverOptions?: ServerOptions
   schema: Schema
   outputs?: Output[]
-  defaultLocales?: string[]
+
+  /**
+   * Default locales for the server/editor and locales used for testing via CLI.
+   */
+  locales?: string[]
   dataRootPath?: string
   homeLayoutSections?: HomeLayoutSection[]
   customStylesheetPath?: string
@@ -53,7 +57,7 @@ export type DataConfig = {
  */
 export type ServerConfig = DataConfig & {
   serverOptions?: ServerOptions
-  defaultLocales: string[]
+  locales: string[]
   homeLayoutSections?: HomeLayoutSection[]
   validationOptions?: Partial<ValidationOptions>
   customStylesheetPath?: string
@@ -63,6 +67,7 @@ export type ServerConfig = DataConfig & {
  * The configuration type required for validating the contents of the database.
  */
 export type TestingConfig = DataConfig & {
+  locales: string[]
   validationOptions?: Partial<ValidationOptions>
 }
 
@@ -74,8 +79,8 @@ export type FormattingConfig = DataConfig
 export const validateConfigForServer: (
   config: Config,
 ) => asserts config is ServerConfig = config => {
-  if ((config.defaultLocales?.length ?? 0) === 0) {
-    throw new Error("At least one default locale must be specified in the config.")
+  if ((config.locales?.length ?? 0) === 0) {
+    throw new Error("At least one locale must be specified in the config.")
   }
 
   if (config.dataRootPath === undefined) {
@@ -86,6 +91,10 @@ export const validateConfigForServer: (
 export const validateConfigForTesting: (
   config: Config,
 ) => asserts config is TestingConfig = config => {
+  if ((config.locales?.length ?? 0) === 0) {
+    throw new Error("At least one locale must be specified in the config.")
+  }
+
   if (config.dataRootPath === undefined) {
     throw new Error("A data root path must be specified in the config.")
   }

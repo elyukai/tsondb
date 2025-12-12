@@ -6,14 +6,10 @@ import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { isEntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { resolveTypeArgumentsInDecls, serializeNode } from "../schema/index.ts"
 import type { Schema } from "../schema/Schema.ts"
-import {
-  createDatabaseInMemory,
-  getInstanceFromDatabaseInMemory,
-  type DatabaseInMemory,
-} from "../utils/databaseInMemory.ts"
+import { createDatabaseInMemory, type DatabaseInMemory } from "../utils/databaseInMemory.ts"
 import { attachGitStatusToDatabaseInMemory } from "../utils/git.ts"
 import { getReferencesToInstances } from "../utils/references.ts"
-import type { GetInstanceById, TSONDBRequestLocals } from "./index.ts"
+import type { TSONDBRequestLocals } from "./index.ts"
 
 const debug = Debug("tsondb:server:init")
 
@@ -72,17 +68,6 @@ export const init = async (
     debug("retrieved git status to instances")
   }
 
-  const getInstanceById: GetInstanceById = id => {
-    const res = getInstanceFromDatabaseInMemory(requestLocals.databaseInMemory, id)
-    if (res) {
-      const [entityName, instance] = res
-      if (requestLocals.entitiesByName[entityName]) {
-        return { entity: requestLocals.entitiesByName[entityName], instance }
-      }
-    }
-    return undefined
-  }
-
   const requestLocals: Omit<TSONDBRequestLocals, "setLocal"> = {
     git: git,
     gitRoot: gitRoot,
@@ -93,7 +78,6 @@ export const init = async (
     entitiesByName: entitiesByName,
     serializedDeclarationsByName,
     localeEntity: schema.localeEntity,
-    getInstanceById,
     referencesToInstances,
     defaultLocales,
     locales: defaultLocales,

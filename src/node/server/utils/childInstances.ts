@@ -1,13 +1,16 @@
-import { isEntityDeclWithParentReference } from "../../schema/index.ts"
+import { isEntityDeclWithParentReference, type EntityDecl } from "../../schema/index.ts"
 import { getChildInstancesFromEntity } from "../../utils/childInstances.ts"
+import type { DatabaseInMemory } from "../../utils/databaseInMemory.ts"
 import type { GetChildInstancesForInstanceId } from "../../utils/displayName.ts"
-import type { TSONDBRequestLocals } from "../index.ts"
 
 export const createChildInstancesForInstanceIdGetter =
-  (locals: TSONDBRequestLocals): GetChildInstancesForInstanceId =>
+  (
+    entitiesByName: Record<string, EntityDecl>,
+    databaseInMemory: DatabaseInMemory,
+  ): GetChildInstancesForInstanceId =>
   (parentEntityName, parentId, childEntityName) => {
-    const parentEntity = locals.entitiesByName[parentEntityName]
-    const childEntity = locals.entitiesByName[childEntityName]
+    const parentEntity = entitiesByName[parentEntityName]
+    const childEntity = entitiesByName[childEntityName]
 
     if (
       parentEntity === undefined ||
@@ -17,5 +20,5 @@ export const createChildInstancesForInstanceIdGetter =
       return []
     }
 
-    return getChildInstancesFromEntity(locals.databaseInMemory, parentEntity, parentId, childEntity)
+    return getChildInstancesFromEntity(databaseInMemory, parentEntity, parentId, childEntity)
   }

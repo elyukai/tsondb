@@ -4,7 +4,6 @@ import { findPackageJSON } from "node:module"
 import { dirname, join } from "node:path"
 import type { SimpleGit } from "simple-git"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
-import type { InstanceContainer } from "../../shared/utils/instances.ts"
 import type { HomeLayoutSection } from "../config.ts"
 import type { ValidationOptions } from "../index.ts"
 import type { Decl } from "../schema/declarations/Declaration.ts"
@@ -41,16 +40,11 @@ export interface TSONDBRequestLocals {
   locales: string[]
   homeLayoutSections?: HomeLayoutSection[]
   validationOptions: Partial<ValidationOptions>
-  getInstanceById: GetInstanceById
   setLocal: <K extends keyof Omit<TSONDBRequestLocals, "setLocal">>(
     key: K,
     value: TSONDBRequestLocals[K],
   ) => void
 }
-
-export type GetInstanceById = (
-  id: string,
-) => { entity: EntityDecl; instance: InstanceContainer } | undefined
 
 declare global {
   namespace Express {

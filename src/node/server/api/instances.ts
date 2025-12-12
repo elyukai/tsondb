@@ -1,9 +1,7 @@
 import Debug from "debug"
 import express from "express"
 import type { GetAllInstancesResponseBody } from "../../../shared/api.ts"
-import { getGroupedInstancesFromDatabaseInMemory } from "../../utils/databaseInMemory.ts"
-import { getDisplayNameFromEntityInstance } from "../../utils/displayName.ts"
-import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
+import { getAllInstanceOverviewsByEntityName } from "../../utils/displayName.ts"
 
 const debug = Debug("tsondb:server:api:instances")
 
@@ -15,32 +13,11 @@ instancesApi.use((req, _res, next) => {
 })
 
 instancesApi.get("/", (req, res) => {
-  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
-
   const body: GetAllInstancesResponseBody = {
-    instances: Object.fromEntries(
-      getGroupedInstancesFromDatabaseInMemory(req.databaseInMemory).map(
-        ([entityName, instances]) => [
-          entityName,
-          instances
-            .map(instance => {
-              const { name, localeId } = getDisplayNameFromEntityInstance(
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                req.entitiesByName[entityName]!,
-                instance,
-                req.getInstanceById,
-                getChildInstancesForInstanceId,
-                req.locales,
-              )
-              return {
-                id: instance.id,
-                name,
-                displayNameLocaleId: localeId,
-              }
-            })
-            .toSorted((a, b) => a.name.localeCompare(b.name, a.displayNameLocaleId)),
-        ],
-      ),
+    instances: getAllInstanceOverviewsByEntityName(
+      req.entitiesByName,
+      req.databaseInMemory,
+      req.locales,
     ),
   }
 

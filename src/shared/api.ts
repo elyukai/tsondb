@@ -59,7 +59,7 @@ export interface DeleteInstanceOfEntityResponseBody {
 
 export interface GetAllInstancesResponseBody {
   instances: {
-    [entity: string]: { id: string; name: string; displayNameLocaleId?: string }[]
+    [entity: string]: { id: string; displayName: string; displayNameLocaleId?: string }[]
   }
 }
 

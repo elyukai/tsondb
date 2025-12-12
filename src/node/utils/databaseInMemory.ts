@@ -13,6 +13,7 @@ import {
   getMapD,
   hasD,
   mapFirstD,
+  reduceD,
   removeD,
   setD,
   sizeD,
@@ -32,14 +33,35 @@ export const emptyDatabaseInMemory: DatabaseInMemory = emptyD
 export const getInstanceFromDatabaseInMemory = (
   db: DatabaseInMemory,
   instanceId: string,
-): [entityName: string, InstanceContainer] | undefined =>
+): { entityName: string; instance: InstanceContainer } | undefined =>
   mapFirstD(db, (instances, entityName) => {
     const instance = getD(instances, instanceId)
     if (instance) {
-      return [entityName, instance]
+      return { entityName, instance }
     }
     return undefined
   })
+
+export type InstanceFromDatabaseInMemoryGetter = (
+  instanceId: string,
+) => { entity: EntityDecl; instance: InstanceContainer } | undefined
+
+export const createInstanceFromDatabaseInMemoryGetter =
+  (
+    db: DatabaseInMemory,
+    entitiesByName: Record<string, EntityDecl>,
+  ): InstanceFromDatabaseInMemoryGetter =>
+  instanceId => {
+    const res = getInstanceFromDatabaseInMemory(db, instanceId)
+    if (res) {
+      const { entityName, instance } = res
+      const entity = entitiesByName[entityName]
+      if (entity) {
+        return { entity, instance }
+      }
+    }
+    return undefined
+  }
 
 export const getInstanceOfEntityFromDatabaseInMemory = (
   db: DatabaseInMemory,
@@ -96,6 +118,9 @@ export const asyncForEachInstanceInDatabaseInMemory = async (
   forEachAsyncD(db, (instances, entityName) =>
     forEachAsyncD(instances, instance => fn(entityName, instance)),
   )
+
+export const countInstancesInDatabaseInMemory = (db: DatabaseInMemory): number =>
+  reduceD(db, (sum, instances) => sum + sizeD(instances), 0)
 
 export const countInstancesOfEntityInDatabaseInMemory = (
   db: DatabaseInMemory,

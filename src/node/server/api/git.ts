@@ -10,7 +10,10 @@ import type {
 } from "../../../shared/api.ts"
 import { hasFileChanges, splitBranchName } from "../../../shared/utils/git.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
-import { getGroupedInstancesFromDatabaseInMemory } from "../../utils/databaseInMemory.ts"
+import {
+  createInstanceFromDatabaseInMemoryGetter,
+  getGroupedInstancesFromDatabaseInMemory,
+} from "../../utils/databaseInMemory.ts"
 import { attachGitStatusToDatabaseInMemory } from "../../utils/git.ts"
 import { reinit } from "../init.ts"
 import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
@@ -51,7 +54,14 @@ gitApi.get("/status", async (req, res) => {
     ),
   )
 
-  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(req)
+  const getInstanceById = createInstanceFromDatabaseInMemoryGetter(
+    req.databaseInMemory,
+    req.entitiesByName,
+  )
+  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(
+    req.entitiesByName,
+    req.databaseInMemory,
+  )
 
   const body: GitStatusResponseBody = {
     currentBranch: status.current,
@@ -69,7 +79,7 @@ gitApi.get("/status", async (req, res) => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 req.entitiesByName[entityName]!,
                 instance,
-                req.getInstanceById,
+                getInstanceById,
                 getChildInstancesForInstanceId,
                 req.locales,
               ),

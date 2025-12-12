@@ -46,6 +46,7 @@ export const runDatabaseTransaction = async (
   entitiesByName: Record<string, EntityDecl>,
   database: DatabaseInMemory,
   references: ReferencesToInstances,
+  locales: string[],
   transactionFn: (db: TransactionResult) => TransactionResult<{
     instanceContainer: InstanceContainer
   }>,
@@ -74,10 +75,7 @@ export const runDatabaseTransaction = async (
 
   const { db: newDb, refs: newRefs, steps, instanceContainer } = result.value
 
-  const constraintResult = checkUniqueConstraintsForAllEntities(
-    newDb,
-    Object.values(entitiesByName),
-  )
+  const constraintResult = checkUniqueConstraintsForAllEntities(newDb, entitiesByName, locales)
 
   if (isError(constraintResult)) {
     return constraintResult

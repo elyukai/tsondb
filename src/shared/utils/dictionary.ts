@@ -112,3 +112,9 @@ export const mapD = <T, U>(
   }
   return [newRecord, dict[1]]
 }
+
+export const reduceD = <T, U>(
+  dict: Dictionary<T>,
+  reducer: (acc: U, value: T, key: string) => U,
+  initialValue: U,
+): U => Object.entries(dict[0]).reduce((acc, [key, item]) => reducer(acc, item, key), initialValue)

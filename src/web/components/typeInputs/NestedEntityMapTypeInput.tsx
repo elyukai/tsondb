@@ -32,7 +32,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
   const secondaryInstances = (instanceNamesByEntity[type.secondaryEntity] ?? [])
     .slice()
     .filter(instance => !existingKeys.includes(instance.id))
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true }))
 
   const isLocaleEntity = checkIsLocaleEntity(type.secondaryEntity)
 
@@ -43,7 +43,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
           {(Object.entries(value) as [string, unknown][]).map(([key, item]) => {
             const name =
               instanceNamesByEntity[type.secondaryEntity]?.find(instance => instance.id === key)
-                ?.name ?? key
+                ?.displayName ?? key
 
             return (
               <li
@@ -106,7 +106,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
           )}
           {secondaryInstances.map(instance => (
             <option key={instance.id} value={instance.id}>
-              {instance.name}
+              {instance.displayName}
             </option>
           ))}
         </Select>

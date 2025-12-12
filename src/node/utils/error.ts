@@ -1,17 +1,20 @@
 import { applyIndentation } from "./render.ts"
+import { UniqueConstraintError } from "./unique.ts"
 
-export const getErrorMessageForDisplay = (error: Error): string => {
+export const getErrorMessageForDisplay = (error: Error, indentation = 2): string => {
   if (error instanceof AggregateError) {
     return `${error.message}\n${applyIndentation(
       1,
       error.errors
         .filter(subError => subError instanceof Error)
-        .map(subError => getErrorMessageForDisplay(subError))
+        .map(subError => getErrorMessageForDisplay(subError, indentation))
         .join("\n"),
-      2,
+      indentation,
     )}`
   } else if (error.cause instanceof Error) {
-    return `${error.message}\n${applyIndentation(1, getErrorMessageForDisplay(error.cause), 2)}`
+    return `${error.message}\n${applyIndentation(1, getErrorMessageForDisplay(error.cause, indentation), indentation)}`
+  } else if (error instanceof UniqueConstraintError) {
+    return `${error.message}\n${applyIndentation(1, error.parts.join("\n"), indentation)}`
   } else {
     return error.message
   }

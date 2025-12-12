@@ -1,5 +1,5 @@
 import type { EntityDecl } from "../../node/schema/index.ts"
-import type { GetInstanceById } from "../../node/server/index.ts"
+import type { InstanceFromDatabaseInMemoryGetter } from "../../node/utils/databaseInMemory.ts"
 import {
   getDisplayNameFromEntityInstance,
   type GetChildInstancesForInstanceId,
@@ -24,7 +24,7 @@ export interface InstanceContainerOverview {
 export const getInstanceContainerOverview = (
   entity: EntityDecl,
   instanceContainer: InstanceContainer,
-  getInstanceById: GetInstanceById,
+  getInstanceById: InstanceFromDatabaseInMemoryGetter,
   getChildInstancesForInstanceId: GetChildInstancesForInstanceId,
   locales: string[],
 ): InstanceContainerOverview => {
