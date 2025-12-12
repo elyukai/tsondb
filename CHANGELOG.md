@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.14.0](https://github.com/elyukai/tsondb/compare/v0.13.2...v0.14.0) (2025-12-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* Locales must be provided in the config so that
+human-readable names of instances can be displayed based on these
+locales. In addition, the `defaultLocales` option has been renamed to
+`locales`.
+
+* feat!(validation): human-readable uniqueness errors ([718a284](https://github.com/elyukai/tsondb/commit/718a2846521e6d365f47dbb7d8e06f40c37bad99))
+
 ## [0.13.2](https://github.com/elyukai/tsondb/compare/v0.13.1...v0.13.2) (2025-12-11)
 
 
