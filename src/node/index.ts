@@ -136,7 +136,7 @@ const _validate = (
   )
 
   if (errors.length === 0) {
-    console.log(styleText("green", "All entities are valid"))
+    console.log(styleText("green", "All instances are valid"))
     return true
   } else {
     const errorCount = countErrors(errors)
