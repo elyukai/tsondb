@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.15.0](https://github.com/elyukai/tsondb/compare/v0.14.0...v0.15.0) (2025-12-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* Requires augmentation of the Register interface under
+tsondb/schema.
+
+### Features
+
+* custom constraints ([3c9486e](https://github.com/elyukai/tsondb/commit/3c9486e8eb0d1e563e4f6650b4602aef71eb6165)), closes [#28](https://github.com/elyukai/tsondb/issues/28)
+* register generated types instead of inference ([9469c57](https://github.com/elyukai/tsondb/commit/9469c57ecfa02d32f7b3836c504afae5bc131ca5))
+
+
+### Bug Fixes
+
+* **validation:** align wording in success message ([c4aec54](https://github.com/elyukai/tsondb/commit/c4aec547b038aec7c7df178be3160980496019af))
+
 ## [0.14.0](https://github.com/elyukai/tsondb/compare/v0.13.2...v0.14.0) (2025-12-12)
 
 
