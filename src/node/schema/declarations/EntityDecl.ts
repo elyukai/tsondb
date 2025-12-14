@@ -3,7 +3,7 @@ import type {
   UniqueConstraints,
 } from "../../../shared/schema/declarations/EntityDecl.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
-import type { DisplayNameCustomizer } from "../../utils/displayName.ts"
+import type { DisplayNameCustomizer, TypedDisplayNameCustomizer } from "../../utils/displayName.ts"
 import type {
   GetNestedDeclarations,
   GetReferences,
@@ -74,7 +74,7 @@ export interface EntityDecl<
    * @default "name"
    */
   displayName?: GenericEntityDisplayName
-  displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
+  displayNameCustomizer?: DisplayNameCustomizer
   isDeprecated?: boolean
   uniqueConstraints?: UniqueConstraints
 }
@@ -97,7 +97,7 @@ export const EntityDecl: {
        * @default "name"
        */
       displayName?: EntityDisplayName<T>
-      displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
+      displayNameCustomizer?: TypedDisplayNameCustomizer<Name>
       isDeprecated?: boolean
       uniqueConstraints?: UniqueConstraints
     },
@@ -114,7 +114,7 @@ export const EntityDecl: {
        * @default "name"
        */
       displayName?: EntityDisplayName<T>
-      displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
+      displayNameCustomizer?: TypedDisplayNameCustomizer<Name>
       isDeprecated?: boolean
       uniqueConstraints?: UniqueConstraints
     },
@@ -131,7 +131,7 @@ export const EntityDecl: {
      * @default "name"
      */
     displayName?: EntityDisplayName<T>
-    displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
+    displayNameCustomizer?: TypedDisplayNameCustomizer<Name>
     isDeprecated?: boolean
     uniqueConstraints?: UniqueConstraints
   },
@@ -140,6 +140,7 @@ export const EntityDecl: {
 
   return {
     ...options,
+    displayNameCustomizer: options.displayNameCustomizer as DisplayNameCustomizer, // ignore contravariance of inferred type
     kind: NodeKind.EntityDecl,
     sourceUrl,
     parameters: [],

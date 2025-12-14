@@ -59,7 +59,7 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
    * @default "name"
    */
   displayName?: EntityDisplayName<T>
-  displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
+  displayNameCustomizer?: DisplayNameCustomizer
   isDeprecated?: boolean
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
@@ -83,7 +83,7 @@ const _NestedEntityMapType = <Name extends string, T extends TConstraint>(option
    * @default "name"
    */
   displayName?: EntityDisplayName<T>
-  displayNameCustomizer?: DisplayNameCustomizer<ObjectType<T>>
+  displayNameCustomizer?: DisplayNameCustomizer
   isDeprecated?: boolean
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {

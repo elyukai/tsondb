@@ -8,7 +8,7 @@ import type {
   InstanceContent,
 } from "../../shared/utils/instances.ts"
 import { serializeEntityDecl, type EntityDecl } from "../schema/declarations/EntityDecl.ts"
-import type { AsDeepType, Type } from "../schema/types/Type.ts"
+import type { RegisteredEntity } from "../schema/externalTypes.ts"
 import { createChildInstancesForInstanceIdGetter } from "../server/utils/childInstances.ts"
 import {
   createInstanceFromDatabaseInMemoryGetter,
@@ -23,8 +23,19 @@ export type GetChildInstancesForInstanceId = (
   childEntityName: string,
 ) => { id: string; content: InstanceContent }[]
 
-export type DisplayNameCustomizer<T extends Type> = (params: {
-  instance: AsDeepType<T>
+export type DisplayNameCustomizer = (params: {
+  instance: unknown
+  instanceId: string
+  instanceDisplayName: string
+  instanceDisplayNameLocaleId: string | undefined
+  locales: string[]
+  getInstanceById: (id: string) => InstanceContent | undefined
+  getDisplayNameForInstanceId: (id: string) => DisplayNameResult | undefined
+  getChildInstancesForInstanceId: GetChildInstancesForInstanceId
+}) => DisplayNameResult
+
+export type TypedDisplayNameCustomizer<Name extends string> = (params: {
+  instance: RegisteredEntity<Name>
   instanceId: string
   instanceDisplayName: string
   instanceDisplayNameLocaleId: string | undefined
@@ -55,8 +66,7 @@ export const getDisplayNameFromEntityInstance = (
     )
 
     return entity.displayNameCustomizer({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment -- otherwise type instiatiation too deep
-      instance: instanceContainer.content as any,
+      instance: instanceContainer.content,
       instanceId: instanceContainer.id,
       instanceDisplayName: calculatedName.name,
       instanceDisplayNameLocaleId: calculatedName.localeId,

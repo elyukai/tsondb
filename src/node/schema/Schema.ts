@@ -489,3 +489,5 @@ export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema 
 
 export const getEntities = (schema: Schema): EntityDecl[] =>
   schema.declarations.filter(isEntityDecl)
+
+export type * from "./externalTypes.ts"
