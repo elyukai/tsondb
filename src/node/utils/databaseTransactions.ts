@@ -2,12 +2,14 @@ import type { SimpleGit } from "simple-git"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import { isError, map, ok, type Result } from "../../shared/utils/result.ts"
 import type { EntityDecl } from "../schema/index.ts"
+import { checkCustomConstraintsForAllEntities } from "./customConstraints.ts"
 import {
   deleteInstanceInDatabaseInMemory,
   setInstanceInDatabaseInMemory,
   type DatabaseInMemory,
 } from "./databaseInMemory.ts"
 import { applyStepsToDisk } from "./databaseOnDisk.ts"
+import { getAllInstanceOverviewsByEntityName } from "./displayName.ts"
 import { attachGitStatusToDatabaseInMemory } from "./git.ts"
 import { updateReferencesToInstances, type ReferencesToInstances } from "./references.ts"
 import { checkUniqueConstraintsForAllEntities } from "./unique.ts"
@@ -75,10 +77,30 @@ export const runDatabaseTransaction = async (
 
   const { db: newDb, refs: newRefs, steps, instanceContainer } = result.value
 
-  const constraintResult = checkUniqueConstraintsForAllEntities(newDb, entitiesByName, locales)
+  const instanceOverviewsByEntityName = getAllInstanceOverviewsByEntityName(
+    entitiesByName,
+    newDb,
+    locales,
+  )
 
-  if (isError(constraintResult)) {
-    return constraintResult
+  const uniqueConstraintResult = checkUniqueConstraintsForAllEntities(
+    newDb,
+    entitiesByName,
+    instanceOverviewsByEntityName,
+  )
+
+  if (isError(uniqueConstraintResult)) {
+    return uniqueConstraintResult
+  }
+
+  const customConstraintResult = checkCustomConstraintsForAllEntities(
+    newDb,
+    entitiesByName,
+    instanceOverviewsByEntityName,
+  )
+
+  if (isError(customConstraintResult)) {
+    return customConstraintResult
   }
 
   const diskResult = await applyStepsToDisk(root, steps)

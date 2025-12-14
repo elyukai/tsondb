@@ -12,6 +12,7 @@ import { createValidationContext } from "./schema/Node.ts"
 import { getEntities, type Schema } from "./schema/Schema.ts"
 import type { ServerOptions } from "./server/index.ts"
 import { createServer } from "./server/index.ts"
+import { checkCustomConstraintsForAllEntities } from "./utils/customConstraints.ts"
 import {
   asyncForEachInstanceInDatabaseInMemory,
   countInstancesInDatabaseInMemory,
@@ -19,6 +20,7 @@ import {
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
 } from "./utils/databaseInMemory.ts"
+import { getAllInstanceOverviewsByEntityName } from "./utils/displayName.ts"
 import {
   countError,
   countErrors,
@@ -111,20 +113,46 @@ const _validate = (
   if (errors.length === 0) {
     debug("Checking unique constraints ...")
 
-    const constraintResult = checkUniqueConstraintsForAllEntities(
+    const entitiesByName = Object.fromEntries(entities.map(entity => [entity.name, entity]))
+
+    const instanceOverviewsByEntityName = getAllInstanceOverviewsByEntityName(
+      entitiesByName,
       databaseInMemory,
-      Object.fromEntries(entities.map(entity => [entity.name, entity])),
       locales,
     )
 
-    if (isError(constraintResult)) {
-      const errorCount = countError(constraintResult.error)
+    const uniqueConstraintResult = checkUniqueConstraintsForAllEntities(
+      databaseInMemory,
+      entitiesByName,
+      instanceOverviewsByEntityName,
+    )
+
+    if (isError(uniqueConstraintResult)) {
+      const errorCount = countError(uniqueConstraintResult.error)
       debug(
         `${errorCount.toString()} unique constraint violation${errorCount === 1 ? "" : "s"} found`,
       )
-      errors.push(constraintResult.error)
+      errors.push(uniqueConstraintResult.error)
     } else {
       debug("No unique constraint violations found")
+    }
+
+    debug("Checking custom constraints ...")
+
+    const customConstraintResult = checkCustomConstraintsForAllEntities(
+      databaseInMemory,
+      entitiesByName,
+      instanceOverviewsByEntityName,
+    )
+
+    if (isError(customConstraintResult)) {
+      const errorCount = countError(customConstraintResult.error)
+      debug(
+        `${errorCount.toString()} custom constraint violation${errorCount === 1 ? "" : "s"} found`,
+      )
+      errors.push(customConstraintResult.error)
+    } else {
+      debug("No custom constraint violations found")
     }
   } else {
     debug("Skipping unique constraint checks due to previous structural integrity errors")

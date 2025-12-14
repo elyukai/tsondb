@@ -13,7 +13,6 @@ import {
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
 } from "./databaseInMemory.ts"
-import { getAllInstanceOverviewsByEntityName } from "./displayName.ts"
 
 export class UniqueConstraintError extends Error {
   readonly parts: string[]
@@ -139,15 +138,9 @@ export const checkUniqueConstraintsForEntity = (
 export const checkUniqueConstraintsForAllEntities = (
   db: DatabaseInMemory,
   entitiesByName: Record<string, EntityDecl>,
-  locales: string[],
-): Result<void, AggregateError> => {
-  const instanceOverviewsByEntityName = getAllInstanceOverviewsByEntityName(
-    entitiesByName,
-    db,
-    locales,
-  )
-
-  return mapError(
+  instanceOverviewsByEntityName: Record<string, InstanceContainerOverview[]>,
+): Result<void, AggregateError> =>
+  mapError(
     Object.values(entitiesByName).reduce<Result<void, AggregateError[]>>((acc, entity) => {
       const resultForEntity = checkUniqueConstraintsForEntity(
         entity,
@@ -174,4 +167,3 @@ export const checkUniqueConstraintsForAllEntities = (
         "at least one unique constraint has been violated",
       ),
   )
-}

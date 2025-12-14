@@ -3,6 +3,7 @@ import type {
   UniqueConstraints,
 } from "../../../shared/schema/declarations/EntityDecl.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
+import type { CustomConstraint, TypedCustomConstraint } from "../../utils/customConstraints.ts"
 import type { DisplayNameCustomizer, TypedDisplayNameCustomizer } from "../../utils/displayName.ts"
 import type {
   GetNestedDeclarations,
@@ -77,6 +78,7 @@ export interface EntityDecl<
   displayNameCustomizer?: DisplayNameCustomizer
   isDeprecated?: boolean
   uniqueConstraints?: UniqueConstraints
+  customConstraint?: CustomConstraint
 }
 
 export interface EntityDeclWithParentReference<
@@ -100,6 +102,7 @@ export const EntityDecl: {
       displayNameCustomizer?: TypedDisplayNameCustomizer<Name>
       isDeprecated?: boolean
       uniqueConstraints?: UniqueConstraints
+      customConstraint?: TypedCustomConstraint<Name>
     },
   ): EntityDecl<Name, T, undefined>
   <Name extends string, T extends TConstraint, FK extends Extract<keyof T, string>>(
@@ -117,6 +120,7 @@ export const EntityDecl: {
       displayNameCustomizer?: TypedDisplayNameCustomizer<Name>
       isDeprecated?: boolean
       uniqueConstraints?: UniqueConstraints
+      customConstraint?: TypedCustomConstraint<Name>
     },
   ): EntityDecl<Name, T, FK>
 } = <Name extends string, T extends TConstraint, FK extends Extract<keyof T, string> | undefined>(
@@ -134,13 +138,15 @@ export const EntityDecl: {
     displayNameCustomizer?: TypedDisplayNameCustomizer<Name>
     isDeprecated?: boolean
     uniqueConstraints?: UniqueConstraints
+    customConstraint?: TypedCustomConstraint<Name>
   },
 ): EntityDecl<Name, T, FK> => {
   validateDeclName(options.name)
 
   return {
     ...options,
-    displayNameCustomizer: options.displayNameCustomizer as DisplayNameCustomizer, // ignore contravariance of inferred type
+    displayNameCustomizer: options.displayNameCustomizer as DisplayNameCustomizer, // ignore contravariance of registered entity type
+    customConstraint: options.customConstraint as CustomConstraint, // ignore contravariance of registered entity type
     kind: NodeKind.EntityDecl,
     sourceUrl,
     parameters: [],
