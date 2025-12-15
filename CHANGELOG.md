@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.16.0](https://github.com/elyukai/tsondb/compare/v0.15.0...v0.16.0) (2025-12-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* typo in custom constraints getter
+* Use customConstraints instead of customConstraint when
+declaring an entity.
+
+* rename custom constraints to plural ([a53d2a5](https://github.com/elyukai/tsondb/commit/a53d2a5f7e49506f22723146faa0f115c4846d10))
+
+
+### Features
+
+* add display name getters to custom constraints ([b3b8765](https://github.com/elyukai/tsondb/commit/b3b87650c44c6c450f203b0da319883990da21ac))
+* **editor:** duplicate child instances ([fc05550](https://github.com/elyukai/tsondb/commit/fc055502aaec357a69c324631b6a18a64bdb2e76))
+
+
+### Bug Fixes
+
+* only return content from custom constraint getters ([c892faf](https://github.com/elyukai/tsondb/commit/c892fafdfff21c57a82a764c6a97d19a8d160a2f))
+* serialize custom constraints as boolean ([02e9fee](https://github.com/elyukai/tsondb/commit/02e9fee75ce309ecb76e85f635668070fb1c9096))
+* typo in custom constraints getter ([12ba6b6](https://github.com/elyukai/tsondb/commit/12ba6b620b637295e478e6eb7fed72383f1fcedf))
+
 ## [0.15.0](https://github.com/elyukai/tsondb/compare/v0.14.0...v0.15.0) (2025-12-14)
 
 
