@@ -62,6 +62,33 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
     [setChildInstances],
   )
 
+  const onChildDuplicate = useCallback(
+    (index: number) => {
+      const setChildInstancesAsNew = (
+        childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[],
+      ): UnsafeEntityTaggedInstanceContainerWithChildInstances[] =>
+        childInstances.map(ci => ({
+          ...ci,
+          childInstances: setChildInstancesAsNew(ci.childInstances),
+          id: undefined,
+        }))
+
+      setChildInstances(old =>
+        old[index]
+          ? [
+              ...old,
+              {
+                ...old[index],
+                childInstances: setChildInstancesAsNew(old[index].childInstances),
+                id: undefined,
+              },
+            ]
+          : old,
+      )
+    },
+    [setChildInstances],
+  )
+
   const onChildRemove = useCallback(
     (index: number) => {
       setChildInstances(old => removeAt(old, index))
@@ -89,15 +116,25 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
             <li class="container-item array-item" key={i}>
               <div className="container-item-header">
                 <div className="container-item-title">{i + 1}.</div>
-                <button
-                  class="destructive"
-                  onClick={() => {
-                    onChildRemove(i)
-                  }}
-                  disabled={disabled}
-                >
-                  Delete Item
-                </button>
+                <div class="container-item-actions">
+                  <button
+                    onClick={() => {
+                      onChildDuplicate(i)
+                    }}
+                    disabled={disabled}
+                  >
+                    Duplicate Item #{i + 1}
+                  </button>
+                  <button
+                    class="destructive"
+                    onClick={() => {
+                      onChildRemove(i)
+                    }}
+                    disabled={disabled}
+                  >
+                    Delete Item #{i + 1}
+                  </button>
+                </div>
               </div>
               <TypeInput
                 {...props}

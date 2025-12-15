@@ -856,6 +856,13 @@ form > .field--container {
   margin: 0.125rem 0 0;
 }
 
+.container-item-actions {
+  flex: none;
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
 .add-item-container {
   display: flex;
   margin-top: 1rem;
