@@ -70,8 +70,9 @@ export const checkCustomConstraintsForAllEntities = (
     getAllChildInstancesForParent: GetAllChildInstancesForParent
   } = {
     getInstanceById: (entityName, id) =>
-      getInstanceOfEntityFromDatabaseInMemory(db, entityName, id),
-    getAllInstance: entityName => getInstancesOfEntityFromDatabaseInMemory(db, entityName),
+      getInstanceOfEntityFromDatabaseInMemory(db, entityName, id)?.content,
+    getAllInstance: entityName =>
+      getInstancesOfEntityFromDatabaseInMemory(db, entityName).map(i => i.content),
     getAllChildInstancesForParent: (entityName, parentId) => {
       const entity = entitiesByName[entityName]
       if (!entity || !entity.parentReferenceKey) {
@@ -79,9 +80,14 @@ export const checkCustomConstraintsForAllEntities = (
       }
       const parentKey = entity.parentReferenceKey
 
-      return getInstancesOfEntityFromDatabaseInMemory(db, entityName).filter(instance =>
-        deepEqual((instance.content as { [K in typeof parentKey]: unknown })[parentKey], parentId),
-      )
+      return getInstancesOfEntityFromDatabaseInMemory(db, entityName)
+        .filter(instance =>
+          deepEqual(
+            (instance.content as { [K in typeof parentKey]: unknown })[parentKey],
+            parentId,
+          ),
+        )
+        .map(i => i.content)
     },
   }
 
