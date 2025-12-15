@@ -13,3 +13,13 @@ export type GetAllChildInstancesForParent = <U extends keyof RegisteredChildEnti
   entity: U,
   parentId: RegisteredChildEntityMap[U][2],
 ) => RegisteredChildEntityMap[U][0][]
+
+/**
+ * Displays the name of an entity instance including its ID. If no display name is found, `undefined` is returned.
+ */
+export type GetDisplayName = (entity: keyof RegisteredEntityMap, id: string) => string | undefined
+
+/**
+ * Displays the name of an entity instance including its ID. If no display name is found, only the ID is returned.
+ */
+export type GetDisplayNameWithId = (entity: keyof RegisteredEntityMap, id: string) => string

@@ -9,6 +9,8 @@ import type { RegisteredEntity } from "../schema/externalTypes.ts"
 import type {
   GetAllChildInstancesForParent,
   GetAllInstances,
+  GetDisplayName,
+  GetDisplayNameWithId,
   GetInstanceById,
 } from "../schema/helpers.ts"
 import type { EntityDecl } from "../schema/index.ts"
@@ -33,6 +35,8 @@ export type CustomConstraint = (params: {
   getInstanceById: GetInstanceById
   getAllInstance: GetAllInstances
   getAllChildInstancesForParent: GetAllChildInstancesForParent
+  getDisplayName: GetDisplayName
+  getDisplayNameWithId: GetDisplayNameWithId
 }) => string[]
 
 /**
@@ -50,6 +54,8 @@ export type TypedCustomConstraint<Name extends string> = (params: {
   getInstanceById: GetInstanceById
   getAllInstance: GetAllInstances
   getAllChildInstancesForParent: GetAllChildInstancesForParent
+  getDisplayName: GetDisplayName
+  getDisplayNameWithId: GetDisplayNameWithId
 }) => string[]
 
 /**
@@ -64,31 +70,32 @@ export const checkCustomConstraintsForAllEntities = (
   entitiesByName: Record<string, EntityDecl>,
   instanceOverviewsByEntityName: Record<string, InstanceContainerOverview[]>,
 ): Result<void, AggregateError> => {
-  const accessors: {
-    getInstanceById: GetInstanceById
-    getAllInstance: GetAllInstances
-    getAllChildInstancesForParent: GetAllChildInstancesForParent
-  } = {
-    getInstanceById: (entityName, id) =>
-      getInstanceOfEntityFromDatabaseInMemory(db, entityName, id)?.content,
-    getAllInstance: entityName =>
-      getInstancesOfEntityFromDatabaseInMemory(db, entityName).map(i => i.content),
-    getAllChildInstancesForParent: (entityName, parentId) => {
-      const entity = entitiesByName[entityName]
-      if (!entity || !entity.parentReferenceKey) {
-        return []
-      }
-      const parentKey = entity.parentReferenceKey
+  const getInstanceById: GetInstanceById = (entityName, id) =>
+    getInstanceOfEntityFromDatabaseInMemory(db, entityName, id)?.content
 
-      return getInstancesOfEntityFromDatabaseInMemory(db, entityName)
-        .filter(instance =>
-          deepEqual(
-            (instance.content as { [K in typeof parentKey]: unknown })[parentKey],
-            parentId,
-          ),
-        )
-        .map(i => i.content)
-    },
+  const getAllInstance: GetAllInstances = entityName =>
+    getInstancesOfEntityFromDatabaseInMemory(db, entityName).map(i => i.content)
+
+  const getAllChildInstancesForParent: GetAllChildInstancesForParent = (entityName, parentId) => {
+    const entity = entitiesByName[entityName]
+    if (!entity || !entity.parentReferenceKey) {
+      return []
+    }
+    const parentKey = entity.parentReferenceKey
+
+    return getInstancesOfEntityFromDatabaseInMemory(db, entityName)
+      .filter(instance =>
+        deepEqual((instance.content as { [K in typeof parentKey]: unknown })[parentKey], parentId),
+      )
+      .map(i => i.content)
+  }
+
+  const getDisplayName: GetDisplayName = (entityName: string, id: string) =>
+    instanceOverviewsByEntityName[entityName]?.find(o => o.id === id)?.displayName
+
+  const getDisplayNameWithId: GetDisplayNameWithId = (entityName: string, id: string) => {
+    const displayName = getDisplayName(entityName, id)
+    return displayName ? `"${displayName}" (${id})` : id
   }
 
   return mapError(
@@ -103,7 +110,11 @@ export const checkCustomConstraintsForAllEntities = (
         .map((instance): [InstanceContainer, string[]] => [
           instance,
           constraintFn({
-            ...accessors,
+            getInstanceById,
+            getAllInstance,
+            getAllChildInstancesForParent,
+            getDisplayName,
+            getDisplayNameWithId,
             instanceId: instance.id,
             instanceContent: instance.content,
           }),
