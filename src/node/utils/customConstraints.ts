@@ -33,7 +33,7 @@ export type CustomConstraint = (params: {
   instanceId: string
   instanceContent: InstanceContent
   getInstanceById: GetInstanceById
-  getAllInstance: GetAllInstances
+  getAllInstances: GetAllInstances
   getAllChildInstancesForParent: GetAllChildInstancesForParent
   getDisplayName: GetDisplayName
   getDisplayNameWithId: GetDisplayNameWithId
@@ -52,7 +52,7 @@ export type TypedCustomConstraint<Name extends string> = (params: {
   instanceId: string
   instanceContent: RegisteredEntity<Name>
   getInstanceById: GetInstanceById
-  getAllInstance: GetAllInstances
+  getAllInstances: GetAllInstances
   getAllChildInstancesForParent: GetAllChildInstancesForParent
   getDisplayName: GetDisplayName
   getDisplayNameWithId: GetDisplayNameWithId
@@ -73,7 +73,7 @@ export const checkCustomConstraintsForAllEntities = (
   const getInstanceById: GetInstanceById = (entityName, id) =>
     getInstanceOfEntityFromDatabaseInMemory(db, entityName, id)?.content
 
-  const getAllInstance: GetAllInstances = entityName =>
+  const getAllInstances: GetAllInstances = entityName =>
     getInstancesOfEntityFromDatabaseInMemory(db, entityName).map(i => i.content)
 
   const getAllChildInstancesForParent: GetAllChildInstancesForParent = (entityName, parentId) => {
@@ -111,7 +111,7 @@ export const checkCustomConstraintsForAllEntities = (
           instance,
           constraintFn({
             getInstanceById,
-            getAllInstance,
+            getAllInstances,
             getAllChildInstancesForParent,
             getDisplayName,
             getDisplayNameWithId,
