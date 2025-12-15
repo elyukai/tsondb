@@ -87,7 +87,7 @@ export const checkCustomConstraintsForAllEntities = (
 
   return mapError(
     Object.values(entitiesByName).reduce<Result<void, AggregateError[]>>((acc, entity) => {
-      const constraintFn = entity.customConstraint
+      const constraintFn = entity.customConstraints
 
       if (!constraintFn) {
         return acc
