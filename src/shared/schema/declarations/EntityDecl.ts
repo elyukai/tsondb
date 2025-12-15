@@ -88,6 +88,7 @@ export interface SerializedEntityDecl<
   displayNameCustomizer: boolean
   isDeprecated?: boolean
   uniqueConstraints?: UniqueConstraints
+  customConstraints: boolean
 }
 
 export const isSerializedEntityDecl = (node: SerializedNode): node is SerializedEntityDecl =>

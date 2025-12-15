@@ -236,6 +236,7 @@ export const serializeEntityDecl = (<
       ? null
       : (type.displayName as SerializedEntityDisplayName<SerializedMemberDeclObject<T>>),
   displayNameCustomizer: type.displayNameCustomizer !== undefined,
+  customConstraints: type.customConstraint !== undefined,
 })) satisfies Serializer<EntityDecl>
 
 export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value, inDecl) =>
