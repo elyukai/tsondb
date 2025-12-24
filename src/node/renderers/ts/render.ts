@@ -1,6 +1,6 @@
 import { EOL } from "node:os"
 import { dirname, relative } from "node:path"
-import { discriminatorKey } from "../../../shared/enum.ts"
+import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import { unique } from "../../../shared/utils/array.ts"
 import { toCamelCase } from "../../../shared/utils/string.ts"
 import {
@@ -174,7 +174,7 @@ const renderEnumType: RenderFn<EnumType> = (options, type) =>
         syntax`${EOL}| {${EOL}${indent(
           options.indentation,
           1,
-          syntax`${discriminatorKey}: "${caseName}"${
+          syntax`${ENUM_DISCRIMINATOR_KEY}: "${caseName}"${
             caseDef.type === null
               ? ""
               : syntax`${EOL}${caseName}: ${renderType(options, caseDef.type)}`

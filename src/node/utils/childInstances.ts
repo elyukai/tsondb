@@ -1,4 +1,7 @@
-import { createEnumCaseValue } from "../../shared/schema/declarations/EnumDecl.ts"
+import {
+  createEnumCaseValue,
+  ENUM_DISCRIMINATOR_KEY,
+} from "../../shared/schema/declarations/EnumDecl.ts"
 import type { GitFileStatus } from "../../shared/utils/git.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import { hasKey } from "../../shared/utils/object.ts"
@@ -74,9 +77,9 @@ const isParentReferenceReferencingParent = (
   parentEntityName: string,
   parentId: string,
 ): boolean => {
-  if (typeof value === "object" && value !== null && hasKey(value, "kind")) {
+  if (typeof value === "object" && value !== null && hasKey(value, ENUM_DISCRIMINATOR_KEY)) {
     return (
-      value.kind === parentEntityName &&
+      value[ENUM_DISCRIMINATOR_KEY] === parentEntityName &&
       hasKey(value, parentEntityName) &&
       value[parentEntityName] === parentId
     )

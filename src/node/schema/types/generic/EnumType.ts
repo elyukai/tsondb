@@ -1,4 +1,4 @@
-import { discriminatorKey } from "../../../../shared/enum.ts"
+import { ENUM_DISCRIMINATOR_KEY } from "../../../../shared/schema/declarations/EnumDecl.ts"
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
@@ -54,15 +54,15 @@ export const validateEnumType: Validator<EnumType> = (helpers, inDecls, type, va
 
   const actualKeys = Object.keys(value)
 
-  if (!(discriminatorKey in value) || typeof value[discriminatorKey] !== "string") {
+  if (!(ENUM_DISCRIMINATOR_KEY in value) || typeof value[ENUM_DISCRIMINATOR_KEY] !== "string") {
     return [
       TypeError(
-        `missing required discriminator value at key ${key(`"${discriminatorKey}"`, helpers.useStyling)} of type string`,
+        `missing required discriminator value at key ${key(`"${ENUM_DISCRIMINATOR_KEY}"`, helpers.useStyling)} of type string`,
       ),
     ]
   }
 
-  const caseName = value[discriminatorKey]
+  const caseName = value[ENUM_DISCRIMINATOR_KEY]
 
   if (!(caseName in type.values)) {
     return [
@@ -73,7 +73,7 @@ export const validateEnumType: Validator<EnumType> = (helpers, inDecls, type, va
   }
 
   const unknownKeyErrors = actualKeys.flatMap(actualKey =>
-    actualKey === discriminatorKey || actualKey in type.values
+    actualKey === ENUM_DISCRIMINATOR_KEY || actualKey in type.values
       ? []
       : [
           TypeError(
@@ -166,12 +166,12 @@ export const getReferencesForEnumType: GetReferences<EnumType> = (type, value, i
     typeof value !== "object" ||
     value === null ||
     Array.isArray(value) ||
-    !(discriminatorKey in value)
+    !(ENUM_DISCRIMINATOR_KEY in value)
   ) {
     return []
   }
 
-  const enumCase = value[discriminatorKey]
+  const enumCase = value[ENUM_DISCRIMINATOR_KEY]
 
   return typeof enumCase === "string" &&
     enumCase in type.values &&
@@ -191,15 +191,15 @@ export const formatEnumType: StructureFormatter<EnumType> = (type, value) => {
     typeof value === "object" &&
     value !== null &&
     !Array.isArray(value) &&
-    discriminatorKey in value &&
-    typeof value[discriminatorKey] === "string"
+    ENUM_DISCRIMINATOR_KEY in value &&
+    typeof value[ENUM_DISCRIMINATOR_KEY] === "string"
   ) {
-    const caseName = value[discriminatorKey]
+    const caseName = value[ENUM_DISCRIMINATOR_KEY]
     const caseValue = (value as Record<typeof caseName, unknown>)[caseName]
     const caseType = type.values[caseName]?.type
 
     return {
-      [discriminatorKey]: caseName,
+      [ENUM_DISCRIMINATOR_KEY]: caseName,
       ...(caseValue == null || caseType == null
         ? {}
         : { [caseName]: formatValue(caseType, caseValue) }),

@@ -1,5 +1,5 @@
 import { dirname, relative } from "node:path"
-import { discriminatorKey } from "../../../shared/enum.ts"
+import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import type { RangeBound } from "../../../shared/validation/number.ts"
 import { asDecl, type Decl } from "../../schema/declarations/Declaration.ts"
@@ -148,12 +148,12 @@ const renderEnumType: RenderFn<EnumType> = (options, type) => ({
     type: "object",
     deprecated: caseDef.isDeprecated,
     properties: {
-      [discriminatorKey]: {
+      [ENUM_DISCRIMINATOR_KEY]: {
         const: caseName,
       },
       ...(caseDef.type === null ? {} : { [caseName]: renderType(options, caseDef.type) }),
     },
-    required: [discriminatorKey, ...(caseDef.type === null ? [] : [caseName])],
+    required: [ENUM_DISCRIMINATOR_KEY, ...(caseDef.type === null ? [] : [caseName])],
   })),
 })
 

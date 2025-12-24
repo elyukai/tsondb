@@ -1,4 +1,4 @@
-import { discriminatorKey } from "../../enum.ts"
+import { ENUM_DISCRIMINATOR_KEY } from "../declarations/EnumDecl.ts"
 import {
   getReferencesSerialized,
   resolveSerializedTypeArguments,
@@ -46,12 +46,12 @@ export const getReferencesForSerializedEnumType: GetReferencesSerialized<Seriali
     typeof value !== "object" ||
     value === null ||
     Array.isArray(value) ||
-    !(discriminatorKey in value)
+    !(ENUM_DISCRIMINATOR_KEY in value)
   ) {
     return []
   }
 
-  const enumCase = value[discriminatorKey]
+  const enumCase = value[ENUM_DISCRIMINATOR_KEY]
 
   return typeof enumCase === "string" &&
     enumCase in type.values &&

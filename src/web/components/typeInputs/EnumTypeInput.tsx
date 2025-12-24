@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact"
-import { discriminatorKey } from "../../../shared/enum.ts"
+import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import type { SerializedEnumType } from "../../../shared/schema/types/EnumType.ts"
 import { toTitleCase } from "../../../shared/utils/string.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
@@ -21,14 +21,14 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
     typeof value !== "object" ||
     value === null ||
     Array.isArray(value) ||
-    !(discriminatorKey in value) ||
-    typeof value[discriminatorKey] !== "string"
+    !(ENUM_DISCRIMINATOR_KEY in value) ||
+    typeof value[ENUM_DISCRIMINATOR_KEY] !== "string"
   ) {
     return <MismatchingTypeError expected="enumeration value" actual={value} />
   }
 
   const enumValues = Object.entries(type.values)
-  const activeEnumCase = value[discriminatorKey]
+  const activeEnumCase = value[ENUM_DISCRIMINATOR_KEY]
   const activeCaseMember = type.values[activeEnumCase]
 
   switch (enumDisplay) {
@@ -41,11 +41,11 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
               const caseMember = type.values[event.currentTarget.value]
               if (caseMember?.type == null) {
                 onChange({
-                  [discriminatorKey]: event.currentTarget.value,
+                  [ENUM_DISCRIMINATOR_KEY]: event.currentTarget.value,
                 })
               } else {
                 onChange({
-                  [discriminatorKey]: event.currentTarget.value,
+                  [ENUM_DISCRIMINATOR_KEY]: event.currentTarget.value,
                   [event.currentTarget.value]: createTypeSkeleton(
                     getDeclFromDeclName,
                     caseMember.type,
@@ -74,7 +74,7 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
                 value={(value as Record<string, unknown>)[activeEnumCase]}
                 onChange={newValue => {
                   onChange({
-                    [discriminatorKey]: activeEnumCase,
+                    [ENUM_DISCRIMINATOR_KEY]: activeEnumCase,
                     [activeEnumCase]: newValue,
                   })
                 }}
@@ -98,11 +98,11 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
                 onInput={() => {
                   if (caseMember.type == null) {
                     onChange({
-                      [discriminatorKey]: enumValue,
+                      [ENUM_DISCRIMINATOR_KEY]: enumValue,
                     })
                   } else {
                     onChange({
-                      [discriminatorKey]: enumValue,
+                      [ENUM_DISCRIMINATOR_KEY]: enumValue,
                       [enumValue]: createTypeSkeleton(getDeclFromDeclName, caseMember.type),
                     })
                   }
@@ -136,7 +136,7 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
                           ? () => {}
                           : newValue => {
                               onChange({
-                                [discriminatorKey]: activeEnumCase,
+                                [ENUM_DISCRIMINATOR_KEY]: activeEnumCase,
                                 [activeEnumCase]: newValue,
                               })
                             }
