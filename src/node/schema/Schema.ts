@@ -73,8 +73,8 @@ const checkParameterNamesShadowing = (decls: Decl[]) => {
 
 const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) => {
   for (const decl of decls) {
-    if (isEntityDecl(decl) && decl.displayName !== null) {
-      const displayName = decl.displayName ?? "name"
+    if (isEntityDecl(decl) && decl.instanceDisplayName !== null) {
+      const displayName = decl.instanceDisplayName ?? "name"
 
       if (typeof displayName === "function") {
         continue

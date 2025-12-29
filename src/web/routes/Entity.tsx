@@ -61,8 +61,9 @@ export const Entity: FunctionalComponent = () => {
   }, [latestCommit, reloadInstances, reloadLocaleInstances])
 
   useEffect(() => {
-    document.title = toTitleCase(entity?.namePlural ?? name ?? "") + " — TSONDB"
-  }, [entity?.namePlural, name])
+    document.title =
+      (entity?.displayNamePlural ?? toTitleCase(entity?.namePlural ?? name ?? "")) + " — TSONDB"
+  }, [entity?.displayNamePlural, entity?.namePlural, name])
 
   useEffect(() => {
     if (created) {

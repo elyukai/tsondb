@@ -55,9 +55,9 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
             }}
             disabled={disabled}
           >
-            {enumValues.map(([enumValue]) => (
+            {enumValues.map(([enumValue, caseMember]) => (
               <option key={enumValue} value={enumValue} selected={enumValue === activeEnumCase}>
-                {toTitleCase(enumValue)}
+                {caseMember.displayName ?? toTitleCase(enumValue)}
               </option>
             ))}
           </Select>
@@ -111,7 +111,7 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
               />
               <div>
                 <label htmlFor={path === undefined ? enumValue : `${path}-${enumValue}`}>
-                  {toTitleCase(enumValue)}
+                  {caseMember.displayName ?? toTitleCase(enumValue)}
                 </label>
                 {caseMember.comment === undefined ? null : (
                   <Markdown class="comment" string={caseMember.comment} />

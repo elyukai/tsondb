@@ -61,7 +61,9 @@ export const Home: FunctionalComponent = () => {
   }) => (
     <li key={entity.declaration.name} class="entries-item">
       <div class="entries-item__title">
-        <h2>{toTitleCase(entity.declaration.namePlural)}</h2>
+        <h2>
+          {entity.declaration.displayNamePlural ?? toTitleCase(entity.declaration.namePlural)}
+        </h2>
         {entity.declaration.comment && (
           <Markdown class="description" string={entity.declaration.comment} />
         )}

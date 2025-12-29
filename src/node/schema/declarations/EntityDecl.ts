@@ -69,13 +69,29 @@ export interface EntityDecl<
 > extends BaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
   namePlural: string
+
+  /**
+   * Changes the appearance of the entity’s name in singular form.
+   */
+  displayName?: string
+
+  /**
+   * Changes the appearance of the entity’s name in plural form.
+   */
+  displayNamePlural?: string
   type: Lazy<ObjectType<T>>
   parentReferenceKey: FK
+
   /**
+   * Sets the property used to retrieve the display name of an instance in editor forms (such as when selecting a reference) and error messages.
    * @default "name"
    */
-  displayName?: GenericEntityDisplayName
-  displayNameCustomizer?: DisplayNameCustomizer
+  instanceDisplayName?: GenericEntityDisplayName
+
+  /**
+   * A function that is used to further customize the display name of an instance.
+   */
+  instanceDisplayNameCustomizer?: DisplayNameCustomizer
   isDeprecated?: boolean
   uniqueConstraints?: UniqueConstraints
   customConstraints?: CustomConstraint
@@ -95,11 +111,17 @@ export const EntityDecl: {
       namePlural: string
       comment?: string
       type: () => ObjectType<T>
+
       /**
+       * Sets the property used to retrieve the display name of an instance in editor forms (such as when selecting a reference) and error messages.
        * @default "name"
        */
-      displayName?: EntityDisplayName<T>
-      displayNameCustomizer?: TypedDisplayNameCustomizer<Name>
+      instanceDisplayName?: EntityDisplayName<T>
+
+      /**
+       * A function that is used to further customize the display name of an instance.
+       */
+      instanceDisplayNameCustomizer?: TypedDisplayNameCustomizer<Name>
       isDeprecated?: boolean
       uniqueConstraints?: UniqueConstraints
       customConstraints?: TypedCustomConstraint<Name>
@@ -113,11 +135,17 @@ export const EntityDecl: {
       comment?: string
       type: () => ObjectType<T>
       parentReferenceKey: FK
+
       /**
+       * Sets the property used to retrieve the display name of an instance in editor forms (such as when selecting a reference) and error messages.
        * @default "name"
        */
-      displayName?: EntityDisplayName<T>
-      displayNameCustomizer?: TypedDisplayNameCustomizer<Name>
+      instanceDisplayName?: EntityDisplayName<T>
+
+      /**
+       * A function that is used to further customize the display name of an instance.
+       */
+      instanceDisplayNameCustomizer?: TypedDisplayNameCustomizer<Name>
       isDeprecated?: boolean
       uniqueConstraints?: UniqueConstraints
       customConstraints?: TypedCustomConstraint<Name>
@@ -131,11 +159,17 @@ export const EntityDecl: {
     comment?: string
     type: () => ObjectType<T>
     parentReferenceKey?: FK
+
     /**
+     * Sets the property used to retrieve the display name of an instance in editor forms (such as when selecting a reference) and error messages.
      * @default "name"
      */
-    displayName?: EntityDisplayName<T>
-    displayNameCustomizer?: TypedDisplayNameCustomizer<Name>
+    instanceDisplayName?: EntityDisplayName<T>
+
+    /**
+     * A function that is used to further customize the display name of an instance.
+     */
+    instanceDisplayNameCustomizer?: TypedDisplayNameCustomizer<Name>
     isDeprecated?: boolean
     uniqueConstraints?: UniqueConstraints
     customConstraints?: TypedCustomConstraint<Name>
@@ -145,7 +179,7 @@ export const EntityDecl: {
 
   return {
     ...options,
-    displayNameCustomizer: options.displayNameCustomizer as DisplayNameCustomizer, // ignore contravariance of registered entity type
+    instanceDisplayNameCustomizer: options.instanceDisplayNameCustomizer as DisplayNameCustomizer, // ignore contravariance of registered entity type
     customConstraints: options.customConstraints as CustomConstraint, // ignore contravariance of registered entity type
     kind: NodeKind.EntityDecl,
     sourceUrl,
@@ -231,11 +265,10 @@ export const serializeEntityDecl = (<
 ): Serialized<EntityDecl<Name, T, FK>> => ({
   ...type,
   type: serializeObjectType(type.type.value),
-  displayName:
-    typeof type.displayName === "function"
-      ? null
-      : (type.displayName as SerializedEntityDisplayName<SerializedMemberDeclObject<T>>),
-  displayNameCustomizer: type.displayNameCustomizer !== undefined,
+  instanceDisplayName: type.instanceDisplayName as SerializedEntityDisplayName<
+    SerializedMemberDeclObject<T>
+  >,
+  instanceDisplayNameCustomizer: type.instanceDisplayNameCustomizer !== undefined,
   customConstraints: type.customConstraints !== undefined,
 })) satisfies Serializer<EntityDecl>
 

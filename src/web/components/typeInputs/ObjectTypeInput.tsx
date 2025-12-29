@@ -29,7 +29,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
             <li class="container-item object-item" key={key}>
               <div className="container-item-header">
                 <div className="container-item-title">
-                  <strong>{toTitleCase(key)}</strong>
+                  <strong>{memberDecl.displayName ?? toTitleCase(key)}</strong>
                   {memberDecl.comment === undefined ? null : (
                     <Markdown class="comment" string={memberDecl.comment} />
                   )}
@@ -50,7 +50,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
                     }}
                     disabled={disabled}
                   >
-                    Add {toTitleCase(key)}
+                    Add {memberDecl.displayName ?? toTitleCase(key)}
                   </button>
                 ) : (
                   <button
@@ -63,7 +63,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
                     }}
                     disabled={disabled}
                   >
-                    Remove {toTitleCase(key)}
+                    Remove {memberDecl.displayName ?? toTitleCase(key)}
                   </button>
                 )}
               </div>

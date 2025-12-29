@@ -133,12 +133,22 @@ export const resolveTypeArgumentsInEnumType: TypeArgumentsResolver<EnumType> = (
 export interface EnumCaseDecl<T extends Type | null = Type | null> {
   kind: NodeKind["EnumCaseDecl"]
   type: T
+
+  /**
+   * Changes the appearance of the enum case’s name in editor forms.
+   */
+  displayName?: string
   comment?: string
   isDeprecated?: boolean
 }
 
 export const EnumCaseDecl = <T extends Type | null>(options: {
   type: T
+
+  /**
+   * Changes the appearance of the enum case’s name in editor forms.
+   */
+  displayName?: string
   comment?: string
   isDeprecated?: boolean
 }): EnumCaseDecl<T> => ({

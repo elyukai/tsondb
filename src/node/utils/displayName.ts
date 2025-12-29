@@ -54,7 +54,7 @@ export const getDisplayNameFromEntityInstance = (
   defaultName: string = "",
   useCustomizer = true,
 ): DisplayNameResult => {
-  if (useCustomizer && entity.displayNameCustomizer) {
+  if (useCustomizer && entity.instanceDisplayNameCustomizer) {
     const calculatedName = getDisplayNameFromEntityInstance(
       entity,
       instanceContainer,
@@ -65,7 +65,7 @@ export const getDisplayNameFromEntityInstance = (
       false,
     )
 
-    return entity.displayNameCustomizer({
+    return entity.instanceDisplayNameCustomizer({
       instance: instanceContainer.content,
       instanceId: instanceContainer.id,
       instanceDisplayName: calculatedName.name,

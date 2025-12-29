@@ -36,7 +36,7 @@ describe("getDisplayNameFromEntityInstance", () => {
             type: StringType(),
           }),
         }),
-      displayName: {},
+      instanceDisplayName: {},
     }),
   )
 

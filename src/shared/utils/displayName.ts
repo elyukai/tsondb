@@ -21,11 +21,7 @@ export const getSerializedDisplayNameFromEntityInstance = (
   defaultName: string,
   locales: string[],
 ): DisplayNameResult => {
-  if (entity.displayName === null) {
-    return { name: defaultName, localeId: locales[0] }
-  }
-
-  const displayNamePath = entity.displayName ?? "name"
+  const displayNamePath = entity.instanceDisplayName ?? "name"
 
   if (typeof displayNamePath === "string") {
     return {

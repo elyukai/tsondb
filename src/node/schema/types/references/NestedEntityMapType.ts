@@ -1,11 +1,9 @@
 import { Lazy } from "../../../../shared/utils/lazy.ts"
 import { sortObjectKeysAlphabetically } from "../../../../shared/utils/object.ts"
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
-import type { DisplayNameCustomizer } from "../../../utils/displayName.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { entity, json, key as keyColor } from "../../../utils/errorFormatting.ts"
 import type { EntityDecl } from "../../declarations/EntityDecl.js"
-import { type EntityDisplayName } from "../../declarations/EntityDecl.js"
 import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
 import type {
   GetNestedDeclarations,
@@ -55,11 +53,6 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
   comment?: string
   secondaryEntity: EntityDecl
   type: PossibleType<T>
-  /**
-   * @default "name"
-   */
-  displayName?: EntityDisplayName<T>
-  displayNameCustomizer?: DisplayNameCustomizer
   isDeprecated?: boolean
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
@@ -79,11 +72,6 @@ const _NestedEntityMapType = <Name extends string, T extends TConstraint>(option
   comment?: string
   secondaryEntity: EntityDecl
   type: () => PossibleType<T>
-  /**
-   * @default "name"
-   */
-  displayName?: EntityDisplayName<T>
-  displayNameCustomizer?: DisplayNameCustomizer
   isDeprecated?: boolean
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {

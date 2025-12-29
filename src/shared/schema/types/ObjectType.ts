@@ -25,6 +25,11 @@ export interface SerializedMemberDecl<
   kind: NodeKind["MemberDecl"]
   isRequired: R
   type: T
+
+  /**
+   * Changes the appearance of the member’s name in editor forms.
+   */
+  displayName?: string
   comment?: string
   isDeprecated?: boolean
 }

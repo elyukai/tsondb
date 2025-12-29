@@ -137,34 +137,52 @@ export interface MemberDecl<T extends Type = Type, R extends boolean = boolean> 
   kind: NodeKind["MemberDecl"]
   isRequired: R
   type: T
+
+  /**
+   * Changes the appearance of the member’s name in editor forms.
+   */
+  displayName?: string
   comment?: string
   isDeprecated?: boolean
 }
 
 const MemberDecl = <T extends Type, R extends boolean>(
   isRequired: R,
-  type: T,
-  comment?: string,
-  isDeprecated?: boolean,
+  options: {
+    type: T
+
+    /**
+     * Changes the appearance of the member’s name in editor forms.
+     */
+    displayName?: string
+    comment?: string
+    isDeprecated?: boolean
+  },
 ): MemberDecl<T, R> => ({
+  ...options,
   kind: NodeKind.MemberDecl,
   isRequired,
-  type,
-  comment,
-  isDeprecated,
 })
 
 export const Required = <T extends Type>(options: {
+  /**
+   * Changes the appearance of the member’s name in editor forms.
+   */
+  displayName?: string
   comment?: string
   isDeprecated?: boolean
   type: T
-}) => MemberDecl(true, options.type, options.comment, options.isDeprecated)
+}) => MemberDecl(true, options)
 
 export const Optional = <T extends Type>(options: {
+  /**
+   * Changes the appearance of the member’s name in editor forms.
+   */
+  displayName?: string
   comment?: string
   isDeprecated?: boolean
   type: T
-}) => MemberDecl(false, options.type, options.comment, options.isDeprecated)
+}) => MemberDecl(false, options)
 
 export const serializeObjectType = <P extends TConstraint>(
   type: ObjectType<P>,

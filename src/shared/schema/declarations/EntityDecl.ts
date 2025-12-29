@@ -79,13 +79,23 @@ export interface SerializedEntityDecl<
 > extends SerializedBaseDecl<Name, []> {
   kind: NodeKind["EntityDecl"]
   namePlural: string
+
+  /**
+   * Changes the appearance of the entity’s name in singular form.
+   */
+  displayName?: string
+
+  /**
+   * Changes the appearance of the entity’s name in plural form.
+   */
+  displayNamePlural?: string
   type: SerializedObjectType<T>
   parentReferenceKey: FK
   /**
    * @default "name"
    */
-  displayName?: GenericEntityDisplayName
-  displayNameCustomizer: boolean
+  instanceDisplayName?: GenericEntityDisplayName
+  instanceDisplayNameCustomizer: boolean
   isDeprecated?: boolean
   uniqueConstraints?: UniqueConstraints
   customConstraints: boolean

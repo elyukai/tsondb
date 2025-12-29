@@ -18,6 +18,11 @@ export interface SerializedEnumType<
 export interface SerializedEnumCaseDecl<T extends SerializedType | null = SerializedType | null> {
   kind: NodeKind["EnumCaseDecl"]
   type: T
+
+  /**
+   * Changes the appearance of the enum case’s name in editor forms.
+   */
+  displayName?: string
   comment?: string
   isDeprecated?: boolean
 }
