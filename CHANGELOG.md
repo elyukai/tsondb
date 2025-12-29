@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.17.0](https://github.com/elyukai/tsondb/compare/v0.16.0...v0.17.0) (2025-12-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* To provide consistent option names, display name
+options for instances are renamed to instanceDisplayName and
+instanceDisplayNameCustomizer.
+
+### Features
+
+* display names for identifier names ([13e9fcb](https://github.com/elyukai/tsondb/commit/13e9fcb70818dac39194ca6d123eec6e4fc31897))
+* more flexible custom constraint injections ([315a0cc](https://github.com/elyukai/tsondb/commit/315a0cc562ba9caa8a9ae72d1761e4cec8e5be61))
+
 ## [0.16.0](https://github.com/elyukai/tsondb/compare/v0.15.0...v0.16.0) (2025-12-15)
 
 
