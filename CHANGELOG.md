@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.17.1](https://github.com/elyukai/tsondb/compare/v0.17.0...v0.17.1) (2025-12-29)
+
+
+### Bug Fixes
+
+* allow entity display names in constructor ([c20ddf3](https://github.com/elyukai/tsondb/commit/c20ddf3f10d207c55546e86211a196346b957488))
+
 ## [0.17.0](https://github.com/elyukai/tsondb/compare/v0.16.0...v0.17.0) (2025-12-29)
 
 
