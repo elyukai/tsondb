@@ -109,6 +109,16 @@ export const EntityDecl: {
     options: {
       name: Name
       namePlural: string
+
+      /**
+       * Changes the appearance of the entity’s name in singular form.
+       */
+      displayName?: string
+
+      /**
+       * Changes the appearance of the entity’s name in plural form.
+       */
+      displayNamePlural?: string
       comment?: string
       type: () => ObjectType<T>
 
@@ -132,6 +142,16 @@ export const EntityDecl: {
     options: {
       name: Name
       namePlural: string
+
+      /**
+       * Changes the appearance of the entity’s name in singular form.
+       */
+      displayName?: string
+
+      /**
+       * Changes the appearance of the entity’s name in plural form.
+       */
+      displayNamePlural?: string
       comment?: string
       type: () => ObjectType<T>
       parentReferenceKey: FK
@@ -156,6 +176,16 @@ export const EntityDecl: {
   options: {
     name: Name
     namePlural: string
+
+    /**
+     * Changes the appearance of the entity’s name in singular form.
+     */
+    displayName?: string
+
+    /**
+     * Changes the appearance of the entity’s name in plural form.
+     */
+    displayNamePlural?: string
     comment?: string
     type: () => ObjectType<T>
     parentReferenceKey?: FK
