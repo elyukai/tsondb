@@ -6,12 +6,13 @@ import type {
 } from "../../shared/utils/instances.ts"
 import { error, isError, mapError, ok, type Result } from "../../shared/utils/result.ts"
 import type { RegisteredEntity } from "../schema/externalTypes.ts"
-import type {
-  GetAllChildInstancesForParent,
-  GetAllInstances,
-  GetDisplayName,
-  GetDisplayNameWithId,
-  GetInstanceById,
+import {
+  normalizedIdArgs,
+  type GetAllChildInstancesForParent,
+  type GetAllInstances,
+  type GetDisplayName,
+  type GetDisplayNameWithId,
+  type GetInstanceById,
 } from "../schema/helpers.ts"
 import type { EntityDecl } from "../schema/index.ts"
 import {
@@ -70,8 +71,10 @@ export const checkCustomConstraintsForAllEntities = (
   entitiesByName: Record<string, EntityDecl>,
   instanceOverviewsByEntityName: Record<string, InstanceContainerOverview[]>,
 ): Result<void, AggregateError> => {
-  const getInstanceById: GetInstanceById = (entityName, id) =>
-    getInstanceOfEntityFromDatabaseInMemory(db, entityName, id)?.content
+  const getInstanceById: GetInstanceById = (...args) => {
+    const { entityName, id } = normalizedIdArgs(args)
+    return getInstanceOfEntityFromDatabaseInMemory(db, entityName, id)?.content
+  }
 
   const getAllInstances: GetAllInstances = entityName =>
     getInstancesOfEntityFromDatabaseInMemory(db, entityName).map(i => i.content)
@@ -90,11 +93,14 @@ export const checkCustomConstraintsForAllEntities = (
       .map(i => i.content)
   }
 
-  const getDisplayName: GetDisplayName = (entityName: string, id: string) =>
-    instanceOverviewsByEntityName[entityName]?.find(o => o.id === id)?.displayName
+  const getDisplayName: GetDisplayName = (...args) => {
+    const { entityName, id } = normalizedIdArgs(args)
+    return instanceOverviewsByEntityName[entityName]?.find(o => o.id === id)?.displayName
+  }
 
-  const getDisplayNameWithId: GetDisplayNameWithId = (entityName: string, id: string) => {
-    const displayName = getDisplayName(entityName, id)
+  const getDisplayNameWithId: GetDisplayNameWithId = (...args) => {
+    const { id } = normalizedIdArgs(args)
+    const displayName = getDisplayName(...args)
     return displayName ? `"${displayName}" (${id})` : id
   }
 
