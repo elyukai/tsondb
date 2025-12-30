@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.17.3](https://github.com/elyukai/tsondb/compare/v0.17.2...v0.17.3) (2025-12-30)
+
+
+### Bug Fixes
+
+* allow generic includes in deeper includes ([b5f9974](https://github.com/elyukai/tsondb/commit/b5f9974b85924c35c6d9ca2d9cdfbc639592040b))
+
 ## [0.17.2](https://github.com/elyukai/tsondb/compare/v0.17.1...v0.17.2) (2025-12-30)
 
 
