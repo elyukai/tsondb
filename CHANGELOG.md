@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.17.2](https://github.com/elyukai/tsondb/compare/v0.17.1...v0.17.2) (2025-12-30)
+
+
+### Bug Fixes
+
+* allow deep includes in nested entity type ([8490365](https://github.com/elyukai/tsondb/commit/8490365aa9ae27c0da308887567f672f7cc7dd25))
+
 ## [0.17.1](https://github.com/elyukai/tsondb/compare/v0.17.0...v0.17.1) (2025-12-29)
 
 
