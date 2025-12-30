@@ -19,7 +19,10 @@ import { isObjectType, type MemberDecl, type ObjectType } from "./types/generic/
 import { isStringType } from "./types/primitives/StringType.ts"
 import { isChildEntitiesType } from "./types/references/ChildEntitiesType.ts"
 import { isIncludeIdentifierType } from "./types/references/IncludeIdentifierType.ts"
-import { isNestedEntityMapType, type PossibleType } from "./types/references/NestedEntityMapType.ts"
+import {
+  isNestedEntityMapType,
+  type PossibleNestedType,
+} from "./types/references/NestedEntityMapType.ts"
 import {
   isReferenceIdentifierType,
   type ReferenceIdentifierType,
@@ -392,7 +395,7 @@ const checkUniqueConstraintElement = (decl: EntityDecl, element: UniquingElement
     const nestedType = entityMapType.type.value
 
     const getActualType = <T extends Record<string, MemberDecl>>(
-      type: PossibleType<T>,
+      type: PossibleNestedType<T>,
     ): ObjectType<T> =>
       isIncludeIdentifierType(type) ? getActualType(type.reference.type.value) : type
 

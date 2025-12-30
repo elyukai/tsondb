@@ -14,6 +14,7 @@ import type {
   Validator,
 } from "../../Node.ts"
 import { getNestedDeclarations, NodeKind, resolveTypeArguments, validateType } from "../../Node.ts"
+import type { TypeParameter } from "../../TypeParameter.ts"
 import type { MemberDecl, ObjectType } from "../generic/ObjectType.ts"
 import {
   getReferencesForObjectType,
@@ -31,9 +32,16 @@ import {
 
 type TConstraint = Record<string, MemberDecl>
 
+export type PossibleNestedType<T extends TConstraint> =
+  | ObjectType<T>
+  | IncludeIdentifier<
+      TypeParameter[],
+      TypeAliasDecl<string, PossibleNestedType<T>, TypeParameter[]>
+    >
+
 export type PossibleType<T extends TConstraint> =
   | ObjectType<T>
-  | IncludeIdentifier<[], TypeAliasDecl<string, PossibleType<T>, []>>
+  | IncludeIdentifier<[], TypeAliasDecl<string, PossibleNestedType<T>, []>>
 
 export interface NestedEntityMapType<
   Name extends string = string,
