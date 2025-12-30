@@ -15,11 +15,11 @@ import { isEntityDecl } from "./declarations/EntityDecl.ts"
 import { cases, isEnumDecl } from "./declarations/EnumDecl.ts"
 import { getNestedDeclarations, NodeKind, type NestedDecl, type Node } from "./Node.ts"
 import type { EnumCaseDecl } from "./types/generic/EnumType.ts"
-import { isObjectType, type ObjectType } from "./types/generic/ObjectType.ts"
+import { isObjectType, type MemberDecl, type ObjectType } from "./types/generic/ObjectType.ts"
 import { isStringType } from "./types/primitives/StringType.ts"
 import { isChildEntitiesType } from "./types/references/ChildEntitiesType.ts"
 import { isIncludeIdentifierType } from "./types/references/IncludeIdentifierType.ts"
-import { isNestedEntityMapType } from "./types/references/NestedEntityMapType.ts"
+import { isNestedEntityMapType, type PossibleType } from "./types/references/NestedEntityMapType.ts"
 import {
   isReferenceIdentifierType,
   type ReferenceIdentifierType,
@@ -390,9 +390,13 @@ const checkUniqueConstraintElement = (decl: EntityDecl, element: UniquingElement
     }
 
     const nestedType = entityMapType.type.value
-    const actualType = isIncludeIdentifierType(nestedType)
-      ? nestedType.reference.type.value
-      : nestedType
+
+    const getActualType = <T extends Record<string, MemberDecl>>(
+      type: PossibleType<T>,
+    ): ObjectType<T> =>
+      isIncludeIdentifierType(type) ? getActualType(type.reference.type.value) : type
+
+    const actualType = getActualType(nestedType)
 
     getNodeAtKeyPath(
       decl,

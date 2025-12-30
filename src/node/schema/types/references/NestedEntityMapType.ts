@@ -31,9 +31,9 @@ import {
 
 type TConstraint = Record<string, MemberDecl>
 
-type PossibleType<T extends TConstraint> =
+export type PossibleType<T extends TConstraint> =
   | ObjectType<T>
-  | IncludeIdentifier<[], TypeAliasDecl<string, ObjectType<T>, []>>
+  | IncludeIdentifier<[], TypeAliasDecl<string, PossibleType<T>, []>>
 
 export interface NestedEntityMapType<
   Name extends string = string,
