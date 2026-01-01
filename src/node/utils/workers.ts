@@ -79,7 +79,7 @@ export class WorkerPool<T, R, I = undefined> extends EventEmitter {
     worker.on("error", err => {
       // In case of an uncaught exception: Call the callback that was passed to
       // `runTask` with the error.
-      if (worker[kTaskInfo]) worker[kTaskInfo].done(error(err))
+      if (worker[kTaskInfo] && err instanceof Error) worker[kTaskInfo].done(error(err))
       else this.emit("error", err)
       // Remove the worker from the list and start a new Worker to replace the
       // current one.
