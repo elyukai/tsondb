@@ -12,8 +12,7 @@ import type { SerializedBaseType, SerializedType } from "./Type.ts"
 type TSerializedConstraint = Record<string, SerializedMemberDecl>
 
 export interface SerializedObjectType<T extends TSerializedConstraint = TSerializedConstraint>
-  extends SerializedBaseType,
-    ObjectConstraints {
+  extends SerializedBaseType, ObjectConstraints {
   kind: NodeKind["ObjectType"]
   properties: T
 }

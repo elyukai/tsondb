@@ -21,8 +21,9 @@ import {
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
 import { formatValue } from "../Type.ts"
 
-export interface EnumType<T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>>
-  extends BaseType {
+export interface EnumType<
+  T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>,
+> extends BaseType {
   kind: NodeKind["EnumType"]
   values: T
 }

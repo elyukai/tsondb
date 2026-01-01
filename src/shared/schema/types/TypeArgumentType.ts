@@ -5,8 +5,9 @@ import type { SerializedBaseType, SerializedType } from "./Type.ts"
 
 type TSerializedConstraint = SerializedTypeParameter
 
-export interface SerializedTypeArgumentType<T extends TSerializedConstraint = TSerializedConstraint>
-  extends SerializedBaseType {
+export interface SerializedTypeArgumentType<
+  T extends TSerializedConstraint = TSerializedConstraint,
+> extends SerializedBaseType {
   kind: NodeKind["TypeArgumentType"]
   argument: T
 }

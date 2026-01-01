@@ -38,29 +38,25 @@ export interface EntityTaggedInstanceContainer {
   content: InstanceContent
 }
 
-export interface CreatedEntityTaggedInstanceContainerWithChildInstances
-  extends GenEntityTaggedInstanceContainerWithChildInstances<
-    undefined,
-    UnsafeEntityTaggedInstanceContainerWithChildInstances
-  > {}
+export interface CreatedEntityTaggedInstanceContainerWithChildInstances extends GenEntityTaggedInstanceContainerWithChildInstances<
+  undefined,
+  UnsafeEntityTaggedInstanceContainerWithChildInstances
+> {}
 
-export interface UpdatedEntityTaggedInstanceContainerWithChildInstances
-  extends GenEntityTaggedInstanceContainerWithChildInstances<
-    string,
-    UnsafeEntityTaggedInstanceContainerWithChildInstances
-  > {}
+export interface UpdatedEntityTaggedInstanceContainerWithChildInstances extends GenEntityTaggedInstanceContainerWithChildInstances<
+  string,
+  UnsafeEntityTaggedInstanceContainerWithChildInstances
+> {}
 
-export interface UnsafeEntityTaggedInstanceContainerWithChildInstances
-  extends GenEntityTaggedInstanceContainerWithChildInstances<
-    string | undefined,
-    UnsafeEntityTaggedInstanceContainerWithChildInstances
-  > {}
+export interface UnsafeEntityTaggedInstanceContainerWithChildInstances extends GenEntityTaggedInstanceContainerWithChildInstances<
+  string | undefined,
+  UnsafeEntityTaggedInstanceContainerWithChildInstances
+> {}
 
-export interface EntityTaggedInstanceContainerWithChildInstances
-  extends GenEntityTaggedInstanceContainerWithChildInstances<
-    string,
-    EntityTaggedInstanceContainerWithChildInstances
-  > {}
+export interface EntityTaggedInstanceContainerWithChildInstances extends GenEntityTaggedInstanceContainerWithChildInstances<
+  string,
+  EntityTaggedInstanceContainerWithChildInstances
+> {}
 
 export interface GenEntityTaggedInstanceContainerWithChildInstances<
   ID extends string | undefined,

@@ -30,8 +30,7 @@ import { formatValue } from "../Type.ts"
 type TConstraint = Record<string, MemberDecl>
 
 export interface ObjectType<T extends TConstraint = TConstraint>
-  extends BaseType,
-    ObjectConstraints {
+  extends BaseType, ObjectConstraints {
   kind: NodeKind["ObjectType"]
   properties: T
 }
