@@ -16,8 +16,8 @@ import {
   isEntityDecl,
   isEntityDeclWithParentReference,
 } from "../../schema/declarations/EntityDecl.ts"
-import type { EnumDecl } from "../../schema/declarations/EnumDecl.ts"
-import { TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
+import { isEnumDecl, type EnumDecl } from "../../schema/declarations/EnumDecl.ts"
+import { isTypeAliasDecl, TypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
 import { flatMapAuxiliaryDecls, NodeKind } from "../../schema/Node.ts"
 import type { TypeParameter } from "../../schema/TypeParameter.ts"
 import { ArrayType } from "../../schema/types/generic/ArrayType.ts"
@@ -63,6 +63,16 @@ export type TypeScriptRendererOptions = {
      * If `true` or a string, generates an object type with all names of entities with parent references as the key and their corresponding generated type as well as their parent reference key as their respective value. Uses `ChildEntityMap` as a default name when using `true` or the string if set to a string.
      */
     childEntityMap: boolean | string
+
+    /**
+     * If `true` or a string, generates an object type with all names of the enumerations as the key and their corresponding generated type as their respective value. Uses `EnumMap` as a default name when using `true` or the string if set to a string.
+     */
+    enumMap: boolean | string
+
+    /**
+     * If `true` or a string, generates an object type with all names of the type aliases as the key and their corresponding generated type as their respective value. Uses `TypeAliasMap` as a default name when using `true` or the string if set to a string.
+     */
+    typeAliasMap: boolean | string
   }>
   addIdentifierToEntities: boolean
   /**
@@ -330,36 +340,53 @@ const renderImports = (currentUrl: string, imports: { [sourceUrl: string]: strin
   return importsSyntax.length > 0 ? importsSyntax + EOL + EOL : ""
 }
 
-const renderEntityMapType = (options: TypeScriptRendererOptions, declarations: readonly Decl[]) =>
-  options.generateHelpers.entityMap
-    ? `export type ${options.generateHelpers.entityMap === true ? "EntityMap" : options.generateHelpers.entityMap} = {${EOL}${prefixLines(
+const renderMapHelperType = <T extends Decl>(
+  options: TypeScriptRendererOptions,
+  declarations: readonly Decl[],
+  key: keyof TypeScriptRendererOptions["generateHelpers"],
+  defaultName: string,
+  filterFn: (decl: Decl) => decl is T,
+  renderKeyFn?: (decl: T) => string,
+) =>
+  options.generateHelpers[key]
+    ? `export type ${options.generateHelpers[key] === true ? defaultName : options.generateHelpers[key]} = {${EOL}${prefixLines(
         getIndentation(options.indentation, 1),
         declarations
-          .filter(isEntityDecl)
+          .filter(filterFn)
           .sort((a, b) => a.name.localeCompare(b.name))
-          .map(decl => `${decl.name}: ${decl.name}`)
+          .map(
+            renderKeyFn ??
+              (decl =>
+                `${decl.name}: ${decl.name}${decl.parameters.length > 0 ? "<" + decl.parameters.map(param => (param.constraint ? renderType(options, param.constraint)[1] : "unknown")).join(", ") + ">" : ""}`),
+          )
           .join(EOL),
       )}${EOL}}${EOL + EOL}`
     : ""
+
+const renderEntityMapType = (options: TypeScriptRendererOptions, declarations: readonly Decl[]) =>
+  renderMapHelperType(options, declarations, "entityMap", "EntityMap", isEntityDecl)
 
 const renderChildEntityMapType = (
   options: TypeScriptRendererOptions,
   declarations: readonly Decl[],
 ) =>
-  options.generateHelpers.childEntityMap
-    ? `export type ${options.generateHelpers.childEntityMap === true ? "ChildEntityMap" : options.generateHelpers.childEntityMap} = {${EOL}${prefixLines(
-        getIndentation(options.indentation, 1),
-        declarations
-          .filter(isEntityDecl)
-          .filter(isEntityDeclWithParentReference)
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map(
-            decl =>
-              `${decl.name}: [${decl.name}, "${decl.parentReferenceKey}", ${decl.name}["${decl.parentReferenceKey}"]]`,
-          )
-          .join(EOL),
-      )}${EOL}}${EOL + EOL}`
-    : ""
+  renderMapHelperType(
+    options,
+    declarations,
+    "childEntityMap",
+    "ChildEntityMap",
+    decl => isEntityDecl(decl) && isEntityDeclWithParentReference(decl),
+    decl =>
+      `${decl.name}: [${decl.name}, "${decl.parentReferenceKey}", ${decl.name}["${decl.parentReferenceKey}"]]`,
+  )
+
+const renderEnumMapType = (options: TypeScriptRendererOptions, declarations: readonly Decl[]) =>
+  renderMapHelperType(options, declarations, "enumMap", "EnumMap", isEnumDecl)
+
+const renderTypeAliasMapType = (
+  options: TypeScriptRendererOptions,
+  declarations: readonly Decl[],
+) => renderMapHelperType(options, declarations, "typeAliasMap", "TypeAliasMap", isTypeAliasDecl)
 
 const renderStringableTranslationParameterType = (options: TypeScriptRendererOptions) =>
   options.inferTranslationParameters?.format === "mf2"
@@ -432,6 +459,8 @@ export const render = (
   return (
     renderEntityMapType(finalOptions, declarations) +
     renderChildEntityMapType(finalOptions, declarations) +
+    renderEnumMapType(finalOptions, declarations) +
+    renderTypeAliasMapType(finalOptions, declarations) +
     renderStringableTranslationParameterType(finalOptions) +
     (finalOptions.preserveFiles
       ? (declarations[0] === undefined ? "" : renderImports(declarations[0].sourceUrl, imports)) +
