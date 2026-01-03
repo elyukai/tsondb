@@ -25,6 +25,7 @@ import type { SerializedTranslationObjectType } from "../../shared/schema/types/
 import type { SerializedTypeArgumentType } from "../../shared/schema/types/TypeArgumentType.ts"
 import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import type { ValidationOptions } from "../index.ts"
+import type { CustomConstraintHelpers } from "../utils/customConstraints.ts"
 import {
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
@@ -781,3 +782,9 @@ export const getReferences: GetReferences = (node, value, inDecl) => {
       return assertExhaustive(node)
   }
 }
+
+export type CustomConstraintValidator<T extends Node = Node, V = unknown> = (
+  node: T,
+  value: V,
+  helpers: CustomConstraintHelpers,
+) => string[]

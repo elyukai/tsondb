@@ -2,12 +2,14 @@ import type { SerializedTypeArguments } from "../../../../shared/schema/declarat
 import type { SerializedIncludeIdentifierType } from "../../../../shared/schema/types/IncludeIdentifierType.ts"
 import type { Decl, IncludableDeclP, TypeArguments } from "../../declarations/Declaration.ts"
 import {
+  checkCustomConstraintsInNestedDecl,
   getTypeArgumentsRecord,
   isDeclWithoutTypeParameters,
 } from "../../declarations/Declaration.ts"
 import type { EnumDecl } from "../../declarations/EnumDecl.ts"
 import { isTypeAliasDecl, type TypeAliasDecl } from "../../declarations/TypeAliasDecl.ts"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -175,3 +177,7 @@ export const formatIncludeIdentifierValue: StructureFormatter<IncludeIdentifierT
       return value
   }
 }
+
+export const checkCustomConstraintsInIncludeIdentifierType: CustomConstraintValidator<
+  IncludeIdentifierType
+> = (type, value, helpers) => checkCustomConstraintsInNestedDecl(type.reference, value, helpers)

@@ -5,6 +5,11 @@ import {
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import { onlyKeys } from "../../../shared/utils/object.ts"
 import type {
+  NestedCustomConstraint,
+  TypedNestedCustomConstraint,
+} from "../../utils/customConstraints.ts"
+import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -24,6 +29,7 @@ import {
   serializeEnumType,
   validateEnumType,
 } from "../types/generic/EnumType.ts"
+import { checkCustomConstraintsInType } from "../types/Type.ts"
 import type { BaseDecl } from "./Declaration.ts"
 import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
 
@@ -37,6 +43,7 @@ export interface EnumDecl<
   kind: NodeKind["EnumDecl"]
   type: Lazy<EnumType<T>>
   isDeprecated?: boolean
+  customConstraints?: NestedCustomConstraint
 }
 
 export const GenEnumDecl = <
@@ -51,6 +58,7 @@ export const GenEnumDecl = <
     parameters: Params
     isDeprecated?: boolean
     values: (...args: Params) => T
+    customConstraints?: TypedNestedCustomConstraint<Name>
   },
 ): EnumDecl<Name, T, Params> => {
   validateDeclName(options.name)
@@ -60,6 +68,7 @@ export const GenEnumDecl = <
     kind: NodeKind.EnumDecl,
     sourceUrl,
     type: Lazy.of(() => EnumType(options.values(...options.parameters))),
+    customConstraints: options.customConstraints as NestedCustomConstraint | undefined, // ignore contravariance of registered enum type
   }
 
   return decl
@@ -74,6 +83,7 @@ export const EnumDecl = <Name extends string, T extends Record<string, EnumCaseD
     comment?: string
     isDeprecated?: boolean
     values: () => T
+    customConstraints?: TypedNestedCustomConstraint<Name>
   },
 ): EnumDecl<Name, T, []> => {
   validateDeclName(options.name)
@@ -84,6 +94,7 @@ export const EnumDecl = <Name extends string, T extends Record<string, EnumCaseD
     sourceUrl,
     parameters: [],
     type: Lazy.of(() => EnumType(options.values())),
+    customConstraints: options.customConstraints as NestedCustomConstraint | undefined, // ignore contravariance of registered enum type
   }
 
   return decl
@@ -131,6 +142,7 @@ export const serializeEnumDecl: Serializer<EnumDecl> = decl => ({
   ...decl,
   type: serializeEnumType(decl.type.value),
   parameters: decl.parameters.map(param => serializeTypeParameter(param)),
+  customConstraints: decl.customConstraints !== undefined,
 })
 
 export const getReferencesForEnumDecl: GetReferences<EnumDecl> = (decl, value, inDecl) =>
@@ -143,3 +155,12 @@ export const cases = <T extends TConstraint>(
 export const getAnyEnumCaseValue = <K extends string, V>(
   enumValue: { [Key in K]: EnumValue<Key, V> }[K],
 ): V => enumValue[enumValue[ENUM_DISCRIMINATOR_KEY]]
+
+export const checkCustomConstraintsInEnumDecl: CustomConstraintValidator<EnumDecl> = (
+  decl,
+  value,
+  helpers,
+) =>
+  (decl.customConstraints?.({ ...helpers, value }) ?? []).concat(
+    checkCustomConstraintsInType(decl.type.value, value, helpers),
+  )

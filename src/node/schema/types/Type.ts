@@ -6,40 +6,69 @@ import {
   type TypeAliasDecl,
   type TypeParameter,
 } from "../index.ts"
-import type { BaseNode } from "../Node.ts"
+import type { BaseNode, CustomConstraintValidator } from "../Node.ts"
 import { NodeKind } from "../Node.ts"
 import type { ArrayType } from "./generic/ArrayType.ts"
-import { formatArrayValue, isArrayType } from "./generic/ArrayType.ts"
-import type { EnumCaseDecl, EnumType } from "./generic/EnumType.ts"
-import { formatEnumType } from "./generic/EnumType.ts"
-import type { MemberDecl, ObjectType } from "./generic/ObjectType.ts"
-import { formatObjectValue, isObjectType } from "./generic/ObjectType.ts"
 import {
+  checkCustomConstraintsInArrayType,
+  formatArrayValue,
+  isArrayType,
+} from "./generic/ArrayType.ts"
+import type { EnumCaseDecl, EnumType } from "./generic/EnumType.ts"
+import { checkCustomConstraintsInEnumType, formatEnumType } from "./generic/EnumType.ts"
+import type { MemberDecl, ObjectType } from "./generic/ObjectType.ts"
+import {
+  checkCustomConstraintsInObjectType,
+  formatObjectValue,
+  isObjectType,
+} from "./generic/ObjectType.ts"
+import {
+  checkCustomConstraintsInTranslationObjectType,
   formatTranslationObjectValue,
   type TranslationObjectType,
 } from "./generic/TranslationObjectType.ts"
 import type { BooleanType } from "./primitives/BooleanType.ts"
-import { formatBooleanValue } from "./primitives/BooleanType.ts"
+import {
+  checkCustomConstraintsInBooleanType,
+  formatBooleanValue,
+} from "./primitives/BooleanType.ts"
 import type { DateType } from "./primitives/DateType.ts"
-import { formatDateValue } from "./primitives/DateType.ts"
+import { checkCustomConstraintsInDateType, formatDateValue } from "./primitives/DateType.ts"
 import type { FloatType } from "./primitives/FloatType.ts"
-import { formatFloatValue } from "./primitives/FloatType.ts"
+import { checkCustomConstraintsInFloatType, formatFloatValue } from "./primitives/FloatType.ts"
 import type { IntegerType } from "./primitives/IntegerType.ts"
-import { formatIntegerValue } from "./primitives/IntegerType.ts"
+import {
+  checkCustomConstraintsInIntegerType,
+  formatIntegerValue,
+} from "./primitives/IntegerType.ts"
 import type { StringType } from "./primitives/StringType.ts"
-import { formatStringValue } from "./primitives/StringType.ts"
-import { formatChildEntitiesValue, type ChildEntitiesType } from "./references/ChildEntitiesType.ts"
+import { checkCustomConstraintsInStringType, formatStringValue } from "./primitives/StringType.ts"
+import {
+  checkCustomConstraintsInChildEntitiesType,
+  formatChildEntitiesValue,
+  type ChildEntitiesType,
+} from "./references/ChildEntitiesType.ts"
 import type { IncludeIdentifierType } from "./references/IncludeIdentifierType.ts"
 import {
+  checkCustomConstraintsInIncludeIdentifierType,
   formatIncludeIdentifierValue,
   isIncludeIdentifierType,
 } from "./references/IncludeIdentifierType.ts"
 import type { NestedEntityMapType } from "./references/NestedEntityMapType.ts"
-import { formatNestedEntityMapValue } from "./references/NestedEntityMapType.ts"
+import {
+  checkCustomConstraintsInNestedEntityMapType,
+  formatNestedEntityMapValue,
+} from "./references/NestedEntityMapType.ts"
 import type { ReferenceIdentifierType } from "./references/ReferenceIdentifierType.ts"
-import { formatReferenceIdentifierValue } from "./references/ReferenceIdentifierType.ts"
+import {
+  checkCustomConstraintsInReferenceIdentifierType,
+  formatReferenceIdentifierValue,
+} from "./references/ReferenceIdentifierType.ts"
 import type { TypeArgumentType } from "./references/TypeArgumentType.ts"
-import { formatTypeArgumentValue } from "./references/TypeArgumentType.ts"
+import {
+  checkCustomConstraintsInTypeArgumentType,
+  formatTypeArgumentValue,
+} from "./references/TypeArgumentType.ts"
 
 export interface BaseType extends BaseNode {}
 
@@ -134,7 +163,7 @@ type MemberDeclsAsDeepType<P extends Record<string, MemberDecl>> = {
   [K in keyof P]: P[K] extends MemberDecl<Type, true>
     ? AsDeepType<P[K]["type"]>
     : // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- it does make a difference here
-        AsDeepType<P[K]["type"]> | undefined
+      AsDeepType<P[K]["type"]> | undefined
 }
 
 export type AsDeepType<T extends Type> =
@@ -297,6 +326,45 @@ export const formatValue: StructureFormatter<Type> = (type, value) => {
       return formatChildEntitiesValue(type, value)
     case NodeKind.TranslationObjectType:
       return formatTranslationObjectValue(type, value)
+    default:
+      return assertExhaustive(type)
+  }
+}
+
+export const checkCustomConstraintsInType: CustomConstraintValidator<Type> = (
+  type,
+  value,
+  helpers,
+) => {
+  switch (type.kind) {
+    case NodeKind.ArrayType:
+      return checkCustomConstraintsInArrayType(type, value, helpers)
+    case NodeKind.ObjectType:
+      return checkCustomConstraintsInObjectType(type, value, helpers)
+    case NodeKind.BooleanType:
+      return checkCustomConstraintsInBooleanType(type, value, helpers)
+    case NodeKind.DateType:
+      return checkCustomConstraintsInDateType(type, value, helpers)
+    case NodeKind.FloatType:
+      return checkCustomConstraintsInFloatType(type, value, helpers)
+    case NodeKind.IntegerType:
+      return checkCustomConstraintsInIntegerType(type, value, helpers)
+    case NodeKind.StringType:
+      return checkCustomConstraintsInStringType(type, value, helpers)
+    case NodeKind.TypeArgumentType:
+      return checkCustomConstraintsInTypeArgumentType(type, value, helpers)
+    case NodeKind.IncludeIdentifierType:
+      return checkCustomConstraintsInIncludeIdentifierType(type, value, helpers)
+    case NodeKind.NestedEntityMapType:
+      return checkCustomConstraintsInNestedEntityMapType(type, value, helpers)
+    case NodeKind.ReferenceIdentifierType:
+      return checkCustomConstraintsInReferenceIdentifierType(type, value, helpers)
+    case NodeKind.EnumType:
+      return checkCustomConstraintsInEnumType(type, value, helpers)
+    case NodeKind.ChildEntitiesType:
+      return checkCustomConstraintsInChildEntitiesType(type, value, helpers)
+    case NodeKind.TranslationObjectType:
+      return checkCustomConstraintsInTranslationObjectType(type, value, helpers)
     default:
       return assertExhaustive(type)
   }

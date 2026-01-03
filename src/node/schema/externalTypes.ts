@@ -51,3 +51,10 @@ export type RegisteredTypeAlias<Name extends string, T = Register> = T extends {
 }
   ? T["typeAliasMap"][Name]
   : TypeAliasContent
+
+export type RegisteredEnumOrTypeAlias<
+  Name extends string,
+  T = Register,
+> = RegisteredEnumMap extends { [K in Name]: unknown }
+  ? RegisteredEnum<Name, T>
+  : RegisteredTypeAlias<Name, T>

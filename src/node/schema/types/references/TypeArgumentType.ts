@@ -1,4 +1,5 @@
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Node,
@@ -60,3 +61,11 @@ export const serializeTypeArgumentType: Serializer<TypeArgumentType> = type => (
 export const getReferencesForTypeArgumentType: GetReferences<TypeArgumentType> = () => []
 
 export const formatTypeArgumentValue: StructureFormatter<TypeArgumentType> = (_type, value) => value
+
+export const checkCustomConstraintsInTypeArgumentType: CustomConstraintValidator<
+  TypeArgumentType
+> = type => {
+  throw new TypeError(
+    `type argument "${type.argument.name}" is unresolved. Make sure to resolve all type arguments before checking for nested custom constraints.`,
+  )
+}

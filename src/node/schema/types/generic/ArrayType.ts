@@ -3,6 +3,7 @@ import { validateArrayConstraints } from "../../../../shared/validation/array.ts
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -20,7 +21,7 @@ import {
 } from "../../Node.ts"
 import { validateOption } from "../../validation/options.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
-import { formatValue } from "../Type.ts"
+import { checkCustomConstraintsInType, formatValue } from "../Type.ts"
 
 export interface ArrayType<T extends Type = Type> extends BaseType {
   kind: NodeKind["ArrayType"]
@@ -98,3 +99,12 @@ export const getReferencesForArrayType: GetReferences<ArrayType> = (type, value,
 
 export const formatArrayValue: StructureFormatter<ArrayType> = (type, value) =>
   Array.isArray(value) ? value.map(item => formatValue(type.items, item)) : value
+
+export const checkCustomConstraintsInArrayType: CustomConstraintValidator<ArrayType> = (
+  type,
+  value,
+  helpers,
+) =>
+  Array.isArray(value)
+    ? value.flatMap(item => checkCustomConstraintsInType(type.items, item, helpers))
+    : []

@@ -2,10 +2,12 @@ import type {
   SerializedEntityDisplayName,
   UniqueConstraints,
 } from "../../../shared/schema/declarations/EntityDecl.ts"
+import type { InstanceContent } from "../../../shared/utils/instances.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { CustomConstraint, TypedCustomConstraint } from "../../utils/customConstraints.ts"
 import type { DisplayNameCustomizer, TypedDisplayNameCustomizer } from "../../utils/displayName.ts"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -25,6 +27,7 @@ import {
 } from "../types/generic/ObjectType.ts"
 import { StringType } from "../types/primitives/StringType.ts"
 import type { NestedEntityMapType } from "../types/references/NestedEntityMapType.ts"
+import { checkCustomConstraintsInType } from "../types/Type.ts"
 import type { BaseDecl } from "./Declaration.ts"
 import { validateDeclName } from "./Declaration.ts"
 import { TypeAliasDecl } from "./TypeAliasDecl.ts"
@@ -304,3 +307,11 @@ export const serializeEntityDecl = (<
 
 export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value, inDecl) =>
   getReferencesForObjectType(decl.type.value, value, [...inDecl, decl])
+
+export const checkCustomConstraintsInEntityDecl: CustomConstraintValidator<
+  EntityDecl,
+  [id: string, content: InstanceContent]
+> = (decl, value, helpers) =>
+  (
+    decl.customConstraints?.({ ...helpers, instanceId: value[0], instanceContent: value[1] }) ?? []
+  ).concat(checkCustomConstraintsInType(decl.type.value, value, helpers))

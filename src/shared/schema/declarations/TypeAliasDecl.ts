@@ -18,6 +18,7 @@ export interface SerializedTypeAliasDecl<
   kind: NodeKind["TypeAliasDecl"]
   type: T
   isDeprecated?: boolean
+  customConstraints: boolean
 }
 
 export const isSerializedTypeAliasDecl = (node: SerializedNode): node is SerializedTypeAliasDecl =>

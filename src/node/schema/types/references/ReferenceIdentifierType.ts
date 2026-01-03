@@ -1,6 +1,7 @@
 import type { EntityDecl } from "../../declarations/EntityDecl.ts"
 import { createEntityIdentifierType } from "../../declarations/EntityDecl.ts"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Node,
@@ -64,3 +65,7 @@ export const formatReferenceIdentifierValue: StructureFormatter<ReferenceIdentif
   _type,
   value,
 ) => value
+
+export const checkCustomConstraintsInReferenceIdentifierType: CustomConstraintValidator<
+  ReferenceIdentifierType
+> = () => []

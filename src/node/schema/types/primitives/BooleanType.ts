@@ -1,6 +1,12 @@
 import { json } from "../../../utils/errorFormatting.ts"
 import type { GetNestedDeclarations, TypeArgumentsResolver } from "../../index.ts"
-import type { GetReferences, Predicate, Serializer, Validator } from "../../Node.ts"
+import type {
+  CustomConstraintValidator,
+  GetReferences,
+  Predicate,
+  Serializer,
+  Validator,
+} from "../../Node.ts"
 import { NodeKind } from "../../Node.ts"
 import type { BaseType, StructureFormatter } from "../Type.ts"
 
@@ -37,3 +43,5 @@ export const serializeBooleanType: Serializer<BooleanType> = type => type
 export const getReferencesForBooleanType: GetReferences<BooleanType> = () => []
 
 export const formatBooleanValue: StructureFormatter<BooleanType> = (_type, value) => value
+
+export const checkCustomConstraintsInBooleanType: CustomConstraintValidator<BooleanType> = () => []

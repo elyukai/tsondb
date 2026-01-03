@@ -2,6 +2,7 @@ import type { DateConstraints } from "../../../../shared/validation/date.ts"
 import { validateDateConstraints } from "../../../../shared/validation/date.ts"
 import { json } from "../../../utils/errorFormatting.ts"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -43,3 +44,5 @@ export const serializeDateType: Serializer<DateType> = type => type
 export const getReferencesForDateType: GetReferences<DateType> = () => []
 
 export const formatDateValue: StructureFormatter<DateType> = (_type, value) => value
+
+export const checkCustomConstraintsInDateType: CustomConstraintValidator<DateType> = () => []

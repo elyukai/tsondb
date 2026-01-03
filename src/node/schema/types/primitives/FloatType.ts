@@ -2,6 +2,7 @@ import type { NumberConstraints } from "../../../../shared/validation/number.ts"
 import { validateNumberConstraints } from "../../../../shared/validation/number.ts"
 import { json } from "../../../utils/errorFormatting.ts"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -59,3 +60,5 @@ export const serializeFloatType: Serializer<FloatType> = type => type
 export const getReferencesForFloatType: GetReferences<FloatType> = () => []
 
 export const formatFloatValue: StructureFormatter<FloatType> = (_type, value) => value
+
+export const checkCustomConstraintsInFloatType: CustomConstraintValidator<FloatType> = () => []

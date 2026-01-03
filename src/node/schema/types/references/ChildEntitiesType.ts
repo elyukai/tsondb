@@ -1,5 +1,6 @@
 import { type EntityDecl } from "../../declarations/EntityDecl.ts"
 import {
+  type CustomConstraintValidator,
   type GetNestedDeclarations,
   type GetReferences,
   type Predicate,
@@ -59,3 +60,7 @@ export const getReferencesForChildEntitiesType: GetReferences<ChildEntitiesType>
 
 export const formatChildEntitiesValue: StructureFormatter<ChildEntitiesType> = (_type, value) =>
   Array.isArray(value) ? value.toSorted() : value
+
+export const checkCustomConstraintsInChildEntitiesType: CustomConstraintValidator<
+  ChildEntitiesType
+> = () => []

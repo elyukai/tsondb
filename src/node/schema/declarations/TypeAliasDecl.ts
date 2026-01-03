@@ -1,5 +1,10 @@
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type {
+  NestedCustomConstraint,
+  TypedNestedCustomConstraint,
+} from "../../utils/customConstraints.ts"
+import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -18,7 +23,7 @@ import {
 } from "../Node.ts"
 import type { TypeParameter } from "../TypeParameter.ts"
 import { serializeTypeParameter } from "../TypeParameter.ts"
-import type { Type } from "../types/Type.ts"
+import { checkCustomConstraintsInType, type Type } from "../types/Type.ts"
 import type { BaseDecl, Decl, TypeArguments } from "./Declaration.ts"
 import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
 
@@ -30,6 +35,7 @@ export interface TypeAliasDecl<
   kind: NodeKind["TypeAliasDecl"]
   type: Lazy<T>
   isDeprecated?: boolean
+  customConstraints?: NestedCustomConstraint
 }
 
 export const GenTypeAliasDecl = <
@@ -44,6 +50,7 @@ export const GenTypeAliasDecl = <
     isDeprecated?: boolean
     parameters: Params
     type: (...args: Params) => T
+    customConstraints?: TypedNestedCustomConstraint<Name>
   },
 ): TypeAliasDecl<Name, T, Params> => {
   validateDeclName(options.name)
@@ -53,6 +60,7 @@ export const GenTypeAliasDecl = <
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,
     type: Lazy.of(() => options.type(...options.parameters)),
+    customConstraints: options.customConstraints as NestedCustomConstraint | undefined, // ignore contravariance of registered enum type
   }
 
   return decl
@@ -67,6 +75,7 @@ export const TypeAliasDecl = <Name extends string, T extends Type>(
     comment?: string
     isDeprecated?: boolean
     type: () => T
+    customConstraints?: TypedNestedCustomConstraint<Name>
   },
 ): TypeAliasDecl<Name, T, []> => {
   validateDeclName(options.name)
@@ -77,6 +86,7 @@ export const TypeAliasDecl = <Name extends string, T extends Type>(
     sourceUrl,
     parameters: [],
     type: Lazy.of(() => options.type()),
+    customConstraints: options.customConstraints as NestedCustomConstraint | undefined, // ignore contravariance of registered type alias type
   }
 
   return decl
@@ -114,13 +124,24 @@ export const resolveTypeArgumentsInTypeAliasDecl: TypeArgumentsResolver<TypeAlia
   TypeAliasDecl(decl.sourceUrl, {
     ...decl,
     type: () => resolveTypeArguments(args, decl.type.value, [...inDecl, decl]),
+    customConstraints: decl.customConstraints as TypedNestedCustomConstraint<string> | undefined, // ignore contravariance of registered type alias type
   })
 
 export const serializeTypeAliasDecl: Serializer<TypeAliasDecl> = type => ({
   ...type,
   type: serializeNode(type.type.value),
   parameters: type.parameters.map(param => serializeTypeParameter(param)),
+  customConstraints: type.customConstraints !== undefined,
 })
 
 export const getReferencesForTypeAliasDecl: GetReferences<TypeAliasDecl> = (decl, value, inDecl) =>
   getReferences(decl.type.value, value, [...inDecl, decl])
+
+export const checkCustomConstraintsInTypeAliasDecl: CustomConstraintValidator<TypeAliasDecl> = (
+  decl,
+  value,
+  helpers,
+) =>
+  (decl.customConstraints?.({ ...helpers, value }) ?? []).concat(
+    checkCustomConstraintsInType(decl.type.value, value, helpers),
+  )

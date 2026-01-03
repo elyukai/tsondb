@@ -3,6 +3,7 @@ import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key } from "../../../utils/errorFormatting.ts"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -19,11 +20,10 @@ import {
   validateType,
 } from "../../Node.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
-import { formatValue } from "../Type.ts"
+import { checkCustomConstraintsInType, formatValue } from "../Type.ts"
 
-export interface EnumType<
-  T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>,
-> extends BaseType {
+export interface EnumType<T extends Record<string, EnumCaseDecl> = Record<string, EnumCaseDecl>>
+  extends BaseType {
   kind: NodeKind["EnumType"]
   values: T
 }
@@ -218,4 +218,33 @@ export const formatEnumType: StructureFormatter<EnumType> = (type, value) => {
   }
 
   return value
+}
+
+export const checkCustomConstraintsInEnumType: CustomConstraintValidator<EnumType> = (
+  type,
+  value,
+  helpers,
+) => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    !(ENUM_DISCRIMINATOR_KEY in value)
+  ) {
+    return []
+  }
+
+  const enumCase = value[ENUM_DISCRIMINATOR_KEY]
+
+  return typeof enumCase === "string" &&
+    enumCase in type.values &&
+    type.values[enumCase] !== undefined &&
+    type.values[enumCase].type !== null &&
+    enumCase in value
+    ? checkCustomConstraintsInType(
+        type.values[enumCase].type,
+        (value as Record<string, unknown>)[enumCase],
+        helpers,
+      )
+    : []
 }

@@ -6,6 +6,7 @@ import { validateObjectConstraints } from "../../../../shared/validation/object.
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key as keyColor } from "../../../utils/errorFormatting.ts"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -25,12 +26,13 @@ import {
 import { validateOption } from "../../validation/options.ts"
 import { isChildEntitiesType } from "../references/ChildEntitiesType.ts"
 import type { BaseType, StructureFormatter, Type } from "../Type.ts"
-import { formatValue } from "../Type.ts"
+import { checkCustomConstraintsInType, formatValue } from "../Type.ts"
 
 type TConstraint = Record<string, MemberDecl>
 
 export interface ObjectType<T extends TConstraint = TConstraint>
-  extends BaseType, ObjectConstraints {
+  extends BaseType,
+    ObjectConstraints {
   kind: NodeKind["ObjectType"]
   properties: T
 }
@@ -217,3 +219,16 @@ export const formatObjectValue: StructureFormatter<ObjectType> = (type, value) =
         Object.keys(type.properties),
       )
     : value
+
+export const checkCustomConstraintsInObjectType: CustomConstraintValidator<ObjectType> = (
+  type,
+  value,
+  helpers,
+) =>
+  typeof value === "object" && value !== null
+    ? Object.entries(value).flatMap(([key, propValue]) =>
+        type.properties[key]
+          ? checkCustomConstraintsInType(type.properties[key].type, propValue, helpers)
+          : [],
+      )
+    : []

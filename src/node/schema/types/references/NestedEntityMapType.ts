@@ -6,6 +6,7 @@ import { entity, json, key as keyColor } from "../../../utils/errorFormatting.ts
 import type { EntityDecl } from "../../declarations/EntityDecl.js"
 import type { TypeAliasDecl } from "../../declarations/TypeAliasDecl.js"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -17,6 +18,7 @@ import { getNestedDeclarations, NodeKind, resolveTypeArguments, validateType } f
 import type { TypeParameter } from "../../TypeParameter.ts"
 import type { MemberDecl, ObjectType } from "../generic/ObjectType.ts"
 import {
+  checkCustomConstraintsInObjectType,
   getReferencesForObjectType,
   isObjectType,
   serializeObjectType,
@@ -24,6 +26,7 @@ import {
 import type { BaseType, StructureFormatter } from "../Type.ts"
 import { formatValue } from "../Type.ts"
 import {
+  checkCustomConstraintsInIncludeIdentifierType,
   formatIncludeIdentifierValue,
   getReferencesForIncludeIdentifierType,
   serializeIncludeIdentifierType,
@@ -169,3 +172,10 @@ export const formatNestedEntityMapValue: StructureFormatter<NestedEntityMapType>
         )
       : value
     : formatIncludeIdentifierValue(type.type.value, value)
+
+export const checkCustomConstraintsInNestedEntityMapType: CustomConstraintValidator<
+  NestedEntityMapType
+> = (type, value, helpers) =>
+  isObjectType(type.type.value)
+    ? checkCustomConstraintsInObjectType(type.type.value, value, helpers)
+    : checkCustomConstraintsInIncludeIdentifierType(type.type.value, value, helpers)

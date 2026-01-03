@@ -10,6 +10,7 @@ import { validateUnknownKeys } from "../../../../shared/validation/object.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { json, key as keyColor } from "../../../utils/errorFormatting.ts"
 import type {
+  CustomConstraintValidator,
   GetNestedDeclarations,
   GetReferences,
   Predicate,
@@ -190,3 +191,7 @@ export const getTypeOfKey = <T extends TConstraint>(
         ...parentType,
         properties: keyValue,
       }
+
+export const checkCustomConstraintsInTranslationObjectType: CustomConstraintValidator<
+  TranslationObjectType
+> = () => []

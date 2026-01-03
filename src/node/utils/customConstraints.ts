@@ -5,7 +5,7 @@ import type {
   InstanceContent,
 } from "../../shared/utils/instances.ts"
 import { error, isError, mapError, ok, type Result } from "../../shared/utils/result.ts"
-import type { RegisteredEntity } from "../schema/externalTypes.ts"
+import type { RegisteredEntity, RegisteredEnumOrTypeAlias } from "../schema/externalTypes.ts"
 import {
   normalizedIdArgs,
   type GetAllChildInstancesForParent,
@@ -14,31 +14,20 @@ import {
   type GetDisplayNameWithId,
   type GetInstanceById,
 } from "../schema/helpers.ts"
-import type { EntityDecl } from "../schema/index.ts"
+import { checkCustomConstraintsInEntityDecl, type EntityDecl } from "../schema/index.ts"
 import {
   getInstanceOfEntityFromDatabaseInMemory,
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
 } from "./databaseInMemory.ts"
 
-/**
- * A constraint that can be defined on an entity to enforce custom validation logic.
- *
- * The constraint function receives the instance to validate and helper functions
- * to retrieve other instances from the database.
- *
- * It should return an array of strings describing the parts of the constraint
- * that were violated. If the array is empty, the instance is considered valid.
- */
-export type CustomConstraint = (params: {
-  instanceId: string
-  instanceContent: InstanceContent
+export type CustomConstraintHelpers = {
   getInstanceById: GetInstanceById
   getAllInstances: GetAllInstances
   getAllChildInstancesForParent: GetAllChildInstancesForParent
   getDisplayName: GetDisplayName
   getDisplayNameWithId: GetDisplayNameWithId
-}) => string[]
+}
 
 /**
  * A constraint that can be defined on an entity to enforce custom validation logic.
@@ -49,15 +38,60 @@ export type CustomConstraint = (params: {
  * It should return an array of strings describing the parts of the constraint
  * that were violated. If the array is empty, the instance is considered valid.
  */
-export type TypedCustomConstraint<Name extends string> = (params: {
-  instanceId: string
-  instanceContent: RegisteredEntity<Name>
-  getInstanceById: GetInstanceById
-  getAllInstances: GetAllInstances
-  getAllChildInstancesForParent: GetAllChildInstancesForParent
-  getDisplayName: GetDisplayName
-  getDisplayNameWithId: GetDisplayNameWithId
-}) => string[]
+export type CustomConstraint = (
+  params: {
+    instanceId: string
+    instanceContent: InstanceContent
+  } & CustomConstraintHelpers,
+) => string[]
+
+/**
+ * A constraint that can be defined on an enum or type alias to enforce custom
+ * validation logic.
+ *
+ * The constraint function receives the value to validate and helper functions
+ * to retrieve other instances from the database.
+ *
+ * It should return an array of strings describing the parts of the constraint
+ * that were violated. If the array is empty, the value is considered valid.
+ */
+export type NestedCustomConstraint = (
+  params: {
+    value: unknown
+  } & CustomConstraintHelpers,
+) => string[]
+
+/**
+ * A constraint that can be defined on an entity to enforce custom validation logic.
+ *
+ * The constraint function receives the instance to validate and helper functions
+ * to retrieve other instances from the database.
+ *
+ * It should return an array of strings describing the parts of the constraint
+ * that were violated. If the array is empty, the instance is considered valid.
+ */
+export type TypedCustomConstraint<Name extends string> = (
+  params: {
+    instanceId: string
+    instanceContent: RegisteredEntity<Name>
+  } & CustomConstraintHelpers,
+) => string[]
+
+/**
+ * A constraint that can be defined on an enum or type alias to enforce custom
+ * validation logic.
+ *
+ * The constraint function receives the value to validate and helper functions
+ * to retrieve other instances from the database.
+ *
+ * It should return an array of strings describing the parts of the constraint
+ * that were violated. If the array is empty, the value is considered valid.
+ */
+export type TypedNestedCustomConstraint<Name extends string> = (
+  params: {
+    instanceContent: RegisteredEnumOrTypeAlias<Name>
+  } & CustomConstraintHelpers,
+) => string[]
 
 /**
  * Checks all custom constraints for all provided entities and their instances.
@@ -104,26 +138,20 @@ export const checkCustomConstraintsForAllEntities = (
     return displayName ? `"${displayName}" (${id})` : id
   }
 
+  const helpers: CustomConstraintHelpers = {
+    getInstanceById,
+    getAllInstances,
+    getAllChildInstancesForParent,
+    getDisplayName,
+    getDisplayNameWithId,
+  }
+
   return mapError(
     Object.values(entitiesByName).reduce<Result<void, AggregateError[]>>((acc, entity) => {
-      const constraintFn = entity.customConstraints
-
-      if (!constraintFn) {
-        return acc
-      }
-
       const errors = getInstancesOfEntityFromDatabaseInMemory(db, entity.name)
         .map((instance): [InstanceContainer, string[]] => [
           instance,
-          constraintFn({
-            getInstanceById,
-            getAllInstances,
-            getAllChildInstancesForParent,
-            getDisplayName,
-            getDisplayNameWithId,
-            instanceId: instance.id,
-            instanceContent: instance.content,
-          }),
+          checkCustomConstraintsInEntityDecl(entity, [instance.id, instance.content], helpers),
         ])
         .filter(([, violations]) => violations.length > 0)
         .map(([instance, violations]) => {

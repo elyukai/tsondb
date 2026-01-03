@@ -21,6 +21,7 @@ export interface SerializedEnumDecl<
   kind: NodeKind["EnumDecl"]
   type: SerializedEnumType<T>
   isDeprecated?: boolean
+  customConstraints: boolean
 }
 
 export const isSerializedEnumDecl = (node: SerializedNode): node is SerializedEnumDecl =>
