@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.17.5](https://github.com/elyukai/tsondb/compare/v0.17.4...v0.17.5) (2026-01-03)
+
+
+### Features
+
+* nested custom constraints ([dbddb36](https://github.com/elyukai/tsondb/commit/dbddb3673e26276d19495d778e2c07771e26655f))
+* **ts-renderer:** enum and type alias map helpers ([6436b1c](https://github.com/elyukai/tsondb/commit/6436b1c76293d33b636fbdd723a4b06c862bacf1))
+
 ## [0.17.4](https://github.com/elyukai/tsondb/compare/v0.17.3...v0.17.4) (2026-01-01)
 
 
