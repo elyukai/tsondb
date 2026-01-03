@@ -162,8 +162,7 @@ type MemberDeclsAsType<P extends Record<string, MemberDecl>> = {
 type MemberDeclsAsDeepType<P extends Record<string, MemberDecl>> = {
   [K in keyof P]: P[K] extends MemberDecl<Type, true>
     ? AsDeepType<P[K]["type"]>
-    : // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- it does make a difference here
-      AsDeepType<P[K]["type"]> | undefined
+    : AsDeepType<P[K]["type"]> | undefined
 }
 
 export type AsDeepType<T extends Type> =
