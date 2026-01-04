@@ -6,6 +6,7 @@ export const defaultSettings: UserSettings = {
   displayedLocales: [],
   enumDisplay: "select",
   gitSidebar: true,
+  defaultFolding: "expanded",
 }
 
 export type SettingsContext = {

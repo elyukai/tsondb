@@ -15,6 +15,7 @@ export const Settings: FunctionComponent = () => {
   const [locales, setLocales] = useSetting("displayedLocales")
   const [enumDisplay, setEnumDisplay] = useSetting("enumDisplay")
   const [isGitAlwaysOpen, setIsGitAlwaysOpen] = useSetting("gitSidebar")
+  const [defaultFolding, setDefaultFolding] = useSetting("defaultFolding")
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const config = useContext(ConfigContext)
   const [localeInstances] = useMappedAPIResource(
@@ -177,6 +178,36 @@ export const Settings: FunctionComponent = () => {
             }}
           />
           <label htmlFor="git-sidebar-always-open">Display as sidebar in larger viewports</label>
+        </div>
+        <h3>Default Editor Folding</h3>
+        <p class="description">
+          Choose if editors are expanded or collapsed by default when opening an instance page.
+        </p>
+        <div className="field--option">
+          <input
+            type="radio"
+            name="editor-folding"
+            id="editor-folding-expanded"
+            value="expanded"
+            checked={defaultFolding === "expanded"}
+            onChange={() => {
+              setDefaultFolding("expanded")
+            }}
+          />
+          <label htmlFor="editor-folding-expanded">Expanded</label>
+        </div>
+        <div className="field--option">
+          <input
+            type="radio"
+            name="editor-folding"
+            id="editor-folding-collapsed"
+            value="radio"
+            checked={defaultFolding === "collapsed"}
+            onChange={() => {
+              setDefaultFolding("collapsed")
+            }}
+          />
+          <label htmlFor="editor-folding-collapsed">Collapsed</label>
         </div>
       </ModalDialog>
     </>

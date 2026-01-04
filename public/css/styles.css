@@ -682,6 +682,36 @@ form > .field--container {
   display: block;
 }
 
+.field--child-entities,
+.field--child-entities > ul > li,
+.field--child-entities > ol > li {
+  border-color: var(--color-foreground-tertiary);
+}
+
+.field--child-entities {
+  border-width: 2px;
+  border-left-width: 4px;
+}
+
+.field--child-entities > ul > li,
+.field--child-entities > ol > li {
+  border-top-width: 2px;
+}
+
+.child-entity-item > .container-item-title,
+.child-entity-item > .container-item-header > .container-item-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: start;
+  flex-direction: row;
+}
+
+.child-entity-item > .container-item-title .id,
+.child-entity-item > .container-item-header > .container-item-title .id {
+  font-size: 1rem;
+}
+
 .field--container > ul > li:first-child,
 .field--container > ol > li:first-child {
   padding-top: 0;

@@ -5,12 +5,17 @@ import { isSerializedEntityDecl } from "../../../shared/schema/declarations/Enti
 import type { SerializedChildEntitiesType } from "../../../shared/schema/types/ChildEntitiesType.ts"
 import { removeAt } from "../../../shared/utils/array.ts"
 import type { InstanceContent } from "../../../shared/utils/instances.ts"
+import { useSetting } from "../../hooks/useSettings.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
-import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
+import { ChildEntitiesTypeInputElement } from "./ChildEntitiesTypeInputElement.tsx"
+import { type TypeInputProps } from "./TypeInput.tsx"
 
 type Props = TypeInputProps<SerializedChildEntitiesType>
 
 export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
+  const [locales] = useSetting("displayedLocales")
+  const [defaultFolding] = useSetting("defaultFolding")
+
   const { type, path, childInstances, disabled, getDeclFromDeclName, setChildInstances } = props
 
   const childEntity = getDeclFromDeclName(type.entity)
@@ -109,47 +114,26 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
   }
 
   return (
-    <div class="field field--container field--array">
+    <div class="field field--container field--array field--child-entities">
       {childInstancesForEntity.length > 0 ? (
         <ol>
-          {childInstancesForEntity.map(([item, originalIndex], i) => (
-            <li class="container-item array-item" key={i}>
-              <div className="container-item-header">
-                <div className="container-item-title">{i + 1}.</div>
-                <div class="container-item-actions">
-                  <button
-                    onClick={() => {
-                      onChildDuplicate(i)
-                    }}
-                    disabled={disabled}
-                  >
-                    Duplicate Item #{i + 1}
-                  </button>
-                  <button
-                    class="destructive"
-                    onClick={() => {
-                      onChildRemove(i)
-                    }}
-                    disabled={disabled}
-                  >
-                    Delete Item #{i + 1}
-                  </button>
-                </div>
-              </div>
-              <TypeInput
-                {...props}
-                type={childEntity.type}
-                value={item.content}
-                parentKey={childEntity.parentReferenceKey}
-                onChange={newItem => {
-                  onChildChange(originalIndex, newItem as InstanceContent) // guaranteed to be an object because of the ObjectType in the child entity
-                }}
-                childInstances={item.childInstances}
-                setChildInstances={newChildInstances => {
-                  onGrandChildrenChange(originalIndex, newChildInstances)
-                }}
-              />
-            </li>
+          {childInstancesForEntity.map(([item, originalIndex], index) => (
+            <ChildEntitiesTypeInputElement
+              key={index}
+              {...props}
+              item={{
+                index,
+                originalIndex,
+                item,
+                childEntity,
+                locales,
+                defaultFolding,
+                onChildChange,
+                onGrandChildrenChange,
+                onChildDuplicate,
+                onChildRemove,
+              }}
+            />
           ))}
         </ol>
       ) : (

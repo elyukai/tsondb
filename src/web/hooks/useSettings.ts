@@ -7,6 +7,7 @@ export type UserSettings = {
   displayedLocales: string[]
   enumDisplay: "select" | "radio"
   gitSidebar: boolean
+  defaultFolding: "expanded" | "collapsed"
 }
 
 const settingsGuards: { [K in keyof UserSettings]: (v: unknown) => v is UserSettings[K] } = {
@@ -15,6 +16,8 @@ const settingsGuards: { [K in keyof UserSettings]: (v: unknown) => v is UserSett
   enumDisplay: (v): v is "select" | "radio" =>
     typeof v === "string" && ["select", "radio"].includes(v),
   gitSidebar: (v): v is boolean => typeof v === "boolean",
+  defaultFolding: (v): v is "expanded" | "collapsed" =>
+    typeof v === "string" && ["expanded", "collapsed"].includes(v),
 }
 
 const defaultSettingsFromConfig = (config: WebConfig): UserSettings => ({
