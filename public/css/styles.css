@@ -107,8 +107,8 @@
     --color-syntax-table-marker: rgb(244, 135, 171);
     --color-syntax-attributed: rgb(137, 157, 244);
     --color-syntax-heading-marker: rgb(140, 229, 231);
-  --color-syntax-footnote: rgb(157, 199, 255);
-  --color-syntax-section: rgb(247, 231, 135);
+    --color-syntax-footnote: rgb(157, 199, 255);
+    --color-syntax-section: rgb(247, 231, 135);
   }
 }
 
@@ -627,6 +627,7 @@ select {
 
 .field {
   margin: 0.75rem 0 0;
+  align-self: center;
 }
 
 .field:only-child {
@@ -673,13 +674,16 @@ form > .field--container {
   margin: 0;
   padding: 0;
   list-style-type: " ";
+  display: grid;
+  grid-template-columns: fit-content(33.3333%) 1fr fit-content(100%);
+  grid-auto-rows: auto;
 }
 
 .field--container > ul > li,
 .field--container > ol > li {
   padding-block: 0.5rem;
   border-top: 1px solid var(--color-separator);
-  display: block;
+  grid-column: 1 / 4;
 }
 
 .field--child-entities,
@@ -859,8 +863,50 @@ form > .field--container {
   border-top: none;
 }
 
-.container-item {
+:is(.array-item, .object-item) {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "title actions" "type type";
+}
+
+:is(.array-item, .object-item).simple-item {
+  grid-template-columns: fit-content(100%) 1fr fit-content(100%);
+  grid-template-areas: "title type actions";
+  gap: 1rem;
+}
+
+@supports (grid-template-rows: subgrid) {
+  :is(.array-item, .object-item).simple-item {
+    grid-template-columns: subgrid;
+  }
+}
+
+:is(.array-item, .object-item) > .field {
+  grid-area: type;
   container-type: inline-size;
+}
+
+:is(.array-item, .object-item).simple-item > .field {
+  margin-top: 0;
+}
+
+:is(.array-item, .object-item).simple-item > .container-item-actions {
+  margin-left: 0;
+}
+
+.simple-item > .field:first-child {
+  grid-column-start: 1;
+  grid-column-end: 4;
+}
+
+.simple-item > .field:nth-child(2) {
+  grid-column-start: 2;
+  grid-column-end: 4;
+}
+
+.simple-item > .container-item-actions + .field:nth-child(2) {
+  grid-column-start: 1;
+  grid-column-end: 3;
 }
 
 .container-item-header {
@@ -874,6 +920,8 @@ form > .field--container {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  grid-area: title;
+  align-self: center;
 }
 
 .container-item-title .id {
@@ -891,6 +939,9 @@ form > .field--container {
   display: flex;
   gap: 0.5rem;
   margin-left: 1rem;
+  grid-area: actions;
+  justify-content: end;
+  align-self: center;
 }
 
 .add-item-container {

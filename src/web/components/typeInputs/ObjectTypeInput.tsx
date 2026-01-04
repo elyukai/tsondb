@@ -1,5 +1,6 @@
 import type { FunctionComponent } from "preact"
 import type { SerializedObjectType } from "../../../shared/schema/types/ObjectType.ts"
+import { isSinglularInputFieldType } from "../../../shared/schema/types/Type.ts"
 import { sortObjectKeys } from "../../../shared/utils/object.ts"
 import { toTitleCase } from "../../../shared/utils/string.ts"
 import { validateObjectConstraints } from "../../../shared/validation/object.ts"
@@ -19,15 +20,28 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
   }
 
   const errors = validateObjectConstraints(type, Object.keys(type.properties), value)
+  const hasOnlySimpleItems = Object.values(type.properties).every(memberDecl =>
+    isSinglularInputFieldType(getDeclFromDeclName, memberDecl.type),
+  )
 
   return (
-    <div class={"field field--container field--object" + (disabled ? " field--disabled" : "")}>
+    <div
+      class={
+        "field field--container field--object" +
+        (disabled ? " field--disabled" : "") +
+        (hasOnlySimpleItems ? " field--simple-container field--simple-object" : "")
+      }
+    >
       <ul>
         {Object.entries(type.properties)
           .filter(([key]) => key !== parentKey)
-          .map(([key, memberDecl]) => (
-            <li class="container-item object-item" key={key}>
-              <div className="container-item-header">
+          .map(([key, memberDecl]) => {
+            const isSimpleItem = isSinglularInputFieldType(getDeclFromDeclName, memberDecl.type)
+            return (
+              <li
+                class={"container-item object-item" + (isSimpleItem ? " simple-item" : "")}
+                key={key}
+              >
                 <div className="container-item-title">
                   <strong>{memberDecl.displayName ?? toTitleCase(key)}</strong>
                   {memberDecl.comment === undefined ? null : (
@@ -36,53 +50,67 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
                 </div>
                 {memberDecl.isRequired ? null : (value as Record<string, unknown>)[key] ===
                   undefined ? (
-                  <button
-                    onClick={() => {
+                  <div className="container-item-actions">
+                    <button
+                      onClick={() => {
+                        onChange(
+                          sortObjectKeys(
+                            {
+                              ...value,
+                              [key]: createTypeSkeleton(getDeclFromDeclName, memberDecl.type),
+                            },
+                            Object.keys(type.properties),
+                          ),
+                        )
+                      }}
+                      disabled={disabled}
+                    >
+                      Add {memberDecl.displayName ?? toTitleCase(key)}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="container-item-actions">
+                    <button
+                      class="destructive"
+                      onClick={() => {
+                        const newObj = { ...value }
+                        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+                        delete newObj[key as keyof typeof newObj]
+                        onChange(newObj)
+                      }}
+                      disabled={disabled}
+                    >
+                      Remove {memberDecl.displayName ?? toTitleCase(key)}
+                    </button>
+                  </div>
+                )}
+                {isSimpleItem ||
+                memberDecl.isRequired ||
+                (value as Record<string, unknown>)[key] !== undefined ? (
+                  <TypeInput
+                    {...props}
+                    parentKey={undefined}
+                    type={memberDecl.type}
+                    path={path === undefined ? key : `${path}.${key}`}
+                    value={
+                      (value[key as keyof typeof value] as unknown) ??
+                      createTypeSkeleton(getDeclFromDeclName, memberDecl.type)
+                    }
+                    disabled={
+                      props.disabled ||
+                      (!memberDecl.isRequired &&
+                        (value as Record<string, unknown>)[key] === undefined)
+                    }
+                    onChange={newItem => {
                       onChange(
-                        sortObjectKeys(
-                          {
-                            ...value,
-                            [key]: createTypeSkeleton(getDeclFromDeclName, memberDecl.type),
-                          },
-                          Object.keys(type.properties),
-                        ),
+                        sortObjectKeys({ ...value, [key]: newItem }, Object.keys(type.properties)),
                       )
                     }}
-                    disabled={disabled}
-                  >
-                    Add {memberDecl.displayName ?? toTitleCase(key)}
-                  </button>
-                ) : (
-                  <button
-                    class="destructive"
-                    onClick={() => {
-                      const newObj = { ...value }
-                      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                      delete newObj[key as keyof typeof newObj]
-                      onChange(newObj)
-                    }}
-                    disabled={disabled}
-                  >
-                    Remove {memberDecl.displayName ?? toTitleCase(key)}
-                  </button>
-                )}
-              </div>
-              {memberDecl.isRequired || (value as Record<string, unknown>)[key] !== undefined ? (
-                <TypeInput
-                  {...props}
-                  parentKey={undefined}
-                  type={memberDecl.type}
-                  path={path === undefined ? key : `${path}.${key}`}
-                  value={value[key as keyof typeof value]}
-                  onChange={newItem => {
-                    onChange(
-                      sortObjectKeys({ ...value, [key]: newItem }, Object.keys(type.properties)),
-                    )
-                  }}
-                />
-              ) : null}
-            </li>
-          ))}
+                  />
+                ) : null}
+              </li>
+            )
+          })}
       </ul>
       <ValidationErrors disabled={disabled} errors={errors} />
     </div>

@@ -1,5 +1,6 @@
 import type { FunctionComponent } from "preact"
 import type { SerializedArrayType } from "../../../shared/schema/types/ArrayType.ts"
+import { isSinglularInputFieldType } from "../../../shared/schema/types/Type.ts"
 import { removeAt } from "../../../shared/utils/array.ts"
 import { validateArrayConstraints } from "../../../shared/validation/array.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
@@ -19,28 +20,40 @@ export const ArrayTypeInput: FunctionComponent<Props> = props => {
   const errors = validateArrayConstraints(type, value)
 
   const isTuple = typeof type.minItems === "number" && type.minItems === type.maxItems
+  const hasOnlySimpleItems = isSinglularInputFieldType(getDeclFromDeclName, type.items)
 
   return (
-    <div class={"field field--container field--array" + (disabled ? " field--disabled" : "")}>
+    <div
+      class={
+        "field field--container field--array" +
+        (disabled ? " field--disabled" : "") +
+        (hasOnlySimpleItems ? " field--simple-container field--simple-array" : "")
+      }
+    >
       {value.length > 0 && (
         <ol>
           {value.map((item, i) => (
-            <li class="container-item array-item" key={i}>
+            <li
+              class={"container-item array-item" + (hasOnlySimpleItems ? " simple-item" : "")}
+              key={i}
+            >
               {isTuple ? null : (
-                <div className="container-item-header">
+                <>
                   <div className="container-item-title">{i + 1}.</div>
-                  <button
-                    class="destructive"
-                    onClick={() => {
-                      onChange(removeAt(value, i))
-                    }}
-                    disabled={
-                      disabled || (type.minItems !== undefined && value.length <= type.minItems)
-                    }
-                  >
-                    Delete Item #{i + 1}
-                  </button>
-                </div>
+                  <div className="container-item-actions">
+                    <button
+                      class="destructive"
+                      onClick={() => {
+                        onChange(removeAt(value, i))
+                      }}
+                      disabled={
+                        disabled || (type.minItems !== undefined && value.length <= type.minItems)
+                      }
+                    >
+                      Delete Item #{i + 1}
+                    </button>
+                  </div>
+                </>
               )}
               <TypeInput
                 {...props}

@@ -30,11 +30,12 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
   const enumValues = Object.entries(type.values)
   const activeEnumCase = value[ENUM_DISCRIMINATOR_KEY]
   const activeCaseMember = type.values[activeEnumCase]
+  const isSimpleEnum = enumValues.every(([, caseMember]) => caseMember.type === null)
 
   switch (enumDisplay) {
     case "select":
       return (
-        <div class="field field--enum">
+        <div class={"field field--enum" + (isSimpleEnum ? " field--simple-enum" : "")}>
           <Select
             value={activeEnumCase}
             onInput={event => {
@@ -86,7 +87,7 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
 
     case "radio":
       return (
-        <div class="field field--enum">
+        <div class={"field field--enum" + (isSimpleEnum ? " field--simple-enum" : "")}>
           {enumValues.map(([enumValue, caseMember]) => (
             <div class="field--option" key={enumValue}>
               <input
