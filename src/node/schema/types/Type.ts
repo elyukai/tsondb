@@ -298,7 +298,7 @@ export const findTypeAtPath = (
       isIncludeIdentifierType(type) &&
       options.followTypeAliasIncludes &&
       isTypeAliasDecl(type.reference)
-        ? ok(type.reference.type.value)
+        ? ok([type.reference.type.value, true])
         : error(),
   )
 

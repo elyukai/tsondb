@@ -45,7 +45,7 @@ export const getAtKeyPath = <T>(
   throwOnPathMismatch: boolean,
   fArray: (value: T, index: number) => Result<T, (previousPath: string) => string>,
   fObject: (value: T, key: string) => Result<T, (previousPath: string) => string>,
-  ...fs: ((value: T, key: KeyPathElement) => Result<T, void>)[]
+  ...fs: ((value: T, key: KeyPathElement) => Result<[T, skipKey?: boolean], void>)[]
 ): T => {
   if (isNotEmpty(remainingKeyPath)) {
     const [key, ...remainingPath] = remainingKeyPath
@@ -64,21 +64,24 @@ export const getAtKeyPath = <T>(
             throwOnPathMismatch,
             fArray,
             fObject,
+            ...fs,
           ),
         error => {
           for (const f of fs) {
             const result = f(value, key)
             if (isOk(result)) {
               return getAtKeyPath(
-                result.value,
-                [...previousPath, key],
-                remainingPath,
+                result.value[0],
+                result.value[1] === true ? previousPath : [...previousPath, key],
+                result.value[1] === true ? remainingKeyPath : remainingPath,
                 throwOnPathMismatch,
                 fArray,
                 fObject,
+                ...fs,
               )
             }
           }
+
           if (throwOnPathMismatch) {
             throw new TypeError(error(renderParsedKeyPath(previousPath)))
           } else {
