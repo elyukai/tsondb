@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.17.7](https://github.com/elyukai/tsondb/compare/v0.17.6...v0.17.7) (2026-01-19)
+
+
+### Features
+
+* sort order ([da87b6a](https://github.com/elyukai/tsondb/commit/da87b6ae1c385fb0d42f85f454b56a43e1de606a)), closes [#38](https://github.com/elyukai/tsondb/issues/38)
+* **web:** differenciate child entities from normal array ([eee08c3](https://github.com/elyukai/tsondb/commit/eee08c30d1ec74e77df0c29555f5d9e1f8972f30))
+* **web:** more compat layout for simple values ([d076fa8](https://github.com/elyukai/tsondb/commit/d076fa869d5941e94bd377eee61c68f929c2fe12))
+
+
+### Bug Fixes
+
+* key path traversal with fallback functions ([b0b861c](https://github.com/elyukai/tsondb/commit/b0b861c571dbbab1c17e70472a979bb91ffa56cb))
+
 ## [0.17.6](https://github.com/elyukai/tsondb/compare/v0.17.5...v0.17.6) (2026-01-03)
 
 ## [0.17.5](https://github.com/elyukai/tsondb/compare/v0.17.4...v0.17.5) (2026-01-03)
