@@ -292,6 +292,8 @@ export const findTypeAtPath = (
         return error(previousPath => `Key path "${previousPath}" does not contain an object type.`)
       }
     },
+    // recursively resolves type aliases in includes as this is automatically
+    // called recursively if needed
     type =>
       isIncludeIdentifierType(type) &&
       options.followTypeAliasIncludes &&

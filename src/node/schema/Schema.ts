@@ -1,5 +1,5 @@
 import Debug from "debug"
-import { normalizeKeyPath, renderKeyPath, type KeyPath } from "../../shared/schema/utils/keyPath.ts"
+import { renderKeyPath, type KeyPath } from "../../shared/schema/utils/keyPath.ts"
 import type { UniquingElement } from "../../shared/schema/utils/uniqueConstraint.ts"
 import { anySame } from "../../shared/utils/array.ts"
 import { deepEqual } from "../../shared/utils/compare.ts"
@@ -11,14 +11,11 @@ import { isEntityDecl } from "./declarations/EntityDecl.ts"
 import { cases, isEnumDecl } from "./declarations/EnumDecl.ts"
 import { getNestedDeclarations, NodeKind, type NestedDecl, type Node } from "./Node.ts"
 import type { EnumCaseDecl } from "./types/generic/EnumType.ts"
-import { isObjectType, type MemberDecl, type ObjectType } from "./types/generic/ObjectType.ts"
+import { isObjectType } from "./types/generic/ObjectType.ts"
 import { isStringType } from "./types/primitives/StringType.ts"
 import { isChildEntitiesType } from "./types/references/ChildEntitiesType.ts"
 import { isIncludeIdentifierType } from "./types/references/IncludeIdentifierType.ts"
-import {
-  isNestedEntityMapType,
-  type PossibleNestedType,
-} from "./types/references/NestedEntityMapType.ts"
+import { isNestedEntityMapType } from "./types/references/NestedEntityMapType.ts"
 import {
   isReferenceIdentifierType,
   type ReferenceIdentifierType,
@@ -338,51 +335,31 @@ const checkRecursiveGenericTypeAliasesAndEnumerationsAreOnlyParameterizedDirectl
   }
 }
 
-const getNodeAtKeyPath = (
-  decl: EntityDecl,
-  objectType: ObjectType,
-  keyPath: KeyPath,
-  parent?: string,
-  parentPath: string[] = [],
-): Type => {
-  const [key, ...keyPathRest] = normalizeKeyPath(keyPath)
-  if (key === undefined) {
-    return objectType
-  }
-
-  const memberDecl = objectType.properties[key]
-
-  if (memberDecl === undefined) {
-    throw TypeError(
-      `key "${key}"${parentPath.length === 0 ? "" : " in " + renderKeyPath(parentPath)} in unique constraint of entity "${decl.name}" does not exist in the entity`,
-    )
-  }
-
-  const value = memberDecl.type
-  const actualValue = isIncludeIdentifierType(value) ? value.reference.type.value : value
-
-  if (keyPathRest.length > 0) {
-    if (isObjectType(actualValue)) {
-      return getNodeAtKeyPath(decl, actualValue, keyPathRest, parent, [...parentPath, key])
-    }
-
-    throw TypeError(
-      `value at key "${key}"${parentPath.length === 0 ? "" : ' in "' + renderKeyPath(parentPath) + '"'}${parent ? " " + parent : ""} in unique constraint of entity "${decl.name}" does not contain an object type`,
-    )
-  }
-
-  return value
-}
-
 const checkUniqueConstraintElement = (decl: EntityDecl, element: UniquingElement) => {
+  const getType = (type: Type, keyPath: KeyPath, additionalText = "") => {
+    try {
+      return findTypeAtPath(type, keyPath, {
+        followTypeAliasIncludes: true,
+        throwOnPathMismatch: true,
+      })
+    } catch (err) {
+      throw TypeError(
+        `invalid key path${additionalText} in unique constraint of entity "${decl.name}"`,
+        {
+          cause: err,
+        },
+      )
+    }
+  }
+
   if ("keyPath" in element) {
-    getNodeAtKeyPath(decl, decl.type.value, element.keyPath)
+    getType(decl.type.value, element.keyPath)
 
     if (element.keyPathFallback !== undefined) {
-      getNodeAtKeyPath(decl, decl.type.value, element.keyPathFallback)
+      getType(decl.type.value, element.keyPathFallback)
     }
   } else {
-    const entityMapType = getNodeAtKeyPath(decl, decl.type.value, element.entityMapKeyPath)
+    const entityMapType = getType(decl.type.value, element.entityMapKeyPath)
 
     if (!isNestedEntityMapType(entityMapType)) {
       throw TypeError(
@@ -390,26 +367,15 @@ const checkUniqueConstraintElement = (decl: EntityDecl, element: UniquingElement
       )
     }
 
-    const nestedType = entityMapType.type.value
-
-    const getActualType = <T extends Record<string, MemberDecl>>(
-      type: PossibleNestedType<T>,
-    ): ObjectType<T> =>
-      isIncludeIdentifierType(type) ? getActualType(type.reference.type.value) : type
-
-    const actualType = getActualType(nestedType)
-
-    getNodeAtKeyPath(
-      decl,
-      actualType,
+    getType(
+      entityMapType.type.value,
       element.keyPathInEntityMap,
       `in entity map "${renderKeyPath(element.entityMapKeyPath)}"`,
     )
 
     if (element.keyPathInEntityMapFallback !== undefined) {
-      getNodeAtKeyPath(
-        decl,
-        actualType,
+      getType(
+        entityMapType.type.value,
         element.keyPathInEntityMapFallback,
         `in entity map "${renderKeyPath(element.entityMapKeyPath)}"`,
       )
