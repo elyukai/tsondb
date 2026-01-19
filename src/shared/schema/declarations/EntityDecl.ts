@@ -13,6 +13,7 @@ import {
   type SerializedObjectType,
 } from "../types/ObjectType.ts"
 import type { SerializedStringType } from "../types/StringType.ts"
+import type { SortOrder } from "../utils/sortOrder.ts"
 import type { UniqueConstraints } from "../utils/uniqueConstraint.ts"
 import type { SerializedBaseDecl } from "./Declaration.ts"
 
@@ -71,6 +72,11 @@ export interface SerializedEntityDecl<
   isDeprecated?: boolean
   uniqueConstraints?: UniqueConstraints
   customConstraints: boolean
+
+  /**
+   * The order in which instances of an entity are sorted in the editor. This affects entity details pages and reference options.
+   */
+  sortOrder?: SortOrder
 }
 
 export const isSerializedEntityDecl = (node: SerializedNode): node is SerializedEntityDecl =>

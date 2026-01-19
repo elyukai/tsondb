@@ -1,4 +1,5 @@
 import type { SerializedEntityDisplayName } from "../../../shared/schema/declarations/EntityDecl.ts"
+import type { SortOrder } from "../../../shared/schema/utils/sortOrder.ts"
 import type { UniqueConstraints } from "../../../shared/schema/utils/uniqueConstraint.ts"
 import type { InstanceContent } from "../../../shared/utils/instances.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
@@ -96,6 +97,11 @@ export interface EntityDecl<
   isDeprecated?: boolean
   uniqueConstraints?: UniqueConstraints
   customConstraints?: CustomConstraint
+
+  /**
+   * The order in which instances of an entity are sorted in the editor. This affects entity details pages and reference options.
+   */
+  sortOrder?: SortOrder
 }
 
 export interface EntityDeclWithParentReference<
@@ -136,6 +142,11 @@ export const EntityDecl: {
       isDeprecated?: boolean
       uniqueConstraints?: UniqueConstraints
       customConstraints?: TypedCustomConstraint<Name>
+
+      /**
+       * The order in which instances of an entity are sorted in the editor. This affects entity details pages and reference options.
+       */
+      sortOrder?: SortOrder
     },
   ): EntityDecl<Name, T, undefined>
   <Name extends string, T extends TConstraint, FK extends Extract<keyof T, string>>(
@@ -170,6 +181,11 @@ export const EntityDecl: {
       isDeprecated?: boolean
       uniqueConstraints?: UniqueConstraints
       customConstraints?: TypedCustomConstraint<Name>
+
+      /**
+       * The order in which instances of an entity are sorted in the editor. This affects entity details pages and reference options.
+       */
+      sortOrder?: SortOrder
     },
   ): EntityDecl<Name, T, FK>
 } = <Name extends string, T extends TConstraint, FK extends Extract<keyof T, string> | undefined>(
@@ -204,6 +220,11 @@ export const EntityDecl: {
     isDeprecated?: boolean
     uniqueConstraints?: UniqueConstraints
     customConstraints?: TypedCustomConstraint<Name>
+
+    /**
+     * The order in which instances of an entity are sorted in the editor. This affects entity details pages and reference options.
+     */
+    sortOrder?: SortOrder
   },
 ): EntityDecl<Name, T, FK> => {
   validateDeclName(options.name)

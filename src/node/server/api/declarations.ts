@@ -12,6 +12,7 @@ import type {
   UpdateInstanceOfEntityRequestBody,
   UpdateInstanceOfEntityResponseBody,
 } from "../../../shared/api.ts"
+import { sortBySortOrder } from "../../../shared/schema/utils/sortOrder.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
 import { isOk } from "../../../shared/utils/result.ts"
 import type { Decl } from "../../schema/declarations/Declaration.ts"
@@ -107,17 +108,21 @@ declarationsApi.get("/:name/instances", (req, res) => {
   )
 
   const body: GetAllInstancesOfEntityResponseBody = {
-    instances: getInstancesOfEntityFromDatabaseInMemory(req.databaseInMemory, decl.name)
-      .map(instanceContainer =>
-        getInstanceContainerOverview(
-          decl,
+    instances: sortBySortOrder(
+      getInstancesOfEntityFromDatabaseInMemory(req.databaseInMemory, decl.name).map(
+        instanceContainer => [
           instanceContainer,
-          getInstanceById,
-          getChildInstancesForInstanceId,
-          req.locales,
-        ),
-      )
-      .toSorted((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true })),
+          getInstanceContainerOverview(
+            decl,
+            instanceContainer,
+            getInstanceById,
+            getChildInstancesForInstanceId,
+            req.locales,
+          ),
+        ],
+      ),
+      decl.sortOrder,
+    ).map(arr => arr[1]),
     isLocaleEntity: decl === req.localeEntity,
   }
 

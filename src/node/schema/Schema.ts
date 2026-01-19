@@ -12,6 +12,8 @@ import { cases, isEnumDecl } from "./declarations/EnumDecl.ts"
 import { getNestedDeclarations, NodeKind, type NestedDecl, type Node } from "./Node.ts"
 import type { EnumCaseDecl } from "./types/generic/EnumType.ts"
 import { isObjectType } from "./types/generic/ObjectType.ts"
+import { isFloatType } from "./types/primitives/FloatType.ts"
+import { isIntegerType } from "./types/primitives/IntegerType.ts"
 import { isStringType } from "./types/primitives/StringType.ts"
 import { isChildEntitiesType } from "./types/references/ChildEntitiesType.ts"
 import { isIncludeIdentifierType } from "./types/references/IncludeIdentifierType.ts"
@@ -69,12 +71,17 @@ const checkParameterNamesShadowing = (decls: Decl[]) => {
 
 const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) => {
   const getType = (type: Type, keyPath: KeyPath) =>
-    trySafe(() =>
-      findTypeAtPath(type, keyPath, {
-        followTypeAliasIncludes: true,
-        throwOnPathMismatch: true,
-      }),
-    )
+    trySafe(() => {
+      try {
+        return findTypeAtPath(type, keyPath, {
+          followTypeAliasIncludes: true,
+          throwOnPathMismatch: true,
+        })
+      } catch (error) {
+        console.log(error)
+        throw error
+      }
+    })
 
   for (const decl of decls) {
     if (isEntityDecl(decl) && decl.instanceDisplayName !== null) {
@@ -405,6 +412,65 @@ const checkUniqueConstraints = (declarations: Decl[]) => {
   }
 }
 
+const isValidSortOrderType = (type: Type): boolean =>
+  isStringType(type) || isIntegerType(type) || isFloatType(type)
+
+const checkSortOrders = (declarations: Decl[]) => {
+  for (const decl of declarations) {
+    if (isEntityDecl(decl) && decl.sortOrder !== undefined) {
+      const getType = (type: Type, keyPath: KeyPath, additionalText = "") => {
+        try {
+          return findTypeAtPath(type, keyPath, {
+            followTypeAliasIncludes: true,
+            throwOnPathMismatch: true,
+          })
+        } catch (err) {
+          throw TypeError(
+            `invalid key path${additionalText} in sort order of entity "${decl.name}"`,
+            {
+              cause: err,
+            },
+          )
+        }
+      }
+
+      const sortOrder = decl.sortOrder
+
+      if (sortOrder === "displayName") {
+        continue
+      } else if ("keyPath" in sortOrder) {
+        const type = getType(decl.type.value, sortOrder.keyPath)
+        if (!isValidSortOrderType(type)) {
+          throw TypeError(
+            `type at key path "${renderKeyPath(
+              sortOrder.keyPath,
+            )}" is not a valid sort order type (string, integer, or float) in entity "${decl.name}"`,
+          )
+        }
+      } else {
+        // const entityMapType = getType(decl.type.value, sortOrder.entityMapKeyPath)
+        // if (!isNestedEntityMapType(entityMapType)) {
+        //   throw TypeError(
+        //     `value at key "${renderKeyPath(sortOrder.entityMapKeyPath)}" is not a nested entity map as required by the sort order of entity "${decl.name}"`,
+        //   )
+        // }
+        // const nestedType = getType(
+        //   entityMapType.type.value,
+        //   sortOrder.keyPathInEntityMap,
+        //   `in entity map "${renderKeyPath(sortOrder.entityMapKeyPath)}"`,
+        // )
+        // if (!isValidSortOrderType(nestedType)) {
+        //   throw TypeError(
+        //     `type at key path "${renderKeyPath(
+        //       sortOrder.keyPathInEntityMap,
+        //     )}" in entity map "${renderKeyPath(sortOrder.entityMapKeyPath)}" is not a valid sort order type (string, integer, or float) in entity "${decl.name}"`,
+        //   )
+        // }
+      }
+    }
+  }
+}
+
 const addDeclarations = (existingDecls: NestedDecl[], declsToAdd: NestedDecl[]): NestedDecl[] =>
   declsToAdd.reduce((accDecls, decl) => {
     if (!accDecls.includes(decl)) {
@@ -449,6 +515,8 @@ export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema 
   )
   debug("checking unique constraints ...")
   checkUniqueConstraints(allDeclsWithoutNestedEntities)
+  debug("checking sort orders ...")
+  checkSortOrders(allDeclsWithoutNestedEntities)
 
   debug("created schema, no integrity violations found")
 

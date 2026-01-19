@@ -1,3 +1,4 @@
+import { sortBySortOrder, type SortableInstance } from "../../shared/schema/utils/sortOrder.ts"
 import {
   getSerializedDisplayNameFromEntityInstance,
   type DisplayNameResult,
@@ -112,26 +113,34 @@ export const getAllInstanceOverviewsByEntityName = (
   )
 
   return Object.fromEntries(
-    getGroupedInstancesFromDatabaseInMemory(databaseInMemory).map(([entityName, instances]) => [
-      entityName,
-      instances
-        .map((instance): InstanceContainerOverview => {
-          const { name, localeId } = getDisplayNameFromEntityInstance(
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            entitiesByName[entityName]!,
-            instance,
-            getInstanceById,
-            getChildInstancesForInstanceId,
-            locales,
-          )
-          return {
-            id: instance.id,
-            displayName: name,
-            displayNameLocaleId: localeId,
-            gitStatus: instance.gitStatus,
-          }
-        })
-        .toSorted((a, b) => a.displayName.localeCompare(b.displayName, a.displayNameLocaleId)),
-    ]),
+    getGroupedInstancesFromDatabaseInMemory(databaseInMemory).map(([entityName, instances]) => {
+      const entity = entitiesByName[entityName]
+      return [
+        entityName,
+        sortBySortOrder(
+          instances.map((instance): SortableInstance => {
+            const { name, localeId } = getDisplayNameFromEntityInstance(
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              entitiesByName[entityName]!,
+              instance,
+              getInstanceById,
+              getChildInstancesForInstanceId,
+              locales,
+            )
+
+            return [
+              instance,
+              {
+                id: instance.id,
+                displayName: name,
+                displayNameLocaleId: localeId,
+                gitStatus: instance.gitStatus,
+              },
+            ]
+          }),
+          entity?.sortOrder,
+        ).map(arr => arr[1]),
+      ]
+    }),
   )
 }
