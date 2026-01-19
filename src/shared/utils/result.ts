@@ -35,9 +35,12 @@ export const isOk = <T, E>(result: Result<T, E>): result is Ok<T> => result.tag 
 /**
  * Creates a result that contains an error.
  */
-export const error = <E>(error: E): Result<never, E> => ({
+export const error: {
+  (): Result<never, void>
+  <E>(error: E): Result<never, E>
+} = <E>(error?: E): Result<never, E> => ({
   tag: "Error",
-  error,
+  error: error as E,
 })
 
 /**

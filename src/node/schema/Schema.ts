@@ -1,13 +1,9 @@
 import Debug from "debug"
-import {
-  normalizeKeyPath,
-  renderKeyPath,
-  type KeyPath,
-  type UniquingElement,
-} from "../../shared/schema/declarations/EntityDecl.ts"
+import { normalizeKeyPath, renderKeyPath, type KeyPath } from "../../shared/schema/utils/keyPath.ts"
+import type { UniquingElement } from "../../shared/schema/utils/uniqueConstraint.ts"
 import { anySame } from "../../shared/utils/array.ts"
 import { deepEqual } from "../../shared/utils/compare.ts"
-import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
+import { assertExhaustive, trySafe } from "../../shared/utils/typeSafety.ts"
 import type { Decl } from "./declarations/Declaration.ts"
 import { getParameterNames, walkNodeTree } from "./declarations/Declaration.ts"
 import type { EntityDecl } from "./declarations/EntityDecl.ts"
@@ -75,6 +71,14 @@ const checkParameterNamesShadowing = (decls: Decl[]) => {
 }
 
 const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) => {
+  const getType = (type: Type, keyPath: KeyPath) =>
+    trySafe(() =>
+      findTypeAtPath(type, keyPath, {
+        followTypeAliasIncludes: true,
+        throwOnPathMismatch: true,
+      }),
+    )
+
   for (const decl of decls) {
     if (isEntityDecl(decl) && decl.instanceDisplayName !== null) {
       const displayName = decl.instanceDisplayName ?? "name"
@@ -91,9 +95,7 @@ const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) =
           )
         }
 
-        const localeMapAtPath = findTypeAtPath(decl.type.value, pathToLocaleMap.split("."), {
-          followTypeAliasIncludes: true,
-        })
+        const localeMapAtPath = getType(decl.type.value, pathToLocaleMap)
 
         if (
           !localeMapAtPath ||
@@ -105,11 +107,7 @@ const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) =
           )
         }
 
-        const typeAtLocaleMapPath = findTypeAtPath(
-          localeMapAtPath.type.value,
-          pathInLocaleMap.split("."),
-          { followTypeAliasIncludes: true },
-        )
+        const typeAtLocaleMapPath = getType(localeMapAtPath.type.value, pathInLocaleMap)
 
         if (!typeAtLocaleMapPath || !isStringType(typeAtLocaleMapPath)) {
           throw new Error(
@@ -117,8 +115,8 @@ const checkEntityDisplayNamePaths = (decls: Decl[], localeEntity?: EntityDecl) =
           )
         }
       } else {
-        const path = displayName.split(".")
-        const typeAtPath = findTypeAtPath(decl.type.value, path, { followTypeAliasIncludes: true })
+        const typeAtPath = getType(decl.type.value, displayName)
+
         if (!typeAtPath || !isStringType(typeAtPath)) {
           throw new Error(
             `Display name path "${displayName}" for entity "${decl.name}" does not lead to a value of type string.`,

@@ -1,3 +1,5 @@
+import { getAtKeyPath, parseKeyPath, type KeyPath } from "../../../shared/schema/utils/keyPath.ts"
+import { error, ok } from "../../../shared/utils/result.ts"
 import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import {
   isTypeAliasDecl,
@@ -263,32 +265,40 @@ export type AsNode<T> = T extends (infer I)[]
 
 export const findTypeAtPath = (
   type: Type,
-  path: string[],
-  options: { followTypeAliasIncludes?: boolean } = {},
-): Type | undefined => {
-  const [head, ...tail] = path
-
-  if (head === undefined) {
-    return type
-  }
-
-  if (isObjectType(type)) {
-    const prop = type.properties[head]
-    if (prop) {
-      return findTypeAtPath(prop.type, tail, options)
-    }
-  } else if (isArrayType(type) && head === "0") {
-    return findTypeAtPath(type.items, path, options)
-  } else if (
-    isIncludeIdentifierType(type) &&
-    options.followTypeAliasIncludes &&
-    isTypeAliasDecl(type.reference)
-  ) {
-    return findTypeAtPath(type.reference.type.value, path, options)
-  }
-
-  return undefined
-}
+  path: KeyPath,
+  options: { followTypeAliasIncludes?: boolean; throwOnPathMismatch?: boolean } = {},
+): Type =>
+  getAtKeyPath<Type>(
+    type,
+    [],
+    parseKeyPath(path),
+    options.throwOnPathMismatch ?? false,
+    type =>
+      isArrayType(type)
+        ? ok(type.items)
+        : error(previousPath => `Key path "${previousPath}" does not contain an array type.`),
+    (type, name) => {
+      if (isObjectType(type)) {
+        const prop = type.properties[name]
+        if (prop) {
+          return ok(prop.type)
+        } else {
+          return error(
+            previousPath =>
+              `Object type at key path "${previousPath}" does not contain the property ${name}.`,
+          )
+        }
+      } else {
+        return error(previousPath => `Key path "${previousPath}" does not contain an object type.`)
+      }
+    },
+    type =>
+      isIncludeIdentifierType(type) &&
+      options.followTypeAliasIncludes &&
+      isTypeAliasDecl(type.reference)
+        ? ok(type.reference.type.value)
+        : error(),
+  )
 
 /**
  * Format the structure of a value to always look the same when serialized as JSON.

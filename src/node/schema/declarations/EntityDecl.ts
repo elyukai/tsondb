@@ -1,7 +1,5 @@
-import type {
-  SerializedEntityDisplayName,
-  UniqueConstraints,
-} from "../../../shared/schema/declarations/EntityDecl.ts"
+import type { SerializedEntityDisplayName } from "../../../shared/schema/declarations/EntityDecl.ts"
+import type { UniqueConstraints } from "../../../shared/schema/utils/uniqueConstraint.ts"
 import type { InstanceContent } from "../../../shared/utils/instances.ts"
 import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { CustomConstraint, TypedCustomConstraint } from "../../utils/customConstraints.ts"

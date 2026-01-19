@@ -1,9 +1,5 @@
-import {
-  normalizeKeyPath,
-  renderKeyPath,
-  type KeyPath,
-  type UniqueConstraint,
-} from "../../shared/schema/declarations/EntityDecl.ts"
+import { getValueAtKeyPath, renderKeyPath } from "../../shared/schema/utils/keyPath.ts"
+import type { UniqueConstraint } from "../../shared/schema/utils/uniqueConstraint.ts"
 import { anySameIndices, flatCombine } from "../../shared/utils/array.ts"
 import { deepEqual } from "../../shared/utils/compare.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "../../shared/utils/instances.ts"
@@ -42,14 +38,6 @@ const printUniqueConstraint = (constraint: UniqueConstraint, values: unknown[]) 
     )
     .join("+")
 
-const unsafeGetValueAtKeyPath = (value: unknown, keyPath: KeyPath): unknown => {
-  let acc = value
-  for (const key of normalizeKeyPath(keyPath)) {
-    acc = (acc as Record<string, unknown>)[key]
-  }
-  return acc
-}
-
 /**
  * Checks all unique constraints for the provided entity and its instances.
  *
@@ -73,19 +61,19 @@ export const checkUniqueConstraintsForEntity = (
         normalizedConstraint.map(elem => {
           if ("keyPath" in elem) {
             return [
-              unsafeGetValueAtKeyPath(content, elem.keyPath) ??
+              getValueAtKeyPath(content, elem.keyPath) ??
                 (elem.keyPathFallback
-                  ? unsafeGetValueAtKeyPath(content, elem.keyPathFallback)
+                  ? getValueAtKeyPath(content, elem.keyPathFallback)
                   : undefined),
             ]
           } else {
             return Object.entries(
-              unsafeGetValueAtKeyPath(content, elem.entityMapKeyPath) as Record<string, unknown>,
+              getValueAtKeyPath(content, elem.entityMapKeyPath) as Record<string, unknown>,
             ).map(([nestedId, nestedContent]) => [
               nestedId,
-              unsafeGetValueAtKeyPath(nestedContent, elem.keyPathInEntityMap) ??
+              getValueAtKeyPath(nestedContent, elem.keyPathInEntityMap) ??
                 (elem.keyPathInEntityMapFallback
-                  ? unsafeGetValueAtKeyPath(nestedContent, elem.keyPathInEntityMapFallback)
+                  ? getValueAtKeyPath(nestedContent, elem.keyPathInEntityMapFallback)
                   : undefined),
             ])
           }
