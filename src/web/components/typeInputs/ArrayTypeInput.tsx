@@ -1,7 +1,7 @@
+import { removeAt } from "@elyukai/utils/array/modify"
 import type { FunctionComponent } from "preact"
 import type { SerializedArrayType } from "../../../shared/schema/types/ArrayType.ts"
 import { isSinglularInputFieldType } from "../../../shared/schema/types/Type.ts"
-import { removeAt } from "../../../shared/utils/array.ts"
 import { validateArrayConstraints } from "../../../shared/validation/array.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"

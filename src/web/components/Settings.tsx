@@ -1,7 +1,7 @@
+import { removeAt, reorder } from "@elyukai/utils/array/modify"
 import type { FunctionComponent } from "preact"
 import { useContext, useState } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
-import { removeAt, reorder } from "../../shared/utils/array.ts"
 import { getLocaleInstances } from "../api/declarations.ts"
 import { ConfigContext } from "../context/config.ts"
 import { useMappedAPIResource } from "../hooks/useMappedAPIResource.ts"

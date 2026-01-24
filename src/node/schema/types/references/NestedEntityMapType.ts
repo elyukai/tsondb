@@ -1,5 +1,5 @@
-import { Lazy } from "../../../../shared/utils/lazy.ts"
-import { sortObjectKeysAlphabetically } from "../../../../shared/utils/object.ts"
+import { Lazy } from "@elyukai/utils/lazy"
+import { sortObjectKeys } from "@elyukai/utils/object"
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import { wrapErrorsIfAny } from "../../../utils/error.ts"
 import { entity, json, key as keyColor } from "../../../utils/errorFormatting.ts"
@@ -165,7 +165,7 @@ export const getReferencesForNestedEntityMapType: GetReferences<NestedEntityMapT
 export const formatNestedEntityMapValue: StructureFormatter<NestedEntityMapType> = (type, value) =>
   isObjectType(type.type.value)
     ? typeof value === "object" && value !== null && !Array.isArray(value)
-      ? sortObjectKeysAlphabetically(
+      ? sortObjectKeys(
           Object.fromEntries(
             Object.entries(value).map(([key, item]) => [key, formatValue(type.type.value, item)]),
           ),

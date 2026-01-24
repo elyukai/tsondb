@@ -1,5 +1,5 @@
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { GetDeclFromDeclName } from "../../../web/hooks/useSecondaryDeclarations.ts"
-import { assertExhaustive } from "../../utils/typeSafety.ts"
 import type { BaseNode } from "../Node.ts"
 import type { SerializedArrayType } from "./ArrayType.ts"
 import type { SerializedBooleanType } from "./BooleanType.ts"

@@ -1,7 +1,7 @@
+import { error, ok, type Result } from "@elyukai/utils/result"
 import { AsyncResource } from "node:async_hooks"
 import { EventEmitter } from "node:events"
 import { Worker } from "node:worker_threads"
-import { error, ok, type Result } from "../../shared/utils/result.ts"
 
 // from https://nodejs.org/api/async_context.html#using-asyncresource-for-a-worker-thread-pool
 

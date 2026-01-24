@@ -1,8 +1,8 @@
+import { sortObjectKeys } from "@elyukai/utils/object"
+import { toTitleCase } from "@elyukai/utils/string"
 import type { FunctionComponent } from "preact"
 import { useState } from "preact/hooks"
 import type { SerializedNestedEntityMapType } from "../../../shared/schema/types/NestedEntityMapType.ts"
-import { sortObjectKeysAlphabetically } from "../../../shared/utils/object.ts"
-import { toTitleCase } from "../../../shared/utils/string.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { Select } from "../Select.tsx"
 import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
@@ -79,7 +79,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
                   path={path === undefined ? key : `${path}.${key}`}
                   value={item}
                   onChange={newItem => {
-                    onChange(sortObjectKeysAlphabetically({ ...value, [key]: newItem }))
+                    onChange(sortObjectKeys({ ...value, [key]: newItem }))
                   }}
                 />
               </li>
@@ -113,7 +113,7 @@ export const NestedEntityMapTypeInput: FunctionComponent<Props> = props => {
         <button
           onClick={() => {
             onChange(
-              sortObjectKeysAlphabetically({
+              sortObjectKeys({
                 ...value,
                 [newKey]: createTypeSkeleton(getDeclFromDeclName, type.type),
               }),

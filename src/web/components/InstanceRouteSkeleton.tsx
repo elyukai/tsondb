@@ -1,13 +1,13 @@
+import { deepEqual } from "@elyukai/utils/equality"
+import { toTitleCase } from "@elyukai/utils/string"
 import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute, type LocationHook } from "preact-iso"
 import type { SetStateAction } from "preact/compat"
 import { useCallback, useContext, useEffect, useMemo, useState, type Dispatch } from "preact/hooks"
 import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../node/utils/childInstances.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
-import { deepEqual } from "../../shared/utils/compare.ts"
 import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
-import { toTitleCase } from "../../shared/utils/string.ts"
 import { validateLocaleIdentifier } from "../../shared/validation/identifier.ts"
 import {
   deleteInstanceByEntityNameAndId,

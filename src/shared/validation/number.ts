@@ -1,4 +1,4 @@
-import { gt, gte, lt, lte } from "../utils/compare.ts"
+import { gt, gte, lt, lte } from "@elyukai/utils/equality"
 import { parallelizeErrors } from "../utils/validation.ts"
 
 export interface NumberConstraints {

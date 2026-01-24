@@ -1,26 +1,10 @@
+import { mapAsync } from "@elyukai/utils/async"
+import { Dictionary } from "@elyukai/utils/dictionary"
 import child_process from "node:child_process"
 import { readdir, readFile } from "node:fs/promises"
 import { basename, extname, join } from "node:path"
 import { platform } from "node:process"
 import { promisify } from "node:util"
-import { mapAsync } from "../../shared/utils/async.ts"
-import {
-  emptyD,
-  forEachAsyncD,
-  forEachD,
-  fromEntriesD,
-  getD,
-  getMapD,
-  hasD,
-  mapFirstD,
-  reduceD,
-  removeD,
-  setD,
-  sizeD,
-  toEntriesD,
-  toValuesD,
-  type Dictionary,
-} from "../../shared/utils/dictionary.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import type { EntityDecl } from "../schema/index.ts"
 
@@ -28,19 +12,15 @@ export type DatabaseInMemory = Dictionary<InstancesInMemory>
 
 export type InstancesInMemory = Dictionary<InstanceContainer>
 
-export const emptyDatabaseInMemory: DatabaseInMemory = emptyD
+export const emptyDatabaseInMemory: DatabaseInMemory = Dictionary.empty
 
 export const getInstanceFromDatabaseInMemory = (
   db: DatabaseInMemory,
   instanceId: string,
 ): { entityName: string; instance: InstanceContainer } | undefined =>
-  mapFirstD(db, (instances, entityName) => {
-    const instance = getD(instances, instanceId)
-    if (instance) {
-      return { entityName, instance }
-    }
-    return undefined
-  })
+  db.mapFirst((instances, entityName) =>
+    instances.getMap(instanceId, instance => ({ entityName, instance })),
+  )
 
 export type InstanceFromDatabaseInMemoryGetter = (
   instanceId: string,
@@ -67,25 +47,26 @@ export const getInstanceOfEntityFromDatabaseInMemory = (
   db: DatabaseInMemory,
   entityName: string,
   instanceId: string,
-): InstanceContainer | undefined =>
-  getMapD(db, entityName, instances => getD(instances, instanceId))
+): InstanceContainer | undefined => db.getMap(entityName, instances => instances.get(instanceId))
 
 export const getInstancesOfEntityFromDatabaseInMemory = (
   db: DatabaseInMemory,
   entityName: string,
-): InstanceContainer[] => getMapD(db, entityName, toValuesD) ?? []
+): InstanceContainer[] => db.getMap(entityName, instances => instances.values()) ?? []
 
 export const getGroupedInstancesFromDatabaseInMemory = (
   db: DatabaseInMemory,
 ): [entityName: string, InstanceContainer[]][] =>
-  toEntriesD(db).map(([entityName, instances]) => [entityName, Object.values(instances[0])])
+  db.entries().map(([entityName, instances]) => [entityName, instances.values()])
 
 export const forEachInstanceOfEntityInDatabaseInMemory = (
   db: DatabaseInMemory,
   entityName: string,
   fn: (instance: InstanceContainer) => void,
 ): void => {
-  for (const instance of Object.values(getMapD(db, entityName, toValuesD) ?? {})) {
+  for (const instance of Object.values(
+    db.getMap(entityName, instances => instances.values()) ?? {},
+  )) {
     fn(instance)
   }
 }
@@ -95,7 +76,9 @@ export const asyncForEachInstanceOfEntityInDatabaseInMemory = async (
   entityName: string,
   fn: (instance: InstanceContainer) => Promise<void>,
 ): Promise<void> => {
-  for (const instance of Object.values(getMapD(db, entityName, toValuesD) ?? {})) {
+  for (const instance of Object.values(
+    db.getMap(entityName, instances => instances.values()) ?? {},
+  )) {
     await fn(instance)
   }
 }
@@ -104,8 +87,8 @@ export const forEachInstanceInDatabaseInMemory = (
   db: DatabaseInMemory,
   fn: (entityName: string, instance: InstanceContainer) => void,
 ): void => {
-  forEachD(db, (instances, entityName) => {
-    forEachD(instances, instance => {
+  db.forEach((instances, entityName) => {
+    instances.forEach(instance => {
       fn(entityName, instance)
     })
   })
@@ -115,17 +98,17 @@ export const asyncForEachInstanceInDatabaseInMemory = async (
   db: DatabaseInMemory,
   fn: (entityName: string, instance: InstanceContainer) => Promise<void>,
 ): Promise<void> =>
-  forEachAsyncD(db, (instances, entityName) =>
-    forEachAsyncD(instances, instance => fn(entityName, instance)),
+  db.forEachAsync((instances, entityName) =>
+    instances.forEachAsync(instance => fn(entityName, instance)),
   )
 
 export const countInstancesInDatabaseInMemory = (db: DatabaseInMemory): number =>
-  reduceD(db, (sum, instances) => sum + sizeD(instances), 0)
+  db.reduce((sum, instances) => sum + instances.size, 0)
 
 export const countInstancesOfEntityInDatabaseInMemory = (
   db: DatabaseInMemory,
   entityName: string,
-): number => getMapD(db, entityName, sizeD) ?? 0
+): number => db.getMap(entityName, instances => instances.size) ?? 0
 
 const exec = promisify(child_process.exec)
 const ulimit = platform === "win32" ? 2048 : Number.parseInt((await exec("ulimit -n")).stdout)
@@ -134,7 +117,7 @@ export const createDatabaseInMemory = async (
   dataRoot: string,
   entities: readonly EntityDecl[],
 ): Promise<DatabaseInMemory> =>
-  fromEntriesD(
+  Dictionary.fromEntries(
     await mapAsync(
       entities,
       async (entity): Promise<[string, Dictionary<InstanceContainer>]> => {
@@ -156,7 +139,7 @@ export const createDatabaseInMemory = async (
           },
           ulimit,
         )
-        const instancesById = fromEntriesD(instances)
+        const instancesById = Dictionary.fromEntries(instances)
         return [entity.name, instancesById] as const
       },
       1,
@@ -167,8 +150,8 @@ const setInstanceInMemory = (
   instances: InstancesInMemory,
   instance: InstanceContainer,
 ): [InstancesInMemory, oldInstance: InstanceContent | undefined] => {
-  const oldInstance = getD(instances, instance.id)
-  return [setD(instances, instance.id, instance), oldInstance?.content]
+  const oldInstance = instances.get(instance.id)
+  return [instances.set(instance.id, instance), oldInstance?.content]
 }
 
 export const setInstanceInDatabaseInMemory = (
@@ -177,23 +160,23 @@ export const setInstanceInDatabaseInMemory = (
   instance: InstanceContainer,
 ): [DatabaseInMemory, oldInstance: InstanceContent | undefined] => {
   const [entityInstances, oldInstance] = setInstanceInMemory(
-    getD(db, entityName) ?? emptyD,
+    db.get(entityName) ?? Dictionary.empty,
     instance,
   )
 
-  return [setD(db, entityName, entityInstances), oldInstance]
+  return [db.set(entityName, entityInstances), oldInstance]
 }
 
 const deleteInstanceInMemory = (
   instances: InstancesInMemory,
   instanceId: string,
 ): [InstancesInMemory, oldInstance: InstanceContent | undefined] => {
-  if (!hasD(instances, instanceId)) {
+  if (!instances.has(instanceId)) {
     return [instances, undefined]
   }
 
-  const oldInstance = getD(instances, instanceId)
-  const remainingInstancesById = removeD(instances, instanceId)
+  const oldInstance = instances.get(instanceId)
+  const remainingInstancesById = instances.remove(instanceId)
 
   return [remainingInstancesById, oldInstance?.content]
 }
@@ -203,7 +186,7 @@ export const deleteInstanceInDatabaseInMemory = (
   entityName: string,
   instanceId: string,
 ): [DatabaseInMemory, oldInstance: InstanceContent | undefined] => {
-  const entityInstances = getD(db, entityName)
+  const entityInstances = db.get(entityName)
 
   if (entityInstances === undefined) {
     return [db, undefined]
@@ -215,10 +198,10 @@ export const deleteInstanceInDatabaseInMemory = (
     return [db, undefined]
   }
 
-  if (remainingInstances[1].length === 0) {
-    const remainingEntities = removeD(db, entityName)
+  if (remainingInstances.size === 0) {
+    const remainingEntities = db.remove(entityName)
     return [remainingEntities, oldInstance]
   }
 
-  return [setD(db, entityName, remainingInstances), oldInstance]
+  return [db.set(entityName, remainingInstances), oldInstance]
 }

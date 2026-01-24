@@ -1,5 +1,5 @@
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { enumOfObject } from "../utils/enum.ts"
-import { assertExhaustive } from "../utils/typeSafety.ts"
 import type { SerializedDecl } from "./declarations/Declaration.ts"
 import {
   getReferencesForSerializedEntityDecl,

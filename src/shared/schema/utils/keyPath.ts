@@ -1,6 +1,6 @@
-import { isNotEmpty } from "../../utils/array.ts"
-import { error, isOk, ok, reduce, type Result } from "../../utils/result.ts"
-import { assertExhaustive } from "../../utils/typeSafety.ts"
+import { isNotEmpty } from "@elyukai/utils/array/nonEmpty"
+import { error, isOk, ok, reduce, type Result } from "@elyukai/utils/result"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 
 export type KeyPath = string | string[]
 

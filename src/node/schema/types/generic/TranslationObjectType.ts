@@ -1,6 +1,6 @@
+import { sortObjectKeysByIndex } from "@elyukai/utils/object"
 import { MessageError, parseMessage, validate } from "messageformat"
 import type { SerializedTranslationObjectType } from "../../../../shared/schema/types/TranslationObjectType.ts"
-import { sortObjectKeys } from "../../../../shared/utils/object.ts"
 import {
   extendsParameterTypes,
   extractParameterTypeNamesFromMessage,
@@ -163,7 +163,7 @@ export const getReferencesForTranslationObjectType: GetReferences<TranslationObj
 
 const formatRecursively = (type: TConstraint, value: unknown): unknown =>
   typeof value === "object" && value !== null && !Array.isArray(value)
-    ? sortObjectKeys(
+    ? sortObjectKeysByIndex(
         Object.fromEntries(
           Object.entries(value).map(([key, item]) => [
             key,

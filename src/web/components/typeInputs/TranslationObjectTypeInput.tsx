@@ -1,9 +1,9 @@
+import { sortObjectKeysByIndex } from "@elyukai/utils/object"
 import type { FunctionComponent } from "preact"
 import {
   getSerializedTypeOfKey,
   type SerializedTranslationObjectType,
 } from "../../../shared/schema/types/TranslationObjectType.ts"
-import { sortObjectKeys } from "../../../shared/utils/object.ts"
 import { validateUnknownKeys } from "../../../shared/validation/object.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { TypeInput, type TypeInputProps } from "./TypeInput.tsx"
@@ -53,7 +53,10 @@ export const TranslationObjectTypeInput: FunctionComponent<Props> = props => {
                     }
                     onChange={newItem => {
                       onChange(
-                        sortObjectKeys({ ...value, [key]: newItem }, Object.keys(type.properties)),
+                        sortObjectKeysByIndex(
+                          { ...value, [key]: newItem },
+                          Object.keys(type.properties),
+                        ),
                       )
                     }}
                   />
@@ -63,7 +66,7 @@ export const TranslationObjectTypeInput: FunctionComponent<Props> = props => {
                   <button
                     onClick={() => {
                       onChange(
-                        sortObjectKeys(
+                        sortObjectKeysByIndex(
                           {
                             ...value,
                             [key]: createTypeSkeleton(getDeclFromDeclName, keyType),

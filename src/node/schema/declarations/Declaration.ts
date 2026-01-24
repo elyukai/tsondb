@@ -1,4 +1,4 @@
-import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { BaseNode, CustomConstraintValidator, Node } from "../Node.ts"
 import { NodeKind, resolveTypeArguments } from "../Node.ts"
 import type { TypeParameter } from "../TypeParameter.ts"

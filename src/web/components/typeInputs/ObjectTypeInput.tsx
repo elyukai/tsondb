@@ -1,8 +1,8 @@
+import { sortObjectKeysByIndex } from "@elyukai/utils/object"
+import { toTitleCase } from "@elyukai/utils/string"
 import type { FunctionComponent } from "preact"
 import type { SerializedObjectType } from "../../../shared/schema/types/ObjectType.ts"
 import { isSinglularInputFieldType } from "../../../shared/schema/types/Type.ts"
-import { sortObjectKeys } from "../../../shared/utils/object.ts"
-import { toTitleCase } from "../../../shared/utils/string.ts"
 import { validateObjectConstraints } from "../../../shared/validation/object.ts"
 import { Markdown } from "../../utils/Markdown.tsx"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
@@ -54,7 +54,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
                     <button
                       onClick={() => {
                         onChange(
-                          sortObjectKeys(
+                          sortObjectKeysByIndex(
                             {
                               ...value,
                               [key]: createTypeSkeleton(getDeclFromDeclName, memberDecl.type),
@@ -103,7 +103,10 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
                     }
                     onChange={newItem => {
                       onChange(
-                        sortObjectKeys({ ...value, [key]: newItem }, Object.keys(type.properties)),
+                        sortObjectKeysByIndex(
+                          { ...value, [key]: newItem },
+                          Object.keys(type.properties),
+                        ),
                       )
                     }}
                   />

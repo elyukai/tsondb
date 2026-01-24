@@ -1,5 +1,5 @@
+import { error, isError, ok, type Result } from "@elyukai/utils/result"
 import type { InstanceContainer } from "../../../shared/utils/instances.ts"
-import { error, isError, ok, type Result } from "../../../shared/utils/result.ts"
 import {
   getChildInstances,
   saveInstanceTree,

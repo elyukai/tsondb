@@ -1,6 +1,6 @@
+import { error, ok } from "@elyukai/utils/result"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { getAtKeyPath, parseKeyPath, type KeyPath } from "../../../shared/schema/utils/keyPath.ts"
-import { error, ok } from "../../../shared/utils/result.ts"
-import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import {
   isTypeAliasDecl,
   type Decl,

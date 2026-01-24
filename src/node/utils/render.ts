@@ -1,5 +1,5 @@
+import { mergeObjects } from "@elyukai/utils/object"
 import { EOL } from "node:os"
-import { mergeObjects } from "../../shared/utils/object.ts"
 
 export const prefixLines = (
   prefix: string,

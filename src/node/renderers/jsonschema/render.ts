@@ -1,6 +1,6 @@
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { dirname, relative } from "node:path"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
-import { assertExhaustive } from "../../../shared/utils/typeSafety.ts"
 import type { RangeBound } from "../../../shared/validation/number.ts"
 import { asDecl, type Decl } from "../../schema/declarations/Declaration.ts"
 import type { EntityDecl } from "../../schema/declarations/EntityDecl.ts"

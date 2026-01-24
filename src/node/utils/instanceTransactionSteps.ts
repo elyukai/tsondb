@@ -1,6 +1,6 @@
+import { error, map, ok, then, type Result } from "@elyukai/utils/result"
 import { randomUUID } from "node:crypto"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
-import { error, map, ok, then, type Result } from "../../shared/utils/result.ts"
 import type { ValidationOptions } from "../index.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { createValidationContext, validateEntityDecl } from "../schema/index.ts"

@@ -1,6 +1,6 @@
+import { toTitleCase } from "@elyukai/utils/string"
 import type { FunctionalComponent } from "preact"
 import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
-import { toTitleCase } from "../../shared/utils/string.ts"
 import {
   getInstanceByEntityNameAndId,
   updateInstanceByEntityNameAndId,

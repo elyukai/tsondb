@@ -1,3 +1,4 @@
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedEnumDecl } from "../../shared/schema/declarations/EnumDecl.ts"
 import type { SerializedTypeAliasDecl } from "../../shared/schema/declarations/TypeAliasDecl.ts"
@@ -23,7 +24,6 @@ import type { SerializedReferenceIdentifierType } from "../../shared/schema/type
 import type { SerializedStringType } from "../../shared/schema/types/StringType.ts"
 import type { SerializedTranslationObjectType } from "../../shared/schema/types/TranslationObjectType.ts"
 import type { SerializedTypeArgumentType } from "../../shared/schema/types/TypeArgumentType.ts"
-import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import type { ValidationOptions } from "../index.ts"
 import type { CustomConstraintHelpers } from "../utils/customConstraints.ts"
 import {

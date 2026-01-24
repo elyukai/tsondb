@@ -1,8 +1,8 @@
+import { Lazy } from "@elyukai/utils/lazy"
 import type { SerializedEntityDisplayName } from "../../../shared/schema/declarations/EntityDecl.ts"
 import type { SortOrder } from "../../../shared/schema/utils/sortOrder.ts"
 import type { UniqueConstraints } from "../../../shared/schema/utils/uniqueConstraint.ts"
 import type { InstanceContent } from "../../../shared/utils/instances.ts"
-import { Lazy } from "../../../shared/utils/lazy.ts"
 import type { CustomConstraint, TypedCustomConstraint } from "../../utils/customConstraints.ts"
 import type { DisplayNameCustomizer, TypedDisplayNameCustomizer } from "../../utils/displayName.ts"
 import type {

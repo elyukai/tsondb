@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { omitUndefinedKeys } from "@elyukai/utils/object"
 import Debug from "debug"
 import { access, constants } from "node:fs/promises"
 import { join } from "node:path"
@@ -15,7 +16,6 @@ import {
 } from "../node/config.ts"
 import type { ValidationOptions } from "../node/index.ts"
 import { format, generateOutputs, serve, validate } from "../node/index.ts"
-import { omitUndefinedKeys } from "../shared/utils/object.ts"
 
 const debug = Debug("tsondb:cli")
 

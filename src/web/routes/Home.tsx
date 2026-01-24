@@ -1,7 +1,7 @@
+import { toTitleCase } from "@elyukai/utils/string"
 import type { FunctionalComponent } from "preact"
 import { useContext, useEffect, useState } from "preact/hooks"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
-import { toTitleCase } from "../../shared/utils/string.ts"
 import { Layout } from "../components/Layout.tsx"
 import { ConfigContext } from "../context/config.ts"
 import { EntitiesContext } from "../context/entities.ts"

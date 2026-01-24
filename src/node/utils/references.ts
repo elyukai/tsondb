@@ -1,9 +1,10 @@
+import { removeAt } from "@elyukai/utils/array/modify"
+import { difference } from "@elyukai/utils/array/sets"
+import { isOk } from "@elyukai/utils/result"
 import Debug from "debug"
 import { resolve } from "node:path"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
-import { difference, removeAt } from "../../shared/utils/array.ts"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
-import { isOk } from "../../shared/utils/result.ts"
 import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.ts"
 import {

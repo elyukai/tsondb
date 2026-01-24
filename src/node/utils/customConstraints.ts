@@ -1,10 +1,10 @@
-import { deepEqual } from "../../shared/utils/compare.ts"
+import { deepEqual } from "@elyukai/utils/equality"
+import { error, isError, mapError, ok, type Result } from "@elyukai/utils/result"
 import type {
   InstanceContainer,
   InstanceContainerOverview,
   InstanceContent,
 } from "../../shared/utils/instances.ts"
-import { error, isError, mapError, ok, type Result } from "../../shared/utils/result.ts"
 import type { RegisteredEntity, RegisteredEnumOrTypeAlias } from "../schema/externalTypes.ts"
 import {
   normalizedIdArgs,

@@ -1,7 +1,7 @@
-import { chunk } from "./array.ts"
+import { chunk } from "@elyukai/utils/array/groups"
+import { omitUndefinedKeys } from "@elyukai/utils/object"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { detectIndentation, removeIndentation } from "./markdown/indentation.ts"
-import { omitUndefinedKeys } from "./object.ts"
-import { assertExhaustive } from "./typeSafety.ts"
 
 type InlineRule = {
   pattern: RegExp

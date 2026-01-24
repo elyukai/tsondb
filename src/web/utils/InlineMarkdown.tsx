@@ -1,6 +1,6 @@
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { Fragment, type FunctionalComponent } from "preact"
 import type { InlineMarkdownNode } from "../../shared/utils/markdown.ts"
-import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 
 type Props = {
   node: InlineMarkdownNode

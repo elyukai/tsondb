@@ -1,3 +1,4 @@
+import { isOk } from "@elyukai/utils/result"
 import Debug from "debug"
 import express from "express"
 import type {
@@ -14,7 +15,6 @@ import type {
 } from "../../../shared/api.ts"
 import { sortBySortOrder } from "../../../shared/schema/utils/sortOrder.ts"
 import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
-import { isOk } from "../../../shared/utils/result.ts"
 import type { Decl } from "../../schema/declarations/Declaration.ts"
 import { isEntityDecl } from "../../schema/declarations/EntityDecl.ts"
 import { isEnumDecl } from "../../schema/declarations/EnumDecl.ts"

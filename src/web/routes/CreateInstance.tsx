@@ -1,5 +1,5 @@
+import { toTitleCase } from "@elyukai/utils/string"
 import type { FunctionalComponent } from "preact"
-import { toTitleCase } from "../../shared/utils/string.ts"
 import { createInstanceByEntityNameAndId } from "../api/declarations.ts"
 import {
   InstanceRouteSkeleton,

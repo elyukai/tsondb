@@ -1,4 +1,4 @@
-import { Lazy } from "../../../shared/utils/lazy.ts"
+import { Lazy } from "@elyukai/utils/lazy"
 import type {
   NestedCustomConstraint,
   TypedNestedCustomConstraint,

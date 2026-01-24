@@ -1,4 +1,4 @@
-import { gte, lte } from "./compare.ts"
+import { gte, lte } from "@elyukai/utils/equality"
 
 export const parallelizeErrors = (errors: (Error | undefined)[]): Error[] =>
   errors.filter(error => error !== undefined)

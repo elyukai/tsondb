@@ -1,5 +1,5 @@
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { MessageError, parseMessage, type Model } from "messageformat"
-import { assertExhaustive } from "./typeSafety.ts"
 
 const mergeAssoc = <V extends string | null>(
   acc: Record<string, V>,

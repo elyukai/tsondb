@@ -1,6 +1,6 @@
+import { isError, map, ok, type Result } from "@elyukai/utils/result"
 import type { SimpleGit } from "simple-git"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
-import { isError, map, ok, type Result } from "../../shared/utils/result.ts"
 import type { EntityDecl } from "../schema/index.ts"
 import { checkCustomConstraintsForAllEntities } from "./customConstraints.ts"
 import {

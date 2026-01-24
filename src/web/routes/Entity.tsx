@@ -1,10 +1,10 @@
+import { toTitleCase } from "@elyukai/utils/string"
 import type { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
 import { useContext, useEffect, useState } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
 import { getGitStatusForDisplay } from "../../shared/utils/git.ts"
 import type { InstanceContainerOverview } from "../../shared/utils/instances.ts"
-import { toTitleCase } from "../../shared/utils/string.ts"
 import {
   deleteInstanceByEntityNameAndId,
   getInstancesByEntityName,

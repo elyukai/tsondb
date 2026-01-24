@@ -1,6 +1,6 @@
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { TranslationObjectTypeConstraint } from "../../node/schema/types/generic/TranslationObjectType.ts"
 import type { SerializedAsType, SerializedType } from "../../shared/schema/types/Type.ts"
-import { assertExhaustive } from "../../shared/utils/typeSafety.ts"
 import type { GetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
 
 export const createTypeSkeleton = <T extends SerializedType>(

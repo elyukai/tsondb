@@ -1,5 +1,5 @@
+import { sortObjectKeysByIndex } from "@elyukai/utils/object"
 import type { SerializedMemberDecl } from "../../../../shared/schema/types/ObjectType.ts"
-import { sortObjectKeys } from "../../../../shared/utils/object.ts"
 import { parallelizeErrors } from "../../../../shared/utils/validation.ts"
 import type { ObjectConstraints } from "../../../../shared/validation/object.ts"
 import { validateObjectConstraints } from "../../../../shared/validation/object.ts"
@@ -208,7 +208,7 @@ export const getReferencesForObjectType: GetReferences<ObjectType> = (type, valu
 
 export const formatObjectValue: StructureFormatter<ObjectType> = (type, value) =>
   typeof value === "object" && value !== null && !Array.isArray(value)
-    ? sortObjectKeys(
+    ? sortObjectKeysByIndex(
         Object.fromEntries(
           Object.entries(value).map(([key, item]) => [
             key,
