@@ -1,3 +1,4 @@
+import type { Response } from "express"
 import { applyIndentation } from "./render.ts"
 import { UniqueConstraintError } from "./unique.ts"
 
@@ -44,5 +45,16 @@ export class HTTPError extends Error {
     super(message)
     this.code = code
     this.name = "HTTPError"
+  }
+}
+
+export const sendErrorResponse = (res: Response, error: unknown): void => {
+  res.set("Content-Type", "text/plain")
+  if (error instanceof HTTPError) {
+    res.status(error.code).send(error.message)
+  } else if (error instanceof Error) {
+    res.status(500).send(error.message)
+  } else {
+    res.status(500).send(String(error))
   }
 }

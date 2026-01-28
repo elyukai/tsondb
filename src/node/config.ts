@@ -47,9 +47,15 @@ export const validateConfigForGeneration: (
 /**
  * The configuration type required for any commands that need to read data stored in the database.
  */
-export type DataConfig = {
+export type DataConfig = Config & {
   schema: Schema
   dataRootPath: string
+}
+
+export const validateConfigForData: (config: Config) => asserts config is DataConfig = config => {
+  if (config.dataRootPath === undefined) {
+    throw new Error("A data root path must be specified in the config.")
+  }
 }
 
 /**

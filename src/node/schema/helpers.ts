@@ -1,5 +1,18 @@
+/**
+ * Types for commonly used functions for retrieving typed instances.
+ * @module
+ */
+
 import { ENUM_DISCRIMINATOR_KEY } from "../../shared/schema/declarations/EnumDecl.ts"
-import type { RegisteredChildEntityMap, RegisteredEntityMap } from "./externalTypes.ts"
+import type { DisplayNameResult } from "../../shared/utils/displayName.ts"
+import type { InstanceContainer } from "../../shared/utils/instances.ts"
+import type { EntityDecl } from "./declarations/EntityDecl.ts"
+import type {
+  AnyChildEntityMap,
+  AnyEntityMap,
+  RegisteredChildEntityMap,
+  RegisteredEntityMap,
+} from "./externalTypes.ts"
 
 /**
  * Creates an enum case object.
@@ -27,13 +40,22 @@ export type Case<K extends string, T = undefined> = {
  * A single instance might be defined by entity and identifier separately or by
  * them being wrapped in an enum case.
  */
-export type IdArgsVariant<U extends keyof RegisteredEntityMap = keyof RegisteredEntityMap> =
-  | [entity: U, id: string]
-  | [enumCase: Case<U, string>]
+export type IdArgsVariant<
+  T extends AnyEntityMap = RegisteredEntityMap,
+  E extends Extract<keyof T, string> = Extract<keyof T, string>,
+> = [entity: E, id: string] | [enumCase: Case<E, string>]
 
-export const normalizedIdArgs = <U extends keyof RegisteredEntityMap>(
-  args: IdArgsVariant<U>,
-): { entityName: U; id: string } => {
+/**
+ * Normalizes entity-identifier arguments into an object.
+ *
+ * In a lot of places, an instance can be specified by a pair of the entity name and the identifier itself. They may be passed as either two separate arguments or wrapped in an enum case object. This function normalizes both forms into a consistent object structure.
+ */
+export const normalizedIdArgs = <
+  T extends AnyEntityMap = RegisteredEntityMap,
+  E extends Extract<keyof T, string> = Extract<keyof T, string>,
+>(
+  args: IdArgsVariant<T, E>,
+): { entityName: E; id: string } => {
   if (typeof args[0] === "object") {
     const [enumCase] = args
     return {
@@ -41,30 +63,92 @@ export const normalizedIdArgs = <U extends keyof RegisteredEntityMap>(
       id: enumCase[enumCase[ENUM_DISCRIMINATOR_KEY]],
     }
   } else {
-    const [entityName, id] = args as [U, string]
+    const [entityName, id] = args as [E, string]
     return { entityName, id }
   }
 }
 
-export type GetInstanceById = <U extends keyof RegisteredEntityMap>(
-  ...args: IdArgsVariant<U>
-) => RegisteredEntityMap[U] | undefined
+/**
+ * A function that retrieves an instance by its entity and identifier.
+ */
+export type GetInstanceById<T extends AnyEntityMap = RegisteredEntityMap> = <
+  E extends Extract<keyof T, string> = Extract<keyof T, string>,
+>(
+  ...args: IdArgsVariant<T, E>
+) => T[E] | undefined
 
-export type GetAllInstances = <U extends keyof RegisteredEntityMap>(
-  entity: U,
-) => RegisteredEntityMap[U][]
+/**
+ * A function that retrieves an instance container by its entity and identifier.
+ */
+export type GetInstanceContainerById<T extends AnyEntityMap = RegisteredEntityMap> = <
+  E extends Extract<keyof T, string> = Extract<keyof T, string>,
+>(
+  ...args: IdArgsVariant<T, E>
+) => InstanceContainer<T[E]> | undefined
 
-export type GetAllChildInstancesForParent = <U extends keyof RegisteredChildEntityMap>(
-  entity: U,
-  parentId: RegisteredChildEntityMap[U][2],
-) => RegisteredChildEntityMap[U][0][]
+/**
+ * A function that retrieves all instances of a given entity.
+ */
+export type GetAllInstances<T extends AnyEntityMap = RegisteredEntityMap> = <
+  E extends Extract<keyof T, string> = Extract<keyof T, string>,
+>(
+  entity: E,
+) => T[E][]
+
+/**
+ * A function that retrieves all instance containers of a given entity.
+ */
+export type GetAllInstanceContainers<T extends AnyEntityMap = RegisteredEntityMap> = <
+  E extends Extract<keyof T, string> = Extract<keyof T, string>,
+>(
+  entity: E,
+) => InstanceContainer<T[E]>[]
+
+/**
+ * A function that retrieves all instances of a given child entity for a given parent instance.
+ */
+export type GetAllChildInstancesForParent<T extends AnyChildEntityMap = RegisteredChildEntityMap> =
+  <E extends Extract<keyof T, string> = Extract<keyof T, string>>(
+    entity: E,
+    parentId: T[E][2],
+  ) => T[E][0][]
+
+/**
+ * A function that retrieves all instance containers of a given child entity for a given parent instance.
+ */
+export type GetAllChildInstanceContainersForParent<
+  T extends AnyChildEntityMap = RegisteredChildEntityMap,
+> = <E extends Extract<keyof T, string> = Extract<keyof T, string>>(
+  entity: E,
+  parentId: T[E][2],
+) => InstanceContainer<T[E][0]>[]
 
 /**
  * Displays the name of an entity instance including its ID. If no display name is found, `undefined` is returned.
  */
-export type GetDisplayName = (...args: IdArgsVariant) => string | undefined
+export type GetDisplayName<T extends AnyEntityMap = RegisteredEntityMap> = (
+  ...args: IdArgsVariant<T>
+) => string | undefined
+
+/**
+ * Displays the name of an entity instance with the used locale identifier, if any.
+ */
+export type GetDisplayNameWithLocaleId<T extends AnyEntityMap = RegisteredEntityMap> = (
+  ...args: IdArgsVariant<T>
+) => DisplayNameResult | undefined
 
 /**
  * Displays the name of an entity instance including its ID. If no display name is found, only the ID is returned.
  */
-export type GetDisplayNameWithId = (...args: IdArgsVariant) => string
+export type GetDisplayNameAndId<T extends AnyEntityMap = RegisteredEntityMap> = (
+  ...args: IdArgsVariant<T>
+) => string
+
+/**
+ * A function that retrieves an entity declaration by its name.
+ */
+export type GetEntityByName<T extends AnyEntityMap = RegisteredEntityMap> = <
+  E extends Extract<keyof T, string> = Extract<keyof T, string>,
+>(
+  name: E,
+) => EntityDecl<E> | undefined

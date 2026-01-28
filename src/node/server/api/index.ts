@@ -14,7 +14,7 @@ api.use("/search", searchApi)
 
 api.get("/config", (req, res) => {
   const body: GetWebConfigResponseBody = {
-    localeEntityName: req.localeEntity?.name,
+    localeEntityName: req.db.schema.localeEntity?.name,
     defaultLocales: req.defaultLocales,
     homeLayoutSections: req.homeLayoutSections?.map(section => ({
       ...section,

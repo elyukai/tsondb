@@ -5,8 +5,9 @@ import Debug from "debug"
 import { resolve } from "node:path"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
-import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
 import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.ts"
+import type { AnyEntityMap, RegisteredEntityMap } from "../schema/externalTypes.ts"
+import type { GetEntityByName } from "../schema/helpers.ts"
 import {
   getGroupedInstancesFromDatabaseInMemory,
   type DatabaseInMemory,
@@ -100,18 +101,28 @@ export const getReferencesToInstances = async (
     getGroupedInstancesFromDatabaseInMemory(databaseInMemory).map(
       ([entityName, instances]) =>
         new Promise<ReferencesToInstances>((resolve, reject) => {
-          pool.runTask({ entityName, instances }, result => {
-            if (isOk(result)) {
-              debug(
-                "collected references for entity %s in %d instances",
-                entityName,
-                instances.length,
-              )
-              resolve(result.value)
-            } else {
-              reject(result.error)
-            }
-          })
+          try {
+            debug(
+              "collecting references for entity %s in %d instances",
+              entityName,
+              instances.length,
+            )
+            pool.runTask({ entityName, instances }, result => {
+              if (isOk(result)) {
+                debug(
+                  "collected references for entity %s in %d instances",
+                  entityName,
+                  instances.length,
+                )
+                resolve(result.value)
+              } else {
+                reject(result.error)
+              }
+            })
+          } catch (err) {
+            debug("error collecting references for entity %s: %O", entityName, err)
+            reject(err)
+          }
         }),
     ),
   )
@@ -124,15 +135,15 @@ export const getReferencesToInstances = async (
   return results
 }
 
-export const updateReferencesToInstances = (
-  entitiesByName: Record<string, EntityDecl>,
+export const updateReferencesToInstances = <EM extends AnyEntityMap = RegisteredEntityMap>(
+  getEntity: GetEntityByName<EM>,
   referencesToInstances: ReferencesToInstances,
-  entityName: string,
+  entityName: Extract<keyof EM, string>,
   instanceId: string,
   oldInstance: InstanceContent | undefined,
   newInstance: InstanceContent | undefined,
 ): ReferencesToInstances => {
-  const entity = entitiesByName[entityName]
+  const entity = getEntity(entityName)
   if (entity) {
     if (oldInstance === undefined) {
       return addReferences(

@@ -1,6 +1,7 @@
 import { join } from "path"
 import type { StatusResult } from "simple-git"
 import type { GitFileStatus, GitFileStatusCode } from "../../shared/utils/git.ts"
+import type { AnyEntityMap } from "../schema/externalTypes.ts"
 import type { DatabaseInMemory } from "./databaseInMemory.ts"
 import { getFileNameForId } from "./files.ts"
 
@@ -24,12 +25,12 @@ export const getGitFileStatusFromStatusResult = (
   }
 }
 
-export const attachGitStatusToDatabaseInMemory = (
-  databaseInMemory: DatabaseInMemory,
+export const attachGitStatusToDatabaseInMemory = <EM extends AnyEntityMap>(
+  databaseInMemory: DatabaseInMemory<EM>,
   dataRoot: string,
   gitRoot: string,
   gitStatus: StatusResult,
-): DatabaseInMemory =>
+): DatabaseInMemory<EM> =>
   databaseInMemory.map((instances, entityName) =>
     instances.map(instanceContainer => ({
       ...instanceContainer,

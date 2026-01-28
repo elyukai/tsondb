@@ -1,12 +1,12 @@
 import { hasKey } from "@elyukai/utils/object"
-import { error, isError, map, ok, type Result } from "@elyukai/utils/result"
+import { error, isError, ok, type Result } from "@elyukai/utils/result"
 import {
   createEnumCaseValue,
   ENUM_DISCRIMINATOR_KEY,
 } from "../../shared/schema/declarations/EnumDecl.ts"
 import type { GitFileStatus } from "../../shared/utils/git.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
-import type { ValidationOptions } from "../index.ts"
+import type { TSONDB } from "../index.ts"
 import type {
   EntityDecl,
   EntityDeclWithParentReference,
@@ -18,13 +18,12 @@ import {
   reduceNodes,
 } from "../schema/index.ts"
 import { isChildEntitiesType } from "../schema/types/references/ChildEntitiesType.ts"
+import type { Transaction } from "../transaction.ts"
 import {
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,
 } from "./databaseInMemory.ts"
-import type { TransactionResult } from "./databaseTransactions.ts"
 import { HTTPError } from "./error.ts"
-import { createInstance, deleteInstance, updateInstance } from "./instanceTransactionSteps.ts"
 
 export interface ChildInstanceContainer {
   id?: string
@@ -103,7 +102,7 @@ export const getChildInstancesFromEntity = (
   )
 
 export const getChildInstances = (
-  databaseInMemory: DatabaseInMemory,
+  db: TSONDB,
   parentEntity: EntityDecl,
   parentId: string,
   recursive: boolean = true,
@@ -116,18 +115,15 @@ export const getChildInstances = (
   )
 
   return childEntities.flatMap(childEntity =>
-    getChildInstancesFromEntity(
-      databaseInMemory,
-      parentEntity,
-      parentId,
-      childEntity,
-    ).map<EntityTaggedInstanceContainerWithChildInstances>(container => ({
-      ...container,
-      entityName: childEntity.name,
-      childInstances: recursive
-        ? getChildInstances(databaseInMemory, childEntity, container.id)
-        : [],
-    })),
+    db
+      .getAllChildInstanceContainersForParent(parentId, childEntity)
+      .map<EntityTaggedInstanceContainerWithChildInstances>(container => ({
+        ...container,
+        entityName: childEntity.name,
+        childInstances: recursive
+          ? getChildInstances(db, childEntity, container.id, recursive)
+          : [],
+      })),
   )
 }
 
@@ -164,57 +160,46 @@ const prepareNewChildInstanceContent = (
 }
 
 export const saveInstanceTree = (
-  validationOptions: Partial<ValidationOptions>,
-  entitiesByName: Record<string, EntityDecl>,
+  txn: Transaction,
+  getEntity: (entityName: string) => EntityDecl | undefined,
   parentEntityName: string | undefined,
   parentId: string | undefined,
-  localeEntity: EntityDecl | undefined,
   entityName: string,
   oldInstance: EntityTaggedInstanceContainerWithChildInstances | undefined,
   newInstance: UnsafeEntityTaggedInstanceContainerWithChildInstances | undefined,
-  customId: unknown,
-  res: TransactionResult,
-): TransactionResult<{ instanceContainer: InstanceContainer }> => {
-  if (isError(res)) {
-    return res
-  }
-
-  const entity = entitiesByName[entityName]
+  customId: string | undefined,
+): [Transaction, InstanceContainer] => {
+  const entity = getEntity(entityName)
 
   if (entity === undefined) {
-    return error(new HTTPError(400, `Unknown entity "${entityName}"`))
+    throw new HTTPError(400, `Unknown entity "${entityName}"`)
   }
 
   if (newInstance === undefined) {
     if (oldInstance === undefined) {
-      // no-op
-      return map(res, data => ({ ...data, instanceContainer: { id: "", content: {} } }))
+      throw new Error("No old or new instance provided")
     }
 
     // delete all child instances recursively
-    const deletedRes = deleteInstance(res, entity, oldInstance.id)
-    return map(
+    const deletedRes = txn.deleteInstance(entity, oldInstance.id)
+
+    return [
       oldInstance.childInstances.reduce(
-        (resAcc: TransactionResult, oldChildInstance) =>
+        (txnAcc: Transaction, oldChildInstance) =>
           saveInstanceTree(
-            validationOptions,
-            entitiesByName,
+            txnAcc,
+            getEntity,
             oldInstance.entityName,
             oldInstance.id,
-            localeEntity,
             oldChildInstance.entityName,
             oldChildInstance,
             undefined,
             undefined,
-            resAcc,
-          ),
-        deletedRes,
+          )[0],
+        deletedRes[0],
       ),
-      data => ({
-        ...data,
-        instanceContainer: { id: oldInstance.id, content: oldInstance.content },
-      }),
-    )
+      deletedRes[1],
+    ]
   } else {
     const preparedContent =
       newInstance.id === undefined
@@ -222,76 +207,47 @@ export const saveInstanceTree = (
         : ok(newInstance.content)
 
     if (isError(preparedContent)) {
-      return preparedContent
+      throw preparedContent.error
     }
 
-    const setRes: TransactionResult<{ instanceId: string }> =
+    const [nextTxn, instanceContainer] =
       newInstance.id === undefined
-        ? createInstance(
-            validationOptions,
-            res,
-            localeEntity,
-            entity,
-            preparedContent.value,
-            customId,
-          )
-        : map(
-            updateInstance(validationOptions, res, entity, newInstance.id, preparedContent.value),
-            data => ({
-              ...data,
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              instanceId: newInstance.id!,
-            }),
-          )
+        ? txn.createInstance(entity, preparedContent.value, customId)
+        : txn.updateInstance(entity, newInstance.id, preparedContent.value)
 
-    if (isError(setRes)) {
-      return setRes
-    }
-
-    const instanceId = setRes.value.instanceId
-
-    const setResWithoutInfo = ok({ ...setRes.value, additionalInformation: undefined })
-
-    return map(
+    return [
       newInstance.childInstances
         .filter(newChildInstance => newChildInstance.id === undefined)
         .reduce(
-          (resAcc: TransactionResult, newChildInstance) =>
+          (txnAcc: Transaction, newChildInstance) =>
             saveInstanceTree(
-              validationOptions,
-              entitiesByName,
+              txnAcc,
+              getEntity,
               newInstance.entityName,
-              instanceId,
-              localeEntity,
+              instanceContainer.id,
               newChildInstance.entityName,
               undefined,
               newChildInstance,
               undefined,
-              resAcc,
-            ),
+            )[0],
           oldInstance
             ? oldInstance.childInstances.reduce(
-                (resAcc: TransactionResult, oldChildInstance) =>
+                (txnAcc: Transaction, oldChildInstance) =>
                   saveInstanceTree(
-                    validationOptions,
-                    entitiesByName,
+                    txnAcc,
+                    getEntity,
                     oldInstance.entityName,
-                    instanceId,
-                    localeEntity,
+                    instanceContainer.id,
                     oldChildInstance.entityName,
                     oldChildInstance,
                     newInstance.childInstances.find(ci => ci.id === oldChildInstance.id),
                     undefined,
-                    resAcc,
-                  ),
-                setResWithoutInfo,
+                  )[0],
+                nextTxn,
               )
-            : setResWithoutInfo,
+            : nextTxn,
         ),
-      data => ({
-        ...data,
-        instanceContainer: { id: instanceId, content: preparedContent.value },
-      }),
-    )
+      instanceContainer,
+    ]
   }
 }

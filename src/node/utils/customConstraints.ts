@@ -1,32 +1,32 @@
-import { deepEqual } from "@elyukai/utils/equality"
 import { error, isError, mapError, ok, type Result } from "@elyukai/utils/result"
+import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
+import type { DefaultTSONDBTypes, EntityName, TSONDB } from "../index.ts"
 import type {
-  InstanceContainer,
-  InstanceContainerOverview,
-  InstanceContent,
-} from "../../shared/utils/instances.ts"
-import type { RegisteredEntity, RegisteredEnumOrTypeAlias } from "../schema/externalTypes.ts"
+  AnyChildEntityMap,
+  AnyEntityMap,
+  RegisteredChildEntityMap,
+  RegisteredEntity,
+  RegisteredEntityMap,
+  RegisteredEnumOrTypeAlias,
+} from "../schema/externalTypes.ts"
 import {
-  normalizedIdArgs,
-  type GetAllChildInstancesForParent,
+  type GetAllChildInstanceContainersForParent,
   type GetAllInstances,
   type GetDisplayName,
-  type GetDisplayNameWithId,
+  type GetDisplayNameAndId,
   type GetInstanceById,
 } from "../schema/helpers.ts"
 import { checkCustomConstraintsInEntityDecl, type EntityDecl } from "../schema/index.ts"
-import {
-  getInstanceOfEntityFromDatabaseInMemory,
-  getInstancesOfEntityFromDatabaseInMemory,
-  type DatabaseInMemory,
-} from "./databaseInMemory.ts"
 
-export type CustomConstraintHelpers = {
-  getInstanceById: GetInstanceById
-  getAllInstances: GetAllInstances
-  getAllChildInstancesForParent: GetAllChildInstancesForParent
-  getDisplayName: GetDisplayName
-  getDisplayNameWithId: GetDisplayNameWithId
+export type CustomConstraintHelpers<
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+> = {
+  getInstanceById: GetInstanceById<EM>
+  getAllInstances: GetAllInstances<EM>
+  getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>
+  getDisplayName: GetDisplayName<EM>
+  getDisplayNameAndId: GetDisplayNameAndId<EM>
 }
 
 /**
@@ -38,11 +38,14 @@ export type CustomConstraintHelpers = {
  * It should return an array of strings describing the parts of the constraint
  * that were violated. If the array is empty, the instance is considered valid.
  */
-export type CustomConstraint = (
+export type CustomConstraint<
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+> = (
   params: {
     instanceId: string
     instanceContent: InstanceContent
-  } & CustomConstraintHelpers,
+  } & CustomConstraintHelpers<EM, CEM>,
 ) => string[]
 
 /**
@@ -55,10 +58,13 @@ export type CustomConstraint = (
  * It should return an array of strings describing the parts of the constraint
  * that were violated. If the array is empty, the value is considered valid.
  */
-export type NestedCustomConstraint = (
+export type NestedCustomConstraint<
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+> = (
   params: {
     value: unknown
-  } & CustomConstraintHelpers,
+  } & CustomConstraintHelpers<EM, CEM>,
 ) => string[]
 
 /**
@@ -70,11 +76,15 @@ export type NestedCustomConstraint = (
  * It should return an array of strings describing the parts of the constraint
  * that were violated. If the array is empty, the instance is considered valid.
  */
-export type TypedCustomConstraint<Name extends string> = (
+export type TypedCustomConstraint<
+  Name extends string,
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+> = (
   params: {
     instanceId: string
     instanceContent: RegisteredEntity<Name>
-  } & CustomConstraintHelpers,
+  } & CustomConstraintHelpers<EM, CEM>,
 ) => string[]
 
 /**
@@ -87,10 +97,14 @@ export type TypedCustomConstraint<Name extends string> = (
  * It should return an array of strings describing the parts of the constraint
  * that were violated. If the array is empty, the value is considered valid.
  */
-export type TypedNestedCustomConstraint<Name extends string> = (
+export type TypedNestedCustomConstraint<
+  Name extends string,
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+> = (
   params: {
     instanceContent: RegisteredEnumOrTypeAlias<Name>
-  } & CustomConstraintHelpers,
+  } & CustomConstraintHelpers<EM, CEM>,
 ) => string[]
 
 /**
@@ -100,64 +114,30 @@ export type TypedNestedCustomConstraint<Name extends string> = (
  * `AggregateError`s for each entity if there are any violations of any custom
  * constraint.
  */
-export const checkCustomConstraintsForAllEntities = (
-  db: DatabaseInMemory,
-  entitiesByName: Record<string, EntityDecl>,
-  instanceOverviewsByEntityName: Record<string, InstanceContainerOverview[]>,
+export const checkCustomConstraintsForAllEntities = <T extends DefaultTSONDBTypes>(
+  db: TSONDB<T>,
 ): Result<void, AggregateError> => {
-  const getInstanceById: GetInstanceById = (...args) => {
-    const { entityName, id } = normalizedIdArgs(args)
-    return getInstanceOfEntityFromDatabaseInMemory(db, entityName, id)?.content
-  }
+  const entities = db.schema.entities as EntityDecl<EntityName<T>>[]
 
-  const getAllInstances: GetAllInstances = entityName =>
-    getInstancesOfEntityFromDatabaseInMemory(db, entityName).map(i => i.content)
-
-  const getAllChildInstancesForParent: GetAllChildInstancesForParent = (entityName, parentId) => {
-    const entity = entitiesByName[entityName]
-    if (!entity || !entity.parentReferenceKey) {
-      return []
-    }
-    const parentKey = entity.parentReferenceKey
-
-    return getInstancesOfEntityFromDatabaseInMemory(db, entityName)
-      .filter(instance =>
-        deepEqual((instance.content as { [K in typeof parentKey]: unknown })[parentKey], parentId),
-      )
-      .map(i => i.content)
-  }
-
-  const getDisplayName: GetDisplayName = (...args) => {
-    const { entityName, id } = normalizedIdArgs(args)
-    return instanceOverviewsByEntityName[entityName]?.find(o => o.id === id)?.displayName
-  }
-
-  const getDisplayNameWithId: GetDisplayNameWithId = (...args) => {
-    const { id } = normalizedIdArgs(args)
-    const displayName = getDisplayName(...args)
-    return displayName ? `"${displayName}" (${id})` : id
-  }
-
-  const helpers: CustomConstraintHelpers = {
-    getInstanceById,
-    getAllInstances,
-    getAllChildInstancesForParent,
-    getDisplayName,
-    getDisplayNameWithId,
+  const helpers: CustomConstraintHelpers<T["entityMap"], T["childEntityMap"]> = {
+    getInstanceById: db.getInstanceOfEntityById.bind(db),
+    getAllInstances: db.getAllInstancesOfEntity.bind(db),
+    getAllChildInstancesForParent: db.getAllChildInstanceContainersForParent.bind(db),
+    getDisplayName: db.getDisplayName.bind(db),
+    getDisplayNameAndId: db.getDisplayNameWithId.bind(db),
   }
 
   return mapError(
-    Object.values(entitiesByName).reduce<Result<void, AggregateError[]>>((acc, entity) => {
-      const errors = getInstancesOfEntityFromDatabaseInMemory(db, entity.name)
+    entities.reduce<Result<void, AggregateError[]>>((acc, entity) => {
+      const errors = db
+        .getAllInstanceContainersOfEntity(entity.name)
         .map((instance): [InstanceContainer, string[]] => [
           instance,
           checkCustomConstraintsInEntityDecl(entity, [instance.id, instance.content], helpers),
         ])
         .filter(([, violations]) => violations.length > 0)
         .map(([instance, violations]) => {
-          const instanceOverview = instanceOverviewsByEntityName[entity.name]?.find(
-            o => o.id === instance.id,
-          )
+          const instanceOverview = db.getInstanceOverviewOfEntityById(entity.name, instance.id)
           const name = instanceOverview
             ? `"${instanceOverview.displayName}" (${instance.id})`
             : instance.id

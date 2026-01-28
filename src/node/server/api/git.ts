@@ -1,6 +1,5 @@
 import Debug from "debug"
 import express, { type Request } from "express"
-import { join } from "node:path"
 import type {
   CreateBranchRequestBody,
   CreateCommitRequestBody,
@@ -8,15 +7,9 @@ import type {
   GitStatusResponseBody,
   IsRepoResponseBody,
 } from "../../../shared/api.ts"
-import { hasFileChanges, splitBranchName } from "../../../shared/utils/git.ts"
-import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
-import {
-  createInstanceFromDatabaseInMemoryGetter,
-  getGroupedInstancesFromDatabaseInMemory,
-} from "../../utils/databaseInMemory.ts"
-import { attachGitStatusToDatabaseInMemory } from "../../utils/git.ts"
+import { splitBranchName } from "../../../shared/utils/git.ts"
+import { sendErrorResponse } from "../../utils/error.ts"
 import { reinit } from "../init.ts"
-import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
 
 const debug = Debug("tsondb:server:api:git")
 
@@ -24,7 +17,7 @@ export const gitApi = express.Router()
 
 gitApi.use((req, res, next) => {
   debug(req.path)
-  if (req.path !== "/" && req.gitRoot === undefined) {
+  if (req.path !== "/" && !req.db.isGitRepo()) {
     res.status(400).send("Git repository not found")
     return
   }
@@ -34,68 +27,26 @@ gitApi.use((req, res, next) => {
 
 gitApi.get("/", (req, res) => {
   const body: IsRepoResponseBody = {
-    isRepo: req.gitRoot !== undefined,
+    isRepo: req.db.isGitRepo(),
   }
 
   res.json(body)
 })
 
 gitApi.get("/status", async (req, res) => {
-  const status = await req.git.status()
-
-  req.setLocal(
-    "databaseInMemory",
-    attachGitStatusToDatabaseInMemory(
-      req.databaseInMemory,
-      req.dataRoot,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      req.gitRoot!,
-      status,
-    ),
-  )
-
-  const getInstanceById = createInstanceFromDatabaseInMemoryGetter(
-    req.databaseInMemory,
-    req.entitiesByName,
-  )
-  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(
-    req.entitiesByName,
-    req.databaseInMemory,
-  )
-
-  const body: GitStatusResponseBody = {
-    currentBranch: status.current,
-    trackingBranch: status.tracking,
-    commitsAhead: status.ahead,
-    commitsBehind: status.behind,
-    instances: Object.fromEntries(
-      getGroupedInstancesFromDatabaseInMemory(req.databaseInMemory).map(
-        ([entityName, instances]) => [
-          entityName,
-          instances
-            .filter(instance => hasFileChanges(instance.gitStatus))
-            .map(instance =>
-              getInstanceContainerOverview(
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                req.entitiesByName[entityName]!,
-                instance,
-                getInstanceById,
-                getChildInstancesForInstanceId,
-                req.locales,
-              ),
-            ),
-        ],
-      ),
-    ),
-    latestCommit: await req.git.revparse(["HEAD"]),
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    const body: GitStatusResponseBody = await req.db.git!.status()
+    res.json(body)
+  } catch (err) {
+    sendErrorResponse(res, err)
   }
-
-  res.json(body)
 })
 
 gitApi.post("/fetch", async (req, res) => {
   try {
-    await req.git.fetch(["--all", "-p"])
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.fetch({ all: true, prune: true })
     res.set("Content-Type", "text/plain")
     res.status(200).send("Fetched all remotes")
   } catch (error) {
@@ -107,7 +58,8 @@ gitApi.post("/fetch", async (req, res) => {
 
 gitApi.post("/stage", async (req, res) => {
   try {
-    await req.git.add(req.dataRoot)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.stage()
     res.set("Content-Type", "text/plain")
     res.status(200).send("Added all database files to index")
   } catch (error) {
@@ -121,7 +73,8 @@ gitApi.post("/stage", async (req, res) => {
 
 gitApi.post("/stage/:entityName", async (req, res) => {
   try {
-    await req.git.add(join(req.dataRoot, req.params.entityName))
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.stage(req.params.entityName)
     res.set("Content-Type", "text/plain")
     res.status(200).send(`Added all database files for entity ${req.params.entityName} to index`)
   } catch (error) {
@@ -139,7 +92,8 @@ gitApi.post("/stage/:entityName", async (req, res) => {
 
 gitApi.post("/stage/:entityName/:instanceId", async (req, res) => {
   try {
-    await req.git.add(join(req.dataRoot, req.params.entityName, `${req.params.instanceId}.json`))
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.stage(req.params.entityName, req.params.instanceId)
     res.set("Content-Type", "text/plain")
     res
       .status(200)
@@ -161,7 +115,8 @@ gitApi.post("/stage/:entityName/:instanceId", async (req, res) => {
 
 gitApi.post("/unstage", async (req, res) => {
   try {
-    await req.git.reset(["HEAD", "--", req.dataRoot])
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.unstage()
     res.set("Content-Type", "text/plain")
     res.status(200).send("Removed all database files to index")
   } catch (error) {
@@ -175,7 +130,8 @@ gitApi.post("/unstage", async (req, res) => {
 
 gitApi.post("/unstage/:entityName", async (req, res) => {
   try {
-    await req.git.reset(["HEAD", "--", join(req.dataRoot, req.params.entityName)])
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.unstage(req.params.entityName)
     res.set("Content-Type", "text/plain")
     res.status(200).send(`Removed all database files for entity ${req.params.entityName} to index`)
   } catch (error) {
@@ -193,11 +149,8 @@ gitApi.post("/unstage/:entityName", async (req, res) => {
 
 gitApi.post("/unstage/:entityName/:instanceId", async (req, res) => {
   try {
-    await req.git.reset([
-      "HEAD",
-      "--",
-      join(req.dataRoot, req.params.entityName, `${req.params.instanceId}.json`),
-    ])
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.unstage(req.params.entityName, req.params.instanceId)
     res.set("Content-Type", "text/plain")
     res
       .status(200)
@@ -219,7 +172,8 @@ gitApi.post("/unstage/:entityName/:instanceId", async (req, res) => {
 
 gitApi.post("/reset", async (req, res) => {
   try {
-    await req.git.raw(["restore", "--", req.dataRoot])
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.restore()
     res.set("Content-Type", "text/plain")
     res.status(200).send("Removed all database files to index")
   } catch (error) {
@@ -233,12 +187,8 @@ gitApi.post("/reset", async (req, res) => {
 
 gitApi.post("/reset/:entityName/:instanceId", async (req, res) => {
   try {
-    await req.git.raw([
-      "restore",
-      "--",
-      join(req.dataRoot, req.params.entityName, `${req.params.instanceId}.json`),
-    ])
-    await reinit(req)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.restore(req.params.entityName, req.params.instanceId)
     res.set("Content-Type", "text/plain")
     res
       .status(200)
@@ -270,7 +220,8 @@ gitApi.post("/commit", async (req: CreateCommitRequest, res) => {
   }
 
   try {
-    await req.git.commit(message)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.commit(message)
     res.set("Content-Type", "text/plain")
     res.status(200).send("Commit successful")
   } catch (error) {
@@ -281,9 +232,8 @@ gitApi.post("/commit", async (req: CreateCommitRequest, res) => {
 
 gitApi.post("/push", async (req, res) => {
   try {
-    const status = await req.git.status()
-    const remotes = await req.git.getRemotes()
-    await req.git.push(remotes[0]?.name, status.current ?? undefined)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.push()
     res.set("Content-Type", "text/plain")
     res.status(200).send("Push successful")
   } catch (error) {
@@ -294,10 +244,8 @@ gitApi.post("/push", async (req, res) => {
 
 gitApi.post("/pull", async (req, res) => {
   try {
-    const status = await req.git.status()
-    const remotes = await req.git.getRemotes()
-    await req.git.pull(remotes[0]?.name, status.current ?? undefined)
-    await reinit(req)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.pull()
     res.set("Content-Type", "text/plain")
     res.status(200).send("Pull successful")
   } catch (error) {
@@ -307,15 +255,8 @@ gitApi.post("/pull", async (req, res) => {
 })
 
 gitApi.get("/branch", async (req, res) => {
-  const branchSummary = await req.git.branch()
-
-  const body: GetAllGitBranchesResponseBody = {
-    allBranches: branchSummary.all,
-    currentBranch: branchSummary.current,
-    isDetached: branchSummary.detached,
-    branches: branchSummary.branches,
-  }
-
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+  const body: GetAllGitBranchesResponseBody = await req.db.git!.branch()
   res.json(body)
 })
 
@@ -331,7 +272,8 @@ gitApi.post("/branch", async (req: CreateBranchRequest, res) => {
   }
 
   try {
-    await req.git.checkoutLocalBranch(branchName)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.createBranch(branchName)
     await reinit(req)
     res.set("Content-Type", "text/plain")
     res.status(200).send(`Creation of branch "${branchName}" successful`)
@@ -353,8 +295,9 @@ gitApi.post("/branch/:branchName", async (req, res) => {
     } else {
       debug(`Switch to local branch "${actualBranch}"`)
     }
-    await req.git.raw("switch", actualBranch)
-    await reinit(req)
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.switchBranch(actualBranch)
 
     res.set("Content-Type", "text/plain")
     res.status(200).send(`Switch to branch "${branchName}" successful`)
@@ -370,15 +313,8 @@ gitApi.delete("/branch/:branchName", async (req, res) => {
   const branchName = decodeURIComponent(req.params.branchName)
 
   try {
-    const branchSummary = await req.git.branchLocal()
-
-    if (branchSummary.current === branchName) {
-      res.set("Content-Type", "text/plain")
-      res.status(400).send("Cannot delete the branch currently checked out")
-      return
-    }
-
-    await req.git.deleteLocalBranch(branchName, true)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
+    await req.db.git!.deleteBranch(branchName, { force: true })
     res.set("Content-Type", "text/plain")
     res.status(200).send(`Deletion of branch "${branchName}" successful`)
   } catch (error) {

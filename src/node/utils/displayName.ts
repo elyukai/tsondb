@@ -9,13 +9,25 @@ import type {
   InstanceContent,
 } from "../../shared/utils/instances.ts"
 import { serializeEntityDecl, type EntityDecl } from "../schema/declarations/EntityDecl.ts"
-import type { RegisteredEntity } from "../schema/externalTypes.ts"
-import { createChildInstancesForInstanceIdGetter } from "../server/utils/childInstances.ts"
+import type {
+  AnyChildEntityMap,
+  AnyEntityMap,
+  RegisteredChildEntityMap,
+  RegisteredEntity,
+  RegisteredEntityMap,
+} from "../schema/externalTypes.ts"
 import {
-  createInstanceFromDatabaseInMemoryGetter,
+  normalizedIdArgs,
+  type GetAllChildInstanceContainersForParent,
+  type GetDisplayNameWithLocaleId,
+  type GetEntityByName,
+  type GetInstanceById,
+  type GetInstanceContainerById,
+  type IdArgsVariant,
+} from "../schema/helpers.ts"
+import {
   getGroupedInstancesFromDatabaseInMemory,
   type DatabaseInMemory,
-  type InstanceFromDatabaseInMemoryGetter,
 } from "./databaseInMemory.ts"
 
 export type GetChildInstancesForInstanceId = (
@@ -24,72 +36,90 @@ export type GetChildInstancesForInstanceId = (
   childEntityName: string,
 ) => { id: string; content: InstanceContent }[]
 
-export type DisplayNameCustomizer = (params: {
+export type DisplayNameCustomizer<
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+> = (params: {
   instance: unknown
   instanceId: string
   instanceDisplayName: string
   instanceDisplayNameLocaleId: string | undefined
   locales: string[]
-  getInstanceById: (id: string) => InstanceContent | undefined
-  getDisplayNameForInstanceId: (id: string) => DisplayNameResult | undefined
-  getChildInstancesForInstanceId: GetChildInstancesForInstanceId
+  getInstanceById: GetInstanceById<EM>
+  getDisplayNameForInstanceId: GetDisplayNameWithLocaleId<EM>
+  getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>
 }) => DisplayNameResult
 
-export type TypedDisplayNameCustomizer<Name extends string> = (params: {
+export type TypedDisplayNameCustomizer<
+  Name extends string,
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+> = (params: {
   instance: RegisteredEntity<Name>
   instanceId: string
   instanceDisplayName: string
   instanceDisplayNameLocaleId: string | undefined
   locales: string[]
-  getInstanceById: (id: string) => InstanceContent | undefined
-  getDisplayNameForInstanceId: (id: string) => DisplayNameResult | undefined
-  getChildInstancesForInstanceId: GetChildInstancesForInstanceId
+  getInstanceById: GetInstanceById<EM>
+  getDisplayNameForInstanceId: GetDisplayNameWithLocaleId<EM>
+  getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>
 }) => DisplayNameResult
 
-export const getDisplayNameFromEntityInstance = (
+export const getDisplayNameFromEntityInstance = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+>(
   entity: EntityDecl,
   instanceContainer: InstanceContainer,
-  getInstanceById: InstanceFromDatabaseInMemoryGetter,
-  getChildInstancesForInstanceId: GetChildInstancesForInstanceId,
+  getEntityByName: GetEntityByName<EM>,
+  getInstanceById: GetInstanceContainerById<EM>,
+  getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>,
   locales: string[],
   defaultName: string = "",
   useCustomizer = true,
 ): DisplayNameResult => {
-  if (useCustomizer && entity.instanceDisplayNameCustomizer) {
+  const instanceDisplayNameCustomizer = entity.instanceDisplayNameCustomizer as
+    | TypedDisplayNameCustomizer<string, EM, CEM>
+    | undefined
+
+  if (useCustomizer && instanceDisplayNameCustomizer) {
     const calculatedName = getDisplayNameFromEntityInstance(
       entity,
       instanceContainer,
+      getEntityByName,
       getInstanceById,
-      getChildInstancesForInstanceId,
+      getAllChildInstancesForParent,
       locales,
       defaultName,
       false,
     )
 
-    return entity.instanceDisplayNameCustomizer({
+    return instanceDisplayNameCustomizer({
       instance: instanceContainer.content,
       instanceId: instanceContainer.id,
       instanceDisplayName: calculatedName.name,
       instanceDisplayNameLocaleId: calculatedName.localeId,
       locales,
-      getInstanceById: id => getInstanceById(id)?.instance.content,
-      getDisplayNameForInstanceId: id => {
-        const result = getInstanceById(id)
-        if (result) {
-          const { entity, instance } = result
+      getInstanceById: (...args) => getInstanceById(...args)?.content,
+      getDisplayNameForInstanceId: (...args) => {
+        const instance = getInstanceById(...args)
+        const { entityName } = normalizedIdArgs(args)
+        const entity = getEntityByName(entityName)
+        if (instance && entity) {
           return getDisplayNameFromEntityInstance(
             entity,
             instance,
+            getEntityByName,
             getInstanceById,
-            getChildInstancesForInstanceId,
+            getAllChildInstancesForParent,
             locales,
-            id,
+            instance.id,
           )
         } else {
           return undefined
         }
       },
-      getChildInstancesForInstanceId,
+      getAllChildInstancesForParent,
     })
   } else {
     return getSerializedDisplayNameFromEntityInstance(
@@ -101,45 +131,101 @@ export const getDisplayNameFromEntityInstance = (
   }
 }
 
-export const getAllInstanceOverviewsByEntityName = (
-  entitiesByName: Record<string, EntityDecl>,
-  databaseInMemory: DatabaseInMemory,
+export const getInstanceOverview = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+>(
+  getInstanceById: GetInstanceContainerById<EM>,
+  getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>,
+  getEntityByName: GetEntityByName<EM>,
   locales: string[],
-): Record<string, InstanceContainerOverview[]> => {
-  const getInstanceById = createInstanceFromDatabaseInMemoryGetter(databaseInMemory, entitiesByName)
-  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(
-    entitiesByName,
-    databaseInMemory,
+  id: IdArgsVariant<EM>,
+): InstanceContainerOverview | undefined => {
+  const { entityName } = normalizedIdArgs(id)
+  const instance = getInstanceById(...id)
+  const entity = getEntityByName(entityName)
+
+  if (!entity || !instance) {
+    return undefined
+  }
+
+  const { name, localeId } = getDisplayNameFromEntityInstance(
+    entity,
+    instance,
+    getEntityByName,
+    getInstanceById,
+    getAllChildInstancesForParent,
+    locales,
   )
 
+  return {
+    id: instance.id,
+    displayName: name,
+    displayNameLocaleId: localeId,
+    gitStatus: instance.gitStatus,
+  }
+}
+
+export const getInstanceOverviewsByEntityName = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+>(
+  getInstanceById: GetInstanceContainerById<EM>,
+  getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>,
+  getEntityByName: GetEntityByName<EM>,
+  entity: EntityDecl,
+  instances: InstanceContainer[],
+  locales: string[],
+): InstanceContainerOverview[] => {
+  return sortBySortOrder(
+    instances.map((instance): SortableInstance => {
+      const { name, localeId } = getDisplayNameFromEntityInstance(
+        entity,
+        instance,
+        getEntityByName,
+        getInstanceById,
+        getAllChildInstancesForParent,
+        locales,
+      )
+
+      return [
+        instance,
+        {
+          id: instance.id,
+          displayName: name,
+          displayNameLocaleId: localeId,
+          gitStatus: instance.gitStatus,
+        },
+      ]
+    }),
+    entity.sortOrder,
+  ).map(arr => arr[1])
+}
+
+export const getAllInstanceOverviewsByEntityName = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+>(
+  getInstanceById: GetInstanceContainerById<EM>,
+  getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>,
+  getEntityByName: GetEntityByName<EM>,
+  databaseInMemory: DatabaseInMemory<EM>,
+  locales: string[],
+): Record<string, InstanceContainerOverview[]> => {
   return Object.fromEntries(
     getGroupedInstancesFromDatabaseInMemory(databaseInMemory).map(([entityName, instances]) => {
-      const entity = entitiesByName[entityName]
+      const entity = getEntityByName(entityName)
       return [
         entityName,
-        sortBySortOrder(
-          instances.map((instance): SortableInstance => {
-            const { name, localeId } = getDisplayNameFromEntityInstance(
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              entitiesByName[entityName]!,
-              instance,
-              getInstanceById,
-              getChildInstancesForInstanceId,
-              locales,
-            )
-
-            return [
-              instance,
-              {
-                id: instance.id,
-                displayName: name,
-                displayNameLocaleId: localeId,
-                gitStatus: instance.gitStatus,
-              },
-            ]
-          }),
-          entity?.sortOrder,
-        ).map(arr => arr[1]),
+        getInstanceOverviewsByEntityName(
+          getInstanceById,
+          getAllChildInstancesForParent,
+          getEntityByName,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          entity!,
+          instances,
+          locales,
+        ),
       ]
     }),
   )

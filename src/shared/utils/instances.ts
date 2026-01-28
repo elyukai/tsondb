@@ -1,16 +1,18 @@
-import type { EntityDecl } from "../../node/schema/index.ts"
-import type { InstanceFromDatabaseInMemoryGetter } from "../../node/utils/databaseInMemory.ts"
-import {
-  getDisplayNameFromEntityInstance,
-  type GetChildInstancesForInstanceId,
-} from "../../node/utils/displayName.ts"
+import type { AnyChildEntityMap, AnyEntityMap } from "../../node/schema/externalTypes.ts"
+import type {
+  EntityDecl,
+  GetAllChildInstanceContainersForParent,
+  GetEntityByName,
+  GetInstanceContainerById,
+} from "../../node/schema/index.ts"
+import { getDisplayNameFromEntityInstance } from "../../node/utils/displayName.ts"
 import type { GitFileStatus } from "./git.ts"
 
 export type InstanceContent = object
 
-export interface InstanceContainer {
+export interface InstanceContainer<T = InstanceContent> {
   id: string
-  content: InstanceContent
+  content: T
   gitStatus?: GitFileStatus
 }
 
@@ -21,17 +23,22 @@ export interface InstanceContainerOverview {
   displayNameLocaleId?: string
 }
 
-export const getInstanceContainerOverview = (
+export const getInstanceContainerOverview = <
+  EM extends AnyEntityMap,
+  CEM extends AnyChildEntityMap,
+>(
   entity: EntityDecl,
   instanceContainer: InstanceContainer,
-  getInstanceById: InstanceFromDatabaseInMemoryGetter,
-  getChildInstancesForInstanceId: GetChildInstancesForInstanceId,
+  getEntityByName: GetEntityByName<EM>,
+  getInstanceById: GetInstanceContainerById<EM>,
+  getChildInstancesForInstanceId: GetAllChildInstanceContainersForParent<CEM>,
   locales: string[],
 ): InstanceContainerOverview => {
   const { content: _, ...rest } = instanceContainer
   const { name: displayName, localeId: displayNameLocaleId } = getDisplayNameFromEntityInstance(
     entity,
     instanceContainer,
+    getEntityByName,
     getInstanceById,
     getChildInstancesForInstanceId,
     locales,

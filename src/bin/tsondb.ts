@@ -8,14 +8,14 @@ import { cwd } from "node:process"
 import { pathToFileURL } from "node:url"
 import { parseArguments } from "simple-cli-args"
 import {
-  validateConfigForFormatting,
+  validateConfigForData,
   validateConfigForGeneration,
   validateConfigForServer,
   validateConfigForTesting,
   type Config,
 } from "../node/config.ts"
-import type { ValidationOptions } from "../node/index.ts"
-import { format, generateOutputs, serve, validate } from "../node/index.ts"
+import { TSONDB, type ValidationOptions } from "../node/index.ts"
+import { createServer } from "../node/server/index.ts"
 
 const debug = Debug("tsondb:cli")
 
@@ -94,45 +94,55 @@ if (passedArguments.command === undefined) {
   )
 }
 
-switch (passedArguments.command.name) {
-  case "generate":
-    debug(`running command: generate`)
-    validateConfigForGeneration(config)
-    await generateOutputs(config.schema, config.outputs)
-    break
-  case "serve":
-    debug(`running command: serve`)
-    validateConfigForServer(config)
-    await serve(
-      config.schema,
-      config.dataRootPath,
-      config.locales,
-      config.homeLayoutSections,
-      config.serverOptions,
-      config.validationOptions,
-      config.customStylesheetPath,
-    )
-    break
-  case "validate":
-    debug(`running command: validate`)
-    validateConfigForTesting(config)
-    if (passedArguments.command.options?.checkReferentialIntegrity !== undefined) {
-      debug(
-        `check referential integrity: ${passedArguments.command.options.checkReferentialIntegrity ? "yes" : "no"}`,
+if (passedArguments.command.name === "generate") {
+  debug(`running command: generate`)
+  validateConfigForGeneration(config)
+  await TSONDB.generateOutputs(config)
+} else {
+  validateConfigForData(config)
+  const db = await TSONDB.create({
+    ...config,
+    validationOptions:
+      passedArguments.command.name === "validate"
+        ? {
+            ...config.validationOptions,
+            ...omitUndefinedKeys<Partial<ValidationOptions>>(passedArguments.command.options ?? {}),
+          }
+        : config.validationOptions,
+  })
+  switch (passedArguments.command.name) {
+    case "serve":
+      debug(`running command: serve`)
+      validateConfigForServer(config)
+      createServer(
+        db,
+        config.homeLayoutSections,
+        config.serverOptions,
+        config.validationOptions,
+        config.customStylesheetPath,
       )
+      break
+    case "validate": {
+      debug(`running command: validate`)
+      validateConfigForTesting(config)
+      if (passedArguments.command.options?.checkReferentialIntegrity !== undefined) {
+        debug(
+          `check referential integrity: ${passedArguments.command.options.checkReferentialIntegrity ? "yes" : "no"}`,
+        )
+      }
+      if (passedArguments.command.options?.checkOnlyEntities !== undefined) {
+        const entities: string[] = passedArguments.command.options.checkOnlyEntities
+        debug(`only check the following entities: ${entities.join(", ")}`)
+      }
+      const result = db.validate()
+      if (!result) {
+        process.exitCode = 1
+      }
+      break
     }
-    if (passedArguments.command.options?.checkOnlyEntities !== undefined) {
-      const entities: string[] = passedArguments.command.options.checkOnlyEntities
-      debug(`only check the following entities: ${entities.join(", ")}`)
-    }
-    await validate(config.schema, config.dataRootPath, config.locales, {
-      ...config.validationOptions,
-      ...omitUndefinedKeys<Partial<ValidationOptions>>(passedArguments.command.options ?? {}),
-    })
-    break
-  case "format":
-    debug(`running command: format`)
-    validateConfigForFormatting(config)
-    await format(config.schema, config.dataRootPath)
-    break
+    case "format":
+      debug(`running command: format`)
+      await db.format()
+      break
+  }
 }

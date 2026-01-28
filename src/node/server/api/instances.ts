@@ -1,7 +1,6 @@
 import Debug from "debug"
 import express from "express"
 import type { GetAllInstancesResponseBody } from "../../../shared/api.ts"
-import { getAllInstanceOverviewsByEntityName } from "../../utils/displayName.ts"
 
 const debug = Debug("tsondb:server:api:instances")
 
@@ -14,11 +13,7 @@ instancesApi.use((req, _res, next) => {
 
 instancesApi.get("/", (req, res) => {
   const body: GetAllInstancesResponseBody = {
-    instances: getAllInstanceOverviewsByEntityName(
-      req.entitiesByName,
-      req.databaseInMemory,
-      req.locales,
-    ),
+    instances: req.db.getAllInstanceOverviews(),
   }
 
   res.json(body)

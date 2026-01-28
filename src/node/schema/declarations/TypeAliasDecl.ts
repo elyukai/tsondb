@@ -1,4 +1,5 @@
 import { Lazy } from "@elyukai/utils/lazy"
+import { onlyKeys } from "@elyukai/utils/object"
 import type {
   NestedCustomConstraint,
   TypedNestedCustomConstraint,
@@ -38,61 +39,174 @@ export interface TypeAliasDecl<
   customConstraints?: NestedCustomConstraint
 }
 
-export const GenTypeAliasDecl = <
-  Name extends string,
-  T extends Type,
-  Params extends TypeParameter[],
->(
+const TypeAliasDeclConstructor: {
+  /**
+   * Creates a new type alias declaration.
+   * @param sourceUrl The source URL where the type alias is defined, usually `import.meta.url`.
+   * @param options The options for the type alias declaration, including its name, comment, values, and custom constraints.
+   * @returns A new `TypeAliasDecl` instance.
+   */
+  <Name extends string, T extends Type>(
+    sourceUrl: string,
+    options: {
+      /**
+       * The name of the type alias. The name must be unique within the schema.
+       */
+      name: Name
+      /**
+       * An optional comment describing the type alias.
+       */
+      comment?: string
+      /**
+       * If the type alias is deprecated. This may be rendered in the editor, generated types and generated documentation.
+       */
+      isDeprecated?: boolean
+      /**
+       * A builder for the type aliases type.
+       */
+      type: () => T
+      /**
+       * Custom validation logic. See {@link TypedNestedCustomConstraint} for more information.
+       */
+      customConstraints?: TypedNestedCustomConstraint<Name>
+    },
+  ): TypeAliasDecl<Name, T, []>
+  /**
+   * Creates a new generic type alias declaration.
+   * @param sourceUrl The source URL where the type alias is defined, usually `import.meta.url`.
+   * @param options The options for the type alias declaration, including its name, comment, parameters, values, and custom constraints.
+   * @returns A new `TypeAliasDecl` instance.
+   */
+  <Name extends string, T extends Type, Params extends TypeParameter[]>(
+    sourceUrl: string,
+    options: {
+      /**
+       * The name of the type alias. The name must be unique within the schema.
+       */
+      name: Name
+      /**
+       * An optional comment describing the type alias.
+       */
+      comment?: string
+      /**
+       * The type parameters for the generic type alias.
+       */
+      parameters: Params
+      /**
+       * If the type alias is deprecated. This may be rendered in the editor, generated types and generated documentation.
+       */
+      isDeprecated?: boolean
+      /**
+       * A builder for the type aliases type.
+       *
+       * It received the type arguments and must return a type.
+       */
+      type: (...args: Params) => T
+      /**
+       * Custom validation logic. See {@link TypedNestedCustomConstraint} for more information.
+       */
+      customConstraints?: TypedNestedCustomConstraint<Name>
+    },
+  ): TypeAliasDecl<Name, T, Params>
+} = <Name extends string, T extends Type, Params extends TypeParameter[]>(
   sourceUrl: string,
   options: {
     name: Name
     comment?: string
+    parameters?: Params
     isDeprecated?: boolean
-    parameters: Params
     type: (...args: Params) => T
     customConstraints?: TypedNestedCustomConstraint<Name>
   },
 ): TypeAliasDecl<Name, T, Params> => {
   validateDeclName(options.name)
 
+  const parameters = (options.parameters ?? []) as Params
   const decl: TypeAliasDecl<Name, T, Params> = {
-    ...options,
+    ...onlyKeys(options, "name", "comment", "isDeprecated"),
     kind: NodeKind.TypeAliasDecl,
     sourceUrl,
-    type: Lazy.of(() => options.type(...options.parameters)),
-    customConstraints: options.customConstraints as NestedCustomConstraint | undefined, // ignore contravariance of registered enum type
-  }
-
-  return decl
-}
-
-export { GenTypeAliasDecl as GenTypeAlias }
-
-export const TypeAliasDecl = <Name extends string, T extends Type>(
-  sourceUrl: string,
-  options: {
-    name: Name
-    comment?: string
-    isDeprecated?: boolean
-    type: () => T
-    customConstraints?: TypedNestedCustomConstraint<Name>
-  },
-): TypeAliasDecl<Name, T, []> => {
-  validateDeclName(options.name)
-
-  const decl: TypeAliasDecl<Name, T, []> = {
-    ...options,
-    kind: NodeKind.TypeAliasDecl,
-    sourceUrl,
-    parameters: [],
-    type: Lazy.of(() => options.type()),
+    parameters,
+    type: Lazy.of(() => options.type(...parameters)),
     customConstraints: options.customConstraints as NestedCustomConstraint | undefined, // ignore contravariance of registered type alias type
   }
 
   return decl
 }
 
+export const TypeAliasDecl: /**
+ * Creates a new type alias declaration.
+ * @param sourceUrl The source URL where the type alias is defined, usually `import.meta.url`.
+ * @param options The options for the type alias declaration, including its name, comment, values, and custom constraints.
+ * @returns A new `TypeAliasDecl` instance.
+ */
+<Name extends string, T extends Type>(
+  sourceUrl: string,
+  options: {
+    /**
+     * The name of the type alias. The name must be unique within the schema.
+     */
+    name: Name
+    /**
+     * An optional comment describing the type alias.
+     */
+    comment?: string
+    /**
+     * If the type alias is deprecated. This may be rendered in the editor, generated types and generated documentation.
+     */
+    isDeprecated?: boolean
+    /**
+     * A builder for the type aliases type.
+     */
+    type: () => T
+    /**
+     * Custom validation logic. See {@link TypedNestedCustomConstraint} for more information.
+     */
+    customConstraints?: TypedNestedCustomConstraint<Name>
+  },
+) => TypeAliasDecl<Name, T, []> = TypeAliasDeclConstructor
+
 export { TypeAliasDecl as TypeAlias }
+
+export const GenTypeAliasDecl: /**
+ * Creates a new generic type alias declaration.
+ * @param sourceUrl The source URL where the type alias is defined, usually `import.meta.url`.
+ * @param options The options for the type alias declaration, including its name, comment, parameters, values, and custom constraints.
+ * @returns A new `TypeAliasDecl` instance.
+ */
+<Name extends string, T extends Type, Params extends TypeParameter[]>(
+  sourceUrl: string,
+  options: {
+    /**
+     * The name of the type alias. The name must be unique within the schema.
+     */
+    name: Name
+    /**
+     * An optional comment describing the type alias.
+     */
+    comment?: string
+    /**
+     * The type parameters for the generic type alias.
+     */
+    parameters: Params
+    /**
+     * If the type alias is deprecated. This may be rendered in the editor, generated types and generated documentation.
+     */
+    isDeprecated?: boolean
+    /**
+     * A builder for the type aliases type.
+     *
+     * It received the type arguments and must return a type.
+     */
+    type: (...args: Params) => T
+    /**
+     * Custom validation logic. See {@link TypedNestedCustomConstraint} for more information.
+     */
+    customConstraints?: TypedNestedCustomConstraint<Name>
+  },
+) => TypeAliasDecl<Name, T, Params> = TypeAliasDeclConstructor
+
+export { GenTypeAliasDecl as GenTypeAlias }
 
 export const isTypeAliasDecl: Predicate<TypeAliasDecl> = node =>
   node.kind === NodeKind.TypeAliasDecl

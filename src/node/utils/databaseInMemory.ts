@@ -6,62 +6,61 @@ import { basename, extname, join } from "node:path"
 import { platform } from "node:process"
 import { promisify } from "node:util"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
+import type { AnyEntityMap, RegisteredEntityMap } from "../schema/externalTypes.ts"
 import type { EntityDecl } from "../schema/index.ts"
 
-export type DatabaseInMemory = Dictionary<InstancesInMemory>
+export type DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> = Dictionary<
+  InstancesInMemory,
+  Extract<keyof EM, string>
+>
 
 export type InstancesInMemory = Dictionary<InstanceContainer>
 
 export const emptyDatabaseInMemory: DatabaseInMemory = Dictionary.empty
 
-export const getInstanceFromDatabaseInMemory = (
-  db: DatabaseInMemory,
+export const getInstanceFromDatabaseInMemory = <EM extends AnyEntityMap = RegisteredEntityMap>(
+  db: DatabaseInMemory<EM>,
   instanceId: string,
-): { entityName: string; instance: InstanceContainer } | undefined =>
+): { entityName: Extract<keyof EM, string>; instance: InstanceContainer } | undefined =>
   db.mapFirst((instances, entityName) =>
     instances.getMap(instanceId, instance => ({ entityName, instance })),
   )
 
-export type InstanceFromDatabaseInMemoryGetter = (
-  instanceId: string,
-) => { entity: EntityDecl; instance: InstanceContainer } | undefined
-
-export const createInstanceFromDatabaseInMemoryGetter =
-  (
-    db: DatabaseInMemory,
-    entitiesByName: Record<string, EntityDecl>,
-  ): InstanceFromDatabaseInMemoryGetter =>
-  instanceId => {
-    const res = getInstanceFromDatabaseInMemory(db, instanceId)
-    if (res) {
-      const { entityName, instance } = res
-      const entity = entitiesByName[entityName]
-      if (entity) {
-        return { entity, instance }
-      }
-    }
-    return undefined
-  }
-
-export const getInstanceOfEntityFromDatabaseInMemory = (
-  db: DatabaseInMemory,
-  entityName: string,
+export const getInstanceOfEntityFromDatabaseInMemory = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+>(
+  db: DatabaseInMemory<EM>,
+  entityName: Extract<keyof EM, string>,
   instanceId: string,
 ): InstanceContainer | undefined => db.getMap(entityName, instances => instances.get(instanceId))
 
-export const getInstancesOfEntityFromDatabaseInMemory = (
-  db: DatabaseInMemory,
-  entityName: string,
+export const hasInstanceOfEntityFromDatabaseInMemory = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+>(
+  db: DatabaseInMemory<EM>,
+  entityName: Extract<keyof EM, string>,
+  instanceId: string,
+): boolean => db.getMap(entityName, instances => instances.has(instanceId)) ?? false
+
+export const getInstancesOfEntityFromDatabaseInMemory = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+>(
+  db: DatabaseInMemory<EM>,
+  entityName: Extract<keyof EM, string>,
 ): InstanceContainer[] => db.getMap(entityName, instances => instances.values()) ?? []
 
-export const getGroupedInstancesFromDatabaseInMemory = (
-  db: DatabaseInMemory,
-): [entityName: string, InstanceContainer[]][] =>
+export const getGroupedInstancesFromDatabaseInMemory = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+>(
+  db: DatabaseInMemory<EM>,
+): [entityName: Extract<keyof EM, string>, InstanceContainer[]][] =>
   db.entries().map(([entityName, instances]) => [entityName, instances.values()])
 
-export const forEachInstanceOfEntityInDatabaseInMemory = (
-  db: DatabaseInMemory,
-  entityName: string,
+export const forEachInstanceOfEntityInDatabaseInMemory = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+>(
+  db: DatabaseInMemory<EM>,
+  entityName: Extract<keyof EM, string>,
   fn: (instance: InstanceContainer) => void,
 ): void => {
   for (const instance of Object.values(
@@ -71,9 +70,11 @@ export const forEachInstanceOfEntityInDatabaseInMemory = (
   }
 }
 
-export const asyncForEachInstanceOfEntityInDatabaseInMemory = async (
-  db: DatabaseInMemory,
-  entityName: string,
+export const asyncForEachInstanceOfEntityInDatabaseInMemory = async <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+>(
+  db: DatabaseInMemory<EM>,
+  entityName: Extract<keyof EM, string>,
   fn: (instance: InstanceContainer) => Promise<void>,
 ): Promise<void> => {
   for (const instance of Object.values(
@@ -83,9 +84,9 @@ export const asyncForEachInstanceOfEntityInDatabaseInMemory = async (
   }
 }
 
-export const forEachInstanceInDatabaseInMemory = (
-  db: DatabaseInMemory,
-  fn: (entityName: string, instance: InstanceContainer) => void,
+export const forEachInstanceInDatabaseInMemory = <EM extends AnyEntityMap = RegisteredEntityMap>(
+  db: DatabaseInMemory<EM>,
+  fn: (entityName: Extract<keyof EM, string>, instance: InstanceContainer) => void,
 ): void => {
   db.forEach((instances, entityName) => {
     instances.forEach(instance => {
@@ -94,9 +95,11 @@ export const forEachInstanceInDatabaseInMemory = (
   })
 }
 
-export const asyncForEachInstanceInDatabaseInMemory = async (
-  db: DatabaseInMemory,
-  fn: (entityName: string, instance: InstanceContainer) => Promise<void>,
+export const asyncForEachInstanceInDatabaseInMemory = async <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+>(
+  db: DatabaseInMemory<EM>,
+  fn: (entityName: Extract<keyof EM, string>, instance: InstanceContainer) => Promise<void>,
 ): Promise<void> =>
   db.forEachAsync((instances, entityName) =>
     instances.forEachAsync(instance => fn(entityName, instance)),
@@ -105,22 +108,24 @@ export const asyncForEachInstanceInDatabaseInMemory = async (
 export const countInstancesInDatabaseInMemory = (db: DatabaseInMemory): number =>
   db.reduce((sum, instances) => sum + instances.size, 0)
 
-export const countInstancesOfEntityInDatabaseInMemory = (
-  db: DatabaseInMemory,
-  entityName: string,
+export const countInstancesOfEntityInDatabaseInMemory = <
+  EM extends AnyEntityMap = RegisteredEntityMap,
+>(
+  db: DatabaseInMemory<EM>,
+  entityName: Extract<keyof EM, string>,
 ): number => db.getMap(entityName, instances => instances.size) ?? 0
 
 const exec = promisify(child_process.exec)
 const ulimit = platform === "win32" ? 2048 : Number.parseInt((await exec("ulimit -n")).stdout)
 
-export const createDatabaseInMemory = async (
+export const createDatabaseInMemory = async <EM extends AnyEntityMap = RegisteredEntityMap>(
   dataRoot: string,
-  entities: readonly EntityDecl[],
-): Promise<DatabaseInMemory> =>
+  entities: readonly EntityDecl<Extract<keyof EM, string>>[],
+): Promise<DatabaseInMemory<EM>> =>
   Dictionary.fromEntries(
     await mapAsync(
       entities,
-      async (entity): Promise<[string, Dictionary<InstanceContainer>]> => {
+      async (entity): Promise<[Extract<keyof EM, string>, Dictionary<InstanceContainer>]> => {
         const entityDir = join(dataRoot, entity.name)
         const instanceFileNames = await readdir(entityDir)
         const instances = await mapAsync(
@@ -154,11 +159,11 @@ const setInstanceInMemory = (
   return [instances.set(instance.id, instance), oldInstance?.content]
 }
 
-export const setInstanceInDatabaseInMemory = (
-  db: DatabaseInMemory,
-  entityName: string,
+export const setInstanceInDatabaseInMemory = <EM extends AnyEntityMap = RegisteredEntityMap>(
+  db: DatabaseInMemory<EM>,
+  entityName: Extract<keyof EM, string>,
   instance: InstanceContainer,
-): [DatabaseInMemory, oldInstance: InstanceContent | undefined] => {
+): [DatabaseInMemory<EM>, oldInstance: InstanceContent | undefined] => {
   const [entityInstances, oldInstance] = setInstanceInMemory(
     db.get(entityName) ?? Dictionary.empty,
     instance,
@@ -181,11 +186,11 @@ const deleteInstanceInMemory = (
   return [remainingInstancesById, oldInstance?.content]
 }
 
-export const deleteInstanceInDatabaseInMemory = (
-  db: DatabaseInMemory,
-  entityName: string,
+export const deleteInstanceInDatabaseInMemory = <EM extends AnyEntityMap = RegisteredEntityMap>(
+  db: DatabaseInMemory<EM>,
+  entityName: Extract<keyof EM, string>,
   instanceId: string,
-): [DatabaseInMemory, oldInstance: InstanceContent | undefined] => {
+): [DatabaseInMemory<EM>, oldInstance: InstanceContent | undefined] => {
   const entityInstances = db.get(entityName)
 
   if (entityInstances === undefined) {

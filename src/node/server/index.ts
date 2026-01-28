@@ -1,16 +1,10 @@
 import Debug from "debug"
 import express from "express"
+import { readdir } from "node:fs/promises"
 import { findPackageJSON } from "node:module"
 import { dirname, join } from "node:path"
-import type { SimpleGit } from "simple-git"
-import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import type { HomeLayoutSection } from "../config.ts"
-import type { ValidationOptions } from "../index.ts"
-import type { Decl } from "../schema/declarations/Declaration.ts"
-import type { EntityDecl } from "../schema/declarations/EntityDecl.ts"
-import type { Schema } from "../schema/Schema.ts"
-import type { DatabaseInMemory } from "../utils/databaseInMemory.ts"
-import type { ReferencesToInstances } from "../utils/references.ts"
+import type { TSONDB, ValidationOptions } from "../index.ts"
 import { api } from "./api/index.ts"
 import { init } from "./init.ts"
 import { getLocalesFromRequest } from "./utils/locales.ts"
@@ -26,24 +20,11 @@ const defaultOptions: ServerOptions = {
 }
 
 export interface TSONDBRequestLocals {
-  git: SimpleGit
-  gitRoot: string | undefined
-  dataRoot: string
-  declarations: readonly Decl[]
-  entities: readonly EntityDecl[]
-  databaseInMemory: DatabaseInMemory
-  entitiesByName: Record<string, EntityDecl>
-  serializedDeclarationsByName: Record<string, SerializedDecl>
-  localeEntity?: EntityDecl
-  referencesToInstances: ReferencesToInstances
+  db: TSONDB
   defaultLocales: string[]
   locales: string[]
   homeLayoutSections?: HomeLayoutSection[]
   validationOptions: Partial<ValidationOptions>
-  setLocal: <K extends keyof Omit<TSONDBRequestLocals, "setLocal">>(
-    key: K,
-    value: TSONDBRequestLocals[K],
-  ) => void
 }
 
 declare global {
@@ -60,11 +41,21 @@ const staticNodeModule = (moduleName: string) => {
   return express.static(dirname(pathToPackageJson))
 }
 
+const getAllJsFilesInNodeModule = async (
+  moduleName: string,
+  pathInside: string[] = [],
+): Promise<string[]> => {
+  const pathToPackageJson = findPackageJSON(moduleName, import.meta.url)
+  if (!pathToPackageJson) {
+    throw new Error(`Could not find module "${moduleName}"`)
+  }
+  const moduleDir = dirname(pathToPackageJson)
+  const paths = await readdir(join(moduleDir, ...pathInside), { recursive: true })
+  return paths.filter(p => p.endsWith(".js")).map(p => p.replace(/\.js$/, ""))
+}
+
 export const createServer = async (
-  schema: Schema,
-  dataRootPath: string,
-  databaseInMemory: DatabaseInMemory,
-  defaultLocales: string[],
+  db: TSONDB,
   homeLayoutSections?: HomeLayoutSection[],
   options?: Partial<ServerOptions>,
   validationOptions?: Partial<ValidationOptions>,
@@ -79,26 +70,17 @@ export const createServer = async (
   app.use("/js/node_modules/@preact/signals", staticNodeModule("@preact/signals"))
   app.use("/js/node_modules/@preact/signals-core", staticNodeModule("@preact/signals-core"))
   app.use("/js/node_modules/preact-iso", staticNodeModule("preact-iso"))
+  app.use("/js/node_modules/@elyukai/utils", staticNodeModule("@elyukai/utils"))
   app.use("/js/client", express.static(join(import.meta.dirname, "../../../../dist/src/web")))
   app.use("/js/shared", express.static(join(import.meta.dirname, "../../../../dist/src/shared")))
   app.use(express.json())
 
-  const requestLocals = await init(
-    schema,
-    dataRootPath,
-    databaseInMemory,
-    defaultLocales,
-    validationOptions,
-    homeLayoutSections,
-  )
+  const requestLocals = init(db, validationOptions, homeLayoutSections)
 
   app.use((req, _res, next) => {
     debug("%s %s", req.method, req.originalUrl)
-    ;(requestLocals as TSONDBRequestLocals).setLocal = (key, value) => {
-      requestLocals[key] = (req as TSONDBRequestLocals)[key] = value
-    }
     Object.assign(req, requestLocals)
-    req.locales = getLocalesFromRequest(req) ?? defaultLocales
+    req.locales = getLocalesFromRequest(req) ?? req.defaultLocales
     next()
   })
 
@@ -116,6 +98,12 @@ export const createServer = async (
         "preact-iso": "/js/node_modules/preact-iso/src/index.js",
         "@preact/signals": "/js/node_modules/@preact/signals/dist/signals.module.js",
         "@preact/signals-core": "/js/node_modules/@preact/signals-core/dist/signals-core.module.js",
+        ...Object.fromEntries(
+          (await getAllJsFilesInNodeModule("@elyukai/utils", ["dist"])).map(localPath => [
+            "@elyukai/utils/" + localPath.replace(/\\/g, "/"),
+            "/js/node_modules/@elyukai/utils/dist/" + localPath.replace(/\\/g, "/") + ".js",
+          ]),
+        ),
       },
     },
     null,

@@ -46,16 +46,83 @@ export interface EnumDecl<
   customConstraints?: NestedCustomConstraint
 }
 
-export const GenEnumDecl = <
-  Name extends string,
-  T extends TConstraint,
-  Params extends TypeParameter[],
->(
+const EnumDeclConstructor: {
+  /**
+   * Creates a new enumeration declaration.
+   * @param sourceUrl The source URL where the enum is defined, usually `import.meta.url`.
+   * @param options The options for the enum declaration, including its name, comment, values, and custom constraints.
+   * @returns A new `EnumDecl` instance.
+   */
+  <Name extends string, T extends TConstraint>(
+    sourceUrl: string,
+    options: {
+      /**
+       * The name of the enumeration. The name must be unique within the schema.
+       */
+      name: Name
+      /**
+       * An optional comment describing the enumeration.
+       */
+      comment?: string
+      /**
+       * If the enumeration is deprecated. This may be rendered in the editor, generated types and generated documentation.
+       */
+      isDeprecated?: boolean
+      /**
+       * A builder for the enumeration values.
+       *
+       * It must return a record where keys are the enumeration case names and values are the corresponding `EnumCaseDecl` instances.
+       */
+      values: () => T
+      /**
+       * Custom validation logic. See {@link TypedNestedCustomConstraint} for more information.
+       */
+      customConstraints?: TypedNestedCustomConstraint<Name>
+    },
+  ): EnumDecl<Name, T, []>
+  /**
+   * Creates a new generic enumeration declaration.
+   * @param sourceUrl The source URL where the enum is defined, usually `import.meta.url`.
+   * @param options The options for the enum declaration, including its name, comment, parameters, values, and custom constraints.
+   * @returns A new `EnumDecl` instance.
+   */
+  <Name extends string, T extends TConstraint, Params extends TypeParameter[]>(
+    sourceUrl: string,
+    options: {
+      /**
+       * The name of the enumeration. The name must be unique within the schema.
+       */
+      name: Name
+      /**
+       * An optional comment describing the enumeration.
+       */
+      comment?: string
+      /**
+       * The type parameters for the generic enumeration.
+       */
+      parameters: Params
+      /**
+       * If the enumeration is deprecated. This may be rendered in the editor, generated types and generated documentation.
+       */
+      isDeprecated?: boolean
+      /**
+       * A builder for the enumeration values.
+       *
+       * It received the type arguments and must return a record where keys are the enumeration case names and values are the corresponding `EnumCaseDecl` instances.
+       */
+      values: (...args: Params) => T
+      /**
+       * Custom validation logic. See {@link TypedNestedCustomConstraint} for more information.
+       */
+      customConstraints?: TypedNestedCustomConstraint<Name>
+    },
+  ): EnumDecl<Name, T, Params>
+} = <Name extends string, T extends TConstraint, Params extends TypeParameter[]>(
   sourceUrl: string,
   options: {
     name: Name
     comment?: string
-    parameters: Params
+    parameters?: Params
     isDeprecated?: boolean
     values: (...args: Params) => T
     customConstraints?: TypedNestedCustomConstraint<Name>
@@ -63,44 +130,94 @@ export const GenEnumDecl = <
 ): EnumDecl<Name, T, Params> => {
   validateDeclName(options.name)
 
+  const parameters = (options.parameters ?? []) as Params
   const decl: EnumDecl<Name, T, Params> = {
-    ...options,
-    kind: NodeKind.EnumDecl,
-    sourceUrl,
-    type: Lazy.of(() => EnumType(options.values(...options.parameters))),
-    customConstraints: options.customConstraints as NestedCustomConstraint | undefined, // ignore contravariance of registered enum type
-  }
-
-  return decl
-}
-
-export { GenEnumDecl as GenEnum }
-
-export const EnumDecl = <Name extends string, T extends Record<string, EnumCaseDecl>>(
-  sourceUrl: string,
-  options: {
-    name: Name
-    comment?: string
-    isDeprecated?: boolean
-    values: () => T
-    customConstraints?: TypedNestedCustomConstraint<Name>
-  },
-): EnumDecl<Name, T, []> => {
-  validateDeclName(options.name)
-
-  const decl: EnumDecl<Name, T, []> = {
     ...onlyKeys(options, "name", "comment", "isDeprecated"),
     kind: NodeKind.EnumDecl,
     sourceUrl,
-    parameters: [],
-    type: Lazy.of(() => EnumType(options.values())),
+    parameters,
+    type: Lazy.of(() => EnumType(options.values(...parameters))),
     customConstraints: options.customConstraints as NestedCustomConstraint | undefined, // ignore contravariance of registered enum type
   }
 
   return decl
 }
 
+export const EnumDecl: /**
+ * Creates a new enumeration declaration.
+ * @param sourceUrl The source URL where the enum is defined, usually `import.meta.url`.
+ * @param options The options for the enum declaration, including its name, comment, values, and custom constraints.
+ * @returns A new `EnumDecl` instance.
+ */
+<Name extends string, T extends TConstraint>(
+  sourceUrl: string,
+  options: {
+    /**
+     * The name of the enumeration. The name must be unique within the schema.
+     */
+    name: Name
+    /**
+     * An optional comment describing the enumeration.
+     */
+    comment?: string
+    /**
+     * If the enumeration is deprecated. This may be rendered in the editor, generated types and generated documentation.
+     */
+    isDeprecated?: boolean
+    /**
+     * A builder for the enumeration values.
+     *
+     * It must return a record where keys are the enumeration case names and values are the corresponding `EnumCaseDecl` instances.
+     */
+    values: () => T
+    /**
+     * Custom validation logic. See {@link TypedNestedCustomConstraint} for more information.
+     */
+    customConstraints?: TypedNestedCustomConstraint<Name>
+  },
+) => EnumDecl<Name, T, []> = EnumDeclConstructor
+
 export { EnumDecl as Enum }
+
+export const GenEnumDecl: /**
+ * Creates a new generic enumeration declaration.
+ * @param sourceUrl The source URL where the enum is defined, usually `import.meta.url`.
+ * @param options The options for the enum declaration, including its name, comment, parameters, values, and custom constraints.
+ * @returns A new `EnumDecl` instance.
+ */
+<Name extends string, T extends TConstraint, Params extends TypeParameter[]>(
+  sourceUrl: string,
+  options: {
+    /**
+     * The name of the enumeration. The name must be unique within the schema.
+     */
+    name: Name
+    /**
+     * An optional comment describing the enumeration.
+     */
+    comment?: string
+    /**
+     * The type parameters for the generic enumeration.
+     */
+    parameters: Params
+    /**
+     * If the enumeration is deprecated. This may be rendered in the editor, generated types and generated documentation.
+     */
+    isDeprecated?: boolean
+    /**
+     * A builder for the enumeration values.
+     *
+     * It received the type arguments and must return a record where keys are the enumeration case names and values are the corresponding `EnumCaseDecl` instances.
+     */
+    values: (...args: Params) => T
+    /**
+     * Custom validation logic. See {@link TypedNestedCustomConstraint} for more information.
+     */
+    customConstraints?: TypedNestedCustomConstraint<Name>
+  },
+) => EnumDecl<Name, T, Params> = EnumDeclConstructor
+
+export { GenEnumDecl as GenEnum }
 
 export const isEnumDecl: Predicate<EnumDecl> = node => node.kind === NodeKind.EnumDecl
 

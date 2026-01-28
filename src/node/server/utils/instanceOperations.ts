@@ -1,192 +1,112 @@
-import { error, isError, ok, type Result } from "@elyukai/utils/result"
 import type { InstanceContainer } from "../../../shared/utils/instances.ts"
+import type { TSONDB } from "../../index.ts"
 import {
   getChildInstances,
   saveInstanceTree,
   type CreatedEntityTaggedInstanceContainerWithChildInstances,
   type UpdatedEntityTaggedInstanceContainerWithChildInstances,
 } from "../../utils/childInstances.ts"
-import { getInstanceOfEntityFromDatabaseInMemory } from "../../utils/databaseInMemory.ts"
-import { runDatabaseTransaction } from "../../utils/databaseTransactions.ts"
 import { HTTPError } from "../../utils/error.ts"
-import type { TSONDBRequestLocals } from "../index.ts"
 
 export const createInstance = async (
-  locals: TSONDBRequestLocals,
+  db: TSONDB,
   instance: CreatedEntityTaggedInstanceContainerWithChildInstances,
-  idQueryParam: unknown,
-): Promise<Result<InstanceContainer, Error>> => {
-  const entity = locals.entitiesByName[instance.entityName]
+  idQueryParam: string | undefined,
+): Promise<InstanceContainer> => {
+  const getEntity = db.schema.getEntity.bind(db.schema)
+  const entity = getEntity(instance.entityName)
 
   if (entity === undefined) {
-    return error(new HTTPError(400, "Entity not found"))
+    throw new HTTPError(400, "Entity not found")
   }
 
-  const databaseTransactionResult = await runDatabaseTransaction(
-    locals.dataRoot,
-    locals.gitRoot ? locals.git : undefined,
-    locals.entitiesByName,
-    locals.databaseInMemory,
-    locals.referencesToInstances,
-    locals.locales,
-    res =>
-      saveInstanceTree(
-        locals.validationOptions,
-        locals.entitiesByName,
-        undefined,
-        undefined,
-        locals.localeEntity,
-        instance.entityName,
-        undefined,
-        instance,
-        idQueryParam,
-        res,
-      ),
+  return await db.runTransaction(txn =>
+    saveInstanceTree(
+      txn,
+      getEntity,
+      undefined,
+      undefined,
+      instance.entityName,
+      undefined,
+      instance,
+      idQueryParam,
+    ),
   )
-
-  if (isError(databaseTransactionResult)) {
-    return databaseTransactionResult
-  }
-
-  const {
-    db: newDatabaseInMemory,
-    refs: newReferencesToInstances,
-    instanceContainer,
-  } = databaseTransactionResult.value
-
-  locals.setLocal("databaseInMemory", newDatabaseInMemory)
-  locals.setLocal("referencesToInstances", newReferencesToInstances)
-
-  return ok(instanceContainer)
 }
 
 export const updateInstance = async (
-  locals: TSONDBRequestLocals,
+  db: TSONDB,
   instance: UpdatedEntityTaggedInstanceContainerWithChildInstances,
-): Promise<Result<InstanceContainer, Error>> => {
-  const instanceContainer = getInstanceOfEntityFromDatabaseInMemory(
-    locals.databaseInMemory,
-    instance.entityName,
-    instance.id,
-  )
+): Promise<InstanceContainer> => {
+  const getEntity = db.schema.getEntity.bind(db.schema)
+  const instanceContent = db.getInstanceOfEntityById(instance.entityName, instance.id)
 
-  if (instanceContainer === undefined) {
-    return error(new HTTPError(400, "Instance not found"))
+  if (instanceContent === undefined) {
+    throw new HTTPError(400, "Instance not found")
   }
 
-  const entity = locals.entitiesByName[instance.entityName]
+  const entity = getEntity(instance.entityName)
 
   if (entity === undefined) {
-    return error(new HTTPError(400, "Entity not found"))
+    throw new HTTPError(400, "Entity not found")
   }
 
-  const oldChildInstances = getChildInstances(locals.databaseInMemory, entity, instance.id, true)
+  const oldChildInstances = getChildInstances(db, entity, instance.id, true)
 
-  const databaseTransactionResult = await runDatabaseTransaction(
-    locals.dataRoot,
-    locals.gitRoot ? locals.git : undefined,
-    locals.entitiesByName,
-    locals.databaseInMemory,
-    locals.referencesToInstances,
-    locals.locales,
-    res =>
-      saveInstanceTree(
-        locals.validationOptions,
-        locals.entitiesByName,
-        undefined,
-        undefined,
-        locals.localeEntity,
-        instance.entityName,
-        {
-          id: instance.id,
-          content: instanceContainer.content,
-          childInstances: oldChildInstances,
-          entityName: instance.entityName,
-        },
-        instance,
-        undefined,
-        res,
-      ),
+  return db.runTransaction(txn =>
+    saveInstanceTree(
+      txn,
+      getEntity,
+      undefined,
+      undefined,
+      instance.entityName,
+      {
+        id: instance.id,
+        content: instanceContent,
+        childInstances: oldChildInstances,
+        entityName: instance.entityName,
+      },
+      instance,
+      undefined,
+    ),
   )
-
-  if (isError(databaseTransactionResult)) {
-    return databaseTransactionResult
-  }
-
-  const {
-    db: newDatabaseInMemory,
-    refs: newReferencesToInstances,
-    instanceContainer: newInstanceContainer,
-  } = databaseTransactionResult.value
-
-  locals.setLocal("databaseInMemory", newDatabaseInMemory)
-  locals.setLocal("referencesToInstances", newReferencesToInstances)
-
-  return ok(newInstanceContainer)
 }
 
 export const deleteInstance = async (
-  locals: TSONDBRequestLocals,
+  db: TSONDB,
   entityName: string,
   instanceId: string,
-): Promise<Result<InstanceContainer, Error>> => {
-  const instanceContainer = getInstanceOfEntityFromDatabaseInMemory(
-    locals.databaseInMemory,
-    entityName,
-    instanceId,
-  )
+): Promise<InstanceContainer> => {
+  const getEntity = db.schema.getEntity.bind(db.schema)
+  const instanceContent = db.getInstanceOfEntityById(entityName, instanceId)
 
-  if (instanceContainer === undefined) {
-    return error(new HTTPError(400, "Instance not found"))
+  if (instanceContent === undefined) {
+    throw new HTTPError(400, "Instance not found")
   }
 
-  const entity = locals.entitiesByName[entityName]
+  const entity = getEntity(entityName)
 
   if (entity === undefined) {
-    return error(new HTTPError(400, "Entity not found"))
+    throw new HTTPError(400, "Entity not found")
   }
 
-  const oldChildInstances = getChildInstances(locals.databaseInMemory, entity, instanceId, true)
+  const oldChildInstances = getChildInstances(db, entity, instanceId, true)
 
-  const databaseTransactionResult = await runDatabaseTransaction(
-    locals.dataRoot,
-    locals.gitRoot ? locals.git : undefined,
-    locals.entitiesByName,
-    locals.databaseInMemory,
-    locals.referencesToInstances,
-    locals.locales,
-    res =>
-      saveInstanceTree(
-        locals.validationOptions,
-        locals.entitiesByName,
-        undefined,
-        undefined,
-        locals.localeEntity,
+  return db.runTransaction(txn =>
+    saveInstanceTree(
+      txn,
+      getEntity,
+      undefined,
+      undefined,
+      entityName,
+      {
+        id: instanceId,
+        content: instanceContent,
+        childInstances: oldChildInstances,
         entityName,
-        {
-          id: instanceId,
-          content: instanceContainer.content,
-          childInstances: oldChildInstances,
-          entityName,
-        },
-        undefined,
-        undefined,
-        res,
-      ),
+      },
+      undefined,
+      undefined,
+    ),
   )
-
-  if (isError(databaseTransactionResult)) {
-    return databaseTransactionResult
-  }
-
-  const {
-    db: newDatabaseInMemory,
-    refs: newReferencesToInstances,
-    instanceContainer: oldInstanceContainer,
-  } = databaseTransactionResult.value
-
-  locals.setLocal("databaseInMemory", newDatabaseInMemory)
-  locals.setLocal("referencesToInstances", newReferencesToInstances)
-
-  return ok(oldInstanceContainer)
 }

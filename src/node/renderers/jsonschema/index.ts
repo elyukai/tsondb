@@ -4,7 +4,8 @@ import { mkdir, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, extname, join, relative } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { Output } from "../../../shared/output.ts"
-import { groupDeclarationsBySourceUrl, resolveTypeArgumentsInDecls } from "../../schema/index.ts"
+import type { DefaultTSONDBTypes } from "../../index.ts"
+import { groupDeclarationsBySourceUrl } from "../../schema/index.ts"
 import type { Schema } from "../../schema/Schema.ts"
 import type { JsonSchemaRendererOptions } from "./render.ts"
 import { render } from "./render.ts"
@@ -17,14 +18,12 @@ export const JsonSchemaOutput = (options: {
   targetPath: string
   rendererOptions?: Partial<JsonSchemaRendererOptions>
 }): Output => ({
-  run: async (schema: Schema): Promise<void> => {
+  run: async <T extends DefaultTSONDBTypes>(schema: Schema<T>): Promise<void> => {
     if (options.rendererOptions?.preserveFiles === true) {
       debug("emitting declarations to multiple files...")
       await rm(options.targetPath, { recursive: true, force: true })
       await mkdir(options.targetPath, { recursive: true })
-      const declarationsBySourceUrl = groupDeclarationsBySourceUrl(
-        resolveTypeArgumentsInDecls(schema.declarations),
-      )
+      const declarationsBySourceUrl = groupDeclarationsBySourceUrl(schema.resolvedDeclarations)
       const sourceRootPath = fileURLToPath(commonPrefix(...Object.keys(declarationsBySourceUrl)))
       debug("common source root path: %s", sourceRootPath)
       if (sourceRootPath) {
@@ -45,7 +44,7 @@ export const JsonSchemaOutput = (options: {
       await mkdir(dirname(options.targetPath), { recursive: true })
       await writeFile(
         options.targetPath,
-        render(options.rendererOptions, resolveTypeArgumentsInDecls(schema.declarations)),
+        render(options.rendererOptions, schema.resolvedDeclarations),
         {
           encoding: "utf-8",
         },

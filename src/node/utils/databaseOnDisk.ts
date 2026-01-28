@@ -1,7 +1,7 @@
 import { error, isError, ok, type Result } from "@elyukai/utils/result"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
 import type { EntityDecl } from "../schema/index.ts"
-import type { TransactionStep } from "./databaseTransactions.ts"
+import type { TransactionStep } from "../transaction.ts"
 import * as DatabaseFilesystem from "./files.ts"
 
 const setInstanceOnDisk = async (
@@ -44,8 +44,9 @@ const rollbackChanges = async (root: string, steps: TransactionStep[]) => {
 
 const runStepAction = (root: string, step: TransactionStep): Promise<Result<void, Error>> => {
   switch (step.kind) {
-    case "set":
-      return setInstanceOnDisk(root, step.entity, step.instanceId, step.instance)
+    case "create":
+    case "update":
+      return setInstanceOnDisk(root, step.entity, step.instanceId, step.instanceContent)
     case "delete":
       return deleteInstanceOnDisk(root, step.entity.name, step.instanceId)
   }
@@ -56,12 +57,10 @@ const runReverseStepAction = (
   step: TransactionStep,
 ): Promise<Result<void, Error>> => {
   switch (step.kind) {
-    case "set":
-      if (step.oldInstance === undefined) {
-        return deleteInstanceOnDisk(root, step.entity.name, step.instanceId)
-      } else {
-        return setInstanceOnDisk(root, step.entity, step.instanceId, step.oldInstance)
-      }
+    case "create":
+      return deleteInstanceOnDisk(root, step.entity.name, step.instanceId)
+    case "update":
+      return setInstanceOnDisk(root, step.entity, step.instanceId, step.oldInstance)
     case "delete":
       return setInstanceOnDisk(root, step.entity, step.instanceId, step.oldInstance)
   }

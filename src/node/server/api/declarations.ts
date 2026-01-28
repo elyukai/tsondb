@@ -1,4 +1,3 @@
-import { isOk } from "@elyukai/utils/result"
 import Debug from "debug"
 import express from "express"
 import type {
@@ -13,22 +12,13 @@ import type {
   UpdateInstanceOfEntityRequestBody,
   UpdateInstanceOfEntityResponseBody,
 } from "../../../shared/api.ts"
-import { sortBySortOrder } from "../../../shared/schema/utils/sortOrder.ts"
-import { getInstanceContainerOverview } from "../../../shared/utils/instances.ts"
 import type { Decl } from "../../schema/declarations/Declaration.ts"
 import { isEntityDecl } from "../../schema/declarations/EntityDecl.ts"
 import { isEnumDecl } from "../../schema/declarations/EnumDecl.ts"
 import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
 import { serializeNode } from "../../schema/index.ts"
 import { getChildInstances } from "../../utils/childInstances.ts"
-import {
-  countInstancesOfEntityInDatabaseInMemory,
-  createInstanceFromDatabaseInMemoryGetter,
-  getInstanceOfEntityFromDatabaseInMemory,
-  getInstancesOfEntityFromDatabaseInMemory,
-} from "../../utils/databaseInMemory.ts"
-import { HTTPError } from "../../utils/error.ts"
-import { createChildInstancesForInstanceIdGetter } from "../utils/childInstances.ts"
+import { sendErrorResponse } from "../../utils/error.ts"
 import { createInstance, deleteInstance, updateInstance } from "../utils/instanceOperations.ts"
 
 const debug = Debug("tsondb:server:api:declarations")
@@ -45,31 +35,31 @@ declarationsApi.get("/", (req, res) => {
 
   switch (req.query["kind"]) {
     case "Entity":
-      filteredEntities = req.entities
+      filteredEntities = req.db.schema.entities
       break
     case "TypeAlias":
-      filteredEntities = req.declarations.filter(isTypeAliasDecl)
+      filteredEntities = req.db.schema.declarations.filter(isTypeAliasDecl)
       break
     case "Enum":
-      filteredEntities = req.declarations.filter(isEnumDecl)
+      filteredEntities = req.db.schema.declarations.filter(isEnumDecl)
       break
     default:
-      filteredEntities = req.declarations
+      filteredEntities = req.db.schema.declarations
   }
 
   const body: GetAllDeclarationsResponseBody = {
     declarations: filteredEntities.map(decl => ({
       declaration: serializeNode(decl),
-      instanceCount: countInstancesOfEntityInDatabaseInMemory(req.databaseInMemory, decl.name),
+      instanceCount: req.db.countInstancesOfEntity(decl.name),
     })),
-    localeEntity: req.localeEntity?.name,
+    localeEntity: req.db.schema.localeEntity?.name,
   }
 
   res.json(body)
 })
 
 declarationsApi.get("/:name", (req, res) => {
-  const decl = req.declarations.find(decl => decl.name === req.params.name)
+  const decl = req.db.schema.getDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -78,15 +68,15 @@ declarationsApi.get("/:name", (req, res) => {
 
   const body: GetDeclarationResponseBody = {
     declaration: serializeNode(decl),
-    instanceCount: countInstancesOfEntityInDatabaseInMemory(req.databaseInMemory, decl.name),
-    isLocaleEntity: decl === req.localeEntity,
+    instanceCount: req.db.countInstancesOfEntity(decl.name),
+    isLocaleEntity: decl === req.db.schema.localeEntity,
   }
 
   res.json(body)
 })
 
 declarationsApi.get("/:name/instances", (req, res) => {
-  const decl = req.declarations.find(decl => decl.name === req.params.name)
+  const decl = req.db.schema.getDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -98,39 +88,16 @@ declarationsApi.get("/:name/instances", (req, res) => {
     return
   }
 
-  const getInstanceById = createInstanceFromDatabaseInMemoryGetter(
-    req.databaseInMemory,
-    req.entitiesByName,
-  )
-  const getChildInstancesForInstanceId = createChildInstancesForInstanceIdGetter(
-    req.entitiesByName,
-    req.databaseInMemory,
-  )
-
   const body: GetAllInstancesOfEntityResponseBody = {
-    instances: sortBySortOrder(
-      getInstancesOfEntityFromDatabaseInMemory(req.databaseInMemory, decl.name).map(
-        instanceContainer => [
-          instanceContainer,
-          getInstanceContainerOverview(
-            decl,
-            instanceContainer,
-            getInstanceById,
-            getChildInstancesForInstanceId,
-            req.locales,
-          ),
-        ],
-      ),
-      decl.sortOrder,
-    ).map(arr => arr[1]),
-    isLocaleEntity: decl === req.localeEntity,
+    instances: req.db.getAllInstanceOverviewsOfEntity(decl.name),
+    isLocaleEntity: decl === req.db.schema.localeEntity,
   }
 
   res.json(body)
 })
 
 declarationsApi.post("/:name/instances", async (req, res) => {
-  const decl = req.declarations.find(decl => decl.name === req.params.name)
+  const decl = req.db.schema.getDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -143,26 +110,25 @@ declarationsApi.post("/:name/instances", async (req, res) => {
   }
 
   const requestBody = req.body as CreateInstanceOfEntityRequestBody
-  const result = await createInstance(req, requestBody.instance, req.query["id"])
+  const reqParamId = req.query["id"]
+  const safeParamId = typeof reqParamId === "string" ? reqParamId : undefined
 
-  if (isOk(result)) {
+  try {
+    const result = await createInstance(req.db, requestBody.instance, safeParamId)
+
     const body: CreateInstanceOfEntityResponseBody = {
-      instance: result.value,
-      isLocaleEntity: decl === req.localeEntity,
+      instance: result,
+      isLocaleEntity: decl === req.db.schema.localeEntity,
     }
 
     res.json(body)
-  } else {
-    if (result.error instanceof HTTPError) {
-      res.status(result.error.code).send(result.error.message)
-    } else {
-      res.status(500).send(result.error.message)
-    }
+  } catch (err) {
+    sendErrorResponse(res, err)
   }
 })
 
 declarationsApi.get("/:name/instances/:id", (req, res) => {
-  const decl = req.declarations.find(decl => decl.name === req.params.name)
+  const decl = req.db.schema.getDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -174,11 +140,7 @@ declarationsApi.get("/:name/instances/:id", (req, res) => {
     return
   }
 
-  const instance = getInstanceOfEntityFromDatabaseInMemory(
-    req.databaseInMemory,
-    decl.name,
-    req.params.id,
-  )
+  const instance = req.db.getInstanceContainerOfEntityById(decl.name, req.params.id)
 
   if (instance === undefined) {
     res.status(404).send(`Instance "${req.params.id}" not found`)
@@ -187,14 +149,14 @@ declarationsApi.get("/:name/instances/:id", (req, res) => {
 
   const body: GetInstanceOfEntityResponseBody = {
     instance: instance,
-    isLocaleEntity: decl === req.localeEntity,
+    isLocaleEntity: decl === req.db.schema.localeEntity,
   }
 
   res.json(body)
 })
 
 declarationsApi.put("/:name/instances/:id", async (req, res) => {
-  const decl = req.declarations.find(decl => decl.name === req.params.name)
+  const decl = req.db.schema.getDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -207,26 +169,23 @@ declarationsApi.put("/:name/instances/:id", async (req, res) => {
   }
 
   const requestBody = req.body as UpdateInstanceOfEntityRequestBody
-  const result = await updateInstance(req, requestBody.instance)
 
-  if (isOk(result)) {
+  try {
+    const result = await updateInstance(req.db, requestBody.instance)
+
     const body: UpdateInstanceOfEntityResponseBody = {
-      instance: result.value,
-      isLocaleEntity: decl === req.localeEntity,
+      instance: result,
+      isLocaleEntity: decl === req.db.schema.localeEntity,
     }
 
     res.json(body)
-  } else {
-    if (result.error instanceof HTTPError) {
-      res.status(result.error.code).send(result.error.message)
-    } else {
-      res.status(500).send(result.error.message)
-    }
+  } catch (err) {
+    sendErrorResponse(res, err)
   }
 })
 
 declarationsApi.delete("/:name/instances/:id", async (req, res) => {
-  const decl = req.declarations.find(decl => decl.name === req.params.name)
+  const decl = req.db.schema.getDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -238,26 +197,22 @@ declarationsApi.delete("/:name/instances/:id", async (req, res) => {
     return
   }
 
-  const result = await deleteInstance(req, req.params.name, req.params.id)
+  try {
+    const result = await deleteInstance(req.db, req.params.name, req.params.id)
 
-  if (isOk(result)) {
     const body: DeleteInstanceOfEntityResponseBody = {
-      instance: result.value,
-      isLocaleEntity: decl === req.localeEntity,
+      instance: result,
+      isLocaleEntity: decl === req.db.schema.localeEntity,
     }
 
     res.json(body)
-  } else {
-    if (result.error instanceof HTTPError) {
-      res.status(result.error.code).send(result.error.message)
-    } else {
-      res.status(500).send(result.error.message)
-    }
+  } catch (err) {
+    sendErrorResponse(res, err)
   }
 })
 
 declarationsApi.get("/:name/instances/:id/children", (req, res) => {
-  const decl = req.declarations.find(decl => decl.name === req.params.name)
+  const decl = req.db.schema.getDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -270,7 +225,7 @@ declarationsApi.get("/:name/instances/:id/children", (req, res) => {
   }
 
   const body: GetAllChildInstancesOfInstanceResponseBody = {
-    instances: getChildInstances(req.databaseInMemory, decl, req.params.id),
+    instances: getChildInstances(req.db, decl, req.params.id),
   }
 
   res.json(body)

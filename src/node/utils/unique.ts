@@ -126,11 +126,11 @@ export const checkUniqueConstraintsForEntity = (
  */
 export const checkUniqueConstraintsForAllEntities = (
   db: DatabaseInMemory,
-  entitiesByName: Record<string, EntityDecl>,
+  entities: EntityDecl[],
   instanceOverviewsByEntityName: Record<string, InstanceContainerOverview[]>,
 ): Result<void, AggregateError> =>
   mapError(
-    Object.values(entitiesByName).reduce<Result<void, AggregateError[]>>((acc, entity) => {
+    entities.reduce<Result<void, AggregateError[]>>((acc, entity) => {
       const resultForEntity = checkUniqueConstraintsForEntity(
         entity,
         getInstancesOfEntityFromDatabaseInMemory(db, entity.name),

@@ -1,11 +1,17 @@
 import { anySame } from "@elyukai/utils/array/filters"
+import { Dictionary } from "@elyukai/utils/dictionary"
 import { deepEqual } from "@elyukai/utils/equality"
 import { assertExhaustive, trySafe } from "@elyukai/utils/typeSafety"
 import Debug from "debug"
 import { renderKeyPath, type KeyPath } from "../../shared/schema/utils/keyPath.ts"
 import type { UniquingElement } from "../../shared/schema/utils/uniqueConstraint.ts"
+import type { DefaultTSONDBTypes, EntityName } from "../index.ts"
 import type { Decl } from "./declarations/Declaration.ts"
-import { getParameterNames, walkNodeTree } from "./declarations/Declaration.ts"
+import {
+  getParameterNames,
+  resolveTypeArgumentsInDecls,
+  walkNodeTree,
+} from "./declarations/Declaration.ts"
 import type { EntityDecl } from "./declarations/EntityDecl.ts"
 import { isEntityDecl } from "./declarations/EntityDecl.ts"
 import { cases, isEnumDecl } from "./declarations/EnumDecl.ts"
@@ -28,9 +34,106 @@ const debug = Debug("tsondb:schema")
 
 // const RESERVED_DECLARATION_IDENTIFIER = ["EntityMap", "StringableTranslationParameter"]
 
-export interface Schema {
-  declarations: readonly Decl[]
-  localeEntity?: EntityDecl
+export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
+  readonly #declarations: Decl[]
+  readonly #entities: EntityDecl<EntityName<T>>[]
+  readonly #resolvedDeclarations: Decl[]
+  readonly #resolvedEntities: EntityDecl<EntityName<T>>[]
+  readonly #localeEntity?: EntityDecl<EntityName<T>>
+  readonly #declarationMap: Dictionary<Decl>
+  readonly #resolvedDeclarationMap: Dictionary<Decl>
+
+  constructor(declarations: Decl[], localeEntity?: EntityDecl) {
+    debug("creating schema from %d declarations", declarations.length)
+    debug("collecting nested declarations ...")
+    const allDecls = addDeclarations(
+      [],
+      localeEntity ? declarations.concat(localeEntity) : declarations,
+    )
+    debug("found %d nested declarations", allDecls.length)
+
+    debug("checking for duplicate identifiers ...") // debug("checking for duplicate or reserved identifiers ...")
+    allDecls.forEach((decl, declIndex) => {
+      checkDuplicateIdentifier(allDecls.slice(0, declIndex), decl)
+      // checkReservedIdentifier(decl)
+    })
+
+    const allDeclsWithoutNestedEntities = allDecls.filter(decl => decl.kind !== "NestedEntity")
+
+    debug("checking name shadowing ...")
+    checkParameterNamesShadowing(allDeclsWithoutNestedEntities)
+    debug("checking entity display name paths ...")
+    checkEntityDisplayNamePaths(allDeclsWithoutNestedEntities, localeEntity)
+    debug("checking child entities ...")
+    checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType(
+      allDeclsWithoutNestedEntities,
+    )
+    debug("checking child entity types ...")
+    checkChildEntityTypes(localeEntity, allDeclsWithoutNestedEntities)
+    debug("checking generic recursive types ...")
+    checkRecursiveGenericTypeAliasesAndEnumerationsAreOnlyParameterizedDirectlyInTypeAliases(
+      allDeclsWithoutNestedEntities,
+    )
+    debug("checking unique constraints ...")
+    checkUniqueConstraints(allDeclsWithoutNestedEntities)
+    debug("checking sort orders ...")
+    checkSortOrders(allDeclsWithoutNestedEntities)
+
+    this.#localeEntity = localeEntity as EntityDecl<EntityName<T>> | undefined
+    this.#declarations = allDeclsWithoutNestedEntities
+    this.#resolvedDeclarations = resolveTypeArgumentsInDecls(allDeclsWithoutNestedEntities)
+    this.#entities = allDeclsWithoutNestedEntities.filter(isEntityDecl) as EntityDecl<
+      EntityName<T>
+    >[]
+    this.#resolvedEntities = this.#resolvedDeclarations.filter(isEntityDecl) as EntityDecl<
+      EntityName<T>
+    >[]
+    this.#declarationMap = Dictionary.fromEntries(
+      allDeclsWithoutNestedEntities.map(decl => [decl.name, decl]),
+    )
+    this.#resolvedDeclarationMap = Dictionary.fromEntries(
+      this.#resolvedDeclarations.map(decl => [decl.name, decl]),
+    )
+    debug("created schema, no integrity violations found")
+  }
+
+  get entities(): EntityDecl<EntityName<T>>[] {
+    return this.#entities
+  }
+
+  get resolvedEntities(): EntityDecl<EntityName<T>>[] {
+    return this.#resolvedEntities
+  }
+
+  getEntity<E extends EntityName<T>>(name: E): EntityDecl<E> | undefined {
+    const decl = this.#declarationMap.get(name)
+    return decl && isEntityDecl(decl) ? (decl as EntityDecl<E>) : undefined
+  }
+
+  getResolvedEntity<E extends EntityName<T>>(name: E): EntityDecl<E> | undefined {
+    const decl = this.#resolvedDeclarationMap.get(name)
+    return decl && isEntityDecl(decl) ? (decl as EntityDecl<E>) : undefined
+  }
+
+  get declarations(): Decl[] {
+    return this.#declarations
+  }
+
+  get resolvedDeclarations(): Decl[] {
+    return this.#resolvedDeclarations
+  }
+
+  getDeclaration(name: string): Decl | undefined {
+    return this.#declarationMap.get(name)
+  }
+
+  getResolvedDeclaration(name: string): Decl | undefined {
+    return this.#resolvedDeclarationMap.get(name)
+  }
+
+  get localeEntity(): EntityDecl<EntityName<T>> | undefined {
+    return this.#localeEntity
+  }
 }
 
 const checkDuplicateIdentifier = (existingDecls: NestedDecl[], decl: NestedDecl) => {
@@ -483,50 +586,5 @@ const addDeclarations = (existingDecls: NestedDecl[], declsToAdd: NestedDecl[]):
 
     return accDecls
   }, existingDecls)
-
-export const Schema = (declarations: Decl[], localeEntity?: EntityDecl): Schema => {
-  debug("creating schema from %d declarations", declarations.length)
-  debug("collecting nested declarations ...")
-  const allDecls = addDeclarations(
-    [],
-    localeEntity ? declarations.concat(localeEntity) : declarations,
-  )
-  debug("found %d nested declarations", allDecls.length)
-
-  debug("checking for duplicate identifiers ...") // debug("checking for duplicate or reserved identifiers ...")
-  allDecls.forEach((decl, declIndex) => {
-    checkDuplicateIdentifier(allDecls.slice(0, declIndex), decl)
-    // checkReservedIdentifier(decl)
-  })
-
-  const allDeclsWithoutNestedEntities = allDecls.filter(decl => decl.kind !== "NestedEntity")
-
-  debug("checking name shadowing ...")
-  checkParameterNamesShadowing(allDeclsWithoutNestedEntities)
-  debug("checking entity display name paths ...")
-  checkEntityDisplayNamePaths(allDeclsWithoutNestedEntities, localeEntity)
-  debug("checking child entities ...")
-  checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType(allDeclsWithoutNestedEntities)
-  debug("checking child entity types ...")
-  checkChildEntityTypes(localeEntity, allDeclsWithoutNestedEntities)
-  debug("checking generic recursive types ...")
-  checkRecursiveGenericTypeAliasesAndEnumerationsAreOnlyParameterizedDirectlyInTypeAliases(
-    allDeclsWithoutNestedEntities,
-  )
-  debug("checking unique constraints ...")
-  checkUniqueConstraints(allDeclsWithoutNestedEntities)
-  debug("checking sort orders ...")
-  checkSortOrders(allDeclsWithoutNestedEntities)
-
-  debug("created schema, no integrity violations found")
-
-  return {
-    declarations: allDeclsWithoutNestedEntities,
-    localeEntity,
-  }
-}
-
-export const getEntities = (schema: Schema): EntityDecl[] =>
-  schema.declarations.filter(isEntityDecl)
 
 export type * from "./externalTypes.ts"
