@@ -224,6 +224,9 @@ const initData = async <T extends DefaultTSONDBTypes>(
 
 type TSONDBGit = { client: SimpleGit; root: string }
 
+/**
+ * The main class for managing a typed JSON database.
+ */
 export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   #data: DatabaseInMemory<T["entityMap"]>
   #dataRootPath: string
@@ -315,10 +318,16 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     })
   }
 
+  /**
+   * Generates outputs based on the provided schema and output configurations.
+   */
   static async generateOutputs(options: { schema: Schema; outputs: Output[] }): Promise<void> {
     await generateOutputs(options.schema, options.outputs)
   }
 
+  /**
+   * Generates outputs based on the current schema and the provided output configurations.
+   */
   async generateOutputs(outputs: Output[]): Promise<void> {
     await generateOutputs(this.#schema, outputs)
   }
@@ -584,12 +593,18 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     return res.content as Entity<T, E>
   }
 
+  /**
+   * Retrieves an instance of the specified entity by its identifier.
+   */
   getInstanceOfEntityById<E extends EntityName<T>>(
     ...args: IdArgsVariant<T["entityMap"], E>
   ): T["entityMap"][E] | undefined {
     return this.getInstanceContainerOfEntityById(...args)?.content
   }
 
+  /**
+   * Retrieves the instance container of the specified entity by its identifier.
+   */
   getInstanceContainerOfEntityById<E extends EntityName<T>>(
     ...args: IdArgsVariant<T["entityMap"], E>
   ): InstanceContainer<T["entityMap"][E]> | undefined {
@@ -599,6 +614,9 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       | undefined
   }
 
+  /**
+   * Retrieves the overview of an instance of the specified entity by its identifier.
+   */
   getInstanceOverviewOfEntityById(
     ...args: IdArgsVariant<T["entityMap"]>
   ): InstanceContainerOverview | undefined {
@@ -611,10 +629,16 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     )
   }
 
+  /**
+   * Retrieves all instances of the specified entity.
+   */
   getAllInstancesOfEntity<E extends EntityName<T>>(entityName: E): Entity<T, E>[] {
     return this.getAllInstanceContainersOfEntity(entityName).map(ic => ic.content)
   }
 
+  /**
+   * Retrieves all instance containers of the specified entity.
+   */
   getAllInstanceContainersOfEntity<E extends EntityName<T>>(
     entityName: E,
   ): InstanceContainer<Entity<T, E>>[] {
@@ -623,6 +647,9 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     >[]
   }
 
+  /**
+   * Retrieves all instance overviews of the specified entity.
+   */
   getAllInstanceOverviewsOfEntity(
     entity: EntityDecl<EntityName<T>> | EntityName<T>,
   ): InstanceContainerOverview[] {
@@ -642,10 +669,16 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     )
   }
 
+  /**
+   * Counts the number of instances registered for the specified entity.
+   */
   countInstancesOfEntity(entityName: EntityName<T>): number {
     return countInstancesOfEntityInDatabaseInMemory(this.#data, entityName)
   }
 
+  /**
+   * Retrieves overviews for all instances in the database, grouped by entity name.
+   */
   getAllInstanceOverviews(): Record<EntityName<T>, InstanceContainerOverview[]> {
     return getAllInstanceOverviewsByEntityName(
       this.getInstanceContainerOfEntityById.bind(this),
@@ -656,6 +689,9 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     )
   }
 
+  /**
+   * Retrieves all instance containers of the specified child entity for a given parent instance.
+   */
   getAllChildInstanceContainersForParent<U extends ChildEntityName<T>>(
     childEntityName: U,
     parentId: ChildEntityConfig<T, U>[2],
