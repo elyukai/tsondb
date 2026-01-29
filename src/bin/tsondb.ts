@@ -114,7 +114,7 @@ if (passedArguments.command.name === "generate") {
     case "serve":
       debug(`running command: serve`)
       validateConfigForServer(config)
-      createServer(
+      await createServer(
         db,
         config.homeLayoutSections,
         config.serverOptions,
