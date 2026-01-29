@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.18.0](https://github.com/elyukai/tsondb/compare/v0.17.7...v0.18.0) (2026-01-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* Some APIs have been changed to make everything align
+better and thus being more consistent and understandable.
+
+### Features
+
+* js api ([eec0e80](https://github.com/elyukai/tsondb/commit/eec0e80c829d3cb37c143ec5c7bbb6d9cd08a997))
+
 ## [0.17.7](https://github.com/elyukai/tsondb/compare/v0.17.6...v0.17.7) (2026-01-19)
 
 
