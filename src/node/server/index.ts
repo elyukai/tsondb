@@ -6,7 +6,6 @@ import { dirname, join } from "node:path"
 import type { HomeLayoutSection } from "../config.ts"
 import type { TSONDB, ValidationOptions } from "../index.ts"
 import { api } from "./api/index.ts"
-import { init } from "./init.ts"
 import { getLocalesFromRequest } from "./utils/locales.ts"
 
 const debug = Debug("tsondb:server")
@@ -75,7 +74,14 @@ export const createServer = async (
   app.use("/js/shared", express.static(join(import.meta.dirname, "../../../../dist/src/shared")))
   app.use(express.json())
 
-  const requestLocals = init(db, validationOptions, homeLayoutSections)
+  const defaultLocales = db.locales
+  const requestLocals: Omit<TSONDBRequestLocals, "setLocal"> = {
+    db,
+    defaultLocales,
+    locales: defaultLocales,
+    homeLayoutSections,
+    validationOptions: validationOptions ?? {},
+  }
 
   app.use((req, _res, next) => {
     debug("%s %s", req.method, req.originalUrl)

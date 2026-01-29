@@ -9,7 +9,6 @@ import type {
 } from "../../../shared/api.ts"
 import { splitBranchName } from "../../../shared/utils/git.ts"
 import { sendErrorResponse } from "../../utils/error.ts"
-import { reinit } from "../init.ts"
 
 const debug = Debug("tsondb:server:api:git")
 
@@ -274,7 +273,6 @@ gitApi.post("/branch", async (req: CreateBranchRequest, res) => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked by middleware
     await req.db.git!.createBranch(branchName)
-    await reinit(req)
     res.set("Content-Type", "text/plain")
     res.status(200).send(`Creation of branch "${branchName}" successful`)
   } catch (error) {
