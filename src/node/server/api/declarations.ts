@@ -35,16 +35,16 @@ declarationsApi.get("/", (req, res) => {
 
   switch (req.query["kind"]) {
     case "Entity":
-      filteredEntities = req.db.schema.entities
+      filteredEntities = req.db.schema.resolvedEntities
       break
     case "TypeAlias":
-      filteredEntities = req.db.schema.declarations.filter(isTypeAliasDecl)
+      filteredEntities = req.db.schema.resolvedDeclarations.filter(isTypeAliasDecl)
       break
     case "Enum":
-      filteredEntities = req.db.schema.declarations.filter(isEnumDecl)
+      filteredEntities = req.db.schema.resolvedDeclarations.filter(isEnumDecl)
       break
     default:
-      filteredEntities = req.db.schema.declarations
+      filteredEntities = req.db.schema.resolvedDeclarations
   }
 
   const body: GetAllDeclarationsResponseBody = {
@@ -59,7 +59,7 @@ declarationsApi.get("/", (req, res) => {
 })
 
 declarationsApi.get("/:name", (req, res) => {
-  const decl = req.db.schema.getDeclaration(req.params.name)
+  const decl = req.db.schema.getResolvedDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -76,7 +76,7 @@ declarationsApi.get("/:name", (req, res) => {
 })
 
 declarationsApi.get("/:name/instances", (req, res) => {
-  const decl = req.db.schema.getDeclaration(req.params.name)
+  const decl = req.db.schema.getResolvedDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -97,7 +97,7 @@ declarationsApi.get("/:name/instances", (req, res) => {
 })
 
 declarationsApi.post("/:name/instances", async (req, res) => {
-  const decl = req.db.schema.getDeclaration(req.params.name)
+  const decl = req.db.schema.getResolvedDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -128,7 +128,7 @@ declarationsApi.post("/:name/instances", async (req, res) => {
 })
 
 declarationsApi.get("/:name/instances/:id", (req, res) => {
-  const decl = req.db.schema.getDeclaration(req.params.name)
+  const decl = req.db.schema.getResolvedDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -156,7 +156,7 @@ declarationsApi.get("/:name/instances/:id", (req, res) => {
 })
 
 declarationsApi.put("/:name/instances/:id", async (req, res) => {
-  const decl = req.db.schema.getDeclaration(req.params.name)
+  const decl = req.db.schema.getResolvedDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -185,7 +185,7 @@ declarationsApi.put("/:name/instances/:id", async (req, res) => {
 })
 
 declarationsApi.delete("/:name/instances/:id", async (req, res) => {
-  const decl = req.db.schema.getDeclaration(req.params.name)
+  const decl = req.db.schema.getResolvedDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
@@ -212,7 +212,7 @@ declarationsApi.delete("/:name/instances/:id", async (req, res) => {
 })
 
 declarationsApi.get("/:name/instances/:id/children", (req, res) => {
-  const decl = req.db.schema.getDeclaration(req.params.name)
+  const decl = req.db.schema.getResolvedDeclaration(req.params.name)
 
   if (decl === undefined) {
     res.status(404).send(`Declaration "${req.params.name}" not found`)
