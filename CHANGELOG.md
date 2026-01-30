@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.18.1](https://github.com/elyukai/tsondb/compare/v0.18.0...v0.18.1) (2026-01-30)
+
+
+### Bug Fixes
+
+* retrieve all child instances for editor ([2ec17d0](https://github.com/elyukai/tsondb/commit/2ec17d0d449da38fa35de795eb7b957a131a57fe))
+* use resolved declarations for editor ([3b5124b](https://github.com/elyukai/tsondb/commit/3b5124b1a0cf13900e163ed561ba7926cab6929b))
+
 ## [0.18.0](https://github.com/elyukai/tsondb/compare/v0.17.7...v0.18.0) (2026-01-29)
 
 
