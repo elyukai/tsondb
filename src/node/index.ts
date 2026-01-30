@@ -26,7 +26,7 @@ import {
   type EntityDecl,
 } from "./schema/index.ts"
 import type { Schema } from "./schema/Schema.ts"
-import { Transaction } from "./transaction.js"
+import { Transaction } from "./transaction.ts"
 import { checkCustomConstraintsForAllEntities } from "./utils/customConstraints.ts"
 import {
   asyncForEachInstanceInDatabaseInMemory,
@@ -697,9 +697,11 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     parentId: ChildEntityConfig<T, U>[2],
   ): InstanceContainer<ChildEntity<T, U>>[] {
     const entity = this.#schema.getEntity(childEntityName as EntityName<T>)
+
     if (!entity || !entity.parentReferenceKey) {
       return []
     }
+
     const parentKey = entity.parentReferenceKey
 
     return getInstancesOfEntityFromDatabaseInMemory(

@@ -11,11 +11,15 @@ import type {
   EntityDecl,
   EntityDeclWithParentReference,
 } from "../schema/declarations/EntityDecl.ts"
+import { Case } from "../schema/helpers.ts"
 import {
   isEntityDeclWithParentReference,
   isEnumDecl,
   isIncludeIdentifierType,
+  isReferenceIdentifierType,
+  NodeKind,
   reduceNodes,
+  type Type,
 } from "../schema/index.ts"
 import { isChildEntitiesType } from "../schema/types/references/ChildEntitiesType.ts"
 import type { Transaction } from "../transaction.ts"
@@ -101,6 +105,26 @@ export const getChildInstancesFromEntity = (
       ),
   )
 
+const getParentReferenceTypeAux = (type: Type): "single" | "enum" => {
+  if (isIncludeIdentifierType(type)) {
+    switch (type.reference.kind) {
+      case NodeKind.EnumDecl:
+        return "enum"
+      case NodeKind.TypeAliasDecl:
+        return getParentReferenceTypeAux(type.reference.type.value)
+    }
+  } else if (isReferenceIdentifierType(type)) {
+    return "single"
+  } else {
+    // should not happen due to schema validation
+    throw new Error("Invalid parent reference type")
+  }
+}
+
+const getParentReferenceType = (entity: EntityDeclWithParentReference): "single" | "enum" =>
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- checked in schema validaion
+  getParentReferenceTypeAux(entity.type.value.properties[entity.parentReferenceKey]!.type)
+
 export const getChildInstances = (
   db: TSONDB,
   parentEntity: EntityDecl,
@@ -114,17 +138,19 @@ export const getChildInstances = (
     { followIncludes: true },
   )
 
-  return childEntities.flatMap(childEntity =>
-    db
-      .getAllChildInstanceContainersForParent(parentId, childEntity)
+  return childEntities.flatMap(childEntity => {
+    const preparedParentId =
+      getParentReferenceType(childEntity) === "enum" ? Case(parentEntity.name, parentId) : parentId
+    return db
+      .getAllChildInstanceContainersForParent(childEntity.name, preparedParentId)
       .map<EntityTaggedInstanceContainerWithChildInstances>(container => ({
         ...container,
         entityName: childEntity.name,
         childInstances: recursive
           ? getChildInstances(db, childEntity, container.id, recursive)
           : [],
-      })),
-  )
+      }))
+  })
 }
 
 const prepareNewChildInstanceContent = (
