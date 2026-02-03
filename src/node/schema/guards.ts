@@ -1,0 +1,20 @@
+export { isDecl, isDeclWithoutTypeParameters } from "./dsl/declarations/Decl.ts"
+export { isEntityDecl, isEntityDeclWithParentReference } from "./dsl/declarations/EntityDecl.ts"
+export { isEnumDecl } from "./dsl/declarations/EnumDecl.ts"
+export { isTypeAliasDecl } from "./dsl/declarations/TypeAliasDecl.ts"
+export { isArrayType } from "./dsl/types/ArrayType.ts"
+export { isBooleanType } from "./dsl/types/BooleanType.ts"
+export { isChildEntitiesType } from "./dsl/types/ChildEntitiesType.ts"
+export { isDateType } from "./dsl/types/DateType.ts"
+export { isFloatType } from "./dsl/types/FloatType.ts"
+export {
+  isIncludeIdentifierType,
+  isNoGenericIncludeIdentifierType,
+} from "./dsl/types/IncludeIdentifierType.ts"
+export { isIntegerType } from "./dsl/types/IntegerType.ts"
+export { isNestedEntityMapType } from "./dsl/types/NestedEntityMapType.ts"
+export { isObjectType } from "./dsl/types/ObjectType.ts"
+export { isReferenceIdentifierType } from "./dsl/types/ReferenceIdentifierType.ts"
+export { isStringType } from "./dsl/types/StringType.ts"
+export { isTranslationObjectType } from "./dsl/types/TranslationObjectType.ts"
+export { isTypeArgumentType } from "./dsl/types/TypeArgumentType.ts"

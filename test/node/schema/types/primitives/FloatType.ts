@@ -1,17 +1,13 @@
 import { deepEqual, equal, notEqual } from "assert/strict"
 import { describe, it } from "node:test"
-import {
-  FloatType,
-  formatFloatValue,
-  getReferencesForFloatType,
-  isFloatType,
-  NodeKind,
-  serializeFloatType,
-  StringType,
-  TypeAliasDecl,
-  validateFloatType,
-} from "../../../../../src/node/schema/index.ts"
+import { FloatType, StringType, TypeAliasDecl } from "../../../../../src/node/schema/dsl/index.ts"
+import { isFloatType } from "../../../../../src/node/schema/guards.ts"
+import { formatValue } from "../../../../../src/node/schema/treeOperations/format.ts"
+import { getReferences } from "../../../../../src/node/schema/treeOperations/references.ts"
+import { serializeNode } from "../../../../../src/node/schema/treeOperations/serialization.ts"
+import { validateType } from "../../../../../src/node/schema/treeOperations/validation.ts"
 import { json } from "../../../../../src/node/utils/errorFormatting.ts"
+import { NodeKind } from "../../../../../src/shared/schema/Node.ts"
 
 describe("constructor", () => {
   it("should create a new Float type", () => {
@@ -34,16 +30,11 @@ describe("predicate", () => {
 describe("validateFloatType", () => {
   it("returns if the value is a valid FloatType", () => {
     deepEqual(
-      validateFloatType(
-        { checkReferentialIntegrity: () => [], useStyling: true },
-        [],
-        FloatType(),
-        1.0,
-      ),
+      validateType({ checkReferentialIntegrity: () => [], useStyling: true }, [], FloatType(), 1.0),
       [],
     )
     deepEqual(
-      validateFloatType(
+      validateType(
         { checkReferentialIntegrity: () => [], useStyling: true },
         [],
         FloatType(),
@@ -57,7 +48,7 @@ describe("validateFloatType", () => {
 describe("serializeFloatType", () => {
   it("returns a serializable FloatType", () => {
     deepEqual(
-      serializeFloatType({
+      serializeNode({
         kind: NodeKind.FloatType,
       }),
       {
@@ -71,13 +62,13 @@ describe("getReferencesForFloatType", () => {
   it("returns the references in the value", () => {
     const type = FloatType()
     const inDecl = [TypeAliasDecl(import.meta.url, { name: "Decl", type: () => type })]
-    deepEqual(getReferencesForFloatType(type, 1.0, inDecl), [])
-    deepEqual(getReferencesForFloatType(type, -1.0, inDecl), [])
+    deepEqual(getReferences(type, 1.0, inDecl), [])
+    deepEqual(getReferences(type, -1.0, inDecl), [])
   })
 })
 
 describe("formatFloatValue", () => {
   it("formats a float value", () => {
-    equal(formatFloatValue(FloatType(), 1.0), 1.0)
+    equal(formatValue(FloatType(), 1.0), 1.0)
   })
 })

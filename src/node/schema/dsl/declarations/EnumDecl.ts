@@ -3,35 +3,18 @@ import { onlyKeys } from "@elyukai/utils/object"
 import {
   ENUM_DISCRIMINATOR_KEY,
   type EnumValue,
-} from "../../../shared/schema/declarations/EnumDecl.ts"
+} from "../../../../shared/schema/declarations/EnumDecl.ts"
+import { NodeKind } from "../../../../shared/schema/Node.ts"
 import type {
   NestedCustomConstraint,
   TypedNestedCustomConstraint,
-} from "../../utils/customConstraints.ts"
-import type {
-  CustomConstraintValidator,
-  GetNestedDeclarations,
-  GetReferences,
-  Predicate,
-  Serializer,
-  TypeArgumentsResolver,
-  ValidatorOfParamDecl,
-} from "../Node.ts"
-import { NodeKind } from "../Node.ts"
+} from "../../../utils/customConstraints.ts"
+import type { Node } from "../index.ts"
 import type { TypeParameter } from "../TypeParameter.ts"
-import { serializeTypeParameter } from "../TypeParameter.ts"
-import type { EnumCaseDecl } from "../types/generic/EnumType.ts"
-import {
-  EnumType,
-  getNestedDeclarationsInEnumType,
-  getReferencesForEnumType,
-  resolveTypeArgumentsInEnumType,
-  serializeEnumType,
-  validateEnumType,
-} from "../types/generic/EnumType.ts"
-import { checkCustomConstraintsInType } from "../types/Type.ts"
-import type { BaseDecl } from "./Declaration.ts"
-import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
+import type { EnumCaseDecl } from "../types/EnumType.ts"
+import { EnumType } from "../types/EnumType.ts"
+import type { BaseDecl } from "./Decl.ts"
+import { validateDeclName } from "./Decl.ts"
 
 type TConstraint = Record<string, EnumCaseDecl>
 
@@ -219,51 +202,7 @@ export const GenEnumDecl: /**
 
 export { GenEnumDecl as GenEnum }
 
-export const isEnumDecl: Predicate<EnumDecl> = node => node.kind === NodeKind.EnumDecl
-
-export const getNestedDeclarationsInEnumDecl: GetNestedDeclarations<EnumDecl> = (
-  addedDecls,
-  decl,
-) => getNestedDeclarationsInEnumType(addedDecls, decl.type.value, decl)
-
-export const validateEnumDecl: ValidatorOfParamDecl<EnumDecl> = (
-  helpers,
-  inDecls,
-  decl,
-  args,
-  value,
-) =>
-  validateEnumType(
-    helpers,
-    [...inDecls, decl],
-    resolveTypeArgumentsInEnumType(getTypeArgumentsRecord(decl, args), decl.type.value, [
-      ...inDecls,
-      decl,
-    ]),
-    value,
-  )
-
-export const resolveTypeArgumentsInEnumDecl: TypeArgumentsResolver<EnumDecl> = (
-  args,
-  decl,
-  inDecl,
-) =>
-  EnumDecl(decl.sourceUrl, {
-    name: decl.name,
-    comment: decl.comment,
-    isDeprecated: decl.isDeprecated,
-    values: () => resolveTypeArgumentsInEnumType(args, decl.type.value, [...inDecl, decl]).values,
-  })
-
-export const serializeEnumDecl: Serializer<EnumDecl> = decl => ({
-  ...decl,
-  type: serializeEnumType(decl.type.value),
-  parameters: decl.parameters.map(param => serializeTypeParameter(param)),
-  customConstraints: decl.customConstraints !== undefined,
-})
-
-export const getReferencesForEnumDecl: GetReferences<EnumDecl> = (decl, value, inDecl) =>
-  getReferencesForEnumType(decl.type.value, value, [...inDecl, decl])
+export const isEnumDecl = (node: Node): node is EnumDecl => node.kind === NodeKind.EnumDecl
 
 export const cases = <T extends TConstraint>(
   decl: EnumDecl<string, T>,
@@ -272,12 +211,3 @@ export const cases = <T extends TConstraint>(
 export const getAnyEnumCaseValue = <K extends string, V>(
   enumValue: { [Key in K]: EnumValue<Key, V> }[K],
 ): V => enumValue[enumValue[ENUM_DISCRIMINATOR_KEY]]
-
-export const checkCustomConstraintsInEnumDecl: CustomConstraintValidator<EnumDecl> = (
-  decl,
-  value,
-  helpers,
-) =>
-  (decl.customConstraints?.({ ...helpers, value }) ?? []).concat(
-    checkCustomConstraintsInType(decl.type.value, value, helpers),
-  )

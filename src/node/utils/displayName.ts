@@ -8,23 +8,22 @@ import type {
   InstanceContainerOverview,
   InstanceContent,
 } from "../../shared/utils/instances.ts"
-import { serializeEntityDecl, type EntityDecl } from "../schema/declarations/EntityDecl.ts"
-import type {
-  AnyChildEntityMap,
-  AnyEntityMap,
-  RegisteredChildEntityMap,
-  RegisteredEntity,
-  RegisteredEntityMap,
-} from "../schema/externalTypes.ts"
+import type { EntityDecl } from "../schema/dsl/declarations/EntityDecl.ts"
 import {
   normalizedIdArgs,
+  type AnyChildEntityMap,
+  type AnyEntityMap,
   type GetAllChildInstanceContainersForParent,
   type GetDisplayNameWithLocaleId,
   type GetEntityByName,
   type GetInstanceById,
   type GetInstanceContainerById,
   type IdArgsVariant,
-} from "../schema/helpers.ts"
+  type RegisteredChildEntityMap,
+  type RegisteredEntity,
+  type RegisteredEntityMap,
+} from "../schema/generatedTypeHelpers.js"
+import { serializeNode } from "../schema/treeOperations/serialization.ts"
 import {
   getGroupedInstancesFromDatabaseInMemory,
   type DatabaseInMemory,
@@ -123,7 +122,7 @@ export const getDisplayNameFromEntityInstance = <
     })
   } else {
     return getSerializedDisplayNameFromEntityInstance(
-      serializeEntityDecl(entity),
+      serializeNode(entity),
       instanceContainer.content,
       defaultName,
       locales,

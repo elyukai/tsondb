@@ -1,7 +1,7 @@
 import { join } from "path"
 import type { StatusResult } from "simple-git"
 import type { GitFileStatus, GitFileStatusCode } from "../../shared/utils/git.ts"
-import type { AnyEntityMap } from "../schema/externalTypes.ts"
+import type { AnyEntityMap } from "../schema/generatedTypeHelpers.ts"
 import type { DatabaseInMemory } from "./databaseInMemory.ts"
 import { getFileNameForId } from "./files.ts"
 

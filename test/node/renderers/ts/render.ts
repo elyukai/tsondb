@@ -1,7 +1,7 @@
 import { equal } from "assert"
 import { describe, it } from "node:test"
 import { render } from "../../../../src/node/renderers/ts/render.ts"
-import type { Type } from "../../../../src/node/schema/index.ts"
+import type { Type } from "../../../../src/node/schema/dsl/index.ts"
 import {
   Array,
   Boolean,
@@ -9,15 +9,15 @@ import {
   GenIncludeIdentifierType,
   GenTypeAliasDecl,
   Integer,
-  isObjectType,
   Object,
   Optional,
-  Param,
   Required,
   TypeAliasDecl,
   TypeArgumentType,
-} from "../../../../src/node/schema/index.ts"
-import { String } from "../../../../src/node/schema/types/primitives/StringType.ts"
+} from "../../../../src/node/schema/dsl/index.ts"
+import { Param } from "../../../../src/node/schema/dsl/TypeParameter.ts"
+import { String } from "../../../../src/node/schema/dsl/types/StringType.ts"
+import { isObjectType } from "../../../../src/node/schema/guards.ts"
 
 describe("render types", () => {
   const testType = (type: Type, expected: string) => {

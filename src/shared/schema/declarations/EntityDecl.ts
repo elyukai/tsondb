@@ -1,4 +1,4 @@
-import type { GenericEntityDisplayName } from "../../../node/schema/index.ts"
+import type { GenericEntityDisplayName } from "../../../node/schema/dsl/index.ts"
 import {
   NodeKind,
   resolveSerializedTypeArguments,

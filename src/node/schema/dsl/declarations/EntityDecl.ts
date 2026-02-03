@@ -1,34 +1,19 @@
 import { Lazy } from "@elyukai/utils/lazy"
-import type { SerializedEntityDisplayName } from "../../../shared/schema/declarations/EntityDecl.ts"
-import type { SortOrder } from "../../../shared/schema/utils/sortOrder.ts"
-import type { UniqueConstraints } from "../../../shared/schema/utils/uniqueConstraint.ts"
-import type { InstanceContent } from "../../../shared/utils/instances.ts"
-import type { CustomConstraint, TypedCustomConstraint } from "../../utils/customConstraints.ts"
-import type { DisplayNameCustomizer, TypedDisplayNameCustomizer } from "../../utils/displayName.ts"
+import { NodeKind } from "../../../../shared/schema/Node.js"
+import type { SortOrder } from "../../../../shared/schema/utils/sortOrder.ts"
+import type { UniqueConstraints } from "../../../../shared/schema/utils/uniqueConstraint.ts"
+import type { CustomConstraint, TypedCustomConstraint } from "../../../utils/customConstraints.ts"
 import type {
-  CustomConstraintValidator,
-  GetNestedDeclarations,
-  GetReferences,
-  Predicate,
-  Serialized,
-  SerializedMemberDeclObject,
-  Serializer,
-  TypeArgumentsResolver,
-  Validator,
-} from "../Node.ts"
-import { NodeKind, resolveTypeArguments, validateType } from "../Node.ts"
-import type { MemberDecl, ObjectType } from "../types/generic/ObjectType.ts"
-import {
-  getNestedDeclarationsInObjectType,
-  getReferencesForObjectType,
-  Required,
-  serializeObjectType,
-} from "../types/generic/ObjectType.ts"
-import { StringType } from "../types/primitives/StringType.ts"
-import type { NestedEntityMapType } from "../types/references/NestedEntityMapType.ts"
-import { checkCustomConstraintsInType } from "../types/Type.ts"
-import type { BaseDecl } from "./Declaration.ts"
-import { validateDeclName } from "./Declaration.ts"
+  DisplayNameCustomizer,
+  TypedDisplayNameCustomizer,
+} from "../../../utils/displayName.ts"
+import type { Node } from "../index.ts"
+import type { NestedEntityMapType } from "../types/NestedEntityMapType.ts"
+import type { MemberDecl, ObjectType } from "../types/ObjectType.ts"
+import { Required } from "../types/ObjectType.ts"
+import { StringType } from "../types/StringType.ts"
+import type { BaseDecl } from "./Decl.ts"
+import { validateDeclName } from "./Decl.ts"
 import { TypeAliasDecl } from "./TypeAliasDecl.ts"
 
 export type GenericEntityDisplayName =
@@ -253,7 +238,7 @@ export const EntityDecl: {
 
 export { EntityDecl as Entity }
 
-export const isEntityDecl: Predicate<EntityDecl> = node => node.kind === NodeKind.EntityDecl
+export const isEntityDecl = (node: Node): node is EntityDecl => node.kind === NodeKind.EntityDecl
 
 export const isEntityDeclWithParentReference = <
   Name extends string,
@@ -262,24 +247,6 @@ export const isEntityDeclWithParentReference = <
 >(
   decl: EntityDecl<Name, T, FK>,
 ): decl is EntityDecl<Name, T, NonNullable<FK>> => decl.parentReferenceKey !== undefined
-
-export const getNestedDeclarationsInEntityDecl: GetNestedDeclarations<EntityDecl> = (
-  isDeclAdded,
-  decl,
-) => getNestedDeclarationsInObjectType(isDeclAdded, decl.type.value, decl)
-
-export const validateEntityDecl: Validator<EntityDecl> = (helpers, inDecls, decl, value) =>
-  validateType(helpers, inDecls, decl.type.value, value)
-
-export const resolveTypeArgumentsInEntityDecl: TypeArgumentsResolver<EntityDecl> = (
-  _args,
-  decl,
-  inDecl,
-) =>
-  EntityDecl(decl.sourceUrl, {
-    ...decl,
-    type: () => resolveTypeArguments({}, decl.type.value, [...inDecl, decl]),
-  })
 
 const createEntityIdentifierComment = () =>
   "The entity’s identifier. A UUID or a locale code if it is registered as the locale entity."
@@ -307,30 +274,3 @@ export const createEntityIdentifierTypeAsDecl = <Name extends string>(decl: Enti
     name: (decl.name + "_ID") as `${Name}_ID`,
     type: createEntityIdentifierType,
   })
-
-export const serializeEntityDecl = (<
-  Name extends string,
-  T extends TConstraint,
-  FK extends Extract<keyof T, string> | undefined,
->(
-  type: EntityDecl<Name, T, FK>,
-): Serialized<EntityDecl<Name, T, FK>> => ({
-  ...type,
-  type: serializeObjectType(type.type.value),
-  instanceDisplayName: type.instanceDisplayName as SerializedEntityDisplayName<
-    SerializedMemberDeclObject<T>
-  >,
-  instanceDisplayNameCustomizer: type.instanceDisplayNameCustomizer !== undefined,
-  customConstraints: type.customConstraints !== undefined,
-})) satisfies Serializer<EntityDecl>
-
-export const getReferencesForEntityDecl: GetReferences<EntityDecl> = (decl, value, inDecl) =>
-  getReferencesForObjectType(decl.type.value, value, [...inDecl, decl])
-
-export const checkCustomConstraintsInEntityDecl: CustomConstraintValidator<
-  EntityDecl,
-  [id: string, content: InstanceContent]
-> = (decl, value, helpers) =>
-  (
-    decl.customConstraints?.({ ...helpers, instanceId: value[0], instanceContent: value[1] }) ?? []
-  ).concat(checkCustomConstraintsInType(decl.type.value, value, helpers))

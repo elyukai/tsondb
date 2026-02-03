@@ -1,32 +1,15 @@
 import { Lazy } from "@elyukai/utils/lazy"
 import { onlyKeys } from "@elyukai/utils/object"
+import { NodeKind } from "../../../../shared/schema/Node.js"
 import type {
   NestedCustomConstraint,
   TypedNestedCustomConstraint,
-} from "../../utils/customConstraints.ts"
-import type {
-  CustomConstraintValidator,
-  GetNestedDeclarations,
-  GetReferences,
-  Predicate,
-  Serializer,
-  TypeArgumentsResolver,
-  ValidationContext,
-  ValidatorOfParamDecl,
-} from "../Node.ts"
-import {
-  getNestedDeclarations,
-  getReferences,
-  NodeKind,
-  resolveTypeArguments,
-  serializeNode,
-  validateType,
-} from "../Node.ts"
+} from "../../../utils/customConstraints.ts"
+import type { Node } from "../index.ts"
 import type { TypeParameter } from "../TypeParameter.ts"
-import { serializeTypeParameter } from "../TypeParameter.ts"
-import { checkCustomConstraintsInType, type Type } from "../types/Type.ts"
-import type { BaseDecl, Decl, TypeArguments } from "./Declaration.ts"
-import { getTypeArgumentsRecord, validateDeclName } from "./Declaration.ts"
+import type { Type } from "../types/Type.ts"
+import type { BaseDecl } from "./Decl.ts"
+import { validateDeclName } from "./Decl.ts"
 
 export interface TypeAliasDecl<
   Name extends string = string,
@@ -208,54 +191,5 @@ export const GenTypeAliasDecl: /**
 
 export { GenTypeAliasDecl as GenTypeAlias }
 
-export const isTypeAliasDecl: Predicate<TypeAliasDecl> = node =>
+export const isTypeAliasDecl = (node: Node): node is TypeAliasDecl =>
   node.kind === NodeKind.TypeAliasDecl
-
-export const getNestedDeclarationsInTypeAliasDecl: GetNestedDeclarations<TypeAliasDecl> = (
-  addedDecls,
-  decl,
-) => getNestedDeclarations(addedDecls, decl.type.value, decl)
-
-export const validateTypeAliasDecl = (<Params extends TypeParameter[]>(
-  helpers: ValidationContext,
-  inDecls: Decl[],
-  decl: TypeAliasDecl<string, Type, Params>,
-  args: TypeArguments<Params>,
-  value: unknown,
-) =>
-  validateType(
-    helpers,
-    [...inDecls, decl],
-    resolveTypeArguments(getTypeArgumentsRecord(decl, args), decl.type.value, [...inDecls, decl]),
-    value,
-  )) satisfies ValidatorOfParamDecl<TypeAliasDecl>
-
-export const resolveTypeArgumentsInTypeAliasDecl: TypeArgumentsResolver<TypeAliasDecl> = (
-  args,
-  decl,
-  inDecl,
-) =>
-  TypeAliasDecl(decl.sourceUrl, {
-    ...decl,
-    type: () => resolveTypeArguments(args, decl.type.value, [...inDecl, decl]),
-    customConstraints: decl.customConstraints as TypedNestedCustomConstraint<string> | undefined, // ignore contravariance of registered type alias type
-  })
-
-export const serializeTypeAliasDecl: Serializer<TypeAliasDecl> = type => ({
-  ...type,
-  type: serializeNode(type.type.value),
-  parameters: type.parameters.map(param => serializeTypeParameter(param)),
-  customConstraints: type.customConstraints !== undefined,
-})
-
-export const getReferencesForTypeAliasDecl: GetReferences<TypeAliasDecl> = (decl, value, inDecl) =>
-  getReferences(decl.type.value, value, [...inDecl, decl])
-
-export const checkCustomConstraintsInTypeAliasDecl: CustomConstraintValidator<TypeAliasDecl> = (
-  decl,
-  value,
-  helpers,
-) =>
-  (decl.customConstraints?.({ ...helpers, value }) ?? []).concat(
-    checkCustomConstraintsInType(decl.type.value, value, helpers),
-  )

@@ -1,17 +1,13 @@
 import { deepEqual, equal, notEqual } from "assert/strict"
 import { describe, it } from "node:test"
-import {
-  BooleanType,
-  formatBooleanValue,
-  getReferencesForBooleanType,
-  isBooleanType,
-  NodeKind,
-  serializeBooleanType,
-  StringType,
-  TypeAliasDecl,
-  validateBooleanType,
-} from "../../../../../src/node/schema/index.ts"
+import { BooleanType, StringType, TypeAliasDecl } from "../../../../../src/node/schema/dsl/index.ts"
+import { isBooleanType } from "../../../../../src/node/schema/guards.ts"
+import { formatValue } from "../../../../../src/node/schema/treeOperations/format.ts"
+import { getReferences } from "../../../../../src/node/schema/treeOperations/references.ts"
+import { serializeNode } from "../../../../../src/node/schema/treeOperations/serialization.ts"
+import { validateType } from "../../../../../src/node/schema/treeOperations/validation.ts"
 import { json } from "../../../../../src/node/utils/errorFormatting.ts"
+import { NodeKind } from "../../../../../src/shared/schema/Node.ts"
 
 describe("constructor", () => {
   it("should create a new Boolean type", () => {
@@ -33,7 +29,7 @@ describe("predicate", () => {
 describe("validateBooleanType", () => {
   it("returns if the value is a valid BooleanType", () => {
     deepEqual(
-      validateBooleanType(
+      validateType(
         { checkReferentialIntegrity: () => [], useStyling: true },
         [],
         BooleanType(),
@@ -42,7 +38,7 @@ describe("validateBooleanType", () => {
       [],
     )
     deepEqual(
-      validateBooleanType(
+      validateType(
         { checkReferentialIntegrity: () => [], useStyling: true },
         [],
         BooleanType(),
@@ -56,7 +52,7 @@ describe("validateBooleanType", () => {
 describe("serializeBooleanType", () => {
   it("returns a serializable BooleanType", () => {
     deepEqual(
-      serializeBooleanType({
+      serializeNode({
         kind: NodeKind.BooleanType,
       }),
       {
@@ -70,13 +66,13 @@ describe("getReferencesForBooleanType", () => {
   it("returns the references in the value", () => {
     const type = BooleanType()
     const inDecl = [TypeAliasDecl(import.meta.url, { name: "Decl", type: () => type })]
-    deepEqual(getReferencesForBooleanType(BooleanType(), false, inDecl), [])
-    deepEqual(getReferencesForBooleanType(BooleanType(), true, inDecl), [])
+    deepEqual(getReferences(BooleanType(), false, inDecl), [])
+    deepEqual(getReferences(BooleanType(), true, inDecl), [])
   })
 })
 
 describe("formatBooleanValue", () => {
   it("formats a boolean value", () => {
-    equal(formatBooleanValue(BooleanType(), false), false)
+    equal(formatValue(BooleanType(), false), false)
   })
 })

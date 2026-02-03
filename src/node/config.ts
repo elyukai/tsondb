@@ -1,7 +1,7 @@
 import type { Output } from "../shared/output.ts"
 import type { ValidationOptions } from "./index.ts"
-import type { EntityDecl } from "./schema/index.ts"
-import type { Schema } from "./schema/Schema.ts"
+import type { EntityDecl } from "./schema/dsl/index.ts"
+import type { Schema } from "./schema/index.ts"
 
 /**
  * The main configuration type for TSONDB.

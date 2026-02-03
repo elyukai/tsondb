@@ -1,22 +1,21 @@
 import { error, isError, mapError, ok, type Result } from "@elyukai/utils/result"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import type { DefaultTSONDBTypes, EntityName, TSONDB } from "../index.ts"
+import { type EntityDecl } from "../schema/dsl/index.ts"
 import type {
   AnyChildEntityMap,
   AnyEntityMap,
+  GetAllChildInstanceContainersForParent,
+  GetAllInstances,
+  GetDisplayName,
+  GetDisplayNameAndId,
+  GetInstanceById,
   RegisteredChildEntityMap,
   RegisteredEntity,
   RegisteredEntityMap,
   RegisteredEnumOrTypeAlias,
-} from "../schema/externalTypes.ts"
-import {
-  type GetAllChildInstanceContainersForParent,
-  type GetAllInstances,
-  type GetDisplayName,
-  type GetDisplayNameAndId,
-  type GetInstanceById,
-} from "../schema/helpers.ts"
-import { checkCustomConstraintsInEntityDecl, type EntityDecl } from "../schema/index.ts"
+} from "../schema/generatedTypeHelpers.ts"
+import { checkCustomConstraints } from "../schema/treeOperations/customConstraints.ts"
 
 export type CustomConstraintHelpers<
   EM extends AnyEntityMap = RegisteredEntityMap,
@@ -133,7 +132,7 @@ export const checkCustomConstraintsForAllEntities = <T extends DefaultTSONDBType
         .getAllInstanceContainersOfEntity(entity.name)
         .map((instance): [InstanceContainer, string[]] => [
           instance,
-          checkCustomConstraintsInEntityDecl(entity, [instance.id, instance.content], helpers),
+          checkCustomConstraints(entity, [instance.id, instance.content], helpers),
         ])
         .filter(([, violations]) => violations.length > 0)
         .map(([instance, violations]) => {

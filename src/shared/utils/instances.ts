@@ -1,10 +1,11 @@
-import type { AnyChildEntityMap, AnyEntityMap } from "../../node/schema/externalTypes.ts"
+import type { EntityDecl } from "../../node/schema/dsl/index.ts"
 import type {
-  EntityDecl,
+  AnyChildEntityMap,
+  AnyEntityMap,
   GetAllChildInstanceContainersForParent,
   GetEntityByName,
   GetInstanceContainerById,
-} from "../../node/schema/index.ts"
+} from "../../node/schema/generatedTypeHelpers.ts"
 import { getDisplayNameFromEntityInstance } from "../../node/utils/displayName.ts"
 import type { GitFileStatus } from "./git.ts"
 

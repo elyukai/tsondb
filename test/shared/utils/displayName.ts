@@ -1,19 +1,14 @@
 import { deepEqual } from "node:assert/strict"
 import { describe, it } from "node:test"
-import {
-  EntityDecl,
-  ObjectType,
-  Required,
-  serializeEntityDecl,
-  StringType,
-} from "../../../src/node/schema/index.ts"
+import { EntityDecl, ObjectType, Required, StringType } from "../../../src/node/schema/dsl/index.ts"
+import { serializeNode } from "../../../src/node/schema/treeOperations/serialization.ts"
 import {
   getSerializedDisplayNameFromEntityInstance,
   type DisplayNameResult,
 } from "../../../src/shared/utils/displayName.ts"
 
 describe("getDisplayNameFromEntityInstance", () => {
-  const entity = serializeEntityDecl(
+  const entity = serializeNode(
     EntityDecl(import.meta.url, {
       name: "User",
       namePlural: "Users",
@@ -26,7 +21,7 @@ describe("getDisplayNameFromEntityInstance", () => {
     }),
   )
 
-  const translatableEntity = serializeEntityDecl(
+  const translatableEntity = serializeNode(
     EntityDecl(import.meta.url, {
       name: "User",
       namePlural: "Users",

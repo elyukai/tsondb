@@ -4,24 +4,24 @@ import {
   createEnumCaseValue,
   ENUM_DISCRIMINATOR_KEY,
 } from "../../shared/schema/declarations/EnumDecl.ts"
+import { NodeKind } from "../../shared/schema/Node.ts"
 import type { GitFileStatus } from "../../shared/utils/git.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import type { TSONDB } from "../index.ts"
 import type {
   EntityDecl,
   EntityDeclWithParentReference,
-} from "../schema/declarations/EntityDecl.ts"
-import { Case } from "../schema/helpers.ts"
+} from "../schema/dsl/declarations/EntityDecl.ts"
+import { type Type } from "../schema/dsl/index.ts"
+import { isChildEntitiesType } from "../schema/dsl/types/ChildEntitiesType.ts"
+import { Case } from "../schema/generatedTypeHelpers.ts"
 import {
   isEntityDeclWithParentReference,
   isEnumDecl,
   isIncludeIdentifierType,
   isReferenceIdentifierType,
-  NodeKind,
-  reduceNodes,
-  type Type,
-} from "../schema/index.ts"
-import { isChildEntitiesType } from "../schema/types/references/ChildEntitiesType.ts"
+} from "../schema/guards.ts"
+import { reduceNodes } from "../schema/helpers.ts"
 import type { Transaction } from "../transaction.ts"
 import {
   getInstancesOfEntityFromDatabaseInMemory,

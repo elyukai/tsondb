@@ -1,5 +1,5 @@
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
-import type { TranslationObjectTypeConstraint } from "../../node/schema/types/generic/TranslationObjectType.ts"
+import type { TranslationObjectTypeConstraint } from "../../node/schema/dsl/types/TranslationObjectType.ts"
 import type { SerializedAsType, SerializedType } from "../../shared/schema/types/Type.ts"
 import type { GetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
 

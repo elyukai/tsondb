@@ -6,8 +6,8 @@ import { basename, extname, join } from "node:path"
 import { platform } from "node:process"
 import { promisify } from "node:util"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
-import type { AnyEntityMap, RegisteredEntityMap } from "../schema/externalTypes.ts"
-import type { EntityDecl } from "../schema/index.ts"
+import type { EntityDecl } from "../schema/dsl/index.ts"
+import type { AnyEntityMap, RegisteredEntityMap } from "../schema/generatedTypeHelpers.ts"
 
 export type DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> = Dictionary<
   InstancesInMemory,

@@ -2,7 +2,7 @@ import { deepEqual } from "@elyukai/utils/equality"
 import { Lazy } from "@elyukai/utils/lazy"
 import { isError } from "@elyukai/utils/result"
 import Debug from "debug"
-import { mkdir } from "node:fs/promises"
+import { mkdir, writeFile } from "node:fs/promises"
 import { join, sep } from "node:path"
 import { stderr } from "node:process"
 import { styleText } from "node:util"
@@ -11,21 +11,18 @@ import type { Output } from "../shared/output.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "../shared/utils/instances.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
 import { Git } from "./git.js"
+import { type EntityDecl } from "./schema/dsl/index.ts"
 import type {
   AnyChildEntityMap,
   AnyEntityMap,
   AnyEnumMap,
   AnyTypeAliasMap,
-} from "./schema/externalTypes.ts"
-import { normalizedIdArgs, type IdArgsVariant } from "./schema/helpers.ts"
-import {
-  createValidationContext,
-  isEntityDeclWithParentReference,
-  serializeNode,
-  validateEntityDecl,
-  type EntityDecl,
-} from "./schema/index.ts"
-import type { Schema } from "./schema/Schema.ts"
+} from "./schema/generatedTypeHelpers.ts"
+import { normalizedIdArgs, type IdArgsVariant } from "./schema/generatedTypeHelpers.ts"
+import { isEntityDeclWithParentReference } from "./schema/guards.ts"
+import type { Schema } from "./schema/index.ts"
+import { serializeNode } from "./schema/treeOperations/serialization.ts"
+import { createValidationContext, validateDecl } from "./schema/treeOperations/validation.ts"
 import { Transaction } from "./transaction.ts"
 import { checkCustomConstraintsForAllEntities } from "./utils/customConstraints.ts"
 import {
@@ -366,7 +363,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
           getInstancesOfEntityFromDatabaseInMemory(this.#data, entity.name).map(instance =>
             wrapErrorsIfAny(
               `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
-              validateEntityDecl(validationContext, [], entity, instance.content),
+              validateDecl(validationContext, [], entity, [], instance.content),
             ),
           ),
         ),
@@ -867,6 +864,16 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
           a[1].relevance - b[1].relevance ||
           a[1].displayName.localeCompare(b[1].displayName, a[1].displayNameLocaleId),
       )
+  }
+
+  /**
+   * Compresses the entire database into a single JSON file at the specified path.
+   *
+   * Instead of storing each instance in its own file, this method serializes the entire database into a single JSON file. This can be useful for backup, transfer or archiving purposes. The resulting file contains all instances organized by entity names. No spaces or indentation are used in the JSON output to minimize file size.
+   * @param path The file path where the compressed database will be saved.
+   */
+  async compressToSingleFile(path: string): Promise<void> {
+    await writeFile(path, JSON.stringify(this.#data), "utf-8")
   }
 }
 

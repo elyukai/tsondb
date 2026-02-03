@@ -1,7 +1,8 @@
 import { rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
-import { formatValue, type EntityDecl } from "../schema/index.ts"
+import { type EntityDecl } from "../schema/dsl/index.ts"
+import { formatValue } from "../schema/treeOperations/format.ts"
 
 export const getFileNameForId = (id: string): string => `${id}.json`
 

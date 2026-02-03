@@ -5,9 +5,12 @@ import Debug from "debug"
 import { resolve } from "node:path"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
-import { getReferencesForEntityDecl } from "../schema/declarations/EntityDecl.ts"
-import type { AnyEntityMap, RegisteredEntityMap } from "../schema/externalTypes.ts"
-import type { GetEntityByName } from "../schema/helpers.ts"
+import type {
+  AnyEntityMap,
+  GetEntityByName,
+  RegisteredEntityMap,
+} from "../schema/generatedTypeHelpers.ts"
+import { getReferences } from "../schema/treeOperations/references.ts"
 import {
   getGroupedInstancesFromDatabaseInMemory,
   type DatabaseInMemory,
@@ -148,7 +151,7 @@ export const updateReferencesToInstances = <EM extends AnyEntityMap = Registered
     if (oldInstance === undefined) {
       return addReferences(
         referencesToInstances,
-        getReferencesForEntityDecl(entity, newInstance, []),
+        getReferences(entity, newInstance, []),
         instanceId,
       )
     }
@@ -156,13 +159,13 @@ export const updateReferencesToInstances = <EM extends AnyEntityMap = Registered
     if (newInstance === undefined) {
       return removeReferences(
         referencesToInstances,
-        getReferencesForEntityDecl(entity, oldInstance, []),
+        getReferences(entity, oldInstance, []),
         instanceId,
       )
     }
 
-    const oldReferences = getReferencesForEntityDecl(entity, oldInstance, [])
-    const newReferences = getReferencesForEntityDecl(entity, newInstance, [])
+    const oldReferences = getReferences(entity, oldInstance, [])
+    const newReferences = getReferences(entity, newInstance, [])
 
     const { added, removed } = difference(oldReferences, newReferences)
 

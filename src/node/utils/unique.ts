@@ -5,7 +5,7 @@ import { error, isError, mapError, ok, type Result } from "@elyukai/utils/result
 import { getValueAtKeyPath, renderKeyPath } from "../../shared/schema/utils/keyPath.ts"
 import type { UniqueConstraint } from "../../shared/schema/utils/uniqueConstraint.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "../../shared/utils/instances.ts"
-import type { EntityDecl } from "../schema/index.ts"
+import type { EntityDecl } from "../schema/dsl/index.ts"
 import {
   getInstancesOfEntityFromDatabaseInMemory,
   type DatabaseInMemory,

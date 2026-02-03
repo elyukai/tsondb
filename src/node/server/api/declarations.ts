@@ -12,11 +12,11 @@ import type {
   UpdateInstanceOfEntityRequestBody,
   UpdateInstanceOfEntityResponseBody,
 } from "../../../shared/api.ts"
-import type { Decl } from "../../schema/declarations/Declaration.ts"
-import { isEntityDecl } from "../../schema/declarations/EntityDecl.ts"
-import { isEnumDecl } from "../../schema/declarations/EnumDecl.ts"
-import { isTypeAliasDecl } from "../../schema/declarations/TypeAliasDecl.ts"
-import { serializeNode } from "../../schema/index.ts"
+import type { Decl } from "../../schema/dsl/declarations/Decl.ts"
+import { isEntityDecl } from "../../schema/dsl/declarations/EntityDecl.ts"
+import { isEnumDecl } from "../../schema/dsl/declarations/EnumDecl.ts"
+import { isTypeAliasDecl } from "../../schema/dsl/declarations/TypeAliasDecl.ts"
+import { serializeNode } from "../../schema/treeOperations/serialization.ts"
 import { getChildInstances } from "../../utils/childInstances.ts"
 import { sendErrorResponse } from "../../utils/error.ts"
 import { createInstance, deleteInstance, updateInstance } from "../utils/instanceOperations.ts"

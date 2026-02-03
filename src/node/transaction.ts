@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto"
 import type { InstanceContainer, InstanceContent } from "../shared/utils/instances.ts"
 import type { ValidationOptions } from "./index.ts"
-import type { AnyEntityMap, RegisteredEntityMap } from "./schema/externalTypes.ts"
-import {
-  createValidationContext,
-  validateEntityDecl,
-  type EntityDecl,
-  type GetEntityByName,
-} from "./schema/index.ts"
+import { type EntityDecl } from "./schema/dsl/index.ts"
+import type {
+  AnyEntityMap,
+  GetEntityByName,
+  RegisteredEntityMap,
+} from "./schema/generatedTypeHelpers.ts"
+import { createValidationContext, validateDecl } from "./schema/treeOperations/validation.ts"
 import {
   deleteInstanceInDatabaseInMemory,
   getInstanceOfEntityFromDatabaseInMemory,
@@ -92,10 +92,11 @@ const checkUpdateInstancePossible = (
   entity: EntityDecl,
   instanceContent: InstanceContent,
 ): void => {
-  const validationErrors = validateEntityDecl(
+  const validationErrors = validateDecl(
     createValidationContext(validationOptions, databaseInMemory, false),
     [],
     entity,
+    [],
     instanceContent,
   )
 
