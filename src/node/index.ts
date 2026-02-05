@@ -1,4 +1,6 @@
+import { on } from "@elyukai/utils/function"
 import { Lazy } from "@elyukai/utils/lazy"
+import { compareNumber, reduceCompare } from "@elyukai/utils/ordering"
 import { isError } from "@elyukai/utils/result"
 import Debug from "debug"
 import { mkdir, writeFile } from "node:fs/promises"
@@ -871,8 +873,8 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
           return []
         }
 
-        return instances.map(
-          (instance): [string, InstanceContainerOverview & { relevance: number }] => {
+        return instances
+          .map((instance): [string, InstanceContainerOverview & { relevance: number }] => {
             const { name, localeId } = getDisplayNameFromEntityInstance(
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               entity!,
@@ -900,13 +902,14 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
                 }),
               },
             ]
-          },
-        )
+          })
+          .filter(instance => instance[1].relevance > 0)
       })
       .toSorted(
-        (a, b) =>
-          a[1].relevance - b[1].relevance ||
-          a[1].displayName.localeCompare(b[1].displayName, a[1].displayNameLocaleId),
+        reduceCompare(
+          on(item => item[1].relevance, compareNumber),
+          (a, b) => a[1].displayName.localeCompare(b[1].displayName, a[1].displayNameLocaleId),
+        ),
       )
   }
 
