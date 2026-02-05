@@ -6,10 +6,7 @@ import { getValueAtKeyPath, renderKeyPath } from "../../shared/schema/utils/keyP
 import type { UniqueConstraint } from "../../shared/schema/utils/uniqueConstraint.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "../../shared/utils/instances.ts"
 import type { EntityDecl } from "../schema/dsl/index.ts"
-import {
-  getInstancesOfEntityFromDatabaseInMemory,
-  type DatabaseInMemory,
-} from "./databaseInMemory.ts"
+import { type DatabaseInMemory } from "./databaseInMemory.ts"
 
 export class UniqueConstraintError extends Error {
   readonly parts: string[]
@@ -133,7 +130,7 @@ export const checkUniqueConstraintsForAllEntities = (
     entities.reduce<Result<void, AggregateError[]>>((acc, entity) => {
       const resultForEntity = checkUniqueConstraintsForEntity(
         entity,
-        getInstancesOfEntityFromDatabaseInMemory(db, entity.name),
+        db.getAllInstanceContainersOfEntity(entity.name),
         instanceOverviewsByEntityName[entity.name] ?? [],
       )
 

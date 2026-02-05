@@ -23,10 +23,7 @@ import {
 } from "../schema/guards.ts"
 import { reduceNodes } from "../schema/helpers.ts"
 import type { Transaction } from "../transaction.ts"
-import {
-  getInstancesOfEntityFromDatabaseInMemory,
-  type DatabaseInMemory,
-} from "./databaseInMemory.ts"
+import { type DatabaseInMemory } from "./databaseInMemory.ts"
 import { HTTPError } from "./error.ts"
 
 export interface ChildInstanceContainer {
@@ -95,15 +92,17 @@ export const getChildInstancesFromEntity = (
   parentId: string,
   childEntity: EntityDeclWithParentReference,
 ): InstanceContainer[] =>
-  getInstancesOfEntityFromDatabaseInMemory(databaseInMemory, childEntity.name).filter(
-    instanceContainer =>
-      hasKey(instanceContainer.content, childEntity.parentReferenceKey) &&
-      isParentReferenceReferencingParent(
-        instanceContainer.content[childEntity.parentReferenceKey],
-        parentEntity.name,
-        parentId,
-      ),
-  )
+  databaseInMemory
+    .getAllInstanceContainersOfEntity(childEntity.name)
+    .filter(
+      instanceContainer =>
+        hasKey(instanceContainer.content, childEntity.parentReferenceKey) &&
+        isParentReferenceReferencingParent(
+          instanceContainer.content[childEntity.parentReferenceKey],
+          parentEntity.name,
+          parentId,
+        ),
+    )
 
 const getParentReferenceTypeAux = (type: Type): "single" | "enum" => {
   if (isIncludeIdentifierType(type)) {

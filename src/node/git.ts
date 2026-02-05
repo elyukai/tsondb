@@ -65,8 +65,6 @@ export class Git<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       commitsAhead: status.ahead,
       commitsBehind: status.behind,
       instances: getAllInstanceOverviewsByEntityName(
-        this.#db.getInstanceContainerOfEntityById.bind(this.#db),
-        this.#db.getAllChildInstanceContainersForParent.bind(this.#db),
         this.#db.schema.getEntity.bind(this.#db.schema),
         data,
         this.#db.locales,

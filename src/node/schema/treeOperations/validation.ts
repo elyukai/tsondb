@@ -17,65 +17,64 @@ import {
 } from "../../../shared/validation/object.ts"
 import { validateStringConstraints } from "../../../shared/validation/string.ts"
 import type { ValidationOptions } from "../../index.ts"
-import {
-  getInstancesOfEntityFromDatabaseInMemory,
-  type DatabaseInMemory,
-} from "../../utils/databaseInMemory.ts"
+import { type DatabaseInMemory } from "../../utils/databaseInMemory.ts"
 import { wrapErrorsIfAny } from "../../utils/error.ts"
 import { entity, json, key } from "../../utils/errorFormatting.ts"
 import { getTypeArgumentsRecord, type Decl } from "../dsl/declarations/Decl.ts"
 import { createEntityIdentifierType } from "../dsl/declarations/EntityDecl.ts"
 import type { Type } from "../dsl/index.ts"
 import type { TranslationObjectTypeConstraint } from "../dsl/types/TranslationObjectType.ts"
+import type { AnyEntityMap } from "../generatedTypeHelpers.ts"
 import { isChildEntitiesType } from "../guards.ts"
 import { resolveTypeArguments } from "./typeResolution.ts"
 
 export type IdentifierToCheck = { name: string; value: unknown }
 
+export type ReferenceValidator = (entityName: string, instanceId: unknown) => ReferenceError[]
+
 export interface ValidationContext {
   useStyling: boolean
-  checkReferentialIntegrity: (identifier: IdentifierToCheck) => Error[]
-  checkTranslations?: ValidationOptions["checkTranslations"]
+  validationOptions: ValidationOptions
 }
 
-export const createValidationContext = (
-  options: Partial<ValidationOptions>,
-  databaseInMemory: DatabaseInMemory,
-  useStyling: boolean,
-  checkReferentialIntegrity: boolean = true,
-): ValidationContext => ({
-  useStyling,
-  checkReferentialIntegrity: checkReferentialIntegrity
-    ? ({ name, value }) =>
-        getInstancesOfEntityFromDatabaseInMemory(databaseInMemory, name).some(
-          instance => instance.id === value,
-        )
-          ? []
-          : [
-              ReferenceError(
-                `Invalid reference to instance of entity ${entity(`"${name}"`, useStyling)} with identifier ${json(
-                  value,
-                  useStyling,
-                )}`,
-              ),
-            ]
-    : () => [],
-  checkTranslations: options.checkTranslations,
-})
+export const createReferenceValidator =
+  <EM extends AnyEntityMap>(
+    isEntityName: (name: string) => name is Extract<keyof EM, string>,
+    databaseInMemory: DatabaseInMemory<EM>,
+    useStyling: boolean,
+  ): ReferenceValidator =>
+  (entityName, instanceId) =>
+    isEntityName(entityName)
+      ? typeof instanceId === "string" &&
+        databaseInMemory.hasInstanceOfEntityById(entityName, instanceId)
+        ? []
+        : [
+            ReferenceError(
+              `Invalid reference to instance of entity ${entity(`"${entityName}"`, useStyling)} with identifier ${json(
+                instanceId,
+                useStyling,
+              )}`,
+            ),
+          ]
+      : [
+          ReferenceError(
+            `Invalid reference to entity ${entity(`"${entityName}"`, useStyling)}, entity does not exist`,
+          ),
+        ]
 
-export const validateDecl = (
+export const validateDeclStructuralIntegrity = (
   helpers: ValidationContext,
   inDecls: Decl[],
   decl: Decl,
   typeArgs: Type[],
   value: unknown,
-): Error[] => {
+): TypeError[] => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
-      return validateType(helpers, inDecls, decl.type.value, value)
+      return validateTypeStructuralIntegrity(helpers, inDecls, decl.type.value, value)
     case NodeKind.EnumDecl:
     case NodeKind.TypeAliasDecl:
-      return validateType(
+      return validateTypeStructuralIntegrity(
         helpers,
         [...inDecls, decl],
         resolveTypeArguments(getTypeArgumentsRecord(decl, typeArgs), decl.type.value, [
@@ -89,12 +88,12 @@ export const validateDecl = (
   }
 }
 
-const validateTranslationObject = (
+const validateTranslationObjectStructuralIntegrity = (
   context: ValidationContext,
   allKeysAreRequired: boolean,
   type: TranslationObjectTypeConstraint,
   value: unknown,
-): Error[] => {
+): TypeError[] => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return [TypeError(`expected an object, but got ${json(value, context.useStyling)}`)]
   }
@@ -131,7 +130,7 @@ const validateTranslationObject = (
         )
       }
 
-      if (typeof propValue === "string" && context.checkTranslations) {
+      if (typeof propValue === "string" && context.validationOptions.checkTranslations) {
         try {
           validate(parseMessage(propValue))
         } catch (err) {
@@ -145,7 +144,7 @@ const validateTranslationObject = (
           }
         }
 
-        if (context.checkTranslations.matchParametersInKeys) {
+        if (context.validationOptions.checkTranslations.matchParametersInKeys) {
           const expectedParams = extractParameterTypeNamesFromMessage(propName)
           const actualParams = extractParameterTypeNamesFromMessage(propValue)
 
@@ -166,7 +165,12 @@ const validateTranslationObject = (
       if (propType !== null && propValue !== undefined) {
         return wrapErrorsIfAny(
           `at translation object key ${key(`"${propName}"`, context.useStyling)}`,
-          validateTranslationObject(context, allKeysAreRequired, propType, propValue),
+          validateTranslationObjectStructuralIntegrity(
+            context,
+            allKeysAreRequired,
+            propType,
+            propValue,
+          ),
         )
       }
 
@@ -175,12 +179,12 @@ const validateTranslationObject = (
   ])
 }
 
-export const validateType = (
+export const validateTypeStructuralIntegrity = (
   helpers: ValidationContext,
   inDecls: Decl[],
   type: Type,
   value: unknown,
-): Error[] => {
+): TypeError[] => {
   switch (type.kind) {
     case NodeKind.ArrayType: {
       if (!Array.isArray(value)) {
@@ -192,7 +196,7 @@ export const validateType = (
         ...value.map((item, index) =>
           wrapErrorsIfAny(
             `at index ${key(index.toString(), helpers.useStyling)}`,
-            validateType(helpers, inDecls, type.items, item),
+            validateTypeStructuralIntegrity(helpers, inDecls, type.items, item),
           ),
         ),
       ])
@@ -224,7 +228,7 @@ export const validateType = (
           ) {
             return wrapErrorsIfAny(
               `at object key ${key(`"${propName}"`, helpers.useStyling)}`,
-              validateType(
+              validateTypeStructuralIntegrity(
                 helpers,
                 inDecls,
                 prop.type,
@@ -280,14 +284,9 @@ export const validateType = (
       )
     }
     case NodeKind.ReferenceIdentifierType:
-      return validateType(helpers, inDecls, createEntityIdentifierType(), value).concat(
-        helpers.checkReferentialIntegrity({
-          name: type.entity.name,
-          value: value,
-        }),
-      )
+      return validateTypeStructuralIntegrity(helpers, inDecls, createEntityIdentifierType(), value)
     case NodeKind.IncludeIdentifierType:
-      return validateDecl(helpers, inDecls, type.reference, type.args, value)
+      return validateDeclStructuralIntegrity(helpers, inDecls, type.reference, type.args, value)
     case NodeKind.NestedEntityMapType: {
       if (typeof value !== "object" || value === null || Array.isArray(value)) {
         return [TypeError(`expected an object, but got ${json(value, helpers.useStyling)}`)]
@@ -298,16 +297,11 @@ export const validateType = (
         ...Object.keys(value).map(propName =>
           wrapErrorsIfAny(
             `at nested entity map ${entity(`"${type.name}"`, helpers.useStyling)} at key ${key(`"${propName}"`, helpers.useStyling)}`,
-            validateType(
+            validateTypeStructuralIntegrity(
               helpers,
               inDecls,
               type.type.value,
               value[propName as keyof typeof value],
-            ).concat(
-              helpers.checkReferentialIntegrity({
-                name: type.secondaryEntity.name,
-                value: propName,
-              }),
             ),
           ),
         ),
@@ -366,7 +360,7 @@ export const validateType = (
         return parallelizeErrors([
           wrapErrorsIfAny(
             `at enum case ${key(`"${caseName}"`, helpers.useStyling)}`,
-            validateType(
+            validateTypeStructuralIntegrity(
               helpers,
               inDecls,
               associatedType,
@@ -381,7 +375,184 @@ export const validateType = (
     case NodeKind.ChildEntitiesType:
       return []
     case NodeKind.TranslationObjectType:
-      return validateTranslationObject(helpers, type.allKeysAreRequired, type.properties, value)
+      return validateTranslationObjectStructuralIntegrity(
+        helpers,
+        type.allKeysAreRequired,
+        type.properties,
+        value,
+      )
+    default:
+      return assertExhaustive(type)
+  }
+}
+
+export const validateDeclReferentialIntegrity = (
+  helpers: ValidationContext,
+  checkReferentialIntegrity: ReferenceValidator,
+  inDecls: Decl[],
+  decl: Decl,
+  typeArgs: Type[],
+  value: unknown,
+): ReferenceError[] => {
+  switch (decl.kind) {
+    case NodeKind.EntityDecl:
+      return validateTypeReferentialIntegrity(
+        helpers,
+        checkReferentialIntegrity,
+        inDecls,
+        decl.type.value,
+        value,
+      )
+    case NodeKind.EnumDecl:
+    case NodeKind.TypeAliasDecl:
+      return validateTypeReferentialIntegrity(
+        helpers,
+        checkReferentialIntegrity,
+        [...inDecls, decl],
+        resolveTypeArguments(getTypeArgumentsRecord(decl, typeArgs), decl.type.value, [
+          ...inDecls,
+          decl,
+        ]),
+        value,
+      )
+    default:
+      return assertExhaustive(decl)
+  }
+}
+
+export const validateTypeReferentialIntegrity = (
+  helpers: ValidationContext,
+  checkReferentialIntegrity: ReferenceValidator,
+  inDecls: Decl[],
+  type: Type,
+  value: unknown,
+): ReferenceError[] => {
+  switch (type.kind) {
+    case NodeKind.ArrayType:
+      return Array.isArray(value)
+        ? parallelizeErrors(
+            value.map((item, index) =>
+              wrapErrorsIfAny(
+                `at index ${key(index.toString(), helpers.useStyling)}`,
+                validateTypeReferentialIntegrity(
+                  helpers,
+                  checkReferentialIntegrity,
+                  inDecls,
+                  type.items,
+                  item,
+                ),
+              ),
+            ),
+          )
+        : []
+    case NodeKind.ObjectType: {
+      if (typeof value !== "object" || value === null || Array.isArray(value)) {
+        return []
+      }
+
+      const expectedKeys = Object.keys(type.properties).filter(
+        propName =>
+          type.properties[propName] !== undefined &&
+          !isChildEntitiesType(type.properties[propName].type),
+      )
+
+      return parallelizeErrors(
+        expectedKeys.map(propName => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const prop = type.properties[propName]!
+
+          if ((value as Record<string, unknown>)[propName] !== undefined) {
+            return wrapErrorsIfAny(
+              `at object key ${key(`"${propName}"`, helpers.useStyling)}`,
+              validateTypeReferentialIntegrity(
+                helpers,
+                checkReferentialIntegrity,
+                inDecls,
+                prop.type,
+                (value as Record<string, unknown>)[propName],
+              ),
+            )
+          }
+
+          return undefined
+        }),
+      )
+    }
+    case NodeKind.TypeArgumentType: {
+      throw new TypeError(
+        `generic argument "${type.argument.name}" has not been replaced with a concrete type`,
+      )
+    }
+    case NodeKind.ReferenceIdentifierType:
+      return checkReferentialIntegrity(type.entity.name, value)
+    case NodeKind.IncludeIdentifierType:
+      return validateDeclReferentialIntegrity(
+        helpers,
+        checkReferentialIntegrity,
+        inDecls,
+        type.reference,
+        type.args,
+        value,
+      )
+    case NodeKind.NestedEntityMapType: {
+      if (typeof value !== "object" || value === null || Array.isArray(value)) {
+        return []
+      }
+
+      return parallelizeErrors(
+        Object.keys(value).map(propName =>
+          wrapErrorsIfAny(
+            `at nested entity map ${entity(`"${type.name}"`, helpers.useStyling)} at key ${key(`"${propName}"`, helpers.useStyling)}`,
+            validateTypeReferentialIntegrity(
+              helpers,
+              checkReferentialIntegrity,
+              inDecls,
+              type.type.value,
+              value[propName as keyof typeof value],
+            ).concat(checkReferentialIntegrity(type.secondaryEntity.name, propName)),
+          ),
+        ),
+      )
+    }
+    case NodeKind.EnumType: {
+      if (
+        typeof value !== "object" ||
+        value === null ||
+        Array.isArray(value) ||
+        !(ENUM_DISCRIMINATOR_KEY in value)
+      ) {
+        return []
+      }
+
+      const enumCase = value[ENUM_DISCRIMINATOR_KEY]
+
+      return typeof enumCase === "string" &&
+        enumCase in type.values &&
+        type.values[enumCase] !== undefined &&
+        type.values[enumCase].type !== null &&
+        enumCase in value
+        ? parallelizeErrors([
+            wrapErrorsIfAny(
+              `at enum case ${key(`"${enumCase}"`, helpers.useStyling)}`,
+              validateTypeReferentialIntegrity(
+                helpers,
+                checkReferentialIntegrity,
+                inDecls,
+                type.values[enumCase].type,
+                (value as Record<typeof enumCase, unknown>)[enumCase],
+              ),
+            ),
+          ])
+        : []
+    }
+    case NodeKind.BooleanType:
+    case NodeKind.DateType:
+    case NodeKind.FloatType:
+    case NodeKind.IntegerType:
+    case NodeKind.StringType:
+    case NodeKind.ChildEntitiesType:
+    case NodeKind.TranslationObjectType:
+      return []
     default:
       return assertExhaustive(type)
   }

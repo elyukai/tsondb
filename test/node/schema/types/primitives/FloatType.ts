@@ -5,9 +5,17 @@ import { isFloatType } from "../../../../../src/node/schema/guards.ts"
 import { formatValue } from "../../../../../src/node/schema/treeOperations/format.ts"
 import { getReferences } from "../../../../../src/node/schema/treeOperations/references.ts"
 import { serializeNode } from "../../../../../src/node/schema/treeOperations/serialization.ts"
-import { validateType } from "../../../../../src/node/schema/treeOperations/validation.ts"
+import {
+  validateTypeStructuralIntegrity,
+  type ValidationContext,
+} from "../../../../../src/node/schema/treeOperations/validation.ts"
 import { json } from "../../../../../src/node/utils/errorFormatting.ts"
 import { NodeKind } from "../../../../../src/shared/schema/Node.ts"
+
+const validationContext: ValidationContext = {
+  useStyling: true,
+  validationOptions: { checkReferentialIntegrity: false, checkOnlyEntities: [] },
+}
 
 describe("constructor", () => {
   it("should create a new Float type", () => {
@@ -29,19 +37,10 @@ describe("predicate", () => {
 
 describe("validateFloatType", () => {
   it("returns if the value is a valid FloatType", () => {
-    deepEqual(
-      validateType({ checkReferentialIntegrity: () => [], useStyling: true }, [], FloatType(), 1.0),
-      [],
-    )
-    deepEqual(
-      validateType(
-        { checkReferentialIntegrity: () => [], useStyling: true },
-        [],
-        FloatType(),
-        "true",
-      ),
-      [TypeError(`expected a floating-point number, but got ${json("true", true)}`)],
-    )
+    deepEqual(validateTypeStructuralIntegrity(validationContext, [], FloatType(), 1.0), [])
+    deepEqual(validateTypeStructuralIntegrity(validationContext, [], FloatType(), "true"), [
+      TypeError(`expected a floating-point number, but got ${json("true", true)}`),
+    ])
   })
 })
 

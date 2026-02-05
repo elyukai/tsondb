@@ -1,4 +1,3 @@
-import { deepEqual } from "@elyukai/utils/equality"
 import { Lazy } from "@elyukai/utils/lazy"
 import { isError } from "@elyukai/utils/result"
 import Debug from "debug"
@@ -8,9 +7,14 @@ import { stderr } from "node:process"
 import { styleText } from "node:util"
 import { simpleGit, type SimpleGit, type StatusResult } from "simple-git"
 import type { Output } from "../shared/output.ts"
-import type { InstanceContainer, InstanceContainerOverview } from "../shared/utils/instances.ts"
+import type {
+  InstanceContainer,
+  InstanceContainerOverview,
+  InstanceContent,
+} from "../shared/utils/instances.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
 import { Git } from "./git.js"
+import { getDisplayName, getDisplayNameWithId } from "./schema/detached.ts"
 import { type EntityDecl } from "./schema/dsl/index.ts"
 import type {
   AnyChildEntityMap,
@@ -18,24 +22,20 @@ import type {
   AnyEnumMap,
   AnyTypeAliasMap,
 } from "./schema/generatedTypeHelpers.ts"
-import { normalizedIdArgs, type IdArgsVariant } from "./schema/generatedTypeHelpers.ts"
+import { type IdArgsVariant } from "./schema/generatedTypeHelpers.ts"
 import { isEntityDeclWithParentReference } from "./schema/guards.ts"
 import type { Schema } from "./schema/index.ts"
 import { serializeNode } from "./schema/treeOperations/serialization.ts"
-import { createValidationContext, validateDecl } from "./schema/treeOperations/validation.ts"
+import {
+  createReferenceValidator,
+  validateDeclReferentialIntegrity,
+  validateDeclStructuralIntegrity,
+  type ReferenceValidator,
+  type ValidationContext,
+} from "./schema/treeOperations/validation.ts"
 import { Transaction } from "./transaction.ts"
 import { checkCustomConstraintsForAllEntities } from "./utils/customConstraints.ts"
-import {
-  asyncForEachInstanceInDatabaseInMemory,
-  countInstancesInDatabaseInMemory,
-  countInstancesOfEntityInDatabaseInMemory,
-  createDatabaseInMemory,
-  getGroupedInstancesFromDatabaseInMemory,
-  getInstanceOfEntityFromDatabaseInMemory,
-  getInstancesOfEntityFromDatabaseInMemory,
-  hasInstanceOfEntityFromDatabaseInMemory,
-  type DatabaseInMemory,
-} from "./utils/databaseInMemory.ts"
+import { DatabaseInMemory } from "./utils/databaseInMemory.ts"
 import { applyStepsToDisk } from "./utils/databaseOnDisk.ts"
 import {
   getAllInstanceOverviewsByEntityName,
@@ -68,6 +68,15 @@ export interface DefaultTSONDBTypes {
 export type Entity<T extends DefaultTSONDBTypes, E extends EntityName<T>> = T["entityMap"][E]
 
 export type EntityName<T extends DefaultTSONDBTypes> = Extract<keyof T["entityMap"], string>
+
+export type EnumName<T extends DefaultTSONDBTypes> = Extract<keyof T["enumMap"], string>
+
+export type TypeAliasName<T extends DefaultTSONDBTypes> = Extract<keyof T["typeAliasMap"], string>
+
+export type DeclarationName<T extends DefaultTSONDBTypes> =
+  | EntityName<T>
+  | EnumName<T>
+  | TypeAliasName<T>
 
 export type ChildEntity<
   T extends DefaultTSONDBTypes,
@@ -167,7 +176,7 @@ const getGit = async (dataRootPath: string) => {
   const git = simpleGit({ baseDir: dataRootPath })
   if (await git.checkIsRepo()) {
     try {
-      const root = await git.revparse({ "--show-toplevel": null })
+      const root = await git.revparse(["--show-toplevel"])
       const status = await git.status()
       return { git, root, status }
     } catch {
@@ -189,15 +198,13 @@ const initData = async <T extends DefaultTSONDBTypes>(
   referencesToInstances: ReferencesToInstances
 }> => {
   debug("loading database into memory ...")
-  let data = await createDatabaseInMemory<T["entityMap"]>(dataRootPath, schema.entities)
+  let data = await DatabaseInMemory.load<T["entityMap"]>(dataRootPath, schema.entities)
   debug("done")
 
   const localeEntity = schema.localeEntity
   if (
     localeEntity &&
-    !locales.every(locale =>
-      hasInstanceOfEntityFromDatabaseInMemory(data, localeEntity.name, locale),
-    )
+    !locales.every(locale => data.hasInstanceOfEntityById(localeEntity.name, locale))
   ) {
     throw new Error("All provided locales must exist in the database.")
   }
@@ -329,14 +336,19 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     await generateOutputs(this.#schema, outputs)
   }
 
-  /**
-   * Validates the data in the database.
-   *
-   * Returns `true` if the data is valid, `false` otherwise.
-   */
-  validate(): boolean {
+  #strucurallyValidateInstance(entity: EntityDecl, instanceContent: InstanceContent): Error[] {
+    const validationContext: ValidationContext = {
+      validationOptions: this.#validationOptions,
+      useStyling: true,
+    }
+
+    return validateDeclStructuralIntegrity(validationContext, [], entity, [], instanceContent)
+  }
+
+  #validate(data: DatabaseInMemory<T["entityMap"]>): Error[] {
     const { checkReferentialIntegrity, checkOnlyEntities } = this.#validationOptions
     const entities = this.#schema.entities
+    const getEntity = this.#schema.getEntity.bind(this.#schema)
 
     for (const onlyEntity of checkOnlyEntities) {
       if (!entities.find(entity => entity.name === onlyEntity)) {
@@ -344,28 +356,35 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       }
     }
 
-    const validationContext = createValidationContext(
-      this.#validationOptions,
-      this.#data,
-      true,
-      checkReferentialIntegrity,
-    )
-
-    debug("Checking structural integrity ...")
-
-    const errors = (
+    const onlyEntities =
       checkOnlyEntities.length > 0
         ? entities.filter(entity => checkOnlyEntities.includes(entity.name))
         : entities
-    )
+
+    const validationContext: ValidationContext = {
+      validationOptions: this.#validationOptions,
+      useStyling: true,
+    }
+
+    debug("Checking structural integrity ...")
+
+    const errors = onlyEntities
       .flatMap(entity =>
         parallelizeErrors(
-          getInstancesOfEntityFromDatabaseInMemory(this.#data, entity.name).map(instance =>
-            wrapErrorsIfAny(
-              `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
-              validateDecl(validationContext, [], entity, [], instance.content),
+          data
+            .getAllInstanceContainersOfEntity(entity.name)
+            .map(instance =>
+              wrapErrorsIfAny(
+                `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
+                validateDeclStructuralIntegrity(
+                  validationContext,
+                  [],
+                  entity,
+                  [],
+                  instance.content,
+                ),
+              ),
             ),
-          ),
         ),
       )
       .toSorted((a, b) => a.message.localeCompare(b.message))
@@ -380,13 +399,61 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     }
 
     if (errors.length === 0) {
+      if (checkReferentialIntegrity) {
+        debug("Checking referential integrity ...")
+
+        const referenceValidator: ReferenceValidator = createReferenceValidator(
+          this.#schema.isEntityName.bind(this.#schema),
+          data,
+          true,
+        )
+
+        const referenceErrors = onlyEntities
+          .flatMap(entity =>
+            parallelizeErrors(
+              data
+                .getAllInstanceContainersOfEntity(entity.name)
+                .map(instance =>
+                  wrapErrorsIfAny(
+                    `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
+                    validateDeclReferentialIntegrity(
+                      validationContext,
+                      referenceValidator,
+                      [],
+                      entity,
+                      [],
+                      instance.content,
+                    ),
+                  ),
+                ),
+            ),
+          )
+          .toSorted((a, b) => a.message.localeCompare(b.message))
+
+        if (referenceErrors.length > 0) {
+          const errorCount = countErrors(referenceErrors)
+          debug(
+            `${errorCount.toString()} referential integrity violation${errorCount === 1 ? "" : "s"} found`,
+          )
+          errors.push(...referenceErrors)
+        } else {
+          debug("No referential integrity violations found")
+        }
+      } else {
+        debug("Disabled referential integrity checks, skipping them")
+      }
+
       debug("Checking unique constraints ...")
 
-      const instanceOverviewsByEntityName = this.getAllInstanceOverviews()
+      const instanceOverviewsByEntityName = getAllInstanceOverviewsByEntityName(
+        getEntity,
+        data,
+        this.#locales,
+      )
 
       const uniqueConstraintResult = checkUniqueConstraintsForAllEntities(
-        this.#data,
-        this.#schema.entities,
+        data,
+        onlyEntities,
         instanceOverviewsByEntityName,
       )
 
@@ -402,7 +469,21 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
       debug("Checking custom constraints ...")
 
-      const customConstraintResult = checkCustomConstraintsForAllEntities(this)
+      const customConstraintResult = checkCustomConstraintsForAllEntities(
+        (...args) => getDisplayName(getEntity, this.#locales, data, ...args),
+        (...args) => getDisplayNameWithId(getEntity, this.#locales, data, ...args),
+        (...args) =>
+          getInstanceOverview(
+            data.getInstanceContainerOfEntityById.bind(data),
+            data.getAllChildInstanceContainersForParent.bind(data, getEntity),
+            getEntity,
+            this.#locales,
+            args,
+          ),
+        getEntity,
+        data,
+        entities,
+      )
 
       if (isError(customConstraintResult)) {
         const errorCount = countError(customConstraintResult.error)
@@ -414,17 +495,13 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         debug("No custom constraint violations found")
       }
     } else {
-      debug("Skipping unique constraint checks due to previous structural integrity errors")
+      debug("Skipping further checks due to previous structural integrity errors")
     }
 
-    const totalInstanceCount = countInstancesInDatabaseInMemory(this.#data)
-    console.log(
-      `${totalInstanceCount.toString()} instance${totalInstanceCount === 1 ? "" : "s"} checked`,
-    )
+    console.log(`${data.totalSize.toString()} instance${data.totalSize === 1 ? "" : "s"} checked`)
 
     if (errors.length === 0) {
       console.log(styleText("green", "All instances are valid"))
-      return true
     } else {
       const errorCount = countErrors(errors)
       console.error(
@@ -434,19 +511,29 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
           { stream: stderr },
         ),
       )
-      return false
     }
+
+    return errors
+  }
+
+  /**
+   * Validates the data in the database.
+   *
+   * Returns `true` if the data is valid, `false` otherwise.
+   */
+  validate(): boolean {
+    return this.#validate(this.#data).length === 0
   }
 
   /**
    * Formats the data on disk according to the current in-memory representation.
    */
   async format(): Promise<void> {
-    await asyncForEachInstanceInDatabaseInMemory(this.#data, async (entityName, instance) => {
+    await this.#data.forEachInstance(async (entityName, instance) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const entity = this.#schema.getEntity(entityName)!
       await writeInstance(this.#dataRootPath, entity, instance.id, instance.content)
-    })
+    }, true)
   }
 
   /**
@@ -479,7 +566,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         data: this.#data,
         getEntity,
         referencesToInstances: this.#referencesToInstances,
-        validationOptions: this.#validationOptions,
+        validate: this.#strucurallyValidateInstance.bind(this),
         localeEntity: this.#schema.localeEntity,
         steps: [],
       }),
@@ -489,28 +576,10 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
     const { data: newData, referencesToInstances: newRefs, steps } = txtResult
 
-    const instanceOverviewsByEntityName = getAllInstanceOverviewsByEntityName(
-      this.getInstanceContainerOfEntityById.bind(this),
-      this.getAllChildInstanceContainersForParent.bind(this),
-      getEntity,
-      newData,
-      this.#locales,
-    )
+    const errors = this.#validate(newData)
 
-    const uniqueConstraintResult = checkUniqueConstraintsForAllEntities(
-      newData,
-      this.#schema.entities,
-      instanceOverviewsByEntityName,
-    )
-
-    if (isError(uniqueConstraintResult)) {
-      throw uniqueConstraintResult.error
-    }
-
-    const customConstraintResult = checkCustomConstraintsForAllEntities(this)
-
-    if (isError(customConstraintResult)) {
-      throw customConstraintResult.error
+    if (errors.length > 0) {
+      throw new AggregateError(errors, "Validation errors occurred")
     }
 
     const diskResult = await applyStepsToDisk(this.#dataRootPath, steps)
@@ -521,11 +590,10 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
     if (this.#git) {
       const status = await this.#git.client.status()
-      const repoRoot = await this.#git.client.revparse(["--show-toplevel"])
       const newDbWithUpdatedGit = attachGitStatusToDatabaseInMemory(
         newData,
         this.#dataRootPath,
-        repoRoot,
+        this.#git.root,
         status,
       )
 
@@ -596,7 +664,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   getInstanceOfEntityById<E extends EntityName<T>>(
     ...args: IdArgsVariant<T["entityMap"], E>
   ): T["entityMap"][E] | undefined {
-    return this.getInstanceContainerOfEntityById(...args)?.content
+    return this.#data.getInstanceContainerOfEntityById(...args)?.content
   }
 
   /**
@@ -605,10 +673,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   getInstanceContainerOfEntityById<E extends EntityName<T>>(
     ...args: IdArgsVariant<T["entityMap"], E>
   ): InstanceContainer<T["entityMap"][E]> | undefined {
-    const { entityName, id } = normalizedIdArgs(args)
-    return getInstanceOfEntityFromDatabaseInMemory(this.#data, entityName, id) as
-      | InstanceContainer<T["entityMap"][E]>
-      | undefined
+    return this.#data.getInstanceContainerOfEntityById(...args)
   }
 
   /**
@@ -630,7 +695,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    * Retrieves all instances of the specified entity.
    */
   getAllInstancesOfEntity<E extends EntityName<T>>(entityName: E): Entity<T, E>[] {
-    return this.getAllInstanceContainersOfEntity(entityName).map(ic => ic.content)
+    return this.#data.getAllInstanceContainersOfEntity(entityName).map(ic => ic.content)
   }
 
   /**
@@ -639,9 +704,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   getAllInstanceContainersOfEntity<E extends EntityName<T>>(
     entityName: E,
   ): InstanceContainer<Entity<T, E>>[] {
-    return getInstancesOfEntityFromDatabaseInMemory(this.#data, entityName) as InstanceContainer<
-      Entity<T, E>
-    >[]
+    return this.#data.getAllInstanceContainersOfEntity(entityName)
   }
 
   /**
@@ -670,7 +733,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    * Counts the number of instances registered for the specified entity.
    */
   countInstancesOfEntity(entityName: EntityName<T>): number {
-    return countInstancesOfEntityInDatabaseInMemory(this.#data, entityName)
+    return this.#data.countInstancesOfEntity(entityName)
   }
 
   /**
@@ -678,8 +741,6 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    */
   getAllInstanceOverviews(): Record<EntityName<T>, InstanceContainerOverview[]> {
     return getAllInstanceOverviewsByEntityName(
-      this.getInstanceContainerOfEntityById.bind(this),
-      this.getAllChildInstanceContainersForParent.bind(this),
       this.#schema.getEntity.bind(this.#schema),
       this.#data,
       this.#locales,
@@ -693,19 +754,10 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     childEntityName: U,
     parentId: ChildEntityConfig<T, U>[2],
   ): InstanceContainer<ChildEntity<T, U>>[] {
-    const entity = this.#schema.getEntity(childEntityName as EntityName<T>)
-
-    if (!entity || !entity.parentReferenceKey) {
-      return []
-    }
-
-    const parentKey = entity.parentReferenceKey
-
-    return getInstancesOfEntityFromDatabaseInMemory(
-      this.#data,
-      childEntityName as EntityName<T>,
-    ).filter(instance =>
-      deepEqual((instance.content as { [K in typeof parentKey]: unknown })[parentKey], parentId),
+    return this.#data.getAllChildInstanceContainersForParent(
+      this.#schema.getEntity.bind(this.#schema),
+      childEntityName,
+      parentId,
     )
   }
 
@@ -713,33 +765,24 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    * Displays the name of an entity instance including its ID. If no display name is found, `undefined` is returned.
    */
   getDisplayName(...args: IdArgsVariant<T["entityMap"]>): string | undefined {
-    const { entityName, id } = normalizedIdArgs(args)
-    // return instanceOverviewsByEntityName[entityName]?.find(o => o.id === id)?.displayName
-    const entity = this.#schema.getEntity(entityName)
-    if (!entity) {
-      return undefined
-    }
-    const instance = getInstanceOfEntityFromDatabaseInMemory(this.#data, entity.name, id)
-    if (!instance) {
-      return undefined
-    }
-    return getDisplayNameFromEntityInstance<T["entityMap"], T["childEntityMap"]>(
-      entity,
-      instance,
+    return getDisplayName(
       this.#schema.getEntity.bind(this.#schema),
-      this.getInstanceContainerOfEntityById.bind(this),
-      this.getAllChildInstanceContainersForParent.bind(this),
       this.#locales,
-    ).name
+      this.#data,
+      ...args,
+    )
   }
 
   /**
    * Displays the name of an entity instance including its ID. If no display name is found, only the ID is returned.
    */
   getDisplayNameWithId(...args: IdArgsVariant<T["entityMap"]>): string {
-    const { id } = normalizedIdArgs(args)
-    const displayName = this.getDisplayName(...args)
-    return displayName ? `"${displayName}" (${id})` : id
+    return getDisplayNameWithId(
+      this.#schema.getEntity.bind(this.#schema),
+      this.#locales,
+      this.#data,
+      ...args,
+    )
   }
 
   /**
@@ -819,7 +862,8 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
     const lowerCaseQuery = query.toLowerCase()
 
-    return getGroupedInstancesFromDatabaseInMemory(this.#data)
+    return this.#data
+      .getAllInstances()
       .flatMap(([entityName, instances]) => {
         const entity = this.#schema.getEntity(entityName)
 

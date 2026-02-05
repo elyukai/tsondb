@@ -24,10 +24,7 @@ import {
   type RegisteredEntityMap,
 } from "../schema/generatedTypeHelpers.js"
 import { serializeNode } from "../schema/treeOperations/serialization.ts"
-import {
-  getGroupedInstancesFromDatabaseInMemory,
-  type DatabaseInMemory,
-} from "./databaseInMemory.ts"
+import { type DatabaseInMemory } from "./databaseInMemory.ts"
 
 export type GetChildInstancesForInstanceId = (
   parentEntityName: string,
@@ -133,12 +130,13 @@ export const getDisplayNameFromEntityInstance = <
 export const getInstanceOverview = <
   EM extends AnyEntityMap = RegisteredEntityMap,
   CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+  E extends Extract<keyof EM, string> = Extract<keyof EM, string>,
 >(
   getInstanceById: GetInstanceContainerById<EM>,
   getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>,
   getEntityByName: GetEntityByName<EM>,
   locales: string[],
-  id: IdArgsVariant<EM>,
+  id: IdArgsVariant<EM, E>,
 ): InstanceContainerOverview | undefined => {
   const { entityName } = normalizedIdArgs(id)
   const instance = getInstanceById(...id)
@@ -201,24 +199,22 @@ export const getInstanceOverviewsByEntityName = <
   ).map(arr => arr[1])
 }
 
-export const getAllInstanceOverviewsByEntityName = <
-  EM extends AnyEntityMap = RegisteredEntityMap,
-  CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
->(
-  getInstanceById: GetInstanceContainerById<EM>,
-  getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>,
+export const getAllInstanceOverviewsByEntityName = <EM extends AnyEntityMap = RegisteredEntityMap>(
   getEntityByName: GetEntityByName<EM>,
   databaseInMemory: DatabaseInMemory<EM>,
   locales: string[],
 ): Record<string, InstanceContainerOverview[]> => {
   return Object.fromEntries(
-    getGroupedInstancesFromDatabaseInMemory(databaseInMemory).map(([entityName, instances]) => {
+    databaseInMemory.getAllInstances().map(([entityName, instances]) => {
       const entity = getEntityByName(entityName)
       return [
         entityName,
         getInstanceOverviewsByEntityName(
-          getInstanceById,
-          getAllChildInstancesForParent,
+          databaseInMemory.getInstanceContainerOfEntityById.bind(databaseInMemory),
+          databaseInMemory.getAllChildInstanceContainersForParent.bind(
+            databaseInMemory,
+            getEntityByName,
+          ),
           getEntityByName,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           entity!,

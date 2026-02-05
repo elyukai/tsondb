@@ -6,7 +6,7 @@ import Debug from "debug"
 import { NodeKind } from "../../shared/schema/Node.ts"
 import { renderKeyPath, type KeyPath } from "../../shared/schema/utils/keyPath.ts"
 import type { UniquingElement } from "../../shared/schema/utils/uniqueConstraint.ts"
-import type { DefaultTSONDBTypes, EntityName } from "../index.ts"
+import type { DeclarationName, DefaultTSONDBTypes, EntityName } from "../index.ts"
 import type { Decl } from "./dsl/declarations/Decl.ts"
 import {
   getParameterNames,
@@ -37,13 +37,13 @@ const debug = Debug("tsondb:schema")
 // const RESERVED_DECLARATION_IDENTIFIER = ["EntityMap", "StringableTranslationParameter"]
 
 export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
-  readonly #declarations: Decl[]
+  readonly #declarations: Decl<DeclarationName<T>>[]
   readonly #entities: EntityDecl<EntityName<T>>[]
-  readonly #resolvedDeclarations: Decl[]
+  readonly #resolvedDeclarations: Decl<DeclarationName<T>>[]
   readonly #resolvedEntities: EntityDecl<EntityName<T>>[]
   readonly #localeEntity?: EntityDecl<EntityName<T>>
-  readonly #declarationMap: Dictionary<Decl>
-  readonly #resolvedDeclarationMap: Dictionary<Decl>
+  readonly #declarationMap: Dictionary<Decl<DeclarationName<T>>>
+  readonly #resolvedDeclarationMap: Dictionary<Decl<DeclarationName<T>>>
 
   constructor(declarations: Decl[], localeEntity?: EntityDecl) {
     debug("creating schema from %d declarations", declarations.length)
@@ -60,7 +60,9 @@ export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       // checkReservedIdentifier(decl)
     })
 
-    const allDeclsWithoutNestedEntities = allDecls.filter(decl => decl.kind !== "NestedEntity")
+    const allDeclsWithoutNestedEntities = allDecls.filter(
+      decl => decl.kind !== "NestedEntity",
+    ) as Decl<DeclarationName<T>>[]
 
     debug("checking name shadowing ...")
     checkParameterNamesShadowing(allDeclsWithoutNestedEntities)
@@ -83,7 +85,9 @@ export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
     this.#localeEntity = localeEntity as EntityDecl<EntityName<T>> | undefined
     this.#declarations = allDeclsWithoutNestedEntities
-    this.#resolvedDeclarations = resolveTypeArgumentsInDecls(allDeclsWithoutNestedEntities)
+    this.#resolvedDeclarations = resolveTypeArgumentsInDecls(allDeclsWithoutNestedEntities) as Decl<
+      DeclarationName<T>
+    >[]
     this.#entities = allDeclsWithoutNestedEntities.filter(isEntityDecl) as EntityDecl<
       EntityName<T>
     >[]
@@ -125,16 +129,34 @@ export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     return this.#resolvedDeclarations
   }
 
-  getDeclaration(name: string): Decl | undefined {
-    return this.#declarationMap.get(name)
+  getDeclaration<E extends DeclarationName<T>>(name: E): Decl<E> | undefined {
+    return this.#declarationMap.get(name) as Decl<E> | undefined
   }
 
-  getResolvedDeclaration(name: string): Decl | undefined {
-    return this.#resolvedDeclarationMap.get(name)
+  getResolvedDeclaration<E extends DeclarationName<T>>(name: E): Decl<E> | undefined {
+    return this.#resolvedDeclarationMap.get(name) as Decl<E> | undefined
   }
 
   get localeEntity(): EntityDecl<EntityName<T>> | undefined {
     return this.#localeEntity
+  }
+
+  /**
+   * Checks if the given name is a valid entity name in the schema.
+   *
+   * This includes all entity declarations, but not nested entity declarations, as they cannot be referenced directly by their name.
+   */
+  isEntityName(name: string): name is EntityName<T> {
+    return this.#entities.some(entity => entity.name === name)
+  }
+
+  /**
+   * Checks if the given name is a valid declaration name in the schema. This includes entity declarations, enum declarations and type alias declarations.
+   *
+   * Note that this does not include nested entity declarations, as they cannot be referenced directly by their name.
+   */
+  isDeclarationName(name: string): name is DeclarationName<T> {
+    return this.#declarationMap.has(name)
   }
 }
 

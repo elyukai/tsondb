@@ -5,9 +5,17 @@ import { isBooleanType } from "../../../../../src/node/schema/guards.ts"
 import { formatValue } from "../../../../../src/node/schema/treeOperations/format.ts"
 import { getReferences } from "../../../../../src/node/schema/treeOperations/references.ts"
 import { serializeNode } from "../../../../../src/node/schema/treeOperations/serialization.ts"
-import { validateType } from "../../../../../src/node/schema/treeOperations/validation.ts"
+import {
+  validateTypeStructuralIntegrity,
+  type ValidationContext,
+} from "../../../../../src/node/schema/treeOperations/validation.ts"
 import { json } from "../../../../../src/node/utils/errorFormatting.ts"
 import { NodeKind } from "../../../../../src/shared/schema/Node.ts"
+
+const validationContext: ValidationContext = {
+  useStyling: true,
+  validationOptions: { checkReferentialIntegrity: false, checkOnlyEntities: [] },
+}
 
 describe("constructor", () => {
   it("should create a new Boolean type", () => {
@@ -28,24 +36,10 @@ describe("predicate", () => {
 
 describe("validateBooleanType", () => {
   it("returns if the value is a valid BooleanType", () => {
-    deepEqual(
-      validateType(
-        { checkReferentialIntegrity: () => [], useStyling: true },
-        [],
-        BooleanType(),
-        false,
-      ),
-      [],
-    )
-    deepEqual(
-      validateType(
-        { checkReferentialIntegrity: () => [], useStyling: true },
-        [],
-        BooleanType(),
-        "true",
-      ),
-      [TypeError(`expected a boolean value, but got ${json("true", true)}`)],
-    )
+    deepEqual(validateTypeStructuralIntegrity(validationContext, [], BooleanType(), false), [])
+    deepEqual(validateTypeStructuralIntegrity(validationContext, [], BooleanType(), "true"), [
+      TypeError(`expected a boolean value, but got ${json("true", true)}`),
+    ])
   })
 })
 

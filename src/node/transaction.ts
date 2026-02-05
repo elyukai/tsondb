@@ -1,19 +1,12 @@
 import { randomUUID } from "node:crypto"
 import type { InstanceContainer, InstanceContent } from "../shared/utils/instances.ts"
-import type { ValidationOptions } from "./index.ts"
 import { type EntityDecl } from "./schema/dsl/index.ts"
 import type {
   AnyEntityMap,
   GetEntityByName,
   RegisteredEntityMap,
 } from "./schema/generatedTypeHelpers.ts"
-import { createValidationContext, validateDecl } from "./schema/treeOperations/validation.ts"
-import {
-  deleteInstanceInDatabaseInMemory,
-  getInstanceOfEntityFromDatabaseInMemory,
-  setInstanceInDatabaseInMemory,
-  type DatabaseInMemory,
-} from "./utils/databaseInMemory.ts"
+import { type DatabaseInMemory } from "./utils/databaseInMemory.ts"
 import { getErrorMessageForDisplay, HTTPError } from "./utils/error.js"
 import {
   isReferencedByOtherInstances,
@@ -47,7 +40,7 @@ type TransactionShared<EM extends AnyEntityMap = RegisteredEntityMap> = {
   referencesToInstances: ReferencesToInstances
   steps: TransactionStep[]
   getEntity: GetEntityByName<EM>
-  validationOptions: ValidationOptions
+  validate: (entity: EntityDecl, instanceContent: InstanceContent) => Error[]
   localeEntity: EntityDecl | undefined
 }
 
@@ -57,7 +50,7 @@ export const createNewId = () => randomUUID()
  * @throws {HTTPError}
  */
 const checkCreateInstancePossible = (
-  validationOptions: ValidationOptions,
+  validate: (entity: EntityDecl, instanceContent: InstanceContent) => Error[],
   localeEntity: EntityDecl | undefined,
   databaseInMemory: DatabaseInMemory,
   entity: EntityDecl,
@@ -72,13 +65,12 @@ const checkCreateInstancePossible = (
 
   if (
     localeEntity === entity &&
-    getInstanceOfEntityFromDatabaseInMemory(databaseInMemory, entity.name, newInstanceId) !==
-      undefined
+    databaseInMemory.hasInstanceOfEntityById(entity.name, newInstanceId)
   ) {
     throw new HTTPError(400, `Duplicate id "${newInstanceId}" for locale entity`)
   }
 
-  checkUpdateInstancePossible(validationOptions, databaseInMemory, entity, instanceContent)
+  checkUpdateInstancePossible(validate, entity, instanceContent)
 
   return newInstanceId
 }
@@ -87,18 +79,11 @@ const checkCreateInstancePossible = (
  * @throws {HTTPError}
  */
 const checkUpdateInstancePossible = (
-  validationOptions: Partial<ValidationOptions>,
-  databaseInMemory: DatabaseInMemory,
+  validate: (entity: EntityDecl, instanceContent: InstanceContent) => Error[],
   entity: EntityDecl,
   instanceContent: InstanceContent,
 ): void => {
-  const validationErrors = validateDecl(
-    createValidationContext(validationOptions, databaseInMemory, false),
-    [],
-    entity,
-    [],
-    instanceContent,
-  )
+  const validationErrors = validate(entity, instanceContent)
 
   if (validationErrors.length > 0) {
     throw new HTTPError(400, validationErrors.map(getErrorMessageForDisplay).join("\n\n"))
@@ -126,17 +111,16 @@ export class Transaction<EM extends AnyEntityMap = RegisteredEntityMap> {
     instanceContent: InstanceContent,
     instanceId?: string,
   ): [Transaction<EM>, InstanceContainer] {
-    const { data, steps, referencesToInstances, getEntity, validationOptions, localeEntity } =
-      this.#values
+    const { data, steps, referencesToInstances, getEntity, validate, localeEntity } = this.#values
     const newId = checkCreateInstancePossible(
-      validationOptions,
+      validate,
       localeEntity,
       data,
       entity,
       instanceContent,
       instanceId,
     )
-    const [updatedDb] = setInstanceInDatabaseInMemory(data, entity.name, {
+    const [updatedDb] = data.setInstanceContainerOfEntityById(entity.name, {
       id: newId,
       content: instanceContent,
     })
@@ -173,9 +157,9 @@ export class Transaction<EM extends AnyEntityMap = RegisteredEntityMap> {
     instanceId: string,
     instanceContent: InstanceContent,
   ): [Transaction<EM>, InstanceContainer] {
-    const { data, steps, referencesToInstances, getEntity, validationOptions } = this.#values
-    checkUpdateInstancePossible(validationOptions, data, entity, instanceContent)
-    const [updatedDb, oldInstance] = setInstanceInDatabaseInMemory(data, entity.name, {
+    const { data, steps, referencesToInstances, getEntity, validate } = this.#values
+    checkUpdateInstancePossible(validate, entity, instanceContent)
+    const [updatedDb, oldInstance] = data.setInstanceContainerOfEntityById(entity.name, {
       id: instanceId,
       content: instanceContent,
     })
@@ -221,7 +205,10 @@ export class Transaction<EM extends AnyEntityMap = RegisteredEntityMap> {
   ): [Transaction<EM>, InstanceContainer] {
     const { data, steps, referencesToInstances, getEntity } = this.#values
     checkDeleteInstancePossible(referencesToInstances, instanceId)
-    const [updatedDb, oldInstance] = deleteInstanceInDatabaseInMemory(data, entity.name, instanceId)
+    const [updatedDb, oldInstance] = data.deleteInstanceContainerOfEntityById(
+      entity.name,
+      instanceId,
+    )
 
     if (oldInstance === undefined) {
       // instance did not exist

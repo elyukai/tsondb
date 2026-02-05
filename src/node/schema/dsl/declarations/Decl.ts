@@ -27,7 +27,10 @@ export const getTypeArgumentsRecord = <Params extends TypeParameter[]>(
     args.slice(0, decl.parameters.length).map((arg, i) => [decl.parameters[i]!.name, arg] as const),
   )
 
-export type Decl = EntityDecl | EnumDecl | TypeAliasDecl
+export type Decl<Name extends string = string> =
+  | EntityDecl<Name>
+  | EnumDecl<Name>
+  | TypeAliasDecl<Name>
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
   | EntityDecl

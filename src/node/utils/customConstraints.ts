@@ -1,6 +1,6 @@
 import { error, isError, mapError, ok, type Result } from "@elyukai/utils/result"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
-import type { DefaultTSONDBTypes, EntityName, TSONDB } from "../index.ts"
+import type { DefaultTSONDBTypes, EntityName } from "../index.ts"
 import { type EntityDecl } from "../schema/dsl/index.ts"
 import type {
   AnyChildEntityMap,
@@ -9,13 +9,16 @@ import type {
   GetAllInstances,
   GetDisplayName,
   GetDisplayNameAndId,
+  GetEntityByName,
   GetInstanceById,
+  GetInstanceOverviewOfEntityById,
   RegisteredChildEntityMap,
   RegisteredEntity,
   RegisteredEntityMap,
   RegisteredEnumOrTypeAlias,
 } from "../schema/generatedTypeHelpers.ts"
 import { checkCustomConstraints } from "../schema/treeOperations/customConstraints.ts"
+import type { DatabaseInMemory } from "./databaseInMemory.ts"
 
 export type CustomConstraintHelpers<
   EM extends AnyEntityMap = RegisteredEntityMap,
@@ -114,21 +117,27 @@ export type TypedNestedCustomConstraint<
  * constraint.
  */
 export const checkCustomConstraintsForAllEntities = <T extends DefaultTSONDBTypes>(
-  db: TSONDB<T>,
+  getDisplayName: GetDisplayName<T["entityMap"]>,
+  getDisplayNameAndId: GetDisplayNameAndId<T["entityMap"]>,
+  getInstanceOverviewOfEntityById: GetInstanceOverviewOfEntityById<T["entityMap"]>,
+  getEntityByName: GetEntityByName<T["entityMap"]>,
+  data: DatabaseInMemory<T["entityMap"]>,
+  entities: EntityDecl<EntityName<T>>[],
 ): Result<void, AggregateError> => {
-  const entities = db.schema.entities as EntityDecl<EntityName<T>>[]
-
   const helpers: CustomConstraintHelpers<T["entityMap"], T["childEntityMap"]> = {
-    getInstanceById: db.getInstanceOfEntityById.bind(db),
-    getAllInstances: db.getAllInstancesOfEntity.bind(db),
-    getAllChildInstancesForParent: db.getAllChildInstanceContainersForParent.bind(db),
-    getDisplayName: db.getDisplayName.bind(db),
-    getDisplayNameAndId: db.getDisplayNameWithId.bind(db),
+    getInstanceById: data.getInstanceOfEntityById.bind(data),
+    getAllInstances: data.getAllInstancesOfEntity.bind(data),
+    getAllChildInstancesForParent: data.getAllChildInstanceContainersForParent.bind(
+      data,
+      getEntityByName,
+    ),
+    getDisplayName,
+    getDisplayNameAndId,
   }
 
   return mapError(
     entities.reduce<Result<void, AggregateError[]>>((acc, entity) => {
-      const errors = db
+      const errors = data
         .getAllInstanceContainersOfEntity(entity.name)
         .map((instance): [InstanceContainer, string[]] => [
           instance,
@@ -136,7 +145,7 @@ export const checkCustomConstraintsForAllEntities = <T extends DefaultTSONDBType
         ])
         .filter(([, violations]) => violations.length > 0)
         .map(([instance, violations]) => {
-          const instanceOverview = db.getInstanceOverviewOfEntityById(entity.name, instance.id)
+          const instanceOverview = getInstanceOverviewOfEntityById(entity.name, instance.id)
           const name = instanceOverview
             ? `"${instanceOverview.displayName}" (${instance.id})`
             : instance.id

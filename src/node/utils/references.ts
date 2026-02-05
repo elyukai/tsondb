@@ -11,10 +11,7 @@ import type {
   RegisteredEntityMap,
 } from "../schema/generatedTypeHelpers.ts"
 import { getReferences } from "../schema/treeOperations/references.ts"
-import {
-  getGroupedInstancesFromDatabaseInMemory,
-  type DatabaseInMemory,
-} from "./databaseInMemory.ts"
+import { type DatabaseInMemory } from "./databaseInMemory.ts"
 import type { ReferencesWorkerTask } from "./referencesWorker.ts"
 import { WorkerPool } from "./workers.ts"
 
@@ -101,7 +98,7 @@ export const getReferencesToInstances = async (
 
   debug("collecting references ...")
   const separateResults = await Promise.all(
-    getGroupedInstancesFromDatabaseInMemory(databaseInMemory).map(
+    databaseInMemory.getAllInstances().map(
       ([entityName, instances]) =>
         new Promise<ReferencesToInstances>((resolve, reject) => {
           try {

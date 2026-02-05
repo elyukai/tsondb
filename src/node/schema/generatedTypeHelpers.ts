@@ -5,7 +5,12 @@
 
 import { ENUM_DISCRIMINATOR_KEY } from "../../shared/schema/declarations/EnumDecl.ts"
 import type { DisplayNameResult } from "../../shared/utils/displayName.ts"
-import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
+import type {
+  InstanceContainer,
+  InstanceContainerOverview,
+  InstanceContent,
+} from "../../shared/utils/instances.ts"
+import type { DeclarationName, DefaultTSONDBTypes } from "../index.ts"
 import type { EntityDecl } from "./dsl/declarations/EntityDecl.ts"
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- used to register generated types
@@ -140,6 +145,15 @@ export type GetInstanceContainerById<T extends AnyEntityMap = RegisteredEntityMa
 ) => InstanceContainer<T[E]> | undefined
 
 /**
+ * A function that retrieves an instance container by its entity and identifier.
+ */
+export type GetInstanceOverviewOfEntityById<T extends AnyEntityMap = RegisteredEntityMap> = <
+  E extends Extract<keyof T, string> = Extract<keyof T, string>,
+>(
+  ...args: IdArgsVariant<T, E>
+) => InstanceContainerOverview | undefined
+
+/**
  * A function that retrieves all instances of a given entity.
  */
 export type GetAllInstances<T extends AnyEntityMap = RegisteredEntityMap> = <
@@ -205,3 +219,17 @@ export type GetEntityByName<T extends AnyEntityMap = RegisteredEntityMap> = <
 >(
   name: E,
 ) => EntityDecl<E> | undefined
+
+/**
+ * A type guard function that checks if a given string is a valid declaration name.
+ */
+export type DeclarationNameGuard<T extends DefaultTSONDBTypes> = (
+  name: string,
+) => name is DeclarationName<T>
+
+/**
+ * A type guard function that checks if a given string is a valid entity name.
+ */
+export type EntityNameGuard<T extends AnyEntityMap = RegisteredEntityMap> = (
+  name: string,
+) => name is Extract<keyof T, string>
