@@ -347,7 +347,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     return validateDeclStructuralIntegrity(validationContext, [], entity, [], instanceContent)
   }
 
-  #validate(data: DatabaseInMemory<T["entityMap"]>): Error[] {
+  #validate(data: DatabaseInMemory<T["entityMap"]>, skipForTransaction = false): Error[] {
     const { checkReferentialIntegrity, checkOnlyEntities } = this.#validationOptions
     const entities = this.#schema.entities
     const getEntity = this.#schema.getEntity.bind(this.#schema)
@@ -368,81 +368,88 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       useStyling: true,
     }
 
-    debug("Checking structural integrity ...")
+    const errors: Error[] = []
 
-    const errors = onlyEntities
-      .flatMap(entity =>
-        parallelizeErrors(
-          data
-            .getAllInstanceContainersOfEntity(entity.name)
-            .map(instance =>
-              wrapErrorsIfAny(
-                `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
-                validateDeclStructuralIntegrity(
-                  validationContext,
-                  [],
-                  entity,
-                  [],
-                  instance.content,
+    if (!skipForTransaction) {
+      debug("Checking structural integrity ...")
+
+      const structureErrors = onlyEntities
+        .flatMap(entity =>
+          parallelizeErrors(
+            data
+              .getAllInstanceContainersOfEntity(entity.name)
+              .map(instance =>
+                wrapErrorsIfAny(
+                  `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
+                  validateDeclStructuralIntegrity(
+                    validationContext,
+                    [],
+                    entity,
+                    [],
+                    instance.content,
+                  ),
                 ),
               ),
-            ),
-        ),
-      )
-      .toSorted((a, b) => a.message.localeCompare(b.message))
+          ),
+        )
+        .toSorted((a, b) => a.message.localeCompare(b.message))
 
-    if (errors.length > 0) {
-      const errorCount = countErrors(errors)
-      debug(
-        `${errorCount.toString()} structural integrity violation${errorCount === 1 ? "" : "s"} found`,
-      )
-    } else {
-      debug("No structural integrity violations found")
+      if (structureErrors.length > 0) {
+        const errorCount = countErrors(structureErrors)
+        debug(
+          `${errorCount.toString()} structural integrity violation${errorCount === 1 ? "" : "s"} found`,
+        )
+        errors.push(...structureErrors)
+      } else {
+        debug("No structural integrity violations found")
+      }
     }
 
     if (errors.length === 0) {
-      if (checkReferentialIntegrity) {
-        debug("Checking referential integrity ...")
+      if (!skipForTransaction) {
+        if (checkReferentialIntegrity) {
+          debug("Checking referential integrity ...")
 
-        const referenceValidator: ReferenceValidator = createReferenceValidator(
-          this.#schema.isEntityName.bind(this.#schema),
-          data,
-          true,
-        )
+          const referenceValidator: ReferenceValidator = createReferenceValidator(
+            this.#schema.isEntityName.bind(this.#schema),
+            data,
+            true,
+          )
 
-        const referenceErrors = onlyEntities
-          .flatMap(entity =>
-            parallelizeErrors(
-              data
-                .getAllInstanceContainersOfEntity(entity.name)
-                .map(instance =>
-                  wrapErrorsIfAny(
-                    `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
-                    validateDeclReferentialIntegrity(
-                      validationContext,
-                      referenceValidator,
-                      [],
-                      entity,
-                      [],
-                      instance.content,
+          const referenceErrors = onlyEntities
+            .flatMap(entity =>
+              parallelizeErrors(
+                data
+                  .getAllInstanceContainersOfEntity(entity.name)
+                  .map(instance =>
+                    wrapErrorsIfAny(
+                      `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
+                      validateDeclReferentialIntegrity(
+                        validationContext,
+                        referenceValidator,
+                        [],
+                        entity,
+                        [],
+                        instance.content,
+                      ),
                     ),
                   ),
-                ),
-            ),
-          )
-          .toSorted((a, b) => a.message.localeCompare(b.message))
+              ),
+            )
+            .toSorted((a, b) => a.message.localeCompare(b.message))
 
-        if (referenceErrors.length > 0) {
-          const errorCount = countErrors(referenceErrors)
-          debug(
-            `${errorCount.toString()} referential integrity violation${errorCount === 1 ? "" : "s"} found`,
-          )
-          errors.push(...referenceErrors)
+          if (referenceErrors.length > 0) {
+            const errorCount = countErrors(referenceErrors)
+            debug(
+              `${errorCount.toString()} referential integrity violation${errorCount === 1 ? "" : "s"} found`,
+            )
+            errors.push(...referenceErrors)
+          } else {
+            debug("No referential integrity violations found")
+          }
         } else {
-          debug("No referential integrity violations found")
+          debug("Disabled referential integrity checks, skipping them")
         }
-      } else {
-        debug("Disabled referential integrity checks, skipping them")
       }
 
       debug("Checking unique constraints ...")
@@ -578,7 +585,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
     const { data: newData, referencesToInstances: newRefs, steps } = txtResult
 
-    const errors = this.#validate(newData)
+    const errors = this.#validate(newData, true)
 
     if (errors.length > 0) {
       throw new AggregateError(errors, "Validation errors occurred")
