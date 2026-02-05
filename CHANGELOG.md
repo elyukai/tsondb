@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.1](https://github.com/elyukai/tsondb/compare/v0.19.0...v0.19.1) (2026-02-05)
+
+
+### Features
+
+* size constraints for nested entity maps ([24c1eb9](https://github.com/elyukai/tsondb/commit/24c1eb90a2e9dd08e68ca48f60b25695ebc3a30f)), closes [#61](https://github.com/elyukai/tsondb/issues/61)
+
 ## [0.19.0](https://github.com/elyukai/tsondb/compare/v0.18.1...v0.19.0) (2026-02-05)
 
 
