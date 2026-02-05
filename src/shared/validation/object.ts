@@ -12,14 +12,25 @@ export const validateObjectConstraints = (
   expectedKeys: string[],
   value: object,
 ) => {
-  const label: NumerusLabel = ["property", "properties"]
   const actualKeys = Object.keys(value)
   return parallelizeErrors([
-    validateLengthRangeBound("lower", label, constraints.minProperties, actualKeys),
-    validateLengthRangeBound("upper", label, constraints.maxProperties, actualKeys),
+    ...validateObjectRangeConstraints(constraints, value),
     ...(constraints.additionalProperties !== true
       ? validateUnknownKeys(expectedKeys, actualKeys)
       : []),
+  ])
+}
+
+const rangeLabel: NumerusLabel = ["property", "properties"]
+
+export const validateObjectRangeConstraints = (
+  constraints: Pick<ObjectConstraints, "minProperties" | "maxProperties">,
+  value: object,
+) => {
+  const actualKeys = Object.keys(value)
+  return parallelizeErrors([
+    validateLengthRangeBound("lower", rangeLabel, constraints.minProperties, actualKeys),
+    validateLengthRangeBound("upper", rangeLabel, constraints.maxProperties, actualKeys),
   ])
 }
 

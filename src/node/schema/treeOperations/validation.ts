@@ -12,6 +12,7 @@ import { validateDateConstraints } from "../../../shared/validation/date.ts"
 import { validateNumberConstraints } from "../../../shared/validation/number.ts"
 import {
   validateObjectConstraints,
+  validateObjectRangeConstraints,
   validateUnknownKeys,
 } from "../../../shared/validation/object.ts"
 import { validateStringConstraints } from "../../../shared/validation/string.ts"
@@ -292,8 +293,9 @@ export const validateType = (
         return [TypeError(`expected an object, but got ${json(value, helpers.useStyling)}`)]
       }
 
-      return parallelizeErrors(
-        Object.keys(value).map(propName =>
+      return parallelizeErrors([
+        ...validateObjectRangeConstraints(type, value),
+        ...Object.keys(value).map(propName =>
           wrapErrorsIfAny(
             `at nested entity map ${entity(`"${type.name}"`, helpers.useStyling)} at key ${key(`"${propName}"`, helpers.useStyling)}`,
             validateType(
@@ -309,7 +311,7 @@ export const validateType = (
             ),
           ),
         ),
-      )
+      ])
     }
     case NodeKind.EnumType: {
       if (typeof value !== "object" || value === null || Array.isArray(value)) {

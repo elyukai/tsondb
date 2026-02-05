@@ -31,6 +31,8 @@ export interface NestedEntityMapType<
   comment?: string
   secondaryEntity: EntityDecl
   type: Lazy<PossibleType<T>>
+  minProperties?: number
+  maxProperties?: number
 }
 
 export const NestedEntityMapType = <Name extends string, T extends TConstraint>(options: {
@@ -40,6 +42,8 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
   secondaryEntity: EntityDecl
   type: PossibleType<T>
   isDeprecated?: boolean
+  minProperties?: number
+  maxProperties?: number
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
@@ -59,6 +63,8 @@ export const _NestedEntityMapType = <Name extends string, T extends TConstraint>
   secondaryEntity: EntityDecl
   type: () => PossibleType<T>
   isDeprecated?: boolean
+  minProperties?: number
+  maxProperties?: number
 }): NestedEntityMapType<Name, T> => {
   const nestedEntityMapType: NestedEntityMapType<Name, T> = {
     ...options,
