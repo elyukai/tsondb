@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.0](https://github.com/elyukai/tsondb/compare/v0.18.1...v0.19.0) (2026-02-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* The tsondb/schema/def export is now called
+tsondb/schema/dsl.
+
+* reorganize schema code ([aedf175](https://github.com/elyukai/tsondb/commit/aedf1750e74345d234801521f56d77ad83996388))
+
+
+### Bug Fixes
+
+* missing exports for type inference ([d1fc25e](https://github.com/elyukai/tsondb/commit/d1fc25eadd79fb69ee3bb6bbbe104d175928a448))
+
 ## [0.18.1](https://github.com/elyukai/tsondb/compare/v0.18.0...v0.18.1) (2026-01-30)
 
 
