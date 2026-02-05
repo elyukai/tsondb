@@ -41,7 +41,6 @@ export const NestedEntityMapType = <Name extends string, T extends TConstraint>(
   comment?: string
   secondaryEntity: EntityDecl
   type: PossibleType<T>
-  isDeprecated?: boolean
   minProperties?: number
   maxProperties?: number
 }): NestedEntityMapType<Name, T> => {
@@ -62,7 +61,6 @@ export const _NestedEntityMapType = <Name extends string, T extends TConstraint>
   comment?: string
   secondaryEntity: EntityDecl
   type: () => PossibleType<T>
-  isDeprecated?: boolean
   minProperties?: number
   maxProperties?: number
 }): NestedEntityMapType<Name, T> => {
