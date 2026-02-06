@@ -1,14 +1,14 @@
 import type { Output } from "../shared/output.ts"
-import type { ValidationOptions } from "./index.ts"
+import type { DefaultTSONDBTypes, ValidationOptions } from "./index.ts"
 import type { EntityDecl } from "./schema/dsl/index.ts"
 import type { Schema } from "./schema/index.ts"
 
 /**
  * The main configuration type for TSONDB.
  */
-export type Config = {
+export type Config<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = {
   serverOptions?: ServerOptions
-  schema: Schema
+  schema: Schema<T>
   outputs?: Output[]
 
   /**
