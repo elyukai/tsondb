@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.4](https://github.com/elyukai/tsondb/compare/v0.19.3...v0.19.4) (2026-02-07)
+
+
+### Features
+
+* **cli:** add list and name commands ([6f72210](https://github.com/elyukai/tsondb/commit/6f72210d91972bf78bc3b697598a51f7fd6761bf))
+* include generated types in config type ([0da602e](https://github.com/elyukai/tsondb/commit/0da602eecd14803eca589ee1842d12464c89e90b))
+* **jsapi:** add getEntityNameOfInstanceId method ([8d69f9d](https://github.com/elyukai/tsondb/commit/8d69f9d8fe2d904e28c7313efc1bfe4ce28606c6))
+
 ## [0.19.3](https://github.com/elyukai/tsondb/compare/v0.19.2...v0.19.3) (2026-02-05)
 
 ## [0.19.2](https://github.com/elyukai/tsondb/compare/v0.19.1...v0.19.2) (2026-02-05)
