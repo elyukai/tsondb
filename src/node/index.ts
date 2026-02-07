@@ -49,6 +49,7 @@ import {
   countError,
   countErrors,
   getErrorMessageForDisplay,
+  HTTPError,
   wrapErrorsIfAny,
 } from "./utils/error.ts"
 import { getFileNameForId, writeInstance } from "./utils/files.ts"
@@ -249,6 +250,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   #referencesToInstances: ReferencesToInstances
   #validationOptions: ValidationOptions
   #gitWrapper: Lazy<Git<T> | undefined>
+  #locked: boolean = false
 
   private constructor(options: {
     dataRootPath: string
@@ -583,51 +585,66 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   async runTransaction<R>(
     fn: (transaction: Transaction<T["entityMap"]>) => [Transaction<T["entityMap"]>, R],
   ): Promise<R> {
-    const getEntity = this.#schema.getEntity.bind(this.#schema)
-    const [txn, res] = fn(
-      new Transaction({
-        data: this.#data,
-        getEntity,
-        referencesToInstances: this.#referencesToInstances,
-        validate: this.#strucurallyValidateInstance.bind(this),
-        localeEntity: this.#schema.localeEntity,
-        steps: [],
-      }),
-    )
-
-    const txtResult = txn.getResult()
-
-    const { data: newData, referencesToInstances: newRefs, steps } = txtResult
-
-    const errors = this.#validate(newData, true)
-
-    if (errors.length > 0) {
-      throw new AggregateError(errors, "Validation errors occurred")
+    if (this.#locked) {
+      throw new HTTPError(
+        503,
+        "Another transaction is currently running. Transactions cannot be run concurrently.",
+      )
     }
 
-    const diskResult = await applyStepsToDisk(this.#dataRootPath, steps)
+    this.#locked = true
 
-    if (isError(diskResult)) {
-      throw diskResult.error
-    }
-
-    if (this.#git) {
-      const status = await this.#git.client.status()
-      const newDbWithUpdatedGit = attachGitStatusToDatabaseInMemory(
-        newData,
-        this.#dataRootPath,
-        this.#git.root,
-        status,
+    try {
+      const getEntity = this.#schema.getEntity.bind(this.#schema)
+      const [txn, res] = fn(
+        new Transaction({
+          data: this.#data,
+          getEntity,
+          referencesToInstances: this.#referencesToInstances,
+          validate: this.#strucurallyValidateInstance.bind(this),
+          localeEntity: this.#schema.localeEntity,
+          steps: [],
+        }),
       )
 
-      this.#data = newDbWithUpdatedGit
-    } else {
-      this.#data = newData
+      const txtResult = txn.getResult()
+
+      const { data: newData, referencesToInstances: newRefs, steps } = txtResult
+
+      const errors = this.#validate(newData, { internal: true })
+
+      if (errors.length > 0) {
+        throw new AggregateError(errors, "Validation errors occurred")
+      }
+
+      const diskResult = await applyStepsToDisk(this.#dataRootPath, steps)
+
+      if (isError(diskResult)) {
+        throw diskResult.error
+      }
+
+      if (this.#git) {
+        const status = await this.#git.client.status()
+        const newDbWithUpdatedGit = attachGitStatusToDatabaseInMemory(
+          newData,
+          this.#dataRootPath,
+          this.#git.root,
+          status,
+        )
+
+        this.#data = newDbWithUpdatedGit
+      } else {
+        this.#data = newData
+      }
+
+      this.#referencesToInstances = newRefs
+
+      this.#locked = false
+      return res
+    } catch (error) {
+      this.#locked = false
+      throw error
     }
-
-    this.#referencesToInstances = newRefs
-
-    return res
   }
 
   /**
