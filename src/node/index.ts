@@ -611,7 +611,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
       const { data: newData, referencesToInstances: newRefs, steps } = txtResult
 
-      const errors = this.#validate(newData, { internal: true })
+      const errors = this.#validate(newData, true)
 
       if (errors.length > 0) {
         throw new AggregateError(errors, "Validation errors occurred")
