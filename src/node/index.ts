@@ -361,8 +361,20 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     return validateDeclStructuralIntegrity(validationContext, [], entity, [], instanceContent)
   }
 
-  #validate(data: DatabaseInMemory<T["entityMap"]>, skipForTransaction = false): Error[] {
+  #validate(
+    data: DatabaseInMemory<T["entityMap"]>,
+    options: {
+      logToConsole?: boolean
+      skipStructuralValidation?: boolean
+      changedEntities?: Extract<keyof T["entityMap"], string>[]
+    } = {},
+  ): Error[] {
     const { checkReferentialIntegrity, checkOnlyEntities } = this.#validationOptions
+    const {
+      skipStructuralValidation = false,
+      logToConsole = true,
+      changedEntities: changedEntityNames,
+    } = options
     const entities = this.#schema.entities
     const getEntity = this.#schema.getEntity.bind(this.#schema)
 
@@ -377,6 +389,10 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         ? entities.filter(entity => checkOnlyEntities.includes(entity.name))
         : entities
 
+    const changedEntities = changedEntityNames
+      ? entities.filter(entity => changedEntityNames.includes(entity.name))
+      : undefined
+
     const validationContext: ValidationContext = {
       validationOptions: this.#validationOptions,
       useStyling: true,
@@ -384,7 +400,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
     const errors: Error[] = []
 
-    if (!skipForTransaction) {
+    if (!skipStructuralValidation) {
       debug("Checking structural integrity ...")
 
       const structureErrors = onlyEntities
@@ -420,7 +436,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     }
 
     if (errors.length === 0) {
-      if (!skipForTransaction) {
+      if (!skipStructuralValidation) {
         if (checkReferentialIntegrity) {
           debug("Checking referential integrity ...")
 
@@ -476,7 +492,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
       const uniqueConstraintResult = checkUniqueConstraintsForAllEntities(
         data,
-        onlyEntities,
+        changedEntities ?? onlyEntities,
         instanceOverviewsByEntityName,
       )
 
@@ -521,19 +537,21 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       debug("Skipping further checks due to previous structural integrity errors")
     }
 
-    console.log(`${data.totalSize.toString()} instance${data.totalSize === 1 ? "" : "s"} checked`)
+    if (logToConsole) {
+      console.log(`${data.totalSize.toString()} instance${data.totalSize === 1 ? "" : "s"} checked`)
 
-    if (errors.length === 0) {
-      console.log(styleText("green", "All instances are valid"))
-    } else {
-      const errorCount = countErrors(errors)
-      console.error(
-        styleText(
-          "red",
-          `${errorCount.toString()} validation error${errorCount === 1 ? "" : "s"} found\n\n${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}`,
-          { stream: stderr },
-        ),
-      )
+      if (errors.length === 0) {
+        console.log(styleText("green", "All instances are valid"))
+      } else {
+        const errorCount = countErrors(errors)
+        console.error(
+          styleText(
+            "red",
+            `${errorCount.toString()} validation error${errorCount === 1 ? "" : "s"} found\n\n${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}`,
+            { stream: stderr },
+          ),
+        )
+      }
     }
 
     return errors
@@ -611,7 +629,16 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
       const { data: newData, referencesToInstances: newRefs, steps } = txtResult
 
-      const errors = this.#validate(newData, true)
+      const changedEntities = [...new Set(steps.map(step => step.entity.name))] as Extract<
+        keyof T["entityMap"],
+        string
+      >[]
+
+      const errors = this.#validate(newData, {
+        logToConsole: false,
+        skipStructuralValidation: true,
+        changedEntities,
+      })
 
       if (errors.length > 0) {
         throw new AggregateError(errors, "Validation errors occurred")
