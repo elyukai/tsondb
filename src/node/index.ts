@@ -194,7 +194,8 @@ const initData = async <T extends DefaultTSONDBTypes>(
   schema: Schema<T>,
   locales: string[],
   git: TSONDBGit | undefined,
-  gitStatus?: StatusResult,
+  gitStatus: StatusResult | undefined,
+  skipReferenceCache: boolean,
 ): Promise<{
   data: DatabaseInMemory<T["entityMap"]>
   referencesToInstances: ReferencesToInstances
@@ -215,9 +216,15 @@ const initData = async <T extends DefaultTSONDBTypes>(
     schema.resolvedDeclarations.map(decl => [decl.name, serializeNode(decl)]),
   )
 
-  debug("creating references cache ...")
-  const referencesToInstances = await getReferencesToInstances(data, serializedDeclarationsByName)
-  debug("done")
+  let referencesToInstances: ReferencesToInstances
+  if (!skipReferenceCache) {
+    debug("creating references cache ...")
+    referencesToInstances = await getReferencesToInstances(data, serializedDeclarationsByName)
+    debug("done")
+  } else {
+    debug("skipping references cache creation")
+    referencesToInstances = {}
+  }
 
   if (git) {
     const status = gitStatus ?? (await git.client.status())
@@ -277,9 +284,13 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
   /**
    * Creates a new TSONDB instance with the specified options.
+   *
+   * @param options The options for creating the TSONDB instance.
+   * @param skipReferenceCache If set to `true`, the reference cache will not be created during initialization. This can speed up the initialization process, but referential integrity checks will not work correctly until the cache is created. This should only be set to `true` if you plan to call `sync()` immediately after initialization.
    */
   static async create<Types extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
     options: TSONDBOptions<Types>,
+    skipReferenceCache = false,
   ): Promise<TSONDB<Types>> {
     const entities = options.schema.entities
 
@@ -309,6 +320,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       options.locales ?? [],
       git,
       gitStatus,
+      skipReferenceCache,
     )
 
     return new TSONDB<Types>({
@@ -554,6 +566,8 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       this.#schema,
       this.#locales,
       this.#git,
+      undefined,
+      false,
     )
 
     this.#data = data

@@ -6,6 +6,7 @@ import { access, constants } from "node:fs/promises"
 import { join } from "node:path"
 import { cwd } from "node:process"
 import { pathToFileURL } from "node:url"
+import { styleText } from "node:util"
 import { parseArguments } from "simple-cli-args"
 import {
   validateConfigForData,
@@ -13,6 +14,7 @@ import {
   validateConfigForServer,
   validateConfigForTesting,
   type Config,
+  type DataConfig,
 } from "../node/config.ts"
 import { TSONDB, type ValidationOptions } from "../node/index.ts"
 import { createServer } from "../node/server/index.ts"
@@ -48,6 +50,25 @@ const passedArguments = parseArguments({
     },
     format: {
       name: "format",
+    },
+    name: {
+      name: "name",
+      options: {
+        id: {
+          name: "id",
+          type: String,
+        },
+      },
+    },
+    list: {
+      name: "list",
+      options: {
+        entity: {
+          name: "entity",
+          alias: "e",
+          type: String,
+        },
+      },
     },
   },
 })
@@ -94,26 +115,30 @@ if (passedArguments.command === undefined) {
   )
 }
 
+const createDB = (
+  config: DataConfig,
+  validationOptions: Partial<ValidationOptions> | undefined,
+  skipReferenceCache: boolean,
+) =>
+  TSONDB.create(
+    {
+      ...config,
+      validationOptions,
+    },
+    skipReferenceCache,
+  )
+
 if (passedArguments.command.name === "generate") {
   debug(`running command: generate`)
   validateConfigForGeneration(config)
   await TSONDB.generateOutputs(config)
 } else {
   validateConfigForData(config)
-  const db = await TSONDB.create({
-    ...config,
-    validationOptions:
-      passedArguments.command.name === "validate"
-        ? {
-            ...config.validationOptions,
-            ...omitUndefinedKeys<Partial<ValidationOptions>>(passedArguments.command.options ?? {}),
-          }
-        : config.validationOptions,
-  })
   switch (passedArguments.command.name) {
-    case "serve":
+    case "serve": {
       debug(`running command: serve`)
       validateConfigForServer(config)
+      const db = await createDB(config, config.validationOptions, false)
       await createServer(
         db,
         config.homeLayoutSections,
@@ -122,6 +147,7 @@ if (passedArguments.command.name === "generate") {
         config.customStylesheetPath,
       )
       break
+    }
     case "validate": {
       debug(`running command: validate`)
       validateConfigForTesting(config)
@@ -134,15 +160,61 @@ if (passedArguments.command.name === "generate") {
         const entities: string[] = passedArguments.command.options.checkOnlyEntities
         debug(`only check the following entities: ${entities.join(", ")}`)
       }
+      const db = await createDB(
+        config,
+        {
+          ...config.validationOptions,
+          ...omitUndefinedKeys<Partial<ValidationOptions>>(passedArguments.command.options ?? {}),
+        },
+        false,
+      )
       const result = db.validate()
       if (!result) {
         process.exitCode = 1
       }
       break
     }
-    case "format":
+    case "format": {
       debug(`running command: format`)
+      const db = await createDB(config, config.validationOptions, true)
       await db.format()
       break
+    }
+    case "name": {
+      debug(`running command: name`)
+      const id = passedArguments.command.options?.id
+      if (id === undefined) {
+        throw new Error("No ID specified for name command.")
+      }
+      const db = await createDB(config, config.validationOptions, true)
+      const entityName = db.getEntityNameOfInstanceId(id)
+      if (entityName === undefined) {
+        throw new Error("An instance with the specified ID does not exist in the database.")
+      }
+      const displayName = db.getDisplayName(entityName, id)
+      console.log(displayName ?? styleText(["underline"], "no display name available"))
+      break
+    }
+    case "list": {
+      debug(`running command: list`)
+      const entity = passedArguments.command.options?.entity
+      if (entity === undefined) {
+        throw new Error("No entity specified for list command.")
+      }
+      const db = await createDB(config, config.validationOptions, true)
+      if (!db.schema.isEntityName(entity)) {
+        throw new Error("An entity with the specified name does not exist in the database.")
+      }
+      const instances = db.getAllInstanceOverviewsOfEntity(entity)
+      if (instances.length === 0) {
+        console.log(styleText(["italic"], "no instances found"))
+        break
+      }
+      console.log(styleText(["bold"], "UUID                                  Display Name"))
+      for (const instance of instances) {
+        console.log(`${styleText(["yellow"], instance.id)}  ${instance.displayName}`)
+      }
+      break
+    }
   }
 }
