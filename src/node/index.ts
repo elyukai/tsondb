@@ -921,6 +921,13 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   }
 
   /**
+   * Retrieves the name of the entity for a given instance ID. If no instance with the provided ID is found, `undefined` is returned.
+   */
+  getEntityNameOfInstanceId(id: string): string | undefined {
+    return this.#data.getEntityNameOfInstanceId(id)
+  }
+
+  /**
    * Compresses the entire database into a single JSON file at the specified path.
    *
    * Instead of storing each instance in its own file, this method serializes the entire database into a single JSON file. This can be useful for backup, transfer or archiving purposes. The resulting file contains all instances organized by entity names. No spaces or indentation are used in the JSON output to minimize file size.

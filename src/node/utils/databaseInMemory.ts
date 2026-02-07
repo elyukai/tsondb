@@ -234,4 +234,8 @@ export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
   ): DatabaseInMemory<EM> {
     return new DatabaseInMemory(this.#data.map(fn))
   }
+
+  getEntityNameOfInstanceId(id: string): Extract<keyof EM, string> | undefined {
+    return this.#data.findKey(instances => instances.has(id))
+  }
 }
