@@ -1,7 +1,6 @@
 import { removeAt } from "@elyukai/utils/array/modify"
 import { difference } from "@elyukai/utils/array/sets"
 import { isOk } from "@elyukai/utils/result"
-import Debug from "debug"
 import { resolve } from "node:path"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
@@ -14,8 +13,6 @@ import { getReferences } from "../schema/treeOperations/references.ts"
 import { type DatabaseInMemory } from "./databaseInMemory.ts"
 import type { ReferencesWorkerTask } from "./referencesWorker.ts"
 import { WorkerPool } from "./workers.ts"
-
-const debug = Debug("tsondb:utils:references")
 
 /**
  * A mapping from instance IDs to the list of instance IDs that reference them.
@@ -89,38 +86,25 @@ export const getReferencesToInstances = async (
   databaseInMemory: DatabaseInMemory,
   serializedDeclarationsByName: Record<string, SerializedDecl>,
 ) => {
-  debug("creating reference worker pool ...")
   const pool = new WorkerPool<
     ReferencesWorkerTask,
     ReferencesToInstances,
     Record<string, SerializedDecl>
   >(6, resolve(import.meta.dirname, "./referencesWorker.js"), serializedDeclarationsByName)
 
-  debug("collecting references ...")
   const separateResults = await Promise.all(
     databaseInMemory.getAllInstances().map(
       ([entityName, instances]) =>
         new Promise<ReferencesToInstances>((resolve, reject) => {
           try {
-            debug(
-              "collecting references for entity %s in %d instances",
-              entityName,
-              instances.length,
-            )
             pool.runTask({ entityName, instances }, result => {
               if (isOk(result)) {
-                debug(
-                  "collected references for entity %s in %d instances",
-                  entityName,
-                  instances.length,
-                )
                 resolve(result.value)
               } else {
                 reject(result.error)
               }
             })
           } catch (err) {
-            debug("error collecting references for entity %s: %O", entityName, err)
             reject(err)
           }
         }),
@@ -129,8 +113,6 @@ export const getReferencesToInstances = async (
 
   await pool.close()
   const results = separateResults.reduce(mergeReferences, {})
-
-  debug("collected references")
 
   return results
 }

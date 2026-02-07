@@ -563,6 +563,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    * Returns `true` if the data is valid, `false` otherwise.
    */
   validate(): boolean {
+    debug("Validating database ...")
     return this.#validate(this.#data).length === 0
   }
 
@@ -570,17 +571,20 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    * Formats the data on disk according to the current in-memory representation.
    */
   async format(): Promise<void> {
+    debug("Formatting database ...")
     await this.#data.forEachInstance(async (entityName, instance) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const entity = this.#schema.getEntity(entityName)!
       await writeInstance(this.#dataRootPath, entity, instance.id, instance.content)
     }, true)
+    debug("All data is formatted")
   }
 
   /**
    * Reloads the data from disk into memory.
    */
   async sync(): Promise<void> {
+    debug("Syncing with disk ...")
     const { data, referencesToInstances } = await initData(
       this.#dataRootPath,
       this.#schema,
@@ -592,6 +596,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
     this.#data = data
     this.#referencesToInstances = referencesToInstances
+    debug("Synced with disk")
   }
 
   /**
@@ -604,12 +609,14 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     fn: (transaction: Transaction<T["entityMap"]>) => [Transaction<T["entityMap"]>, R],
   ): Promise<R> {
     if (this.#locked) {
+      debug("Another transaction is currently running")
       throw new HTTPError(
         503,
         "Another transaction is currently running. Transactions cannot be run concurrently.",
       )
     }
 
+    debug("Starting transaction, locking database ...")
     this.#locked = true
 
     try {
@@ -641,12 +648,18 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       })
 
       if (errors.length > 0) {
+        debug(
+          "Transaction validation failed with %d error%s",
+          errors.length,
+          errors.length === 1 ? "" : "s",
+        )
         throw new AggregateError(errors, "Validation errors occurred")
       }
 
       const diskResult = await applyStepsToDisk(this.#dataRootPath, steps)
 
       if (isError(diskResult)) {
+        debug("Error applying changes to disk: %s", diskResult.error.message)
         throw diskResult.error
       }
 
@@ -667,6 +680,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       this.#referencesToInstances = newRefs
 
       this.#locked = false
+      debug("Transaction successful, released lock")
       return res
     } catch (error) {
       this.#locked = false
