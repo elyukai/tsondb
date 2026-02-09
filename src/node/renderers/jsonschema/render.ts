@@ -13,7 +13,7 @@ import {
 import type { EnumDecl } from "../../schema/dsl/declarations/EnumDecl.ts"
 import { TypeAliasDecl } from "../../schema/dsl/declarations/TypeAliasDecl.ts"
 import type { Type } from "../../schema/dsl/index.ts"
-import { ArrayType } from "../../schema/dsl/types/ArrayType.ts"
+import type { ArrayType } from "../../schema/dsl/types/ArrayType.ts"
 import type { BooleanType } from "../../schema/dsl/types/BooleanType.ts"
 import type { ChildEntitiesType } from "../../schema/dsl/types/ChildEntitiesType.ts"
 import type { DateType } from "../../schema/dsl/types/DateType.ts"
@@ -24,12 +24,12 @@ import type { IntegerType } from "../../schema/dsl/types/IntegerType.ts"
 import type { NestedEntityMapType } from "../../schema/dsl/types/NestedEntityMapType.ts"
 import { isNestedEntityMapType } from "../../schema/dsl/types/NestedEntityMapType.ts"
 import type { MemberDecl, ObjectType } from "../../schema/dsl/types/ObjectType.ts"
-import { ReferenceIdentifierType } from "../../schema/dsl/types/ReferenceIdentifierType.ts"
+import type { ReferenceIdentifierType } from "../../schema/dsl/types/ReferenceIdentifierType.ts"
 import type { StringType } from "../../schema/dsl/types/StringType.ts"
 import type { TranslationObjectType } from "../../schema/dsl/types/TranslationObjectType.ts"
 import { getTypeOfKey } from "../../schema/dsl/types/TranslationObjectType.ts"
 import type { TypeArgumentType } from "../../schema/dsl/types/TypeArgumentType.ts"
-import { flatMapAuxiliaryDecls } from "../../schema/helpers.ts"
+import { flatMapAuxiliaryDecls, isFinalChildEntitiesType } from "../../schema/helpers.ts"
 import { ensureSpecialDirStart } from "../../utils/path.ts"
 
 export type JsonSchemaRendererOptions = {
@@ -57,14 +57,16 @@ const renderArrayType: RenderFn<ArrayType> = (options, type) => ({
 const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (options, type) => ({
   type: "object",
   properties: Object.fromEntries(
-    Object.entries(type.properties).map(([name, config]) => [
-      name,
-      {
-        description: config.comment,
-        deprecated: config.isDeprecated,
-        ...renderType(options, config.type),
-      },
-    ]),
+    Object.entries(type.properties)
+      .filter(([_, config]) => !isFinalChildEntitiesType(config.type))
+      .map(([name, config]) => [
+        name,
+        {
+          description: config.comment,
+          deprecated: config.isDeprecated,
+          ...renderType(options, config.type),
+        },
+      ]),
   ),
   required: Object.entries(type.properties)
     .filter(([, config]) => config.isRequired)
@@ -158,8 +160,7 @@ const renderEnumType: RenderFn<EnumType> = (options, type) => ({
   })),
 })
 
-const renderChildEntitiesType: RenderFn<ChildEntitiesType> = (options, type) =>
-  renderType(options, ArrayType(ReferenceIdentifierType(type.entity), { uniqueItems: true }))
+const renderChildEntitiesType: RenderFn<ChildEntitiesType> = () => ({})
 
 const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, type) => ({
   type: "object",

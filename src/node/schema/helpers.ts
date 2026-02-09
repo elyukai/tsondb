@@ -408,3 +408,13 @@ export const findTypeAtPath = (
         ? ok([type.reference.type.value, true])
         : error(),
   )
+
+/**
+ * Tests whether a type is a child entity type, either directly or through an include.
+ */
+export const isFinalChildEntitiesType = (type: Type): boolean =>
+  type.kind === NodeKind.ChildEntitiesType
+    ? true
+    : type.kind === NodeKind.IncludeIdentifierType
+      ? isFinalChildEntitiesType(type.reference.type.value)
+      : false

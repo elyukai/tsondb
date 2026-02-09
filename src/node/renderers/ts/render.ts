@@ -21,7 +21,7 @@ import { isEnumDecl, type EnumDecl } from "../../schema/dsl/declarations/EnumDec
 import { isTypeAliasDecl, TypeAliasDecl } from "../../schema/dsl/declarations/TypeAliasDecl.ts"
 import type { Type } from "../../schema/dsl/index.ts"
 import type { TypeParameter } from "../../schema/dsl/TypeParameter.ts"
-import { ArrayType } from "../../schema/dsl/types/ArrayType.ts"
+import type { ArrayType } from "../../schema/dsl/types/ArrayType.ts"
 import type { BooleanType } from "../../schema/dsl/types/BooleanType.ts"
 import type { ChildEntitiesType } from "../../schema/dsl/types/ChildEntitiesType.ts"
 import type { DateType } from "../../schema/dsl/types/DateType.ts"
@@ -33,12 +33,12 @@ import type { NestedEntityMapType } from "../../schema/dsl/types/NestedEntityMap
 import { isNestedEntityMapType } from "../../schema/dsl/types/NestedEntityMapType.ts"
 import type { MemberDecl, ObjectType } from "../../schema/dsl/types/ObjectType.ts"
 import { isObjectType } from "../../schema/dsl/types/ObjectType.ts"
-import { ReferenceIdentifierType } from "../../schema/dsl/types/ReferenceIdentifierType.ts"
+import type { ReferenceIdentifierType } from "../../schema/dsl/types/ReferenceIdentifierType.ts"
 import type { StringType } from "../../schema/dsl/types/StringType.ts"
 import type { TranslationObjectType } from "../../schema/dsl/types/TranslationObjectType.ts"
 import { getTypeOfKey } from "../../schema/dsl/types/TranslationObjectType.ts"
 import type { TypeArgumentType } from "../../schema/dsl/types/TypeArgumentType.ts"
-import { flatMapAuxiliaryDecls } from "../../schema/helpers.ts"
+import { flatMapAuxiliaryDecls, isFinalChildEntitiesType } from "../../schema/helpers.ts"
 import { ensureSpecialDirStart } from "../../utils/path.ts"
 import type { RenderResult } from "../../utils/render.ts"
 import {
@@ -133,12 +133,14 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (opti
   return wrapAsObject(
     options,
     combineSyntaxes(
-      Object.entries(type.properties).map(
-        ([name, config]) =>
-          syntax`${renderDocumentation(config.comment, config.isDeprecated)}${name}${
-            config.isRequired ? "" : "?"
-          }: ${renderType(options, config.type)}`,
-      ),
+      Object.entries(type.properties)
+        .filter(([_, config]) => !isFinalChildEntitiesType(config.type))
+        .map(
+          ([name, config]) =>
+            syntax`${renderDocumentation(config.comment, config.isDeprecated)}${name}${
+              config.isRequired ? "" : "?"
+            }: ${renderType(options, config.type)}`,
+        ),
       Object.values(type.properties).some(prop => prop.comment !== undefined) ? EOL + EOL : EOL,
     ),
   )
@@ -195,8 +197,7 @@ const renderEnumType: RenderFn<EnumType> = (options, type) =>
     ),
   )
 
-const renderChildEntitiesType: RenderFn<ChildEntitiesType> = (options, type) =>
-  renderType(options, ArrayType(ReferenceIdentifierType(type.entity), { uniqueItems: true }))
+const renderChildEntitiesType: RenderFn<ChildEntitiesType> = () => syntax`never`
 
 const mapTypeNameToType = (typeName: string | null): string => {
   switch (typeName) {
