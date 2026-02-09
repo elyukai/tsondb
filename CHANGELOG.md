@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.8](https://github.com/elyukai/tsondb/compare/v0.19.7...v0.19.8) (2026-02-09)
+
+
+### Features
+
+* add fromUniformCase helper ([f059d74](https://github.com/elyukai/tsondb/commit/f059d74dd3118d7ac74699df6a9a2379f04bbdc1))
+
+
+### Bug Fixes
+
+* exclude child entity properties from outputs ([99602ee](https://github.com/elyukai/tsondb/commit/99602eeefe73f455966edcbb6bac72d868b75962))
+
 ## [0.19.7](https://github.com/elyukai/tsondb/compare/v0.19.6...v0.19.7) (2026-02-07)
 
 ## [0.19.6](https://github.com/elyukai/tsondb/compare/v0.19.5...v0.19.6) (2026-02-07)
