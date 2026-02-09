@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.9](https://github.com/elyukai/tsondb/compare/v0.19.8...v0.19.9) (2026-02-09)
+
+
+### Bug Fixes
+
+* **ts-renderer:** render fixed-length arrays as tuples ([421f0ea](https://github.com/elyukai/tsondb/commit/421f0ead24a9bf8e14b96b2da3a29a8fa9afe3ec))
+
 ## [0.19.8](https://github.com/elyukai/tsondb/compare/v0.19.7...v0.19.8) (2026-02-09)
 
 
