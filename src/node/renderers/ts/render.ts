@@ -124,7 +124,17 @@ const renderTypeParameters: RenderFn<TypeParameter[]> = (options, params) =>
   }`
 
 const renderArrayType: RenderFn<ArrayType> = (options, type) =>
-  syntax`${renderType(options, type.items)}[]`
+  type.minItems !== undefined && type.minItems === type.maxItems
+    ? combineSyntaxes([
+        "[",
+        renderType(options, type.items),
+        ...Array.from({ length: type.minItems - 1 }, () => [
+          ", ",
+          renderType(options, type.items),
+        ]).flat(),
+        "]",
+      ])
+    : syntax`${renderType(options, type.items)}[]`
 
 const wrapAsObject: RenderFn<RenderResult> = (options, str) =>
   syntax`{${EOL}${indent(options.indentation, 1, str)}${EOL}}`
