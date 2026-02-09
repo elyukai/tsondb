@@ -3,6 +3,7 @@
  * @module
  */
 
+import type { AnyNonNullish } from "@elyukai/utils/nullable"
 import { ENUM_DISCRIMINATOR_KEY } from "../../shared/schema/declarations/EnumDecl.ts"
 import type { DisplayNameResult } from "../../shared/utils/displayName.ts"
 import type {
@@ -93,6 +94,13 @@ export type Case<K extends string, T = undefined> = {
       }
     : { [Key in ENUM_DISCRIMINATOR_KEY]: P }
 }[K]
+
+/**
+ * Extracts the value from an enum case where all members of the enum have the same associated type.
+ */
+export const fromUniformCase = <T extends string, V extends AnyNonNullish | null>(
+  caseObj: { [K in T]: { kind: K } & { [K1 in K]: V } }[T],
+): V => caseObj[caseObj.kind]
 
 /**
  * A single instance might be defined by entity and identifier separately or by
