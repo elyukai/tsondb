@@ -656,14 +656,18 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         throw new AggregateError(errors, "Validation errors occurred")
       }
 
+      debug("Applying changes to disk ...")
       const diskResult = await applyStepsToDisk(this.#dataRootPath, steps)
 
       if (isError(diskResult)) {
         debug("Error applying changes to disk: %s", diskResult.error.message)
         throw diskResult.error
+      } else {
+        debug("Changes applied to disk successfully")
       }
 
       if (this.#git) {
+        debug("Updating git status ...")
         const status = await this.#git.client.status()
         const newDbWithUpdatedGit = attachGitStatusToDatabaseInMemory(
           newData,
@@ -671,9 +675,11 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
           this.#git.root,
           status,
         )
+        debug("Git status updated")
 
         this.#data = newDbWithUpdatedGit
       } else {
+        debug("No git repository, skipping git status update")
         this.#data = newData
       }
 
