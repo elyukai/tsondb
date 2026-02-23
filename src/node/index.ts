@@ -190,6 +190,20 @@ const getGit = async (dataRootPath: string) => {
   }
 }
 
+const checkLocales = <T extends DefaultTSONDBTypes>(
+  schema: Schema<T>,
+  data: DatabaseInMemory<T["entityMap"]>,
+  locales: string[],
+) => {
+  const localeEntity = schema.localeEntity
+  if (
+    localeEntity &&
+    !locales.every(locale => data.hasInstanceOfEntityById(localeEntity.name, locale))
+  ) {
+    throw new Error("All provided locales must exist in the database.")
+  }
+}
+
 const initData = async <T extends DefaultTSONDBTypes>(
   dataRootPath: string,
   schema: Schema<T>,
@@ -205,13 +219,7 @@ const initData = async <T extends DefaultTSONDBTypes>(
   let data = await DatabaseInMemory.load<T["entityMap"]>(dataRootPath, schema.entities)
   debug("done")
 
-  const localeEntity = schema.localeEntity
-  if (
-    localeEntity &&
-    !locales.every(locale => data.hasInstanceOfEntityById(localeEntity.name, locale))
-  ) {
-    throw new Error("All provided locales must exist in the database.")
-  }
+  checkLocales(schema, data, locales)
 
   const serializedDeclarationsByName = Object.fromEntries(
     schema.resolvedDeclarations.map(decl => [decl.name, serializeNode(decl)]),
@@ -890,6 +898,16 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    */
   get locales(): string[] {
     return this.#locales
+  }
+
+  /**
+   * Sets the locales for this TSONDB instance.
+   *
+   * The provided locales must exist in the database if a locale entity is defined in the schema.
+   */
+  setLocales(locales: string[]): void {
+    checkLocales(this.#schema, this.#data, locales)
+    this.#locales = locales
   }
 
   /**

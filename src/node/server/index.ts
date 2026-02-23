@@ -87,6 +87,7 @@ export const createServer = async (
     debug("%s %s", req.method, req.originalUrl)
     Object.assign(req, requestLocals)
     req.locales = getLocalesFromRequest(req) ?? req.defaultLocales
+    req.db.setLocales(req.locales)
     next()
   })
 
