@@ -1,11 +1,11 @@
-import { assertExhaustive } from "@elyukai/utils/typeSafety"
-import type { FunctionalComponent } from "preact"
 import {
   checkTableRowsAreSections,
   type BlockMarkdownNode,
   type TableCellBlockNode,
   type TableColumnStyleBlockNode,
-} from "../../shared/utils/markdown.ts"
+} from "@elyukai/markdown/types"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
+import type { FunctionalComponent } from "preact"
 import { InlineMarkdown } from "./InlineMarkdown.tsx"
 
 type Props = {

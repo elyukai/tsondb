@@ -70,6 +70,7 @@ export const createServer = async (
   app.use("/js/node_modules/@preact/signals-core", staticNodeModule("@preact/signals-core"))
   app.use("/js/node_modules/preact-iso", staticNodeModule("preact-iso"))
   app.use("/js/node_modules/@elyukai/utils", staticNodeModule("@elyukai/utils"))
+  app.use("/js/node_modules/@elyukai/markdown", staticNodeModule("@elyukai/markdown"))
   app.use("/js/client", express.static(join(import.meta.dirname, "../../../../dist/src/web")))
   app.use("/js/shared", express.static(join(import.meta.dirname, "../../../../dist/src/shared")))
   app.use(express.json())
@@ -111,6 +112,8 @@ export const createServer = async (
             "/js/node_modules/@elyukai/utils/dist/" + localPath.replace(/\\/g, "/") + ".js",
           ]),
         ),
+        "@elyukai/markdown": "/js/node_modules/@elyukai/markdown/dist/src/index.js",
+        "@elyukai/markdown/types": "/js/node_modules/@elyukai/markdown/dist/src/types.js",
       },
     },
     null,

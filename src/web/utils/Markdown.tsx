@@ -1,5 +1,5 @@
+import { parseBlockMarkdown } from "@elyukai/markdown"
 import type { FunctionalComponent } from "preact"
-import { parseBlockMarkdown } from "../../shared/utils/markdown.ts"
 import { BlockMarkdown } from "./BlockMarkdown.tsx"
 
 type Props = {

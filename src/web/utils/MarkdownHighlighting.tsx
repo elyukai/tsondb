@@ -1,5 +1,5 @@
+import { parseBlockMarkdownForSyntaxHighlighting } from "@elyukai/markdown"
 import type { FunctionalComponent } from "preact"
-import { parseBlockMarkdownForSyntaxHighlighting } from "../../shared/utils/markdown.ts"
 import { BlockMarkdownHighlighting } from "./BlockMarkdownHighlighting.tsx"
 
 type Props = {

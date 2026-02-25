@@ -1,5 +1,5 @@
+import type { BlockSyntaxMarkdownNode } from "@elyukai/markdown/types"
 import type { FunctionalComponent } from "preact"
-import type { BlockSyntaxMarkdownNode } from "../../shared/utils/markdown.ts"
 import { InlineMarkdown } from "./InlineMarkdown.tsx"
 
 type Props = {
