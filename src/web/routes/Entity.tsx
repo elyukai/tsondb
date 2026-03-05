@@ -11,7 +11,7 @@ import {
   getLocaleInstances,
 } from "../api/declarations.ts"
 import { GitStatusIndicator } from "../components/git/GitStatusIndicator.tsx"
-import { Layout } from "../components/Layout.ts"
+import { Layout } from "../components/Layout.tsx"
 import { ConfigContext } from "../context/config.ts"
 import { EntitiesContext } from "../context/entities.ts"
 import { GitClientContext } from "../context/gitClient.ts"

@@ -15,9 +15,9 @@ import {
   validateConfigForTesting,
   type Config,
   type DataConfig,
-} from "../node/config.ts"
-import { TSONDB, type ValidationOptions } from "../node/index.ts"
-import { createServer } from "../node/server/index.ts"
+} from "../config.ts"
+import { TSONDB, type ValidationOptions } from "../index.ts"
+import { createServer } from "../server/index.ts"
 
 const debug = Debug("tsondb:cli")
 

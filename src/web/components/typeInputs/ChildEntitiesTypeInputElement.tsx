@@ -1,7 +1,7 @@
 import type { FunctionComponent } from "preact"
-import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../../node/utils/childInstances.ts"
 import type { SerializedEntityDecl } from "../../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedChildEntitiesType } from "../../../shared/schema/types/ChildEntitiesType.ts"
+import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../../shared/utils/childInstances.ts"
 import { getSerializedDisplayNameFromEntityInstance } from "../../../shared/utils/displayName.ts"
 import type { InstanceContent } from "../../../shared/utils/instances.ts"
 import { useBoolean } from "../../hooks/useBoolean.ts"

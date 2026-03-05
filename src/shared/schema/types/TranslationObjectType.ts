@@ -9,6 +9,8 @@ import type { SerializedBaseType } from "./Type.ts"
 
 type TSerializedConstraint = { [key: string]: null | TSerializedConstraint }
 
+export type { TSerializedConstraint as SerializedTranslationObjectTypeConstraint }
+
 export interface SerializedTranslationObjectType<
   T extends TSerializedConstraint = TSerializedConstraint,
 > extends SerializedBaseType {

@@ -1,4 +1,3 @@
-import type { GenericEntityDisplayName } from "../../../node/schema/dsl/index.ts"
 import {
   NodeKind,
   resolveSerializedTypeArguments,
@@ -16,6 +15,11 @@ import type { SerializedStringType } from "../types/StringType.ts"
 import type { SortOrder } from "../utils/sortOrder.ts"
 import type { UniqueConstraints } from "../utils/uniqueConstraint.ts"
 import type { SerializedBaseDecl } from "./Declaration.ts"
+
+export type GenericEntityDisplayName =
+  | string
+  | { pathToLocaleMap?: string; pathInLocaleMap?: string }
+  | null
 
 export type SerializedEntityDisplayName<T extends TSerializedConstraint> =
   | SerializedPathTo<T, SerializedStringType>

@@ -1,7 +1,7 @@
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
-import type { TranslationObjectTypeConstraint } from "../../node/schema/dsl/types/TranslationObjectType.ts"
+import type { GetDeclFromDeclName } from "../../shared/schema/declarations/Declaration.ts"
+import type { SerializedTranslationObjectTypeConstraint } from "../../shared/schema/types/TranslationObjectType.ts"
 import type { SerializedAsType, SerializedType } from "../../shared/schema/types/Type.ts"
-import type { GetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
 
 export const createTypeSkeleton = <T extends SerializedType>(
   getDeclFromDeclName: GetDeclFromDeclName,
@@ -77,7 +77,9 @@ export const createTypeSkeleton = <T extends SerializedType>(
       return undefined as SerializedAsType<T>
 
     case "TranslationObjectType": {
-      const createObject = (type: TranslationObjectTypeConstraint): Record<string, unknown> =>
+      const createObject = (
+        type: SerializedTranslationObjectTypeConstraint,
+      ): Record<string, unknown> =>
         Object.fromEntries(
           Object.entries(type).map(([key, propType]) => [
             key,

@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "outDir": "../../dist/src/web",
+  },
+  "references": [
+    { "path": "../shared" }
+  ]
+}

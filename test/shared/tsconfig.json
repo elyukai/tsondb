@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "outDir": "../../dist/test/shared",
+  },
+  "references": [
+    { "path": "../../src/node" },
+    { "path": "../../src/shared" }
+  ]
+}

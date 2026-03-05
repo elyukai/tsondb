@@ -5,7 +5,10 @@ import {
   ENUM_DISCRIMINATOR_KEY,
 } from "../../shared/schema/declarations/EnumDecl.ts"
 import { NodeKind } from "../../shared/schema/Node.ts"
-import type { GitFileStatus } from "../../shared/utils/git.ts"
+import type {
+  EntityTaggedInstanceContainerWithChildInstances,
+  UnsafeEntityTaggedInstanceContainerWithChildInstances,
+} from "../../shared/utils/childInstances.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import type { TSONDB } from "../index.ts"
 import type {
@@ -25,48 +28,6 @@ import { reduceNodes } from "../schema/helpers.ts"
 import type { Transaction } from "../transaction.ts"
 import { type DatabaseInMemory } from "./databaseInMemory.ts"
 import { HTTPError } from "./error.ts"
-
-export interface ChildInstanceContainer {
-  id?: string
-  content: InstanceContent
-  gitStatus?: GitFileStatus
-}
-
-export interface EntityTaggedInstanceContainer {
-  entityName: string
-  id: string
-  content: InstanceContent
-}
-
-export interface CreatedEntityTaggedInstanceContainerWithChildInstances extends GenEntityTaggedInstanceContainerWithChildInstances<
-  undefined,
-  UnsafeEntityTaggedInstanceContainerWithChildInstances
-> {}
-
-export interface UpdatedEntityTaggedInstanceContainerWithChildInstances extends GenEntityTaggedInstanceContainerWithChildInstances<
-  string,
-  UnsafeEntityTaggedInstanceContainerWithChildInstances
-> {}
-
-export interface UnsafeEntityTaggedInstanceContainerWithChildInstances extends GenEntityTaggedInstanceContainerWithChildInstances<
-  string | undefined,
-  UnsafeEntityTaggedInstanceContainerWithChildInstances
-> {}
-
-export interface EntityTaggedInstanceContainerWithChildInstances extends GenEntityTaggedInstanceContainerWithChildInstances<
-  string,
-  EntityTaggedInstanceContainerWithChildInstances
-> {}
-
-export interface GenEntityTaggedInstanceContainerWithChildInstances<
-  ID extends string | undefined,
-  C,
-> {
-  entityName: string
-  id: ID
-  content: InstanceContent
-  childInstances: C[]
-}
 
 const isParentReferenceReferencingParent = (
   value: unknown,

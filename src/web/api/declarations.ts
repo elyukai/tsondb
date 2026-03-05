@@ -1,8 +1,4 @@
 import type {
-  CreatedEntityTaggedInstanceContainerWithChildInstances,
-  UpdatedEntityTaggedInstanceContainerWithChildInstances,
-} from "../../node/utils/childInstances.ts"
-import type {
   CreateInstanceOfEntityRequestBody,
   CreateInstanceOfEntityResponseBody,
   DeleteInstanceOfEntityResponseBody,
@@ -18,6 +14,10 @@ import type { SerializedDecl } from "../../shared/schema/declarations/Declaratio
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedEnumDecl } from "../../shared/schema/declarations/EnumDecl.ts"
 import type { SerializedTypeAliasDecl } from "../../shared/schema/declarations/TypeAliasDecl.ts"
+import type {
+  CreatedEntityTaggedInstanceContainerWithChildInstances,
+  UpdatedEntityTaggedInstanceContainerWithChildInstances,
+} from "../../shared/utils/childInstances.ts"
 import { deleteResource, getResource, postResource, putResource } from "../utils/api.ts"
 
 type DeclKind = "Entity" | "Enum" | "TypeAlias"

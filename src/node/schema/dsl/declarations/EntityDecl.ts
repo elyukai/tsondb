@@ -1,4 +1,5 @@
 import { Lazy } from "@elyukai/utils/lazy"
+import type { GenericEntityDisplayName } from "../../../../shared/schema/declarations/EntityDecl.ts"
 import { NodeKind } from "../../../../shared/schema/Node.js"
 import type { SortOrder } from "../../../../shared/schema/utils/sortOrder.ts"
 import type { UniqueConstraints } from "../../../../shared/schema/utils/uniqueConstraint.ts"
@@ -15,11 +16,6 @@ import { StringType } from "../types/StringType.ts"
 import type { BaseDecl } from "./Decl.ts"
 import { validateDeclName } from "./Decl.ts"
 import { TypeAliasDecl } from "./TypeAliasDecl.ts"
-
-export type GenericEntityDisplayName =
-  | string
-  | { pathToLocaleMap?: string; pathInLocaleMap?: string }
-  | null
 
 export type EntityDisplayName<T extends TConstraint> =
   | PathTo<T, StringType>

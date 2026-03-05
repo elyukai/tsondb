@@ -8,7 +8,6 @@ import { join, sep } from "node:path"
 import { stderr } from "node:process"
 import { styleText } from "node:util"
 import { simpleGit, type SimpleGit, type StatusResult } from "simple-git"
-import type { Output } from "../shared/output.ts"
 import type {
   InstanceContainer,
   InstanceContainerOverview,
@@ -16,6 +15,7 @@ import type {
 } from "../shared/utils/instances.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
 import { Git } from "./git.js"
+import type { Output } from "./output.ts"
 import { getDisplayName, getDisplayNameWithId } from "./schema/detached.ts"
 import { type EntityDecl } from "./schema/dsl/index.ts"
 import type {
@@ -1037,3 +1037,5 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 export type TSONDBWithGit<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = TSONDB<T> & {
   git: Git<T>
 }
+
+export type { Config } from "./config.ts"

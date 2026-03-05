@@ -1,10 +1,5 @@
 import { createContext } from "preact"
-
-export type WebConfig = {
-  localeEntityName: string | undefined
-  defaultLocales: string[]
-  homeLayoutSections?: { title: string; comment?: string; entities: string[] }[]
-}
+import type { WebConfig } from "../../shared/api.ts"
 
 export const defaultWebConfig: WebConfig = {
   localeEntityName: undefined,

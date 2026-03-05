@@ -1,11 +1,16 @@
+import type { SerializedDecl } from "./schema/declarations/Declaration.ts"
 import type {
   CreatedEntityTaggedInstanceContainerWithChildInstances,
   EntityTaggedInstanceContainerWithChildInstances,
   UpdatedEntityTaggedInstanceContainerWithChildInstances,
-} from "../node/utils/childInstances.ts"
-import type { WebConfig } from "../web/context/config.ts"
-import type { SerializedDecl } from "./schema/declarations/Declaration.ts"
+} from "./utils/childInstances.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "./utils/instances.ts"
+
+export type WebConfig = {
+  localeEntityName: string | undefined
+  defaultLocales: string[]
+  homeLayoutSections?: { title: string; comment?: string; entities: string[] }[]
+}
 
 export type GetWebConfigResponseBody = WebConfig
 

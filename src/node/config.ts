@@ -1,5 +1,5 @@
-import type { Output } from "../shared/output.ts"
 import type { DefaultTSONDBTypes, ValidationOptions } from "./index.ts"
+import type { Output } from "./output.ts"
 import type { EntityDecl } from "./schema/dsl/index.ts"
 import type { Schema } from "./schema/index.ts"
 

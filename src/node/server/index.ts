@@ -1,6 +1,5 @@
 import Debug from "debug"
 import express from "express"
-import { readdir } from "node:fs/promises"
 import { findPackageJSON } from "node:module"
 import { dirname, join } from "node:path"
 import type { HomeLayoutSection } from "../config.ts"
@@ -40,26 +39,13 @@ const staticNodeModule = (moduleName: string) => {
   return express.static(dirname(pathToPackageJson))
 }
 
-const getAllJsFilesInNodeModule = async (
-  moduleName: string,
-  pathInside: string[] = [],
-): Promise<string[]> => {
-  const pathToPackageJson = findPackageJSON(moduleName, import.meta.url)
-  if (!pathToPackageJson) {
-    throw new Error(`Could not find module "${moduleName}"`)
-  }
-  const moduleDir = dirname(pathToPackageJson)
-  const paths = await readdir(join(moduleDir, ...pathInside), { recursive: true })
-  return paths.filter(p => p.endsWith(".js")).map(p => p.replace(/\.js$/, ""))
-}
-
-export const createServer = async (
+export const createServer = (
   db: TSONDB,
   homeLayoutSections?: HomeLayoutSection[],
   options?: Partial<ServerOptions>,
   validationOptions?: Partial<ValidationOptions>,
   customStylesheetPath?: string,
-): Promise<void> => {
+): void => {
   const { port } = { ...defaultOptions, ...options }
 
   const app = express()
@@ -94,32 +80,6 @@ export const createServer = async (
 
   app.use("/api", api)
 
-  const importMap = JSON.stringify(
-    {
-      imports: {
-        preact: "/js/node_modules/preact/dist/preact.module.js",
-        "preact/compat": "/js/node_modules/preact/compat/dist/compat.module.js",
-        "preact/debug": "/js/node_modules/preact/debug/dist/debug.module.js",
-        "preact/devtools": "/js/node_modules/preact/devtools/dist/devtools.module.js",
-        "preact/hooks": "/js/node_modules/preact/hooks/dist/hooks.module.js",
-        "preact/jsx-runtime": "/js/node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
-        "preact-iso": "/js/node_modules/preact-iso/src/index.js",
-        "@preact/signals": "/js/node_modules/@preact/signals/dist/signals.module.js",
-        "@preact/signals-core": "/js/node_modules/@preact/signals-core/dist/signals-core.module.js",
-        ...Object.fromEntries(
-          (await getAllJsFilesInNodeModule("@elyukai/utils", ["dist"])).map(localPath => [
-            "@elyukai/utils/" + localPath.replace(/\\/g, "/"),
-            "/js/node_modules/@elyukai/utils/dist/" + localPath.replace(/\\/g, "/") + ".js",
-          ]),
-        ),
-        "@elyukai/markdown": "/js/node_modules/@elyukai/markdown/dist/src/index.js",
-        "@elyukai/markdown/types": "/js/node_modules/@elyukai/markdown/dist/src/types.js",
-      },
-    },
-    null,
-    2,
-  )
-
   const customStylesheetLinkHeader = customStylesheetPath
     ? `
   <link rel="stylesheet" href="/css/custom.css">`
@@ -139,11 +99,10 @@ export const createServer = async (
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TSONDB</title>
   <link rel="stylesheet" href="/css/styles.css">${customStylesheetLinkHeader}
-  <script type="importmap">${importMap}</script>
 </head>
 <body>
   <div id="app"></div>
-  <script type="module" src="/js/client/index.js"></script>
+  <script type="module" src="/js/client/web.js"></script>
 </body>
 </html>`)
   })

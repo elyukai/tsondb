@@ -14,7 +14,6 @@ export {
   EntityDecl,
   type EntityDeclWithParentReference,
   type EntityDisplayName,
-  type GenericEntityDisplayName,
 } from "./declarations/EntityDecl.ts"
 export { Enum, EnumDecl, GenEnum, GenEnumDecl } from "./declarations/EnumDecl.ts"
 export {

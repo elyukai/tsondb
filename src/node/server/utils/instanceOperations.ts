@@ -1,11 +1,10 @@
+import type {
+  CreatedEntityTaggedInstanceContainerWithChildInstances,
+  UpdatedEntityTaggedInstanceContainerWithChildInstances,
+} from "../../../shared/utils/childInstances.ts"
 import type { InstanceContainer } from "../../../shared/utils/instances.ts"
 import type { TSONDB } from "../../index.ts"
-import {
-  getChildInstances,
-  saveInstanceTree,
-  type CreatedEntityTaggedInstanceContainerWithChildInstances,
-  type UpdatedEntityTaggedInstanceContainerWithChildInstances,
-} from "../../utils/childInstances.ts"
+import { getChildInstances, saveInstanceTree } from "../../utils/childInstances.ts"
 import { HTTPError } from "../../utils/error.ts"
 
 export const createInstance = async (

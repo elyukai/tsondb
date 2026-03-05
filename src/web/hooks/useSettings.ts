@@ -1,6 +1,6 @@
 import type { SetStateAction } from "preact/compat"
 import { useCallback, useContext, useState, type Dispatch, type StateUpdater } from "preact/hooks"
-import type { WebConfig } from "../context/config.ts"
+import type { WebConfig } from "../../shared/api.ts"
 import { defaultSettings, SettingsContext } from "../context/settings.ts"
 
 export type UserSettings = {

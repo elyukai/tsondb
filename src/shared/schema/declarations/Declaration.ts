@@ -34,6 +34,8 @@ export type SerializedSecondaryDecl =
   | SerializedTypeAliasDecl
   | SerializedEntityDecl<string, Record<string, SerializedMemberDecl>, string>
 
+export type GetDeclFromDeclName = (name: string) => SerializedSecondaryDecl | undefined
+
 export interface SerializedBaseDecl<
   Name extends string = string,
   Params extends SerializedTypeParameter[] = SerializedTypeParameter[],

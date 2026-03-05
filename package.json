@@ -10,9 +10,9 @@
     "public"
   ],
   "bin": {
-    "tsondb": "dist/src/bin/tsondb.js"
+    "tsondb": "dist/src/node/bin/tsondb.js"
   },
-  "main": "dist/src/index.js",
+  "main": "dist/src/node/index.js",
   "exports": {
     ".": "./dist/src/index.js",
     "./config": "./dist/src/node/config.js",
@@ -24,7 +24,9 @@
   },
   "scripts": {
     "build": "tsc -b",
+    "build:web": "rslib build",
     "watch": "tsc -b -w",
+    "watch:web": "rslib build -w",
     "test": "node --import tsx --test",
     "lint": "eslint",
     "format": "prettier \"{src,test}/**/*.{ts,tsx}\" --write",
@@ -34,6 +36,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@rsbuild/plugin-preact": "^1.7.1",
+    "@rslib/core": "^0.19.6",
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.0",
@@ -43,6 +47,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^17.3.0",
     "prettier": "^3.8.1",
+    "rslib": "^0.0.10",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1"

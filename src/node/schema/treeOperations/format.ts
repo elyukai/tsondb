@@ -4,7 +4,7 @@ import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/Enum
 import { NodeKind } from "../../../shared/schema/Node.ts"
 import type { Type } from "../dsl/index.ts"
 import { isObjectType } from "../dsl/types/ObjectType.ts"
-import { type TranslationObjectTypeConstraint } from "../dsl/types/TranslationObjectType.ts"
+import type { TranslationObjectTypeConstraint } from "../dsl/types/TranslationObjectType.ts"
 
 const formatTranslationObjectValue = (
   type: TranslationObjectTypeConstraint,

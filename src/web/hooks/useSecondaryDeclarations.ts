@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "preact/hooks"
-import type { SerializedSecondaryDecl } from "../../shared/schema/declarations/Declaration.ts"
+import type {
+  GetDeclFromDeclName,
+  SerializedSecondaryDecl,
+} from "../../shared/schema/declarations/Declaration.ts"
 import { isSerializedEntityDeclWithParentReference } from "../../shared/schema/declarations/EntityDecl.ts"
 import { isSerializedEnumDecl } from "../../shared/schema/declarations/EnumDecl.ts"
 import { isSerializedTypeAliasDecl } from "../../shared/schema/declarations/TypeAliasDecl.ts"
 import { getAllDeclarations } from "../api/declarations.ts"
 import { useSetting } from "./useSettings.ts"
-
-export type GetDeclFromDeclName = (name: string) => SerializedSecondaryDecl | undefined
 
 export const useGetDeclFromDeclName = (): [GetDeclFromDeclName, loaded: boolean] => {
   const [locales] = useSetting("displayedLocales")
