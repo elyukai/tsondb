@@ -14,7 +14,7 @@
   },
   "main": "dist/src/node/index.js",
   "exports": {
-    ".": "./dist/src/index.js",
+    ".": "./dist/src/node/index.js",
     "./config": "./dist/src/node/config.js",
     "./renderer/jsonschema": "./dist/src/node/renderers/jsonschema/index.js",
     "./renderer/ts": "./dist/src/node/renderers/ts/index.js",
