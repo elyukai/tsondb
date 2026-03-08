@@ -18,6 +18,7 @@ export type Config<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = {
   dataRootPath?: string
   homeLayoutSections?: HomeLayoutSection[]
   customStylesheetPath?: string
+  customAssetsPath?: string
   validationOptions?: Partial<ValidationOptions>
 }
 
@@ -67,6 +68,7 @@ export type ServerConfig = DataConfig & {
   homeLayoutSections?: HomeLayoutSection[]
   validationOptions?: Partial<ValidationOptions>
   customStylesheetPath?: string
+  customAssetsPath?: string
 }
 
 /**

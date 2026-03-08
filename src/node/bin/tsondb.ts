@@ -139,12 +139,13 @@ if (passedArguments.command.name === "generate") {
       debug(`running command: serve`)
       validateConfigForServer(config)
       const db = await createDB(config, config.validationOptions, false)
-      await createServer(
+      createServer(
         db,
         config.homeLayoutSections,
         config.serverOptions,
         config.validationOptions,
         config.customStylesheetPath,
+        config.customAssetsPath,
       )
       break
     }

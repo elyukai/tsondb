@@ -45,6 +45,7 @@ export const createServer = (
   options?: Partial<ServerOptions>,
   validationOptions?: Partial<ValidationOptions>,
   customStylesheetPath?: string,
+  customAssetsPath?: string,
 ): void => {
   const { port } = { ...defaultOptions, ...options }
 
@@ -89,6 +90,10 @@ export const createServer = (
     app.use("/css/custom.css", (_req, res) => {
       res.sendFile(customStylesheetPath)
     })
+  }
+
+  if (customAssetsPath) {
+    app.use("/assets/custom", express.static(customAssetsPath))
   }
 
   app.get(/^\/.*/, (_req, res) => {
