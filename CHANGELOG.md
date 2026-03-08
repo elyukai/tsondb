@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.12](https://github.com/elyukai/tsondb/compare/v0.19.11...v0.19.12) (2026-03-08)
+
+
+### Features
+
+* allow custom editor assets ([df38852](https://github.com/elyukai/tsondb/commit/df38852d875edb7cfac4a394f7a1ad1f19f5588c))
+* highlight hovered entry list item ([1c3c543](https://github.com/elyukai/tsondb/commit/1c3c543e11df2ccfefef0e7e973e914977f27f87))
+* new markdown parser ([2b6e0bc](https://github.com/elyukai/tsondb/commit/2b6e0bc2b178d936732d5f7744d24522d641240d))
+
+
+### Bug Fixes
+
+* changed import ([a82d705](https://github.com/elyukai/tsondb/commit/a82d70553c18bfda222049545bf4e1665e64d034))
+
 ## [0.19.11](https://github.com/elyukai/tsondb/compare/v0.19.10...v0.19.11) (2026-02-25)
 
 ## [0.19.10](https://github.com/elyukai/tsondb/compare/v0.19.9...v0.19.10) (2026-02-23)
