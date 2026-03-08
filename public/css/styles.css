@@ -540,6 +540,10 @@ select {
   border-top: none;
 }
 
+.entries-item:hover {
+  background: var(--color-background-secondary);
+}
+
 .entries-item--created {
   color: var(--color-highlight-foreground);
   background: var(--color-highlight-background);
