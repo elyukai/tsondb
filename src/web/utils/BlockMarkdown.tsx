@@ -1,9 +1,10 @@
 import {
   checkTableRowsAreSections,
   type BlockMarkdownNode,
-  type TableCellBlockNode,
-  type TableColumnStyleBlockNode,
-} from "@elyukai/markdown/types"
+  type TableCell,
+  type TableColumnStyle,
+} from "@elyukai/markdown"
+import { isNotEmpty } from "@elyukai/utils/array/nonEmpty"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { FunctionalComponent } from "preact"
 import { InlineMarkdown } from "./InlineMarkdown.tsx"
@@ -22,14 +23,14 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
   footnoteLabelSuffix = ")",
 }) => {
   const inheritableProps = { outerHeadingLevel, footnoteLabelSuffix }
-  switch (node.kind) {
+  switch (node.type) {
     case "paragraph":
       return (
         <p>
           {insertBefore}
-          {node.content.map((inline, ii) => (
-            <InlineMarkdown key={ii} node={inline} />
-          ))}
+          {node.content.map((inline, ii) =>
+            inline.type === "break" ? <br key={ii} /> : <InlineMarkdown key={ii} node={inline} />,
+          )}
         </p>
       )
     case "heading":
@@ -57,7 +58,7 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
                     ))
                   : null}
                 {item.content.map((content, iii) => (
-                  <BlockMarkdown key={iii} node={content} />
+                  <BlockMarkdown {...inheritableProps} key={iii} node={content} />
                 ))}
               </li>
             ))}
@@ -70,11 +71,17 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
         <>
           {insertBefore}
           <table>
-            {node.caption !== undefined && (
+            {node.caption !== undefined && isNotEmpty(node.caption) && (
               <caption>
-                {node.caption.map((inline, ci) => (
-                  <InlineMarkdown key={ci} node={inline} />
-                ))}
+                {node.caption.length > 1
+                  ? node.caption.map((captionLine, cli) => (
+                      <div key={cli}>
+                        {captionLine.map((inline, ci) => (
+                          <InlineMarkdown key={ci} node={inline} />
+                        ))}
+                      </div>
+                    ))
+                  : node.caption[0].map((inline, ci) => <InlineMarkdown key={ci} node={inline} />)}
               </caption>
             )}
             <thead>
@@ -111,13 +118,15 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
         </div>
       )
     case "footnote": {
-      const isNumeric = /^\d+$/.test(node.label)
       const label = (
         <>
           <span
-            class={"footnote__label" + (isNumeric ? " footnote__label--numeric" : "")}
+            class={
+              "footnote__label" +
+              (typeof node.label === "number" ? " footnote__label--numeric" : "")
+            }
             data-reference={node.label}
-            style={{ "--label": isNumeric ? Number.parseInt(node.label) : node.label }}
+            style={{ "--label": node.label }}
           >
             <span class="footnote-label">{node.label}</span>
             {footnoteLabelSuffix}
@@ -148,7 +157,7 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
                     ))}
                   </dt>
                 ))}
-                {item.definitions.map((definition, di) => (
+                {item.descriptions.map((definition, di) => (
                   <dd key={di}>
                     {definition.map((n, i) => (
                       <BlockMarkdown {...inheritableProps} key={i} node={n} />
@@ -170,8 +179,8 @@ const TableRow = ({
   cells,
   cellType = "td",
 }: {
-  columns: TableColumnStyleBlockNode[]
-  cells: TableCellBlockNode[]
+  columns: TableColumnStyle[]
+  cells: TableCell[]
   cellType?: "td" | "th"
 }) => {
   const CellTag = cellType as keyof preact.JSX.IntrinsicElements

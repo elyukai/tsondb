@@ -1,4 +1,4 @@
-import type { InlineMarkdownNode } from "@elyukai/markdown/types"
+import type { InlineMarkdownNode } from "@elyukai/markdown"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { Fragment, type FunctionalComponent } from "preact"
 
@@ -6,10 +6,10 @@ type Props = {
   node: InlineMarkdownNode
 }
 
-const emptyNode: InlineMarkdownNode = { kind: "text", content: "" }
+const emptyNode: InlineMarkdownNode = { type: "text", content: "" }
 
 export const InlineMarkdown: FunctionalComponent<Props> = ({ node }) => {
-  switch (node.kind) {
+  switch (node.type) {
     case "code":
       return <code>{node.content}</code>
     case "bold":
@@ -38,7 +38,7 @@ export const InlineMarkdown: FunctionalComponent<Props> = ({ node }) => {
       )
     case "attributed": {
       const separatorIndex = node.content.findIndex(
-        attr => attr.kind === "text" && attr.content === "](",
+        attr => attr.type === "text" && attr.content === "](",
       )
       const count = Object.keys(node.attributes).length
 
@@ -92,14 +92,13 @@ export const InlineMarkdown: FunctionalComponent<Props> = ({ node }) => {
         </sup>
       )
     case "footnoteRef": {
-      const isNumeric = /^\d+$/.test(node.label)
       return (
         <sup
-          class={"footnote-ref" + (isNumeric ? " footnote-ref--numeric" : "")}
+          class={"footnote-ref" + (typeof node.label === "number" ? " footnote-ref--numeric" : "")}
           data-reference={node.label}
-          style={{ "--label": isNumeric ? Number.parseInt(node.label) : node.label }}
+          style={{ "--label": node.label }}
         >
-          <span class="footnote-label">{node.label}</span>
+          <span class="footnote-label">{node.content}</span>
         </sup>
       )
     }

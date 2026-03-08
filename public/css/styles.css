@@ -785,6 +785,15 @@ form > .field--container {
   color: var(--color-syntax-footnote);
 }
 
+.editor-highlighting .footnote-ref {
+  color: var(--color-syntax-footnote);
+}
+
+.editor-highlighting sup {
+  vertical-align: baseline;
+  font-size: 1rem;
+}
+
 .editor-highlighting .section-marker {
   color: var(--color-syntax-section);
 }
