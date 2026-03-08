@@ -1,5 +1,5 @@
 import { anySameIndices } from "@elyukai/utils/array/filters"
-import { flatCombine } from "@elyukai/utils/array/generators"
+import { flatCombine } from "@elyukai/utils/array/transformations"
 import { deepEqual } from "@elyukai/utils/equality"
 import { error, isError, mapError, ok, type Result } from "@elyukai/utils/result"
 import { getValueAtKeyPath, renderKeyPath } from "../../shared/schema/utils/keyPath.ts"
