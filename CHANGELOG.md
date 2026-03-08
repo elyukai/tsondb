@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.13](https://github.com/elyukai/tsondb/compare/v0.19.12...v0.19.13) (2026-03-08)
+
+
+### Bug Fixes
+
+* root export ([33c47fe](https://github.com/elyukai/tsondb/commit/33c47fe4635a6115c295f5ad1af7e90a1d7da6bf))
+
 ## [0.19.12](https://github.com/elyukai/tsondb/compare/v0.19.11...v0.19.12) (2026-03-08)
 
 
