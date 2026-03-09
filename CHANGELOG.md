@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.14](https://github.com/elyukai/tsondb/compare/v0.19.13...v0.19.14) (2026-03-09)
+
+
+### Features
+
+* provide information which instance failed to load ([75a6df2](https://github.com/elyukai/tsondb/commit/75a6df259b66012f02d17d9db990052eb5ff76ef))
+
 ## [0.19.13](https://github.com/elyukai/tsondb/compare/v0.19.12...v0.19.13) (2026-03-08)
 
 
