@@ -48,15 +48,21 @@ export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
               instanceFileNames,
               async (instanceFileName): Promise<[string, InstanceContainer]> => {
                 const id = basename(instanceFileName, extname(instanceFileName))
-                return [
-                  id,
-                  {
+                try {
+                  return [
                     id,
-                    content: JSON.parse(
-                      await readFile(join(entityDir, instanceFileName), "utf-8"),
-                    ) as InstanceContent,
-                  },
-                ]
+                    {
+                      id,
+                      content: JSON.parse(
+                        await readFile(join(entityDir, instanceFileName), "utf-8"),
+                      ) as InstanceContent,
+                    },
+                  ]
+                } catch (error) {
+                  throw new Error(`Failed to load instance "${id}" of entity "${entity.name}"`, {
+                    cause: error,
+                  })
+                }
               },
               ulimit,
             )
