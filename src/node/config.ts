@@ -35,7 +35,10 @@ export type HomeLayoutSection = {
 /**
  * The configuration type required for generation commands.
  */
-export type GenerationConfig = { schema: Schema; outputs: Output[] }
+export type GenerationConfig<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = {
+  schema: Schema<T>
+  outputs: Output[]
+}
 
 export const validateConfigForGeneration: (
   config: Config,
