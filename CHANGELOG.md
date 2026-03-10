@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.15](https://github.com/elyukai/tsondb/compare/v0.19.14...v0.19.15) (2026-03-10)
+
+
+### Bug Fixes
+
+* forward tsondb types in all configs ([2b7c010](https://github.com/elyukai/tsondb/commit/2b7c01087be17823674858144ad0cadb13f58381))
+
 ## [0.19.14](https://github.com/elyukai/tsondb/compare/v0.19.13...v0.19.14) (2026-03-09)
 
 
