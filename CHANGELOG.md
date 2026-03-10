@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.19.18](https://github.com/elyukai/tsondb/compare/v0.19.17...v0.19.18) (2026-03-10)
+
+
+### Features
+
+* **ts-renderer:** generateHelpers shortcut ([38fe3cb](https://github.com/elyukai/tsondb/commit/38fe3cbf8fc77de46847cb7b475f3801b32028e6))
+
 ## [0.19.17](https://github.com/elyukai/tsondb/compare/v0.19.16...v0.19.17) (2026-03-10)
 
 
