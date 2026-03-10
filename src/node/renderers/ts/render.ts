@@ -54,27 +54,29 @@ export type TypeScriptRendererOptions = {
   indentation: number
   objectTypeKeyword: "interface" | "type"
   preserveFiles: boolean
-  generateHelpers: Partial<{
-    /**
-     * If `true` or a string, generates an object type with all names of the entities as the key and their corresponding generated type as their respective value. Uses `EntityMap` as a default name when using `true` or the string if set to a string.
-     */
-    entityMap: boolean | string
+  generateHelpers:
+    | Partial<{
+        /**
+         * If `true` or a string, generates an object type with all names of the entities as the key and their corresponding generated type as their respective value. Uses `EntityMap` as a default name when using `true` or the string if set to a string.
+         */
+        entityMap: boolean | string
 
-    /**
-     * If `true` or a string, generates an object type with all names of entities with parent references as the key and their corresponding generated type as well as their parent reference key as their respective value. Uses `ChildEntityMap` as a default name when using `true` or the string if set to a string.
-     */
-    childEntityMap: boolean | string
+        /**
+         * If `true` or a string, generates an object type with all names of entities with parent references as the key and their corresponding generated type as well as their parent reference key as their respective value. Uses `ChildEntityMap` as a default name when using `true` or the string if set to a string.
+         */
+        childEntityMap: boolean | string
 
-    /**
-     * If `true` or a string, generates an object type with all names of the enumerations as the key and their corresponding generated type as their respective value. Uses `EnumMap` as a default name when using `true` or the string if set to a string.
-     */
-    enumMap: boolean | string
+        /**
+         * If `true` or a string, generates an object type with all names of the enumerations as the key and their corresponding generated type as their respective value. Uses `EnumMap` as a default name when using `true` or the string if set to a string.
+         */
+        enumMap: boolean | string
 
-    /**
-     * If `true` or a string, generates an object type with all names of the type aliases as the key and their corresponding generated type as their respective value. Uses `TypeAliasMap` as a default name when using `true` or the string if set to a string.
-     */
-    typeAliasMap: boolean | string
-  }>
+        /**
+         * If `true` or a string, generates an object type with all names of the type aliases as the key and their corresponding generated type as their respective value. Uses `TypeAliasMap` as a default name when using `true` or the string if set to a string.
+         */
+        typeAliasMap: boolean | string
+      }>
+    | boolean
   addIdentifierToEntities: boolean
   /**
    * Infer translation parameter types from the message strings in a {@link TranslationObjectType TranslationObject} as branded types.
@@ -355,13 +357,18 @@ const renderImports = (currentUrl: string, imports: { [sourceUrl: string]: strin
 const renderMapHelperType = <T extends Decl>(
   options: TypeScriptRendererOptions,
   declarations: readonly Decl[],
-  key: keyof TypeScriptRendererOptions["generateHelpers"],
+  key: keyof Extract<TypeScriptRendererOptions["generateHelpers"], object>,
   defaultName: string,
   filterFn: (decl: Decl) => decl is T,
   renderKeyFn?: (decl: T) => string,
-) =>
-  options.generateHelpers[key]
-    ? `export type ${options.generateHelpers[key] === true ? defaultName : options.generateHelpers[key]} = {${EOL}${prefixLines(
+) => {
+  const option =
+    typeof options.generateHelpers === "boolean"
+      ? options.generateHelpers
+      : options.generateHelpers[key]
+
+  return option
+    ? `export type ${option === true ? defaultName : option} = {${EOL}${prefixLines(
         getIndentation(options.indentation, 1),
         declarations
           .filter(filterFn)
@@ -374,6 +381,7 @@ const renderMapHelperType = <T extends Decl>(
           .join(EOL),
       )}${EOL}}${EOL + EOL}`
     : ""
+}
 
 const renderEntityMapType = (options: TypeScriptRendererOptions, declarations: readonly Decl[]) =>
   renderMapHelperType(options, declarations, "entityMap", "EntityMap", isEntityDecl)
