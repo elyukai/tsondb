@@ -48,8 +48,8 @@ export const validateConfigForGeneration: (
 /**
  * The configuration type required for any commands that need to read data stored in the database.
  */
-export type DataConfig = Config & {
-  schema: Schema
+export type DataConfig<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = Config<T> & {
+  schema: Schema<T>
   dataRootPath: string
 }
 
@@ -62,7 +62,7 @@ export const validateConfigForData: (config: Config) => asserts config is DataCo
 /**
  * The configuration type required for running the server for the editor.
  */
-export type ServerConfig = DataConfig & {
+export type ServerConfig<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = DataConfig<T> & {
   serverOptions?: ServerOptions
   locales: string[]
   homeLayoutSections?: HomeLayoutSection[]
@@ -74,7 +74,7 @@ export type ServerConfig = DataConfig & {
 /**
  * The configuration type required for validating the contents of the database.
  */
-export type TestingConfig = DataConfig & {
+export type TestingConfig<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = DataConfig<T> & {
   locales: string[]
   validationOptions?: Partial<ValidationOptions>
 }
@@ -82,7 +82,7 @@ export type TestingConfig = DataConfig & {
 /**
  * The configuration type required for formatting the contents of the database.
  */
-export type FormattingConfig = DataConfig
+export type FormattingConfig<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = DataConfig<T>
 
 export const validateConfigForServer: (
   config: Config,
