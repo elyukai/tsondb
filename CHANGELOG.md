@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.20.0](https://github.com/elyukai/tsondb/compare/v0.19.18...v0.20.0) (2026-03-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* The isMarkdown option is being renamed to markdown,
+which now takes either "block" or "inline" as a string to determine
+whether to interpret the value as a single paragraph or multiple blocks
+of Markdown.
+
+### Features
+
+* inline markdown ([37c6096](https://github.com/elyukai/tsondb/commit/37c6096b3dd06c70095b3a409f413d70de0b9aea))
+
+
+### Bug Fixes
+
+* nested entity map formatting ([3321bec](https://github.com/elyukai/tsondb/commit/3321beceecb3dcbfb843dace35e45efb1eda6658))
+
 ## [0.19.18](https://github.com/elyukai/tsondb/compare/v0.19.17...v0.19.18) (2026-03-10)
 
 
