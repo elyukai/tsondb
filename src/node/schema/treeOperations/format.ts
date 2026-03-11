@@ -1,9 +1,8 @@
-import { sortObjectKeys, sortObjectKeysByIndex } from "@elyukai/utils/object"
+import { mapObject, sortObjectKeys, sortObjectKeysByIndex } from "@elyukai/utils/object"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import { NodeKind } from "../../../shared/schema/Node.ts"
 import type { Type } from "../dsl/index.ts"
-import { isObjectType } from "../dsl/types/ObjectType.ts"
 import type { TranslationObjectTypeConstraint } from "../dsl/types/TranslationObjectType.ts"
 
 const formatTranslationObjectValue = (
@@ -32,44 +31,20 @@ export const formatValue = (type: Type, value: unknown): unknown => {
     case NodeKind.ObjectType:
       return typeof value === "object" && value !== null && !Array.isArray(value)
         ? sortObjectKeysByIndex(
-            Object.fromEntries(
-              Object.entries(value).map(([key, item]) => [
-                key,
-                type.properties[key] ? formatValue(type.properties[key].type, item) : item,
-              ]),
+            mapObject(value as Record<string, unknown>, (item, key) =>
+              type.properties[key] ? formatValue(type.properties[key].type, item) : item,
             ),
             Object.keys(type.properties),
           )
         : value
-    case NodeKind.BooleanType:
-      return value
-    case NodeKind.DateType:
-      return value
-    case NodeKind.FloatType:
-      return value
-    case NodeKind.IntegerType:
-      return value
-    case NodeKind.StringType:
-      return value
-    case NodeKind.TypeArgumentType:
-      return value
     case NodeKind.IncludeIdentifierType:
       return formatValue(type.reference.type.value, value)
     case NodeKind.NestedEntityMapType:
-      return isObjectType(type.type.value)
-        ? typeof value === "object" && value !== null && !Array.isArray(value)
-          ? sortObjectKeys(
-              Object.fromEntries(
-                Object.entries(value).map(([key, item]) => [
-                  key,
-                  formatValue(type.type.value, item),
-                ]),
-              ),
-            )
-          : value
-        : formatValue(type.type.value, value)
-    case NodeKind.ReferenceIdentifierType:
-      return value
+      return typeof value === "object" && value !== null && !Array.isArray(value)
+        ? sortObjectKeys(
+            mapObject(value as Record<string, unknown>, item => formatValue(type.type.value, item)),
+          )
+        : value
     case NodeKind.EnumType: {
       if (
         typeof value === "object" &&
@@ -96,6 +71,14 @@ export const formatValue = (type: Type, value: unknown): unknown => {
       return Array.isArray(value) ? value.toSorted() : value
     case NodeKind.TranslationObjectType:
       return formatTranslationObjectValue(type.properties, value)
+    case NodeKind.BooleanType:
+    case NodeKind.DateType:
+    case NodeKind.FloatType:
+    case NodeKind.IntegerType:
+    case NodeKind.StringType:
+    case NodeKind.TypeArgumentType:
+    case NodeKind.ReferenceIdentifierType:
+      return value
     default:
       return assertExhaustive(type)
   }
