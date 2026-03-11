@@ -94,7 +94,7 @@ export const isSinglularInputFieldType = (
         : false
     }
     case "StringType":
-      return !(type.isMarkdown ?? false)
+      return !(type.markdown ?? false)
     default:
       return assertExhaustive(type)
   }

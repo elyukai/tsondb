@@ -1,4 +1,5 @@
 import { NodeKind } from "../../../../shared/schema/Node.js"
+import type { MarkdownStringOption } from "../../../../shared/schema/types/StringType.ts"
 import type { StringConstraints } from "../../../../shared/validation/string.ts"
 import type { Node } from "../index.ts"
 import type { BaseType } from "./Type.ts"
@@ -6,14 +7,14 @@ import type { BaseType } from "./Type.ts"
 export interface StringType extends BaseType, StringConstraints {
   kind: NodeKind["StringType"]
   pattern?: RegExp
-  isMarkdown?: boolean
+  markdown?: MarkdownStringOption
 }
 export const StringType = (
   options: {
     minLength?: number
     maxLength?: number
     pattern?: RegExp
-    isMarkdown?: boolean
+    markdown?: MarkdownStringOption
   } = {},
 ): StringType => ({
   ...options,

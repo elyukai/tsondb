@@ -5,6 +5,7 @@ import { Markdown } from "../../utils/Markdown.tsx"
 import { MarkdownHighlighting } from "../../utils/MarkdownHighlighting.tsx"
 import type { TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
+import { TextInput } from "./utils/TextInput.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = TypeInputProps<SerializedStringType, string>
@@ -20,9 +21,15 @@ export const StringTypeInput: FunctionComponent<Props> = ({
     return <MismatchingTypeError expected="string" actual={value} />
   }
 
-  const { minLength, maxLength, pattern, isMarkdown } = type
+  const { minLength, maxLength, pattern, markdown } = type
 
   const errors = validateStringConstraints(type, value)
+  const preparedPattern =
+    pattern === undefined
+      ? undefined
+      : pattern.startsWith("^(?:") && pattern.endsWith(")$")
+        ? pattern.slice(4, -2)
+        : `.*${pattern}.*`
 
   return (
     <div class="field field--string">
@@ -46,12 +53,12 @@ export const StringTypeInput: FunctionComponent<Props> = ({
             <ValidationErrors disabled={disabled} errors={errors} />
           </div>
         </>
-      ) : isMarkdown ? (
+      ) : markdown !== undefined ? (
         <>
           <div class="editor editor--markdown">
             <div class="textarea-grow-wrap">
-              <textarea
-                rows={1}
+              <TextInput
+                type={markdown}
                 value={value}
                 minLength={minLength}
                 maxLength={maxLength}
@@ -62,7 +69,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({
                 disabled={disabled}
               />
               <p class="help">
-                This textarea supports{" "}
+                This text field supports{" "}
                 <a
                   href="https://www.markdownguide.org/getting-started/"
                   target="_blank"
@@ -75,12 +82,13 @@ export const StringTypeInput: FunctionComponent<Props> = ({
               <MarkdownHighlighting
                 class="textarea-grow-wrap__mirror editor-highlighting"
                 string={value + " "}
+                inline={markdown === "inline"}
               />
             </div>
             <ValidationErrors disabled={disabled} errors={errors} />
           </div>
           <div class="preview">
-            <Markdown string={value} outerHeadingLevel={2} />
+            <Markdown string={value} outerHeadingLevel={2} inline={markdown === "inline"} />
           </div>
         </>
       ) : (
@@ -90,13 +98,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({
             value={value}
             minLength={minLength}
             maxLength={maxLength}
-            pattern={
-              pattern === undefined
-                ? undefined
-                : pattern.startsWith("^(?:") && pattern.endsWith(")$")
-                  ? pattern.slice(4, -2)
-                  : `.*${pattern}.*`
-            }
+            pattern={preparedPattern}
             onInput={event => {
               onChange(event.currentTarget.value)
             }}
