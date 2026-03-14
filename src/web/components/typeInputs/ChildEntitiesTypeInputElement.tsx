@@ -72,7 +72,7 @@ export const ChildEntitiesTypeInputElement: FunctionComponent<Props> = props => 
           </button>
           <button
             onClick={() => {
-              onChildDuplicate(index)
+              onChildDuplicate(originalIndex)
             }}
             disabled={disabled}
           >
@@ -81,7 +81,7 @@ export const ChildEntitiesTypeInputElement: FunctionComponent<Props> = props => 
           <button
             class="destructive"
             onClick={() => {
-              onChildRemove(index)
+              onChildRemove(originalIndex)
             }}
             disabled={disabled}
           >
