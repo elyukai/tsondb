@@ -2,6 +2,7 @@ import {
   parseBlockMarkdownForSyntaxHighlighting,
   parseInlineMarkdownForSyntaxHighlighting,
 } from "@elyukai/markdown"
+import { trySafe } from "@elyukai/utils/typeSafety"
 import type { FunctionalComponent } from "preact"
 import { BlockMarkdownHighlighting } from "./BlockMarkdownHighlighting.tsx"
 
@@ -17,7 +18,10 @@ export const MarkdownHighlighting: FunctionalComponent<Props> = ({
   inline,
 }) => {
   const blocks = inline
-    ? parseInlineMarkdownForSyntaxHighlighting(string)
+    ? trySafe(
+        () => parseInlineMarkdownForSyntaxHighlighting(string),
+        [{ type: "text", content: string }],
+      )
     : parseBlockMarkdownForSyntaxHighlighting(string)
   const blockElements = blocks.map((block, i) => (
     <BlockMarkdownHighlighting key={`md-block-${i.toString()}`} node={block} />

@@ -1,4 +1,5 @@
 import { parseBlockMarkdown, parseInlineMarkdown } from "@elyukai/markdown"
+import { trySafe } from "@elyukai/utils/typeSafety"
 import type { FunctionalComponent } from "preact"
 import { BlockMarkdown } from "./BlockMarkdown.tsx"
 import { InlineMarkdown } from "./InlineMarkdown.tsx"
@@ -19,9 +20,9 @@ export const Markdown: FunctionalComponent<Props> = ({
   inline,
 }) => {
   const elements = inline
-    ? parseInlineMarkdown(string).map((node, i) => (
-        <InlineMarkdown key={`md-inline-${i.toString()}`} node={node} />
-      ))
+    ? trySafe(() => parseInlineMarkdown(string), [{ type: "text", content: string }]).map(
+        (node, i) => <InlineMarkdown key={`md-inline-${i.toString()}`} node={node} />,
+      )
     : parseBlockMarkdown(string).map((node, i) => (
         <BlockMarkdown
           key={`md-block-${i.toString()}`}

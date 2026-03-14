@@ -5,7 +5,6 @@ import { Markdown } from "../../utils/Markdown.tsx"
 import { MarkdownHighlighting } from "../../utils/MarkdownHighlighting.tsx"
 import type { TypeInputProps } from "./TypeInput.tsx"
 import { MismatchingTypeError } from "./utils/MismatchingTypeError.tsx"
-import { TextInput } from "./utils/TextInput.tsx"
 import { ValidationErrors } from "./utils/ValidationErrors.tsx"
 
 type Props = TypeInputProps<SerializedStringType, string>
@@ -57,8 +56,8 @@ export const StringTypeInput: FunctionComponent<Props> = ({
         <>
           <div class="editor editor--markdown">
             <div class="textarea-grow-wrap">
-              <TextInput
-                type={markdown}
+              <textarea
+                rows={1}
                 value={value}
                 minLength={minLength}
                 maxLength={maxLength}
