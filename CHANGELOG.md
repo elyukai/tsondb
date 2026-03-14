@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.20.1](https://github.com/elyukai/tsondb/compare/v0.20.0...v0.20.1) (2026-03-14)
+
+
+### Bug Fixes
+
+* inline markdown editor ([25915b2](https://github.com/elyukai/tsondb/commit/25915b2c4fcc0c658cd18fcd181f3eaa4f86156a))
+
 ## [0.20.0](https://github.com/elyukai/tsondb/compare/v0.19.18...v0.20.0) (2026-03-11)
 
 
