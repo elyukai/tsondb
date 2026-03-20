@@ -6,6 +6,7 @@ import type {
   AnyChildEntityMap,
   AnyEntityMap,
   GetAllChildInstanceContainersForParent,
+  GetAllInstanceContainers,
   GetAllInstances,
   GetDisplayName,
   GetDisplayNameAndId,
@@ -26,6 +27,7 @@ export type CustomConstraintHelpers<
 > = {
   getInstanceById: GetInstanceById<EM>
   getAllInstances: GetAllInstances<EM>
+  getAllInstanceContainers: GetAllInstanceContainers<EM>
   getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>
   getDisplayName: GetDisplayName<EM>
   getDisplayNameAndId: GetDisplayNameAndId<EM>
@@ -127,6 +129,7 @@ export const checkCustomConstraintsForAllEntities = <T extends DefaultTSONDBType
   const helpers: CustomConstraintHelpers<T["entityMap"], T["childEntityMap"]> = {
     getInstanceById: data.getInstanceOfEntityById.bind(data),
     getAllInstances: data.getAllInstancesOfEntity.bind(data),
+    getAllInstanceContainers: data.getAllInstanceContainersOfEntity.bind(data),
     getAllChildInstancesForParent: data.getAllChildInstanceContainersForParent.bind(
       data,
       getEntityByName,
