@@ -36,12 +36,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@rsbuild/plugin-preact": "^1.7.1",
+    "@rsbuild/plugin-preact": "^1.7.2",
     "@rslib/core": "^0.20.0",
-    "@types/debug": "^4.1.12",
+    "@types/debug": "^4.1.13",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.4.0",
-    "commit-and-tag-version": "^12.6.1",
+    "@types/node": "^25.5.0",
+    "commit-and-tag-version": "^12.7.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -50,11 +50,11 @@
     "rslib": "^0.0.10",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.0"
+    "typescript-eslint": "^8.57.1"
   },
   "dependencies": {
     "@elyukai/markdown": "^0.2.2",
-    "@elyukai/utils": "^0.3.0",
+    "@elyukai/utils": "^0.3.3",
     "@preact/signals": "^2.8.2",
     "debug": "^4.4.3",
     "express": "^5.2.1",
