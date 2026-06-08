@@ -106,7 +106,6 @@ const onBeforeUnload = (event: BeforeUnloadEvent) => {
 
 const applePlatformPattern = /(Mac|iPhone|iPod|iPad)/i
 
-// eslint-disable-next-line @typescript-eslint/no-deprecated
 const isApplePlatform = () => applePlatformPattern.test(window.navigator.platform)
 
 const checkCmdOrCtrl = (event: KeyboardEvent) => (isApplePlatform() ? event.metaKey : event.ctrlKey)

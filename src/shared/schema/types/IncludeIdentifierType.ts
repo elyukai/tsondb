@@ -32,7 +32,7 @@ export const resolveTypeArgumentsInSerializedIncludeIdentifierType = (<
   decls: Record<string, SerializedDecl>,
   args: Record<string, SerializedType>,
   type: T,
-) => {
+): T extends SerializedIncludeIdentifierType<[]> ? T : SerializedType => {
   const reference = getDecl(decls, type.reference)
 
   return (

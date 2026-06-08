@@ -93,7 +93,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
                     type={memberDecl.type}
                     path={path === undefined ? key : `${path}.${key}`}
                     value={
-                      (value[key as keyof typeof value] as unknown) ??
+                      (value as Partial<Record<string, unknown>>)[key] ??
                       createTypeSkeleton(getDeclFromDeclName, memberDecl.type)
                     }
                     disabled={

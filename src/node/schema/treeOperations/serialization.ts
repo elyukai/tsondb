@@ -1,8 +1,5 @@
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
-import type {
-  SerializedEntityDecl,
-  SerializedEntityDisplayName,
-} from "../../../shared/schema/declarations/EntityDecl.ts"
+import type { SerializedEntityDecl } from "../../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedEnumDecl } from "../../../shared/schema/declarations/EnumDecl.ts"
 import type { SerializedTypeAliasDecl } from "../../../shared/schema/declarations/TypeAliasDecl.ts"
 import { NodeKind } from "../../../shared/schema/Node.js"
@@ -119,9 +116,7 @@ export const serializeNode = <T extends Node>(node: T): Serialized<T> => {
       const serializedNode: SerializedEntityDecl = {
         ...node,
         type: serializeNode(node.type.value),
-        instanceDisplayName: node.instanceDisplayName as SerializedEntityDisplayName<
-          Record<string, SerializedMemberDecl>
-        >,
+        instanceDisplayName: node.instanceDisplayName,
         instanceDisplayNameCustomizer: node.instanceDisplayNameCustomizer !== undefined,
         customConstraints: node.customConstraints !== undefined,
       }

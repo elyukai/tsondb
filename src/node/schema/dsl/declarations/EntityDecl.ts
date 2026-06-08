@@ -213,7 +213,6 @@ export const EntityDecl: {
   return {
     ...options,
     instanceDisplayNameCustomizer: options.instanceDisplayNameCustomizer as DisplayNameCustomizer, // ignore contravariance of registered entity type
-    customConstraints: options.customConstraints as CustomConstraint, // ignore contravariance of registered entity type
     kind: NodeKind.EntityDecl,
     sourceUrl,
     parameters: [],
