@@ -53,7 +53,7 @@ export const sendErrorResponse = (res: Response, error: unknown): void => {
   if (error instanceof HTTPError) {
     res.status(error.code).send(error.message)
   } else if (error instanceof Error) {
-    res.status(500).send(error.message)
+    res.status(500).send(getErrorMessageForDisplay(error))
   } else {
     res.status(500).send(String(error))
   }
