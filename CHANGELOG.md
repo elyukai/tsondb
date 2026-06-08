@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.20.4](https://github.com/elyukai/tsondb/compare/v0.20.3...v0.20.4) (2026-06-08)
+
+
+### Bug Fixes
+
+* **api:** display all errors when doing CRUD operations ([fea090a](https://github.com/elyukai/tsondb/commit/fea090aec3d7ec12e6c77d6b3e171b6d6b58d9d7))
+
 ## [0.20.3](https://github.com/elyukai/tsondb/compare/v0.20.2...v0.20.3) (2026-03-20)
 
 
