@@ -1,6 +1,6 @@
 import { isNotEmpty } from "@elyukai/utils/array/nonEmpty"
 import { error, isOk, ok, reduce, type Result } from "@elyukai/utils/result"
-import { assertExhaustive } from "@elyukai/utils/typeSafety"
+import { assertExhaustive, trySafe } from "@elyukai/utils/typeSafety"
 
 export type KeyPath = string | string[]
 
@@ -132,3 +132,6 @@ export const getValueAtKeyPath = (
             )
         : error(previousPath => `Key path "${previousPath}" does not contain an object.`),
   )
+
+export const getValueAtKeyPathIfDefined = (value: unknown, keyPath: KeyPath): unknown =>
+  trySafe(() => getValueAtKeyPath(value, keyPath, true))

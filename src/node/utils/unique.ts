@@ -2,7 +2,11 @@ import { anySameIndices } from "@elyukai/utils/array/filters"
 import { flatCombine } from "@elyukai/utils/array/transformations"
 import { deepEqual } from "@elyukai/utils/equality"
 import { error, isError, mapError, ok, type Result } from "@elyukai/utils/result"
-import { getValueAtKeyPath, renderKeyPath } from "../../shared/schema/utils/keyPath.ts"
+import {
+  getValueAtKeyPath,
+  getValueAtKeyPathIfDefined,
+  renderKeyPath,
+} from "../../shared/schema/utils/keyPath.ts"
 import type { UniqueConstraint } from "../../shared/schema/utils/uniqueConstraint.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "../../shared/utils/instances.ts"
 import type { EntityDecl } from "../schema/dsl/index.ts"
@@ -59,7 +63,7 @@ export const checkUniqueConstraintsForEntity = (
         normalizedConstraint.map(elem => {
           if ("keyPath" in elem) {
             return [
-              getValueAtKeyPath(content, elem.keyPath) ??
+              getValueAtKeyPathIfDefined(content, elem.keyPath) ??
                 (elem.keyPathFallback
                   ? getValueAtKeyPath(content, elem.keyPathFallback)
                   : undefined),
@@ -69,7 +73,7 @@ export const checkUniqueConstraintsForEntity = (
               getValueAtKeyPath(content, elem.entityMapKeyPath) as Record<string, unknown>,
             ).map(([nestedId, nestedContent]) => [
               nestedId,
-              getValueAtKeyPath(nestedContent, elem.keyPathInEntityMap) ??
+              getValueAtKeyPathIfDefined(nestedContent, elem.keyPathInEntityMap) ??
                 (elem.keyPathInEntityMapFallback
                   ? getValueAtKeyPath(nestedContent, elem.keyPathInEntityMapFallback)
                   : undefined),
