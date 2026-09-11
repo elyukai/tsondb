@@ -75,8 +75,7 @@ export const getDisplayNameFromEntityInstance = <
   useCustomizer = true,
 ): DisplayNameResult => {
   const instanceDisplayNameCustomizer = entity.instanceDisplayNameCustomizer as
-    | TypedDisplayNameCustomizer<string, EM, CEM>
-    | undefined
+    TypedDisplayNameCustomizer<string, EM, CEM> | undefined
 
   if (useCustomizer && instanceDisplayNameCustomizer) {
     const calculatedName = getDisplayNameFromEntityInstance(

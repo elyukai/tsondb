@@ -42,8 +42,7 @@ export const getSerializedDisplayNameFromEntityInstance = (
 
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const possibleName = getValueAtPath(localeMap![locale], pathInLocaleMap) as
-            | string
-            | undefined
+            string | undefined
           if (possibleName) {
             return { name: possibleName, localeId: locale }
           } else {
@@ -53,8 +52,7 @@ export const getSerializedDisplayNameFromEntityInstance = (
           name:
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             (getValueAtPath(localeMap![availableLocales[0]!], pathInLocaleMap) as
-              | string
-              | undefined) ?? defaultName,
+              string | undefined) ?? defaultName,
         })
   }
 }

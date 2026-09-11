@@ -25,16 +25,14 @@ const filterFilesForDisplay = (
   data: GitStatusResponseBody,
 ): GitEntityOverview[] =>
   Object.entries(data.instances)
-    .map(
-      ([entityName, instances]): GitEntityOverview => [
+    .map(([entityName, instances]): GitEntityOverview => [
+      entityName,
+      entities.find(entity => entity.declaration.name === entityName)?.declaration.namePlural ??
         entityName,
-        entities.find(entity => entity.declaration.name === entityName)?.declaration.namePlural ??
-          entityName,
-        instances
-          .filter(instance => instance.gitStatus !== undefined && predicate(instance.gitStatus))
-          .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true })),
-      ],
-    )
+      instances
+        .filter(instance => instance.gitStatus !== undefined && predicate(instance.gitStatus))
+        .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true })),
+    ])
     .filter(([_1, _2, instances]) => instances.length > 0)
     .sort((a, b) => a[1].localeCompare(b[1]))
 

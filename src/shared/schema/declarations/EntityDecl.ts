@@ -17,9 +17,7 @@ import type { UniqueConstraints } from "../utils/uniqueConstraint.ts"
 import type { SerializedBaseDecl } from "./Declaration.ts"
 
 export type GenericEntityDisplayName =
-  | string
-  | { pathToLocaleMap?: string; pathInLocaleMap?: string }
-  | null
+  string | { pathToLocaleMap?: string; pathInLocaleMap?: string } | null
 
 export type SerializedEntityDisplayName<T extends TSerializedConstraint> =
   | SerializedPathTo<T, SerializedStringType>

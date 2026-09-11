@@ -8,8 +8,7 @@ import type { EnumCaseDecl } from "./EnumType.ts"
 import type { BaseType, Type } from "./Type.ts"
 
 type TConstraint<Params extends TypeParameter[]> =
-  | TypeAliasDecl<string, Type, Params>
-  | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
+  TypeAliasDecl<string, Type, Params> | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
 
 export interface IncludeIdentifierType<
   Params extends TypeParameter[] = TypeParameter[],

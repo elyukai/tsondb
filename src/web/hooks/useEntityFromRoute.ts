@@ -4,8 +4,7 @@ import type { SerializedEntityDecl } from "../../shared/schema/declarations/Enti
 import { EntitiesContext } from "../context/entities.ts"
 
 export const useEntityFromRoute = ():
-  | { declaration: SerializedEntityDecl; isLocaleEntity: boolean }
-  | undefined => {
+  { declaration: SerializedEntityDecl; isLocaleEntity: boolean } | undefined => {
   const {
     params: { name },
   } = useRoute()

@@ -28,9 +28,7 @@ export const getTypeArgumentsRecord = <Params extends TypeParameter[]>(
   )
 
 export type Decl<Name extends string = string> =
-  | EntityDecl<Name>
-  | EnumDecl<Name>
-  | TypeAliasDecl<Name>
+  EntityDecl<Name> | EnumDecl<Name> | TypeAliasDecl<Name>
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
   | EntityDecl
@@ -38,8 +36,7 @@ export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
   | TypeAliasDecl<string, Type, Params>
 
 export type IncludableDeclP<Params extends TypeParameter[] = TypeParameter[]> =
-  | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
-  | TypeAliasDecl<string, Type, Params>
+  EnumDecl<string, Record<string, EnumCaseDecl>, Params> | TypeAliasDecl<string, Type, Params>
 
 export type SecondaryDecl = EnumDecl | TypeAliasDecl
 

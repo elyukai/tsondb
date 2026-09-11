@@ -124,8 +124,7 @@ export const resolveTypeArguments = <T extends Node = Node>(
         ...node,
         type: () => resolveTypeArguments(args, node.type.value, [...inDecl, node]),
         customConstraints: node.customConstraints as
-          | TypedNestedCustomConstraint<string>
-          | undefined, // ignore contravariance of registered type alias type
+          TypedNestedCustomConstraint<string> | undefined, // ignore contravariance of registered type alias type
       }) as RN
     case NodeKind.ArrayType:
       return ArrayType(resolveTypeArguments(args, node.items, inDecl), {

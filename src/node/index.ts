@@ -77,9 +77,7 @@ export type EnumName<T extends DefaultTSONDBTypes> = Extract<keyof T["enumMap"],
 export type TypeAliasName<T extends DefaultTSONDBTypes> = Extract<keyof T["typeAliasMap"], string>
 
 export type DeclarationName<T extends DefaultTSONDBTypes> =
-  | EntityName<T>
-  | EnumName<T>
-  | TypeAliasName<T>
+  EntityName<T> | EnumName<T> | TypeAliasName<T>
 
 export type ChildEntity<
   T extends DefaultTSONDBTypes,

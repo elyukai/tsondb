@@ -373,16 +373,14 @@ const checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType = (dec
       if (valueAtParentReferenceKey) {
         const typeAtProperty = valueAtParentReferenceKey.type
         // the parent reference must either be an enum of reference types (for polymorphic relations) or a reference identifier type
-        if (
-          !(
-            (isIncludeIdentifierType(typeAtProperty) &&
-              isEnumDecl(typeAtProperty.reference) &&
-              cases(typeAtProperty.reference).every(
-                caseDecl => caseDecl.type !== null && isReferenceIdentifierType(caseDecl.type),
-              )) ||
-            isReferenceIdentifierType(typeAtProperty)
-          )
-        ) {
+        if (!(
+          (isIncludeIdentifierType(typeAtProperty) &&
+            isEnumDecl(typeAtProperty.reference) &&
+            cases(typeAtProperty.reference).every(
+              caseDecl => caseDecl.type !== null && isReferenceIdentifierType(caseDecl.type),
+            )) ||
+          isReferenceIdentifierType(typeAtProperty)
+        )) {
           throw new TypeError(
             `Parent reference key "${decl.parentReferenceKey}" in entity declaration "${decl.name}" must be an IncludeIdentifierType that references an enum declaration whose cases all have a ReferenceIdentifierType.`,
           )

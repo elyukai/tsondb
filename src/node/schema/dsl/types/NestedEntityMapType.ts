@@ -18,8 +18,7 @@ export type PossibleNestedType<T extends TConstraint> =
     >
 
 export type PossibleType<T extends TConstraint> =
-  | ObjectType<T>
-  | IncludeIdentifier<[], TypeAliasDecl<string, PossibleNestedType<T>, []>>
+  ObjectType<T> | IncludeIdentifier<[], TypeAliasDecl<string, PossibleNestedType<T>, []>>
 
 export interface NestedEntityMapType<
   Name extends string = string,
