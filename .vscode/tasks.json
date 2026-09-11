@@ -1,0 +1,36 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "watch:web",
+			"problemMatcher": [],
+			"label": "Start Frontend Watcher",
+      "presentation": {
+        "group": "serve"
+      }
+		},
+		{
+			"type": "npm",
+			"script": "watch",
+			"problemMatcher": [],
+			"label": "Start Backend Watcher",
+      "presentation": {
+        "group": "serve"
+      }
+		},
+		{
+			"label": "Start Watchers",
+			"dependsOn": ["Start Frontend Watcher", "Start Backend Watcher"],
+			"dependsOrder": "parallel",
+			"presentation": {
+				"panel": "shared"
+			},
+			"problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+		}
+	]
+}

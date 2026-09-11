@@ -37,7 +37,8 @@ export const combineSyntaxes = (
 
 const mergeArraysByKey = (...arrayGroups: { [key: string]: string[] }[]) =>
   arrayGroups.reduce<{ [key: string]: string[] }>(
-    (acc, arrayGroup) => mergeObjects(acc, arrayGroup, (a, b) => a.concat(b)),
+    (acc, arrayGroup) =>
+      mergeObjects(acc, arrayGroup, (a, b) => a.concat(b)) as { [key: string]: string[] },
     {},
   )
 
