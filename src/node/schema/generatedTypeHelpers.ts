@@ -81,16 +81,16 @@ export const Case = (<T extends string, V>(type: T, value: V): Case<T, V> =>
     ? { [ENUM_DISCRIMINATOR_KEY]: type }
     : { [ENUM_DISCRIMINATOR_KEY]: type, [type]: value }) as Case<T, V>) as {
   <T extends string>(type: T): Case<T>
-  <T extends string, V extends NonNullable<unknown> | null>(type: T, value: V): Case<T, V>
+  <T extends string, V extends AnyNonNullish | null>(type: T, value: V): Case<T, V>
 }
 
 /**
  * Type representing an enum case object.
  */
 export type Case<K extends string, T = undefined> = {
-  [P in K]: T extends NonNullable<unknown> | null
+  [P in K]: T extends AnyNonNullish | null
     ? { [Key in ENUM_DISCRIMINATOR_KEY]: P } & {
-        [Key in P]: Extract<T, NonNullable<unknown> | null>
+        [Key in P]: Extract<T, AnyNonNullish | null>
       }
     : { [Key in ENUM_DISCRIMINATOR_KEY]: P }
 }[K]
