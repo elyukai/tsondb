@@ -1,4 +1,4 @@
-import { error, ok } from "@elyukai/utils/result"
+import { isError, ok } from "@elyukai/utils/result"
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import * as DSL from "../../../src/node/schema/dsl/index.ts"
@@ -52,14 +52,15 @@ describe("checkUniqueConstraintsForEntity", () => {
         { id: "3", displayName: "Bob" },
       ]
 
+      const res = checkUniqueConstraintsForEntity(entity, instances, instanceOverviews)
+      assert.ok(isError(res))
+      const err = res.error
+      assert.ok(err instanceof AggregateError)
+      assert.equal(err.message, `in entity "${entity.name}"`)
+      assert.ok(err.errors.every(e => e instanceof UniqueConstraintError))
       assert.deepEqual(
-        checkUniqueConstraintsForEntity(entity, instances, instanceOverviews),
-        error(
-          new AggregateError(
-            [new UniqueConstraintError(`for unique constraint name:`, [`"Bob" (2)`, `"Bob" (3)`])],
-            `in entity "${entity.name}"`,
-          ),
-        ),
+        err.errors.map(e => [e.message, e.parts]),
+        [[`for unique constraint name:`, [`"Bob" (2)`, `"Bob" (3)`]]],
       )
     })
   })
@@ -105,14 +106,15 @@ describe("checkUniqueConstraintsForEntity", () => {
         { id: "3", displayName: "Bob" },
       ]
 
+      const res = checkUniqueConstraintsForEntity(entity, instances, instanceOverviews)
+      assert.ok(isError(res))
+      const err = res.error
+      assert.ok(err instanceof AggregateError)
+      assert.equal(err.message, `in entity "${entity.name}"`)
+      assert.ok(err.errors.every(e => e instanceof UniqueConstraintError))
       assert.deepEqual(
-        checkUniqueConstraintsForEntity(entity, instances, instanceOverviews),
-        error(
-          new AggregateError(
-            [new UniqueConstraintError(`for unique constraint name:`, [`"Bob" (2)`, `"Bob" (3)`])],
-            `in entity "${entity.name}"`,
-          ),
-        ),
+        err.errors.map(e => [e.message, e.parts]),
+        [[`for unique constraint name|otherName:`, [`"Bob" (2)`, `"Bob" (3)`]]],
       )
     })
   })
