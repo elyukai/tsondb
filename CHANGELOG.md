@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.20.6](https://github.com/elyukai/tsondb/compare/v0.20.5...v0.20.6) (2026-09-21)
+
+### Features
+
+* **client:** adjustments for pointer devices ([e819951](https://github.com/elyukai/tsondb/commit/e81995118cd6c0f308f3cff9d797f109b5458070))
+* integrate markdown validation and formatting ([d1f139a](https://github.com/elyukai/tsondb/commit/d1f139a4337b32aae436ac6f1fe13daa212fd97c))
 ## [0.20.5](https://github.com/elyukai/tsondb/compare/v0.20.4...v0.20.5) (2026-09-11)
 
 ### Bug Fixes
