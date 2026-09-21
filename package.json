@@ -53,7 +53,7 @@
     "typescript-eslint": "^8.70.0"
   },
   "dependencies": {
-    "@elyukai/markdown": "^0.3.2",
+    "@elyukai/markdown": "^0.3.3",
     "@elyukai/utils": "^0.3.6",
     "@preact/signals": "^2.11.2",
     "debug": "^4.4.3",

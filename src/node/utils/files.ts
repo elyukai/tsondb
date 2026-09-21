@@ -1,6 +1,7 @@
 import { rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
+import type { FormatterOptions } from "../config.ts"
 import { type EntityDecl } from "../schema/dsl/index.ts"
 import { formatValue } from "../schema/treeOperations/format.ts"
 
@@ -14,13 +15,21 @@ export const writeInstance = (
   entity: EntityDecl,
   id: string,
   instance: InstanceContent,
+  formatterOptions: Partial<FormatterOptions> | undefined,
 ): Promise<void> =>
-  writeFile(getPathToInstance(dataRoot, entity.name, id), formatInstance(entity, instance), {
-    encoding: "utf-8",
-  })
+  writeFile(
+    getPathToInstance(dataRoot, entity.name, id),
+    formatInstance(entity, instance, formatterOptions),
+    {
+      encoding: "utf-8",
+    },
+  )
 
 export const deleteInstance = (dataRoot: string, entityName: string, id: string): Promise<void> =>
   rm(getPathToInstance(dataRoot, entityName, id))
 
-export const formatInstance = (entity: EntityDecl, instanceContent: InstanceContent) =>
-  JSON.stringify(formatValue(entity.type.value, instanceContent), undefined, 2) + "\n"
+export const formatInstance = (
+  entity: EntityDecl,
+  instanceContent: InstanceContent,
+  options: Partial<FormatterOptions> | undefined,
+) => JSON.stringify(formatValue(entity.type.value, instanceContent, options), undefined, 2) + "\n"

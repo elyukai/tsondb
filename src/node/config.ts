@@ -1,3 +1,4 @@
+import type { FormatterOptions as MarkdownFormatterOptions } from "@elyukai/markdown/format"
 import type { DefaultTSONDBTypes, ValidationOptions } from "./index.ts"
 import type { Output } from "./output.ts"
 import type { EntityDecl } from "./schema/dsl/index.ts"
@@ -20,6 +21,14 @@ export type Config<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = {
   customStylesheetPath?: string
   customAssetsPath?: string
   validationOptions?: Partial<ValidationOptions>
+  formattingOptions?: Partial<FormatterOptions>
+}
+
+export type FormatterOptions = {
+  /**
+   * If set to false, Markdown formatting will be disabled. Otherwise, the default or, if provided, provided Markdown formatting options will be used to format Markdown strings.
+   */
+  markdown?: Partial<MarkdownFormatterOptions> | false
 }
 
 export type ServerOptions = {
@@ -54,6 +63,7 @@ export const validateConfigForGeneration: (
 export type DataConfig<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = Config<T> & {
   schema: Schema<T>
   dataRootPath: string
+  formattingOptions?: Partial<FormatterOptions>
 }
 
 export const validateConfigForData: (config: Config) => asserts config is DataConfig = config => {
@@ -72,6 +82,7 @@ export type ServerConfig<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = Da
   validationOptions?: Partial<ValidationOptions>
   customStylesheetPath?: string
   customAssetsPath?: string
+  formattingOptions?: Partial<FormatterOptions>
 }
 
 /**

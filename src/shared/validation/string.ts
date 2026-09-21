@@ -1,9 +1,13 @@
+import { validate, validateInline } from "@elyukai/markdown/validate"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
+import type { MarkdownStringOption } from "../schema/types/StringType.ts"
 import { parallelizeErrors } from "../utils/validation.ts"
 
 export interface StringConstraints {
   minLength?: number
   maxLength?: number
   pattern?: string | RegExp
+  markdown?: MarkdownStringOption
 }
 
 export const validateStringConstraints = (constraints: StringConstraints, value: string) =>
@@ -35,5 +39,19 @@ export const validateStringConstraints = (constraints: StringConstraints, value:
       return !pattern.test(value)
         ? TypeError(`string does not match the pattern ${pattern.toString()}`)
         : undefined
+    })(),
+    (() => {
+      if (constraints.markdown === undefined) {
+        return undefined
+      }
+
+      switch (constraints.markdown) {
+        case "inline":
+          return validateInline(value)
+        case "block":
+          return validate(value)
+        default:
+          return assertExhaustive(constraints.markdown)
+      }
     })(),
   ])

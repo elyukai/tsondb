@@ -14,6 +14,7 @@ import type {
   InstanceContent,
 } from "../shared/utils/instances.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
+import type { FormatterOptions } from "./config.ts"
 import { Git } from "./git.js"
 import type { Output } from "./output.ts"
 import { getDisplayName, getDisplayNameWithId } from "./schema/detached.ts"
@@ -116,6 +117,10 @@ export interface TSONDBOptions<T extends DefaultTSONDBTypes = DefaultTSONDBTypes
    * Options for validating the data in the database.
    */
   validationOptions?: Partial<ValidationOptions>
+  /**
+   * Options for formatting the data in the database.
+   */
+  formatterOptions?: Partial<FormatterOptions>
 }
 
 /**
@@ -255,6 +260,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   #git: TSONDBGit | undefined
   #referencesToInstances: ReferencesToInstances
   #validationOptions: ValidationOptions
+  #formatterOptions: Partial<FormatterOptions> | undefined
   #gitWrapper: Lazy<Git<T> | undefined>
   #locked: boolean = false
 
@@ -266,6 +272,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     git?: TSONDBGit
     referencesToInstances: ReferencesToInstances
     validationOptions: ValidationOptions
+    formatterOptions?: Partial<FormatterOptions> | undefined
   }) {
     this.#dataRootPath = options.dataRootPath
     this.#data = options.data
@@ -274,6 +281,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     this.#git = options.git
     this.#referencesToInstances = options.referencesToInstances
     this.#validationOptions = options.validationOptions
+    this.#formatterOptions = options.formatterOptions
     this.#gitWrapper = Lazy.of(() =>
       this.#git
         ? new Git<T>(
@@ -581,7 +589,13 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     await this.#data.forEachInstance(async (entityName, instance) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const entity = this.#schema.getEntity(entityName)!
-      await writeInstance(this.#dataRootPath, entity, instance.id, instance.content)
+      await writeInstance(
+        this.#dataRootPath,
+        entity,
+        instance.id,
+        instance.content,
+        this.#formatterOptions,
+      )
     }, true)
     debug("All data is formatted")
   }
@@ -663,7 +677,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       }
 
       debug("Applying changes to disk ...")
-      const diskResult = await applyStepsToDisk(this.#dataRootPath, steps)
+      const diskResult = await applyStepsToDisk(this.#dataRootPath, steps, this.#formatterOptions)
 
       if (isError(diskResult)) {
         debug("Error applying changes to disk: %s", diskResult.error.message)

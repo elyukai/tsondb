@@ -2,7 +2,7 @@ import Debug from "debug"
 import express from "express"
 import { findPackageJSON } from "node:module"
 import { dirname, join } from "node:path"
-import type { HomeLayoutSection } from "../config.ts"
+import type { HomeLayoutSection, ServerConfig } from "../config.ts"
 import type { TSONDB, ValidationOptions } from "../index.ts"
 import { api } from "./api/index.ts"
 import { getLocalesFromRequest } from "./utils/locales.ts"
@@ -39,14 +39,14 @@ const staticNodeModule = (moduleName: string) => {
   return express.static(dirname(pathToPackageJson))
 }
 
-export const createServer = (
-  db: TSONDB,
-  homeLayoutSections?: HomeLayoutSection[],
-  options?: Partial<ServerOptions>,
-  validationOptions?: Partial<ValidationOptions>,
-  customStylesheetPath?: string,
-  customAssetsPath?: string,
-): void => {
+export const createServer = (db: TSONDB, config: Omit<ServerConfig, "locales">): void => {
+  const {
+    serverOptions: options,
+    homeLayoutSections,
+    validationOptions,
+    customAssetsPath,
+    customStylesheetPath,
+  } = config
   const { port } = { ...defaultOptions, ...options }
 
   const app = express()

@@ -1,7 +1,12 @@
+import {
+  format as formatMarkdown,
+  formatInline as formatMarkdownInline,
+} from "@elyukai/markdown/format"
 import { mapObject, sortObjectKeys, sortObjectKeysByIndex } from "@elyukai/utils/object"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import { NodeKind } from "../../../shared/schema/Node.ts"
+import type { FormatterOptions } from "../../config.ts"
 import type { Type } from "../dsl/index.ts"
 import type { TranslationObjectTypeConstraint } from "../dsl/types/TranslationObjectType.ts"
 
@@ -24,25 +29,33 @@ const formatTranslationObjectValue = (
 /**
  * Format the structure of a value to always look the same when serialized as JSON.
  */
-export const formatValue = (type: Type, value: unknown): unknown => {
+export const formatValue = (
+  type: Type,
+  value: unknown,
+  options: Partial<FormatterOptions> | undefined,
+): unknown => {
   switch (type.kind) {
     case NodeKind.ArrayType:
-      return Array.isArray(value) ? value.map(item => formatValue(type.items, item)) : value
+      return Array.isArray(value)
+        ? value.map(item => formatValue(type.items, item, options))
+        : value
     case NodeKind.ObjectType:
       return typeof value === "object" && value !== null && !Array.isArray(value)
         ? sortObjectKeysByIndex(
             mapObject(value as Record<string, unknown>, (item, key) =>
-              type.properties[key] ? formatValue(type.properties[key].type, item) : item,
+              type.properties[key] ? formatValue(type.properties[key].type, item, options) : item,
             ),
             Object.keys(type.properties),
           )
         : value
     case NodeKind.IncludeIdentifierType:
-      return formatValue(type.reference.type.value, value)
+      return formatValue(type.reference.type.value, value, options)
     case NodeKind.NestedEntityMapType:
       return typeof value === "object" && value !== null && !Array.isArray(value)
         ? sortObjectKeys(
-            mapObject(value as Record<string, unknown>, item => formatValue(type.type.value, item)),
+            mapObject(value as Record<string, unknown>, item =>
+              formatValue(type.type.value, item, options),
+            ),
           )
         : value
     case NodeKind.EnumType: {
@@ -61,7 +74,7 @@ export const formatValue = (type: Type, value: unknown): unknown => {
           [ENUM_DISCRIMINATOR_KEY]: caseName,
           ...(caseValue == null || caseType == null
             ? {}
-            : { [caseName]: formatValue(caseType, caseValue) }),
+            : { [caseName]: formatValue(caseType, caseValue, options) }),
         }
       }
 
@@ -71,11 +84,27 @@ export const formatValue = (type: Type, value: unknown): unknown => {
       return Array.isArray(value) ? value.toSorted() : value
     case NodeKind.TranslationObjectType:
       return formatTranslationObjectValue(type.properties, value)
+    case NodeKind.StringType: {
+      if (options?.markdown === false) {
+        return value
+      }
+
+      switch (type.markdown) {
+        case "inline":
+          return typeof value === "string" ? formatMarkdownInline(value.trim()) : value
+        case "block":
+          return typeof value === "string"
+            ? formatMarkdown(value.trimEnd(), options?.markdown)
+            : value
+        default:
+          return value
+      }
+    }
+
     case NodeKind.BooleanType:
     case NodeKind.DateType:
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
-    case NodeKind.StringType:
     case NodeKind.TypeArgumentType:
     case NodeKind.ReferenceIdentifierType:
       return value

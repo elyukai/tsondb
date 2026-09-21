@@ -68,6 +68,6 @@ describe("getReferencesForFloatType", () => {
 
 describe("formatFloatValue", () => {
   it("formats a float value", () => {
-    equal(formatValue(FloatType(), 1.0), 1.0)
+    equal(formatValue(FloatType(), 1.0, undefined), 1.0)
   })
 })

@@ -67,6 +67,6 @@ describe("getReferencesForBooleanType", () => {
 
 describe("formatBooleanValue", () => {
   it("formats a boolean value", () => {
-    equal(formatValue(BooleanType(), false), false)
+    equal(formatValue(BooleanType(), false, undefined), false)
   })
 })
