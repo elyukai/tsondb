@@ -50,6 +50,12 @@ const passedArguments = parseArguments({
     },
     format: {
       name: "format",
+      options: {
+        check: {
+          name: "check",
+          type: Boolean,
+        },
+      },
     },
     name: {
       name: "name",
@@ -169,9 +175,14 @@ if (passedArguments.command.name === "generate") {
       break
     }
     case "format": {
-      debug(`running command: format`)
       const db = await createDB(config, config.validationOptions, true)
-      await db.format()
+      if (passedArguments.command.options?.check === true) {
+        debug(`running command: format --check`)
+        await db.checkFormat()
+      } else {
+        debug(`running command: format`)
+        await db.format()
+      }
       break
     }
     case "name": {

@@ -1,4 +1,4 @@
-import { rm, writeFile } from "node:fs/promises"
+import { readFile, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
 import type { FormatterOptions } from "../config.ts"
@@ -9,6 +9,11 @@ export const getFileNameForId = (id: string): string => `${id}.json`
 
 export const getPathToInstance = (dataRoot: string, entityName: string, id: string): string =>
   join(dataRoot, entityName, getFileNameForId(id))
+
+export const readInstance = (dataRoot: string, entity: EntityDecl, id: string): Promise<string> =>
+  readFile(getPathToInstance(dataRoot, entity.name, id), {
+    encoding: "utf-8",
+  })
 
 export const writeInstance = (
   dataRoot: string,

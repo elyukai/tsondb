@@ -30,9 +30,11 @@ import { isEntityDeclWithParentReference } from "./schema/guards.ts"
 import type { Schema } from "./schema/index.ts"
 import { serializeNode } from "./schema/treeOperations/serialization.ts"
 import {
+  createEntityNameValidator,
   createReferenceValidator,
   validateDeclReferentialIntegrity,
   validateDeclStructuralIntegrity,
+  type EntityNameValidator,
   type ReferenceValidator,
   type ValidationContext,
 } from "./schema/treeOperations/validation.ts"
@@ -53,7 +55,7 @@ import {
   HTTPError,
   wrapErrorsIfAny,
 } from "./utils/error.ts"
-import { getFileNameForId, writeInstance } from "./utils/files.ts"
+import { formatInstance, getFileNameForId, readInstance, writeInstance } from "./utils/files.ts"
 import { attachGitStatusToDatabaseInMemory } from "./utils/git.ts"
 import {
   getReferencesToInstances,
@@ -624,6 +626,38 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       )
     }, true)
     debug("All data is formatted")
+  }
+
+  /**
+   * Checks if the data on disk is formatted according to the current in-memory representation.
+   */
+  async checkFormat(): Promise<void> {
+    debug("Check database formatting ...")
+
+    let counter = 0
+
+    await this.#data.forEachInstance(async (entityName, instance) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const entity = this.#schema.getEntity(entityName)!
+      const instanceOnDisk = await readInstance(this.#dataRootPath, entity, instance.id)
+      const currentFormatted = formatInstance(entity, instance.content, this.#formatterOptions)
+      if (instanceOnDisk !== currentFormatted) {
+        console.log(
+          `Instance ${styleText("yellow", instance.id)} of entity ${styleText("cyan", entityName)} is not formatted correctly.`,
+        )
+        counter++
+      }
+    }, true)
+
+    if (counter === 0) {
+      console.log(styleText("green", "All data is formatted"))
+    } else {
+      console.error(
+        styleText("red", `${counter.toFixed()} formatting error${counter === 1 ? "" : "s"} found`, {
+          stream: stderr,
+        }),
+      )
+    }
   }
 
   /**
