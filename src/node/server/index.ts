@@ -68,7 +68,7 @@ export const createServer = (db: TSONDB, config: Omit<ServerConfig, "locales">):
     defaultLocales,
     locales: defaultLocales,
     homeLayoutSections,
-    validationOptions: validationOptions ?? {},
+    validationOptions: { ...(validationOptions ?? {}), markdown: undefined },
   }
 
   app.use((req, _res, next) => {

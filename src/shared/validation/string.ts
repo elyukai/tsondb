@@ -40,9 +40,9 @@ export const validateStringConstraints = (constraints: StringConstraints, value:
         ? TypeError(`string does not match the pattern ${pattern.toString()}`)
         : undefined
     })(),
-    (() => {
+    ...(() => {
       if (constraints.markdown === undefined) {
-        return undefined
+        return []
       }
 
       switch (constraints.markdown) {

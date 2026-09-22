@@ -1,3 +1,9 @@
+import {
+  validate as validateBlockMarkdown,
+  validateInline as validateInlineMarkdown,
+  type ValidationOptions as MarkdownValidationOptions,
+} from "@elyukai/markdown/validate"
+import { isNotNullish } from "@elyukai/utils/nullable"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { MessageError, parseMessage, validate } from "messageformat"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
@@ -22,7 +28,7 @@ import { wrapErrorsIfAny } from "../../utils/error.ts"
 import { entity, json, key } from "../../utils/errorFormatting.ts"
 import { getTypeArgumentsRecord, type Decl } from "../dsl/declarations/Decl.ts"
 import { createEntityIdentifierType } from "../dsl/declarations/EntityDecl.ts"
-import type { Type } from "../dsl/index.ts"
+import type { StringType, Type } from "../dsl/index.ts"
 import type { TranslationObjectTypeConstraint } from "../dsl/types/TranslationObjectType.ts"
 import type { AnyEntityMap } from "../generatedTypeHelpers.ts"
 import { isChildEntitiesType } from "../guards.ts"
@@ -30,12 +36,21 @@ import { resolveTypeArguments } from "./typeResolution.ts"
 
 export type IdentifierToCheck = { name: string; value: unknown }
 
+export type EntityNameValidator = (entityName: unknown) => Error[]
+
 export type ReferenceValidator = (entityName: string, instanceId: unknown) => ReferenceError[]
 
 export interface ValidationContext {
   useStyling: boolean
   validationOptions: ValidationOptions
 }
+
+export const createEntityNameValidator =
+  (isEntityName: (name: string) => boolean, useStyling: boolean): EntityNameValidator =>
+  entityName =>
+    typeof entityName === "string" && isEntityName(entityName)
+      ? []
+      : [ReferenceError(`Invalid entity name ${json(entityName, useStyling)}`)]
 
 export const createReferenceValidator =
   <EM extends AnyEntityMap>(
@@ -179,6 +194,108 @@ const validateTranslationObjectStructuralIntegrity = (
   ])
 }
 
+const DEFAULT_ENTITY_KEY = "entity"
+const DEFAULT_INSTANCE_KEY = "instance"
+
+const normalizeAttributedStringReferenceKeys = (
+  option: true | { entityKey: string; instanceKey: string },
+) =>
+  option === true ? { entityKey: DEFAULT_ENTITY_KEY, instanceKey: DEFAULT_INSTANCE_KEY } : option
+
+const createStructuralAttributedStringKeyValidator = (
+  validationOptions: ValidationOptions,
+): ((key: string) => boolean) | undefined => {
+  const { checkInstanceReferencesInAttributedStrings: checkAttrRefs, checkAttributedStringKeys } =
+    validationOptions.markdown ?? {}
+
+  if (checkAttributedStringKeys !== undefined) {
+    const generalTest: (key: string) => boolean = Array.isArray(checkAttributedStringKeys)
+      ? key => checkAttributedStringKeys.includes(key)
+      : key => checkAttributedStringKeys.test(key)
+
+    if (checkAttrRefs === true || typeof checkAttrRefs === "object") {
+      const { entityKey, instanceKey } = normalizeAttributedStringReferenceKeys(checkAttrRefs)
+      const additionalValidKeys = [entityKey, instanceKey]
+
+      return key => generalTest(key) || additionalValidKeys.includes(key)
+    }
+
+    return generalTest
+  }
+
+  return undefined
+}
+
+const createStructuralAttributedStringValidator = (
+  validationOptions: ValidationOptions,
+): MarkdownValidationOptions["validateAttributes"] | undefined => {
+  const keyValidator = createStructuralAttributedStringKeyValidator(validationOptions)
+
+  if (keyValidator === undefined) {
+    return undefined
+  }
+
+  return attributes =>
+    Object.keys(attributes)
+      .map(attributeName =>
+        keyValidator(attributeName)
+          ? undefined
+          : new TypeError(`invalid attribute key "${attributeName}" in attributed string`),
+      )
+      .filter(isNotNullish)
+}
+
+const createReferentialAttributedStringValidator = (
+  entityValidator: EntityNameValidator,
+  referenceValidator: ReferenceValidator,
+  validationOptions: ValidationOptions,
+): MarkdownValidationOptions["validateAttributes"] | undefined => {
+  const { checkInstanceReferencesInAttributedStrings: checkAttrRefs } =
+    validationOptions.markdown ?? {}
+
+  if (checkAttrRefs === true || typeof checkAttrRefs === "object") {
+    const { entityKey, instanceKey } = normalizeAttributedStringReferenceKeys(checkAttrRefs)
+
+    return attributes => {
+      if (entityKey in attributes) {
+        const entityName = attributes[entityKey]
+        const entityErrors = entityValidator(entityName)
+
+        if (entityErrors.length > 0) {
+          return entityErrors
+        }
+
+        if (instanceKey in attributes && typeof entityName === "string") {
+          const instanceId = attributes[instanceKey]
+          return referenceValidator(entityName, instanceId)
+        }
+      }
+      return []
+    }
+  }
+
+  return undefined
+}
+
+const validateMarkdownString = (
+  type: StringType,
+  value: unknown,
+  validator: MarkdownValidationOptions["validateAttributes"] | undefined,
+): Error[] => {
+  if (type.markdown !== undefined && typeof value === "string") {
+    switch (type.markdown) {
+      case "inline":
+        return validateInlineMarkdown(value, { validateAttributes: validator })
+      case "block":
+        return validateBlockMarkdown(value, { validateAttributes: validator })
+      default:
+        return assertExhaustive(type.markdown)
+    }
+  }
+
+  return []
+}
+
 export const validateTypeStructuralIntegrity = (
   helpers: ValidationContext,
   inDecls: Decl[],
@@ -276,7 +393,14 @@ export const validateTypeStructuralIntegrity = (
         return [TypeError(`expected a string, but got ${json(value, helpers.useStyling)}`)]
       }
 
-      return validateStringConstraints(type, value)
+      return parallelizeErrors([
+        ...validateStringConstraints(type, value),
+        ...validateMarkdownString(
+          type,
+          value,
+          createStructuralAttributedStringValidator(helpers.validationOptions),
+        ),
+      ])
     }
     case NodeKind.TypeArgumentType: {
       throw new TypeError(
@@ -388,6 +512,7 @@ export const validateTypeStructuralIntegrity = (
 
 export const validateDeclReferentialIntegrity = (
   helpers: ValidationContext,
+  checkEntityName: EntityNameValidator,
   checkReferentialIntegrity: ReferenceValidator,
   inDecls: Decl[],
   decl: Decl,
@@ -398,6 +523,7 @@ export const validateDeclReferentialIntegrity = (
     case NodeKind.EntityDecl:
       return validateTypeReferentialIntegrity(
         helpers,
+        checkEntityName,
         checkReferentialIntegrity,
         inDecls,
         decl.type.value,
@@ -407,6 +533,7 @@ export const validateDeclReferentialIntegrity = (
     case NodeKind.TypeAliasDecl:
       return validateTypeReferentialIntegrity(
         helpers,
+        checkEntityName,
         checkReferentialIntegrity,
         [...inDecls, decl],
         resolveTypeArguments(getTypeArgumentsRecord(decl, typeArgs), decl.type.value, [
@@ -422,6 +549,7 @@ export const validateDeclReferentialIntegrity = (
 
 export const validateTypeReferentialIntegrity = (
   helpers: ValidationContext,
+  checkEntityName: EntityNameValidator,
   checkReferentialIntegrity: ReferenceValidator,
   inDecls: Decl[],
   type: Type,
@@ -436,6 +564,7 @@ export const validateTypeReferentialIntegrity = (
                 `at index ${key(index.toString(), helpers.useStyling)}`,
                 validateTypeReferentialIntegrity(
                   helpers,
+                  checkEntityName,
                   checkReferentialIntegrity,
                   inDecls,
                   type.items,
@@ -466,6 +595,7 @@ export const validateTypeReferentialIntegrity = (
               `at object key ${key(`"${propName}"`, helpers.useStyling)}`,
               validateTypeReferentialIntegrity(
                 helpers,
+                checkEntityName,
                 checkReferentialIntegrity,
                 inDecls,
                 prop.type,
@@ -488,6 +618,7 @@ export const validateTypeReferentialIntegrity = (
     case NodeKind.IncludeIdentifierType:
       return validateDeclReferentialIntegrity(
         helpers,
+        checkEntityName,
         checkReferentialIntegrity,
         inDecls,
         type.reference,
@@ -505,6 +636,7 @@ export const validateTypeReferentialIntegrity = (
             `at nested entity map ${entity(`"${type.name}"`, helpers.useStyling)} at key ${key(`"${propName}"`, helpers.useStyling)}`,
             validateTypeReferentialIntegrity(
               helpers,
+              checkEntityName,
               checkReferentialIntegrity,
               inDecls,
               type.type.value,
@@ -536,6 +668,7 @@ export const validateTypeReferentialIntegrity = (
               `at enum case ${key(`"${enumCase}"`, helpers.useStyling)}`,
               validateTypeReferentialIntegrity(
                 helpers,
+                checkEntityName,
                 checkReferentialIntegrity,
                 inDecls,
                 type.values[enumCase].type,
@@ -545,11 +678,22 @@ export const validateTypeReferentialIntegrity = (
           ])
         : []
     }
+
+    case NodeKind.StringType:
+      return validateMarkdownString(
+        type,
+        value,
+        createReferentialAttributedStringValidator(
+          checkEntityName,
+          checkReferentialIntegrity,
+          helpers.validationOptions,
+        ),
+      )
+
     case NodeKind.BooleanType:
     case NodeKind.DateType:
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
-    case NodeKind.StringType:
     case NodeKind.ChildEntitiesType:
     case NodeKind.TranslationObjectType:
       return []

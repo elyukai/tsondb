@@ -139,6 +139,26 @@ export interface ValidationOptions {
    * If set, translations will be validated according to the provided options.
    */
   checkTranslations?: TranslationValidationOptions
+
+  /**
+   * Special options for validating Markdown content in the database.
+   */
+  markdown?: Partial<MarkdownValidationOptions>
+}
+
+/**
+ * Special options for validating Markdown content in the database.
+ */
+export interface MarkdownValidationOptions {
+  /**
+   * Checks for the existence of referenced entities and possibly instances in attributed strings. If the attribute names are not specified via an object, the default attribute names `entity` and `instance` will be used.
+   */
+  checkInstanceReferencesInAttributedStrings?: boolean | { entityKey: string; instanceKey: string }
+
+  /**
+   * If set, keys in attributed strings will be checked agains the provided list of keys or regular expression. Keys for `checkInstanceReferencesInAttributedStrings` are included automatically and do not need to be specified again.
+   */
+  checkAttributedStringKeys?: string[] | RegExp
 }
 
 /**
@@ -454,6 +474,11 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         if (checkReferentialIntegrity) {
           debug("Checking referential integrity ...")
 
+          const entityNameValidator: EntityNameValidator = createEntityNameValidator(
+            this.#schema.isEntityName.bind(this.#schema),
+            true,
+          )
+
           const referenceValidator: ReferenceValidator = createReferenceValidator(
             this.#schema.isEntityName.bind(this.#schema),
             data,
@@ -470,6 +495,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
                       `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
                       validateDeclReferentialIntegrity(
                         validationContext,
+                        entityNameValidator,
                         referenceValidator,
                         [],
                         entity,
