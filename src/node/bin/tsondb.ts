@@ -178,7 +178,10 @@ if (passedArguments.command.name === "generate") {
       const db = await createDB(config, config.validationOptions, true)
       if (passedArguments.command.options?.check === true) {
         debug(`running command: format --check`)
-        await db.checkFormat()
+        const result = await db.checkFormat()
+        if (!result) {
+          process.exitCode = 1
+        }
       } else {
         debug(`running command: format`)
         await db.format()

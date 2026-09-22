@@ -631,7 +631,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   /**
    * Checks if the data on disk is formatted according to the current in-memory representation.
    */
-  async checkFormat(): Promise<void> {
+  async checkFormat(): Promise<boolean> {
     debug("Check database formatting ...")
 
     let counter = 0
@@ -651,12 +651,14 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
     if (counter === 0) {
       console.log(styleText("green", "All data is formatted"))
+      return true
     } else {
       console.error(
         styleText("red", `${counter.toFixed()} formatting error${counter === 1 ? "" : "s"} found`, {
           stream: stderr,
         }),
       )
+      return false
     }
   }
 
