@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.20.8](https://github.com/elyukai/tsondb/compare/v0.20.7...v0.20.8) (2026-09-22)
+
+### Features
+
+* **client:** validate attributed string attributes ([aa971ab](https://github.com/elyukai/tsondb/commit/aa971ab9e9a6c577e5574be87b7f317f372a1dd9))
+* **cli:** format checker ([da8f924](https://github.com/elyukai/tsondb/commit/da8f924de48ca5177af94727fb394cc0caebad03))
+
 ## [0.20.7](https://github.com/elyukai/tsondb/compare/v0.20.6...v0.20.7) (2026-09-21)
 
 ## [0.20.6](https://github.com/elyukai/tsondb/compare/v0.20.5...v0.20.6) (2026-09-21)
