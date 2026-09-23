@@ -83,6 +83,12 @@ export type TypeScriptRendererOptions = {
    */
   inferTranslationParameters?: {
     format: "mf2"
+
+    /**
+     * The default type to use for translation parameters when the type cannot be inferred from the message string.
+     * @default "string"
+     */
+    defaultTranslationParameterType?: "string" | "StringableTranslationParameter"
   }
 }
 
@@ -93,6 +99,10 @@ const defaultOptions: TypeScriptRendererOptions = {
   generateHelpers: {},
   addIdentifierToEntities: false,
 }
+
+const defaultTranslationParameterType: NonNullable<
+  TypeScriptRendererOptions["inferTranslationParameters"]
+>["defaultTranslationParameterType"] = "string"
 
 type RenderFn<T> = (options: TypeScriptRendererOptions, node: T) => RenderResult
 
@@ -211,7 +221,7 @@ const renderEnumType: RenderFn<EnumType> = (options, type) =>
 
 const renderChildEntitiesType: RenderFn<ChildEntitiesType> = () => syntax`never`
 
-const mapTypeNameToType = (typeName: string | null): string => {
+const mapTypeNameToType = (options: TypeScriptRendererOptions, typeName: string | null): string => {
   switch (typeName) {
     case "string":
       return "string"
@@ -224,7 +234,10 @@ const mapTypeNameToType = (typeName: string | null): string => {
       return "Date"
     case null:
     default:
-      return "StringableTranslationParameter"
+      return (
+        options.inferTranslationParameters?.defaultTranslationParameterType ??
+        defaultTranslationParameterType
+      )
   }
 }
 
@@ -249,7 +262,9 @@ const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, t
             type.allKeysAreRequired ? "" : "?"
           }: ${renderType(options, getTypeOfKey(config, type))}${renderTranslationParameterBrand(
             options,
-            mapParameterTypeNames(extractParameterTypeNamesFromMessage(name), mapTypeNameToType),
+            mapParameterTypeNames(extractParameterTypeNamesFromMessage(name), typeName =>
+              mapTypeNameToType(options, typeName),
+            ),
           )}`,
       ),
       EOL,
@@ -409,7 +424,10 @@ const renderTypeAliasMapType = (
 ) => renderMapHelperType(options, declarations, "typeAliasMap", "TypeAliasMap", isTypeAliasDecl)
 
 const renderStringableTranslationParameterType = (options: TypeScriptRendererOptions) =>
-  options.inferTranslationParameters?.format === "mf2"
+  options.inferTranslationParameters?.format === "mf2" &&
+  (options.inferTranslationParameters.defaultTranslationParameterType === undefined ||
+    options.inferTranslationParameters.defaultTranslationParameterType ===
+      "StringableTranslationParameter")
     ? "export type StringableTranslationParameter = {" +
       EOL +
       prefixLines(getIndentation(options.indentation, 1), "toString(): string") +
