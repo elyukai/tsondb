@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.21.0](https://github.com/elyukai/tsondb/compare/v0.20.10...v0.21.0) (2026-09-23)
+
+### ⚠ BREAKING CHANGES
+
+* **ts-renderer:** Defaults to string instead of Date
+* **ts-renderer:** Sets the default to string instead of
+  StringableTranslationParameter.
+
+### Features
+
+* **ts-renderer:** option for default translation parameter type ([c07400b](https://github.com/elyukai/tsondb/commit/c07400b6975401fa91a523d41cc8b878fcd321ad))
+* **ts-renderer:** option for generated date type ([6f967e1](https://github.com/elyukai/tsondb/commit/6f967e1385a14481081466a7c7ea4f498211a390))
+
 ## [0.20.10](https://github.com/elyukai/tsondb/compare/v0.20.9...v0.20.10) (2026-09-23)
 
 ### Bug Fixes
