@@ -26,35 +26,76 @@ const formatTranslationObjectValue = (
       )
     : value
 
+const resolveNestedTypeArguments = (type: Type, typeArguments: Record<string, Type>): Type => {
+  switch (type.kind) {
+    case NodeKind.TypeArgumentType:
+      return typeArguments[type.argument.name] ?? type
+    case NodeKind.IncludeIdentifierType:
+      return {
+        ...type,
+        args: type.args.map(arg => resolveNestedTypeArguments(arg, typeArguments)),
+      }
+    case NodeKind.ArrayType:
+    case NodeKind.BooleanType:
+    case NodeKind.ChildEntitiesType:
+    case NodeKind.DateType:
+    case NodeKind.EnumType:
+    case NodeKind.FloatType:
+    case NodeKind.IntegerType:
+    case NodeKind.NestedEntityMapType:
+    case NodeKind.ObjectType:
+    case NodeKind.ReferenceIdentifierType:
+    case NodeKind.StringType:
+    case NodeKind.TranslationObjectType:
+      return type
+    default:
+      return assertExhaustive(type)
+  }
+}
+
 /**
  * Format the structure of a value to always look the same when serialized as JSON.
  */
 export const formatValue = (
   type: Type,
   value: unknown,
+  typeArguments: Record<string, Type>,
   options: Partial<FormatterOptions> | undefined,
 ): unknown => {
   switch (type.kind) {
     case NodeKind.ArrayType:
       return Array.isArray(value)
-        ? value.map(item => formatValue(type.items, item, options))
+        ? value.map(item => formatValue(type.items, item, typeArguments, options))
         : value
     case NodeKind.ObjectType:
       return typeof value === "object" && value !== null && !Array.isArray(value)
         ? sortObjectKeysByIndex(
             mapObject(value as Record<string, unknown>, (item, key) =>
-              type.properties[key] ? formatValue(type.properties[key].type, item, options) : item,
+              type.properties[key]
+                ? formatValue(type.properties[key].type, item, typeArguments, options)
+                : item,
             ),
             Object.keys(type.properties),
           )
         : value
     case NodeKind.IncludeIdentifierType:
-      return formatValue(type.reference.type.value, value, options)
+      return formatValue(
+        type.reference.type.value,
+        value,
+        Object.fromEntries(
+          type.args.map((arg, index) => [
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            type.reference.parameters[index]!.name,
+            resolveNestedTypeArguments(arg, typeArguments),
+          ]),
+        ),
+        options,
+      )
     case NodeKind.NestedEntityMapType:
       return typeof value === "object" && value !== null && !Array.isArray(value)
         ? sortObjectKeys(
             mapObject(value as Record<string, unknown>, item =>
-              formatValue(type.type.value, item, options),
+              formatValue(type.type.value, item, typeArguments, options),
             ),
           )
         : value
@@ -74,7 +115,7 @@ export const formatValue = (
           [ENUM_DISCRIMINATOR_KEY]: caseName,
           ...(caseValue == null || caseType == null
             ? {}
-            : { [caseName]: formatValue(caseType, caseValue, options) }),
+            : { [caseName]: formatValue(caseType, caseValue, typeArguments, options) }),
         }
       }
 
@@ -100,12 +141,19 @@ export const formatValue = (
           return value
       }
     }
+    case NodeKind.TypeArgumentType: {
+      const typeArgument = typeArguments[type.argument.name]
+      if (typeArgument === undefined) {
+        return value
+      } else {
+        return formatValue(typeArgument, value, typeArguments, options)
+      }
+    }
 
     case NodeKind.BooleanType:
     case NodeKind.DateType:
     case NodeKind.FloatType:
     case NodeKind.IntegerType:
-    case NodeKind.TypeArgumentType:
     case NodeKind.ReferenceIdentifierType:
       return value
     default:

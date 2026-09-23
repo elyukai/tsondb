@@ -635,6 +635,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     debug("Check database formatting ...")
 
     let counter = 0
+    let total = 0
 
     await this.#data.forEachInstance(async (entityName, instance) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -647,16 +648,26 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         )
         counter++
       }
+      total++
     }, true)
 
     if (counter === 0) {
-      console.log(styleText("green", "All data is formatted"))
+      console.log(
+        styleText(
+          "green",
+          `All ${total.toFixed()} instance${total === 1 ? "" : "s"} are formatted correctly`,
+        ),
+      )
       return true
     } else {
       console.error(
-        styleText("red", `${counter.toFixed()} formatting error${counter === 1 ? "" : "s"} found`, {
-          stream: stderr,
-        }),
+        styleText(
+          "red",
+          `${counter.toFixed()} instance${counter === 1 ? "" : "s"} of ${total.toFixed()} instance${total === 1 ? "" : "s"} are not formatted correctly`,
+          {
+            stream: stderr,
+          },
+        ),
       )
       return false
     }

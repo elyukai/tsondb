@@ -37,4 +37,5 @@ export const formatInstance = (
   entity: EntityDecl,
   instanceContent: InstanceContent,
   options: Partial<FormatterOptions> | undefined,
-) => JSON.stringify(formatValue(entity.type.value, instanceContent, options), undefined, 2) + "\n"
+): string =>
+  JSON.stringify(formatValue(entity.type.value, instanceContent, {}, options), undefined, 2) + "\n"
