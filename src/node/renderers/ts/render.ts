@@ -90,6 +90,11 @@ export type TypeScriptRendererOptions = {
      */
     defaultTranslationParameterType?: "string" | "StringableTranslationParameter"
   }
+
+  /**
+   * The generated type to use for Date types. The data is always stored as a string, but Date can be helpful if you need to differenciate between a string and a date in code. Defaults to `string`.
+   */
+  dateType: "string" | "Date"
 }
 
 const defaultOptions: TypeScriptRendererOptions = {
@@ -98,6 +103,7 @@ const defaultOptions: TypeScriptRendererOptions = {
   preserveFiles: false,
   generateHelpers: {},
   addIdentifierToEntities: false,
+  dateType: "string",
 }
 
 const defaultTranslationParameterType: NonNullable<
@@ -170,7 +176,8 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (opti
 
 const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => syntax`boolean`
 
-const renderDateType: RenderFn<DateType> = (_options, _type) => syntax`Date`
+const renderDateType: RenderFn<DateType> = (options, _type) =>
+  options.dateType === "Date" ? syntax`Date` : syntax`string`
 
 const renderFloatType: RenderFn<FloatType> = (_options, _type) => syntax`number`
 
