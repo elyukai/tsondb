@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.20.10](https://github.com/elyukai/tsondb/compare/v0.20.9...v0.20.10) (2026-09-23)
+
+### Bug Fixes
+
+* **client:** fix formatting with nested generic type includes ([09eebe9](https://github.com/elyukai/tsondb/commit/09eebe92ce026859aef1a07ad16da09a317c45ea))
+
 ## [0.20.9](https://github.com/elyukai/tsondb/compare/v0.20.8...v0.20.9) (2026-09-22)
 
 ### Bug Fixes
