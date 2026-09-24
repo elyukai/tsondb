@@ -89,6 +89,11 @@ export type TypeScriptRendererOptions = {
      * @default "string"
      */
     defaultTranslationParameterType?: "string" | "StringableTranslationParameter"
+
+    /**
+     * New formatter types can be introduced to MF2 messages. This option allows you to specify a mapping of formatter names to their corresponding TypeScript types. For example, a list formatter could be defined as `{ list: "string[]" }`, which would infer the type of a translation parameter using the `list` formatter as `string[]`.
+     */
+    otherTypes?: Record<string, string>
   }
 
   /**
@@ -241,6 +246,15 @@ const mapTypeNameToType = (options: TypeScriptRendererOptions, typeName: string 
       return "Date"
     case null:
     default:
+      if (
+        typeName !== null &&
+        options.inferTranslationParameters?.otherTypes !== undefined &&
+        typeName in options.inferTranslationParameters.otherTypes
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- already checked that the key exists
+        return options.inferTranslationParameters.otherTypes[typeName]!
+      }
+
       return (
         options.inferTranslationParameters?.defaultTranslationParameterType ??
         defaultTranslationParameterType
