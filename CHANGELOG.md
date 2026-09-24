@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.21.1](https://github.com/elyukai/tsondb/compare/v0.21.0...v0.21.1) (2026-09-24)
+
+### Features
+
+* **ts-renderer:** support other message formatters ([ec12ed6](https://github.com/elyukai/tsondb/commit/ec12ed67c1e0c436c83e60261beacb4f525571dd))
+
 ## [0.21.0](https://github.com/elyukai/tsondb/compare/v0.20.10...v0.21.0) (2026-09-23)
 
 ### ⚠ BREAKING CHANGES
