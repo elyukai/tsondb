@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.21.2](https://github.com/elyukai/tsondb/compare/v0.21.1...v0.21.2) (2026-09-29)
+
+### Features
+
+* singleton entity declaration ([3254f3f](https://github.com/elyukai/tsondb/commit/3254f3f5555fffde08a767f5f690a9b7dd22ea36))
+
 ## [0.21.1](https://github.com/elyukai/tsondb/compare/v0.21.0...v0.21.1) (2026-09-24)
 
 ### Features
