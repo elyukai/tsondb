@@ -1,7 +1,7 @@
 import type { FormatterOptions as MarkdownFormatterOptions } from "@elyukai/markdown/format"
 import type { DefaultTSONDBTypes, ValidationOptions } from "./index.ts"
 import type { Output } from "./output.ts"
-import type { EntityDecl } from "./schema/dsl/index.ts"
+import type { EntityDecl, SingletonEntityDecl } from "./schema/dsl/index.ts"
 import type { Schema } from "./schema/index.ts"
 
 /**
@@ -38,7 +38,7 @@ export type ServerOptions = {
 export type HomeLayoutSection = {
   title: string
   comment?: string
-  entities: EntityDecl[]
+  entities: (EntityDecl | SingletonEntityDecl)[]
 }
 
 /**

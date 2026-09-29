@@ -1,10 +1,17 @@
 import type { SerializedDecl } from "./schema/declarations/Declaration.ts"
+import type { SerializedEntityDecl } from "./schema/declarations/EntityDecl.ts"
+import type { SerializedSingletonEntityDecl } from "./schema/declarations/SingletonEntityDecl.ts"
 import type {
   CreatedEntityTaggedInstanceContainerWithChildInstances,
   EntityTaggedInstanceContainerWithChildInstances,
+  EntityTaggedSingletonInstanceContainer,
   UpdatedEntityTaggedInstanceContainerWithChildInstances,
 } from "./utils/childInstances.ts"
-import type { InstanceContainer, InstanceContainerOverview } from "./utils/instances.ts"
+import type {
+  InstanceContainer,
+  InstanceContainerOverview,
+  SingletonInstanceContainer,
+} from "./utils/instances.ts"
 
 export type WebConfig = {
   localeEntityName: string | undefined
@@ -15,14 +22,40 @@ export type WebConfig = {
 export type GetWebConfigResponseBody = WebConfig
 
 export interface GetAllDeclarationsResponseBody<D extends SerializedDecl = SerializedDecl> {
+  declarations: { declaration: D }[]
+  localeEntity?: string
+}
+
+export interface GetAllEntityDeclarationsResponseBody<
+  D extends SerializedEntityDecl = SerializedEntityDecl,
+> {
   declarations: { declaration: D; instanceCount: number }[]
   localeEntity?: string
 }
 
+export interface GetAllSingletonEntityDeclarationsResponseBody<
+  D extends SerializedSingletonEntityDecl = SerializedSingletonEntityDecl,
+> {
+  declarations: { declaration: D; hasInstance: boolean }[]
+}
+
 export interface GetDeclarationResponseBody<D extends SerializedDecl = SerializedDecl> {
+  declaration: D
+}
+
+export interface GetEntityDeclarationResponseBody<
+  D extends SerializedEntityDecl = SerializedEntityDecl,
+> {
   declaration: D
   instanceCount: number
   isLocaleEntity: boolean
+}
+
+export interface GetSingletonEntityDeclarationResponseBody<
+  D extends SerializedSingletonEntityDecl = SerializedSingletonEntityDecl,
+> {
+  declaration: D
+  hasInstance: boolean
 }
 
 export interface GetAllInstancesOfEntityResponseBody {
@@ -60,6 +93,30 @@ export interface UpdateInstanceOfEntityResponseBody {
 export interface DeleteInstanceOfEntityResponseBody {
   instance: InstanceContainer
   isLocaleEntity: boolean
+}
+
+export interface CreateSingletonInstanceOfEntityRequestBody {
+  instance: EntityTaggedSingletonInstanceContainer
+}
+
+export interface CreateSingletonInstanceOfEntityResponseBody {
+  instance: SingletonInstanceContainer
+}
+
+export interface GetSingletonInstanceOfEntityResponseBody {
+  instance: SingletonInstanceContainer
+}
+
+export interface UpdateSingletonInstanceOfEntityRequestBody {
+  instance: EntityTaggedSingletonInstanceContainer
+}
+
+export interface UpdateSingletonInstanceOfEntityResponseBody {
+  instance: SingletonInstanceContainer
+}
+
+export interface DeleteSingletonInstanceOfEntityResponseBody {
+  instance: SingletonInstanceContainer
 }
 
 export interface GetAllInstancesResponseBody {

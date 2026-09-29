@@ -5,7 +5,7 @@ import type { InstanceContent } from "../../../shared/utils/instances.ts"
 import type { CustomConstraintHelpers } from "../../utils/customConstraints.ts"
 import type { SecondaryDecl } from "../dsl/declarations/Decl.ts"
 import type { EntityDecl } from "../dsl/declarations/EntityDecl.ts"
-import type { Type } from "../dsl/index.ts"
+import type { SingletonEntityDecl, Type } from "../dsl/index.ts"
 
 export const checkCustomConstraintsInEntityDecl = (
   node: EntityDecl,
@@ -14,11 +14,18 @@ export const checkCustomConstraintsInEntityDecl = (
 ): string[] =>
   (
     node.customConstraints?.({ ...helpers, instanceId: value[0], instanceContent: value[1] }) ?? []
-  ).concat(checkCustomConstraints(node.type.value, value, helpers))
+  ).concat(checkNestedCustomConstraints(node.type.value, value, helpers))
 
-export { checkCustomConstraintsInEntityDecl as checkCustomConstraints }
+export const checkCustomConstraintsInSingletonEntityDecl = (
+  node: SingletonEntityDecl,
+  value: InstanceContent,
+  helpers: CustomConstraintHelpers,
+): string[] =>
+  (
+    node.customConstraints?.({ ...helpers, instanceId: node.name, instanceContent: value }) ?? []
+  ).concat(checkNestedCustomConstraints(node.type.value, value, helpers))
 
-const checkCustomConstraints = (
+const checkNestedCustomConstraints = (
   node: Type | SecondaryDecl,
   value: unknown,
   helpers: CustomConstraintHelpers,
@@ -26,21 +33,21 @@ const checkCustomConstraints = (
   switch (node.kind) {
     case NodeKind.EnumDecl:
       return (node.customConstraints?.({ ...helpers, value }) ?? []).concat(
-        checkCustomConstraints(node.type.value, value, helpers),
+        checkNestedCustomConstraints(node.type.value, value, helpers),
       )
     case NodeKind.TypeAliasDecl:
       return (node.customConstraints?.({ ...helpers, value }) ?? []).concat(
-        checkCustomConstraints(node.type.value, value, helpers),
+        checkNestedCustomConstraints(node.type.value, value, helpers),
       )
     case NodeKind.ArrayType:
       return Array.isArray(value)
-        ? value.flatMap(item => checkCustomConstraints(node.items, item, helpers))
+        ? value.flatMap(item => checkNestedCustomConstraints(node.items, item, helpers))
         : []
     case NodeKind.ObjectType:
       return typeof value === "object" && value !== null
         ? Object.entries(value).flatMap(([key, propValue]) =>
             node.properties[key]
-              ? checkCustomConstraints(node.properties[key].type, propValue, helpers)
+              ? checkNestedCustomConstraints(node.properties[key].type, propValue, helpers)
               : [],
           )
         : []
@@ -50,9 +57,9 @@ const checkCustomConstraints = (
       )
     }
     case NodeKind.IncludeIdentifierType:
-      return checkCustomConstraints(node.reference, value, helpers)
+      return checkNestedCustomConstraints(node.reference, value, helpers)
     case NodeKind.NestedEntityMapType:
-      return checkCustomConstraints(node.type.value, value, helpers)
+      return checkNestedCustomConstraints(node.type.value, value, helpers)
     case NodeKind.EnumType: {
       if (
         typeof value !== "object" ||
@@ -70,7 +77,7 @@ const checkCustomConstraints = (
         node.values[enumCase] !== undefined &&
         node.values[enumCase].type !== null &&
         enumCase in value
-        ? checkCustomConstraints(
+        ? checkNestedCustomConstraints(
             node.values[enumCase].type,
             (value as Record<string, unknown>)[enumCase],
             helpers,

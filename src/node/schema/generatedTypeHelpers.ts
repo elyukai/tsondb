@@ -13,6 +13,7 @@ import type {
 } from "../../shared/utils/instances.ts"
 import type { DeclarationName, DefaultTSONDBTypes } from "../index.ts"
 import type { EntityDecl } from "./dsl/declarations/EntityDecl.ts"
+import type { SingletonEntityDecl } from "./dsl/declarations/SingletonEntityDecl.ts"
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- used to register generated types
 export interface Register {}
@@ -27,6 +28,20 @@ export type RegisteredEntity<Name extends string, T = Register> = T extends {
   entityMap: { [K in Name]: InstanceContent }
 }
   ? T["entityMap"][Name]
+  : InstanceContent
+
+export type AnySingletonEntityMap = Record<string, InstanceContent>
+
+export type RegisteredSingletonEntityMap<T = Register> = T extends {
+  singletonEntityMap: AnySingletonEntityMap
+}
+  ? T["singletonEntityMap"]
+  : AnySingletonEntityMap
+
+export type RegisteredSingletonEntity<Name extends string, T = Register> = T extends {
+  singletonEntityMap: { [K in Name]: InstanceContent }
+}
+  ? T["singletonEntityMap"][Name]
   : InstanceContent
 
 export type AnyChildEntityMap = Record<
@@ -227,6 +242,24 @@ export type GetEntityByName<T extends AnyEntityMap = RegisteredEntityMap> = <
 >(
   name: E,
 ) => EntityDecl<E> | undefined
+
+/**
+ * A function that retrieves an entity declaration by its name.
+ */
+export type GetSingletonEntityByName<
+  T extends AnySingletonEntityMap = RegisteredSingletonEntityMap,
+> = <E extends Extract<keyof T, string> = Extract<keyof T, string>>(
+  name: E,
+) => SingletonEntityDecl<E> | undefined
+
+/**
+ * A function that retrieves the singleton instance by its entity if available.
+ */
+export type GetSingletonInstance<T extends AnySingletonEntityMap = RegisteredSingletonEntityMap> = <
+  E extends Extract<keyof T, string> = Extract<keyof T, string>,
+>(
+  entity: E,
+) => T[E] | undefined
 
 /**
  * A type guard function that checks if a given string is a valid declaration name.

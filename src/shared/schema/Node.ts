@@ -12,6 +12,11 @@ import {
   type SerializedEnumDecl,
 } from "./declarations/EnumDecl.ts"
 import {
+  getReferencesForSerializedSingletonEntityDecl,
+  resolveTypeArgumentsInSerializedSingletonEntityDecl,
+  type SerializedSingletonEntityDecl,
+} from "./declarations/SingletonEntityDecl.ts"
+import {
   getReferencesForSerializedTypeAliasDecl,
   resolveTypeArgumentsInSerializedTypeAliasDecl,
   type SerializedTypeAliasDecl,
@@ -98,6 +103,7 @@ import {
 export interface NodeKind {
   ChildEntityDecl: "ChildEntityDecl"
   EntityDecl: "EntityDecl"
+  SingletonEntityDecl: "SingletonEntityDecl"
   EnumDecl: "EnumDecl"
   EnumCaseDecl: "EnumCaseDecl"
   TypeAliasDecl: "TypeAliasDecl"
@@ -122,6 +128,7 @@ export interface NodeKind {
 export const NodeKind: NodeKind = enumOfObject({
   ChildEntityDecl: null,
   EntityDecl: null,
+  SingletonEntityDecl: null,
   EnumDecl: null,
   EnumCaseDecl: null,
   TypeAliasDecl: null,
@@ -169,52 +176,64 @@ export type SerializedNodeWithResolvedTypeArguments<T extends SerializedNode | n
         },
         FK
       >
-    : T extends SerializedEnumDecl<infer N, infer V, SerializedTypeParameter[]>
-      ? SerializedEnumDecl<
+    : T extends SerializedSingletonEntityDecl<infer N, infer P>
+      ? SerializedSingletonEntityDecl<
           N,
           {
-            [K in keyof V]: V[K] extends SerializedEnumCaseDecl<infer CT>
-              ? SerializedEnumCaseDecl<SerializedNodeWithResolvedTypeArguments<CT>>
+            [K in keyof P]: P[K] extends SerializedMemberDecl<infer PT, infer R>
+              ? SerializedMemberDecl<SerializedNodeWithResolvedTypeArguments<PT>, R>
               : never
-          },
-          []
+          }
         >
-      : T extends SerializedTypeAliasDecl<infer N, infer U, SerializedTypeParameter[]>
-        ? SerializedTypeAliasDecl<N, SerializedNodeWithResolvedTypeArguments<U>, []>
-        : T extends SerializedArrayType<infer I>
-          ? SerializedArrayType<SerializedNodeWithResolvedTypeArguments<I>>
-          : T extends SerializedEnumType<infer V>
-            ? SerializedEnumType<{
-                [K in keyof V]: V[K] extends SerializedEnumCaseDecl<infer CT>
-                  ? SerializedEnumCaseDecl<SerializedNodeWithResolvedTypeArguments<CT>>
-                  : never
-              }>
-            : T extends SerializedObjectType<infer P>
-              ? SerializedObjectType<{
-                  [K in keyof P]: P[K] extends SerializedMemberDecl<infer PT, infer R>
-                    ? SerializedMemberDecl<SerializedNodeWithResolvedTypeArguments<PT>, R>
+      : T extends SerializedEnumDecl<infer N, infer V, SerializedTypeParameter[]>
+        ? SerializedEnumDecl<
+            N,
+            {
+              [K in keyof V]: V[K] extends SerializedEnumCaseDecl<infer CT>
+                ? SerializedEnumCaseDecl<SerializedNodeWithResolvedTypeArguments<CT>>
+                : never
+            },
+            []
+          >
+        : T extends SerializedTypeAliasDecl<infer N, infer U, SerializedTypeParameter[]>
+          ? SerializedTypeAliasDecl<N, SerializedNodeWithResolvedTypeArguments<U>, []>
+          : T extends SerializedArrayType<infer I>
+            ? SerializedArrayType<SerializedNodeWithResolvedTypeArguments<I>>
+            : T extends SerializedEnumType<infer V>
+              ? SerializedEnumType<{
+                  [K in keyof V]: V[K] extends SerializedEnumCaseDecl<infer CT>
+                    ? SerializedEnumCaseDecl<SerializedNodeWithResolvedTypeArguments<CT>>
                     : never
                 }>
-              : T extends SerializedTypeArgumentType
-                ? SerializedType
-                : T extends SerializedIncludeIdentifierType<[]>
-                  ? T
-                  : T extends SerializedIncludeIdentifierType
-                    ? SerializedType
-                    : T extends SerializedNestedEntityMapType<infer N, infer P>
-                      ? SerializedNestedEntityMapType<
-                          N,
-                          {
-                            [K in keyof P]: P[K] extends SerializedMemberDecl<infer PT, infer R>
-                              ? SerializedMemberDecl<SerializedNodeWithResolvedTypeArguments<PT>, R>
-                              : never
-                          }
-                        >
-                      : T extends SerializedTypeParameter<infer N, infer C>
-                        ? SerializedTypeParameter<N, SerializedNodeWithResolvedTypeArguments<C>>
-                        : T extends null
-                          ? null
-                          : never
+              : T extends SerializedObjectType<infer P>
+                ? SerializedObjectType<{
+                    [K in keyof P]: P[K] extends SerializedMemberDecl<infer PT, infer R>
+                      ? SerializedMemberDecl<SerializedNodeWithResolvedTypeArguments<PT>, R>
+                      : never
+                  }>
+                : T extends SerializedTypeArgumentType
+                  ? SerializedType
+                  : T extends SerializedIncludeIdentifierType<[]>
+                    ? T
+                    : T extends SerializedIncludeIdentifierType
+                      ? SerializedType
+                      : T extends SerializedNestedEntityMapType<infer N, infer P>
+                        ? SerializedNestedEntityMapType<
+                            N,
+                            {
+                              [K in keyof P]: P[K] extends SerializedMemberDecl<infer PT, infer R>
+                                ? SerializedMemberDecl<
+                                    SerializedNodeWithResolvedTypeArguments<PT>,
+                                    R
+                                  >
+                                : never
+                            }
+                          >
+                        : T extends SerializedTypeParameter<infer N, infer C>
+                          ? SerializedTypeParameter<N, SerializedNodeWithResolvedTypeArguments<C>>
+                          : T extends null
+                            ? null
+                            : never
 
 export type SerializedTypeArgumentsResolver<T extends SerializedNode = SerializedNode> = (
   decls: Record<string, SerializedDecl>,
@@ -232,6 +251,8 @@ export const resolveSerializedTypeArguments = <T extends SerializedNode = Serial
   switch (node.kind) {
     case NodeKind.EntityDecl:
       return resolveTypeArgumentsInSerializedEntityDecl(decls, args, node) as NT
+    case NodeKind.SingletonEntityDecl:
+      return resolveTypeArgumentsInSerializedSingletonEntityDecl(decls, args, node) as NT
     case NodeKind.EnumDecl:
       return resolveTypeArgumentsInSerializedEnumDecl(decls, args, node) as NT
     case NodeKind.TypeAliasDecl:
@@ -281,6 +302,8 @@ export const getReferencesSerialized: GetReferencesSerialized = (decls, node, va
   switch (node.kind) {
     case NodeKind.EntityDecl:
       return getReferencesForSerializedEntityDecl(decls, node, value)
+    case NodeKind.SingletonEntityDecl:
+      return getReferencesForSerializedSingletonEntityDecl(decls, node, value)
     case NodeKind.EnumDecl:
       return getReferencesForSerializedEnumDecl(decls, node, value)
     case NodeKind.TypeAliasDecl:

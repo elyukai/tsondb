@@ -5,6 +5,7 @@ import type { SerializedMemberDecl } from "../types/ObjectType.ts"
 import { type SerializedType } from "../types/Type.ts"
 import type { SerializedEntityDecl } from "./EntityDecl.ts"
 import type { SerializedEnumDecl } from "./EnumDecl.ts"
+import type { SerializedSingletonEntityDecl } from "./SingletonEntityDecl.ts"
 import type { SerializedTypeAliasDecl } from "./TypeAliasDecl.ts"
 
 export type SerializedTypeArguments<Params extends SerializedTypeParameter[]> = {
@@ -22,10 +23,15 @@ export const getSerializedTypeArgumentsRecord = <Params extends SerializedTypePa
     args.slice(0, decl.parameters.length).map((arg, i) => [decl.parameters[i]!.name, arg] as const),
   )
 
-export type SerializedDecl = SerializedEntityDecl | SerializedEnumDecl | SerializedTypeAliasDecl
+export type SerializedDecl =
+  | SerializedEntityDecl
+  | SerializedSingletonEntityDecl
+  | SerializedEnumDecl
+  | SerializedTypeAliasDecl
 
 export type SerializedDeclP<Params extends SerializedTypeParameter[] = SerializedTypeParameter[]> =
   | SerializedEntityDecl
+  | SerializedSingletonEntityDecl
   | SerializedEnumDecl<string, Record<string, SerializedEnumCaseDecl>, Params>
   | SerializedTypeAliasDecl<string, SerializedType, Params>
 

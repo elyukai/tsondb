@@ -1,6 +1,7 @@
 export { isDecl, isDeclWithoutTypeParameters } from "./dsl/declarations/Decl.ts"
 export { isEntityDecl, isEntityDeclWithParentReference } from "./dsl/declarations/EntityDecl.ts"
 export { isEnumDecl } from "./dsl/declarations/EnumDecl.ts"
+export { isSingletonEntityDecl } from "./dsl/declarations/SingletonEntityDecl.ts"
 export { isTypeAliasDecl } from "./dsl/declarations/TypeAliasDecl.ts"
 export { isArrayType } from "./dsl/types/ArrayType.ts"
 export { isBooleanType } from "./dsl/types/BooleanType.ts"

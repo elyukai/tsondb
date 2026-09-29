@@ -1,43 +1,50 @@
 import type {
   CreateInstanceOfEntityRequestBody,
   CreateInstanceOfEntityResponseBody,
+  CreateSingletonInstanceOfEntityRequestBody,
+  CreateSingletonInstanceOfEntityResponseBody,
   DeleteInstanceOfEntityResponseBody,
+  DeleteSingletonInstanceOfEntityResponseBody,
   GetAllChildInstancesOfInstanceResponseBody,
   GetAllDeclarationsResponseBody,
+  GetAllEntityDeclarationsResponseBody,
   GetAllInstancesOfEntityResponseBody,
+  GetAllSingletonEntityDeclarationsResponseBody,
   GetDeclarationResponseBody,
   GetInstanceOfEntityResponseBody,
+  GetSingletonInstanceOfEntityResponseBody,
   UpdateInstanceOfEntityRequestBody,
   UpdateInstanceOfEntityResponseBody,
+  UpdateSingletonInstanceOfEntityRequestBody,
+  UpdateSingletonInstanceOfEntityResponseBody,
 } from "../../shared/api.ts"
-import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedEnumDecl } from "../../shared/schema/declarations/EnumDecl.ts"
 import type { SerializedTypeAliasDecl } from "../../shared/schema/declarations/TypeAliasDecl.ts"
 import type {
   CreatedEntityTaggedInstanceContainerWithChildInstances,
+  EntityTaggedSingletonInstanceContainer,
   UpdatedEntityTaggedInstanceContainerWithChildInstances,
 } from "../../shared/utils/childInstances.ts"
 import { deleteResource, getResource, postResource, putResource } from "../utils/api.ts"
 
-type DeclKind = "Entity" | "Enum" | "TypeAlias"
+type DeclKind = "Entity" | "SingletonEntity" | "Enum" | "TypeAlias"
 
-type DeclTypeForKind<K extends DeclKind | undefined> = K extends "Entity"
-  ? SerializedEntityDecl
-  : K extends "Enum"
-    ? SerializedEnumDecl
-    : K extends "TypeAlias"
-      ? SerializedTypeAliasDecl
-      : SerializedDecl
+type ResponseTypeForKind<K extends DeclKind | undefined> = K extends "Entity"
+  ? GetAllEntityDeclarationsResponseBody
+  : K extends "SingletonEntity"
+    ? GetAllSingletonEntityDeclarationsResponseBody
+    : K extends "Enum"
+      ? GetAllDeclarationsResponseBody<SerializedEnumDecl>
+      : K extends "TypeAlias"
+        ? GetAllDeclarationsResponseBody<SerializedTypeAliasDecl>
+        : GetAllDeclarationsResponseBody
 
 export const getAllDeclarations: {
   (locales: string[], kind?: undefined): Promise<GetAllDeclarationsResponseBody>
-  <D extends "Entity" | "Enum" | "TypeAlias">(
-    locales: string[],
-    kind: D,
-  ): Promise<GetAllDeclarationsResponseBody<DeclTypeForKind<D>>>
-} = async <D extends "Entity" | "Enum" | "TypeAlias" | undefined>(locales: string[], kind: D) =>
-  getResource<GetAllDeclarationsResponseBody<DeclTypeForKind<D>>>("/api/declarations", {
+  <D extends DeclKind>(locales: string[], kind: D): Promise<ResponseTypeForKind<D>>
+} = async <D extends DeclKind | undefined>(locales: string[], kind: D) =>
+  getResource<ResponseTypeForKind<D>>("/api/declarations", {
     locales,
     modifyUrl: url => {
       if (kind) {
@@ -47,6 +54,9 @@ export const getAllDeclarations: {
   })
 
 export const getAllEntities = (locales: string[]) => getAllDeclarations(locales, "Entity")
+
+export const getAllSingletonEntities = (locales: string[]) =>
+  getAllDeclarations(locales, "SingletonEntity")
 
 export const getEntityByName = async (locales: string[], name: string) =>
   getResource<GetDeclarationResponseBody<SerializedEntityDecl>>(`/api/declarations/${name}`, {
@@ -127,6 +137,55 @@ export const getChildInstancesForInstanceByEntityName = async (
 ) =>
   getResource<GetAllChildInstancesOfInstanceResponseBody>(
     `/api/declarations/${name}/instances/${parentId}/children`,
+    {
+      locales,
+    },
+  )
+
+export const getSingletonInstanceByEntityName = async (locales: string[], name: string) =>
+  getResource<GetSingletonInstanceOfEntityResponseBody>(`/api/declarations/${name}/instance`, {
+    locales,
+  })
+
+export const createSingletonInstanceByEntityName = async (
+  locales: string[],
+  name: string,
+  content: EntityTaggedSingletonInstanceContainer,
+) => {
+  const body: CreateSingletonInstanceOfEntityRequestBody = {
+    instance: content,
+  }
+
+  return postResource<CreateSingletonInstanceOfEntityResponseBody>(
+    `/api/declarations/${name}/instance`,
+    {
+      locales,
+      body,
+    },
+  )
+}
+
+export const updateSingletonInstanceByEntityName = async (
+  locales: string[],
+  name: string,
+  content: EntityTaggedSingletonInstanceContainer,
+) => {
+  const body: UpdateSingletonInstanceOfEntityRequestBody = {
+    instance: content,
+  }
+
+  return putResource<UpdateSingletonInstanceOfEntityResponseBody>(
+    `/api/declarations/${name}/instance`,
+    {
+      locales,
+      body,
+    },
+  )
+}
+
+export const deleteSingletonInstanceByEntityName = async (locales: string[], name: string) =>
+  deleteResource<DeleteSingletonInstanceOfEntityResponseBody>(
+    `/api/declarations/${name}/instance`,
     {
       locales,
     },

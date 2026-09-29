@@ -9,6 +9,7 @@ import type { EntityDecl } from "./EntityDecl.ts"
 import { isEntityDecl } from "./EntityDecl.ts"
 import type { EnumDecl } from "./EnumDecl.ts"
 import { isEnumDecl } from "./EnumDecl.ts"
+import { isSingletonEntityDecl, type SingletonEntityDecl } from "./SingletonEntityDecl.ts"
 import type { TypeAliasDecl } from "./TypeAliasDecl.ts"
 import { isTypeAliasDecl } from "./TypeAliasDecl.ts"
 
@@ -28,10 +29,11 @@ export const getTypeArgumentsRecord = <Params extends TypeParameter[]>(
   )
 
 export type Decl<Name extends string = string> =
-  EntityDecl<Name> | EnumDecl<Name> | TypeAliasDecl<Name>
+  EntityDecl<Name> | SingletonEntityDecl<Name> | EnumDecl<Name> | TypeAliasDecl<Name>
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
   | EntityDecl
+  | SingletonEntityDecl
   | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
   | TypeAliasDecl<string, Type, Params>
 
@@ -41,7 +43,7 @@ export type IncludableDeclP<Params extends TypeParameter[] = TypeParameter[]> =
 export type SecondaryDecl = EnumDecl | TypeAliasDecl
 
 export const isDecl = (node: Node): node is Decl =>
-  isEntityDecl(node) || isEnumDecl(node) || isTypeAliasDecl(node)
+  isEntityDecl(node) || isSingletonEntityDecl(node) || isEnumDecl(node) || isTypeAliasDecl(node)
 
 export const asDecl = (node: Node | undefined): Decl | undefined =>
   node && isDecl(node) ? node : undefined

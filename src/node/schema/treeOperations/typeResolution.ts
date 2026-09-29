@@ -9,6 +9,7 @@ import {
 } from "../dsl/declarations/Decl.ts"
 import { EntityDecl } from "../dsl/declarations/EntityDecl.ts"
 import { EnumDecl } from "../dsl/declarations/EnumDecl.ts"
+import { SingletonEntityDecl } from "../dsl/declarations/SingletonEntityDecl.ts"
 import { isTypeAliasDecl, TypeAliasDecl } from "../dsl/declarations/TypeAliasDecl.ts"
 import type { Node, Type } from "../dsl/index.ts"
 import type { TypeParameter } from "../dsl/TypeParameter.ts"
@@ -53,52 +54,61 @@ export type NodeWithResolvedTypeArguments<T extends Node | null> = T extends
         },
         FK
       >
-    : T extends EnumDecl<infer N, infer V, TypeParameter[]>
-      ? EnumDecl<
+    : T extends SingletonEntityDecl<infer N, infer P>
+      ? SingletonEntityDecl<
           N,
           {
-            [K in keyof V]: V[K] extends EnumCaseDecl<infer CT>
-              ? EnumCaseDecl<NodeWithResolvedTypeArguments<CT>>
+            [K in keyof P]: P[K] extends MemberDecl<infer PT, infer R>
+              ? MemberDecl<NodeWithResolvedTypeArguments<PT>, R>
               : never
-          },
-          []
+          }
         >
-      : T extends TypeAliasDecl<infer N, infer U, TypeParameter[]>
-        ? TypeAliasDecl<N, NodeWithResolvedTypeArguments<U>, []>
-        : T extends ArrayType<infer I>
-          ? ArrayType<NodeWithResolvedTypeArguments<I>>
-          : T extends EnumType<infer V>
-            ? EnumType<{
-                [K in keyof V]: V[K] extends EnumCaseDecl<infer CT>
-                  ? EnumCaseDecl<NodeWithResolvedTypeArguments<CT>>
-                  : never
-              }>
-            : T extends ObjectType<infer P>
-              ? ObjectType<{
-                  [K in keyof P]: P[K] extends MemberDecl<infer PT, infer R>
-                    ? MemberDecl<NodeWithResolvedTypeArguments<PT>, R>
+      : T extends EnumDecl<infer N, infer V, TypeParameter[]>
+        ? EnumDecl<
+            N,
+            {
+              [K in keyof V]: V[K] extends EnumCaseDecl<infer CT>
+                ? EnumCaseDecl<NodeWithResolvedTypeArguments<CT>>
+                : never
+            },
+            []
+          >
+        : T extends TypeAliasDecl<infer N, infer U, TypeParameter[]>
+          ? TypeAliasDecl<N, NodeWithResolvedTypeArguments<U>, []>
+          : T extends ArrayType<infer I>
+            ? ArrayType<NodeWithResolvedTypeArguments<I>>
+            : T extends EnumType<infer V>
+              ? EnumType<{
+                  [K in keyof V]: V[K] extends EnumCaseDecl<infer CT>
+                    ? EnumCaseDecl<NodeWithResolvedTypeArguments<CT>>
                     : never
                 }>
-              : T extends TypeArgumentType
-                ? Type
-                : T extends IncludeIdentifierType<[], IncludableDeclP<[]>>
-                  ? T
-                  : T extends IncludeIdentifierType
-                    ? Type
-                    : T extends NestedEntityMapType<infer N, infer P>
-                      ? NestedEntityMapType<
-                          N,
-                          {
-                            [K in keyof P]: P[K] extends MemberDecl<infer PT, infer R>
-                              ? MemberDecl<NodeWithResolvedTypeArguments<PT>, R>
-                              : never
-                          }
-                        >
-                      : T extends TypeParameter<infer N, infer C>
-                        ? TypeParameter<N, NodeWithResolvedTypeArguments<C>>
-                        : T extends null
-                          ? null
-                          : never
+              : T extends ObjectType<infer P>
+                ? ObjectType<{
+                    [K in keyof P]: P[K] extends MemberDecl<infer PT, infer R>
+                      ? MemberDecl<NodeWithResolvedTypeArguments<PT>, R>
+                      : never
+                  }>
+                : T extends TypeArgumentType
+                  ? Type
+                  : T extends IncludeIdentifierType<[], IncludableDeclP<[]>>
+                    ? T
+                    : T extends IncludeIdentifierType
+                      ? Type
+                      : T extends NestedEntityMapType<infer N, infer P>
+                        ? NestedEntityMapType<
+                            N,
+                            {
+                              [K in keyof P]: P[K] extends MemberDecl<infer PT, infer R>
+                                ? MemberDecl<NodeWithResolvedTypeArguments<PT>, R>
+                                : never
+                            }
+                          >
+                        : T extends TypeParameter<infer N, infer C>
+                          ? TypeParameter<N, NodeWithResolvedTypeArguments<C>>
+                          : T extends null
+                            ? null
+                            : never
 
 export const resolveTypeArguments = <T extends Node = Node>(
   args: Record<string, Type>,
@@ -109,6 +119,11 @@ export const resolveTypeArguments = <T extends Node = Node>(
   switch (node.kind) {
     case NodeKind.EntityDecl:
       return EntityDecl(node.sourceUrl, {
+        ...node,
+        type: () => resolveTypeArguments({}, node.type.value, [...inDecl, node]),
+      }) as RN
+    case NodeKind.SingletonEntityDecl:
+      return SingletonEntityDecl(node.sourceUrl, {
         ...node,
         type: () => resolveTypeArguments({}, node.type.value, [...inDecl, node]),
       }) as RN

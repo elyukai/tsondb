@@ -16,6 +16,7 @@ export {
   type EntityDisplayName,
 } from "./declarations/EntityDecl.ts"
 export { Enum, EnumDecl, GenEnum, GenEnumDecl } from "./declarations/EnumDecl.ts"
+export { SingletonEntity, SingletonEntityDecl } from "./declarations/SingletonEntityDecl.ts"
 export {
   GenTypeAlias,
   GenTypeAliasDecl,

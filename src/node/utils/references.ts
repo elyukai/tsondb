@@ -3,6 +3,10 @@ import { difference } from "@elyukai/utils/array/sets"
 import { isOk } from "@elyukai/utils/result"
 import { resolve } from "node:path"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
+import {
+  getReferencesForSerializedSingletonEntityDecl,
+  type SerializedSingletonEntityDecl,
+} from "../../shared/schema/declarations/SingletonEntityDecl.ts"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
 import type {
   AnyEntityMap,
@@ -16,6 +20,8 @@ import { WorkerPool } from "./workers.ts"
 
 /**
  * A mapping from instance IDs to the list of instance IDs that reference them.
+ *
+ * For single instance entities, the instance ID is the entity name.
  */
 export type ReferencesToInstances = {
   [instanceId: string]: string[]
@@ -112,7 +118,25 @@ export const getReferencesToInstances = async (
   )
 
   await pool.close()
-  const results = separateResults.reduce(mergeReferences, {})
+  const results = separateResults
+    .concat(
+      databaseInMemory
+        .getAllSingletonInstances()
+        .reduce(
+          (acc, [entityName, instance]) =>
+            addReferences(
+              acc,
+              getReferencesForSerializedSingletonEntityDecl(
+                serializedDeclarationsByName,
+                serializedDeclarationsByName[entityName] as SerializedSingletonEntityDecl,
+                instance.content,
+              ),
+              entityName,
+            ),
+          {},
+        ),
+    )
+    .reduce(mergeReferences, {})
 
   return results
 }

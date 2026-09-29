@@ -11,6 +11,7 @@ import {
   isEntityDecl,
 } from "../../schema/dsl/declarations/EntityDecl.ts"
 import type { EnumDecl } from "../../schema/dsl/declarations/EnumDecl.ts"
+import type { SingletonEntityDecl } from "../../schema/dsl/declarations/SingletonEntityDecl.ts"
 import { TypeAliasDecl } from "../../schema/dsl/declarations/TypeAliasDecl.ts"
 import type { Type } from "../../schema/dsl/index.ts"
 import type { ArrayType } from "../../schema/dsl/types/ArrayType.ts"
@@ -217,6 +218,12 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) => ({
   ...renderType(options, addEphemeralUUIDToType(decl)),
 })
 
+const renderSingletonEntityDecl: RenderFn<SingletonEntityDecl> = (options, decl) => ({
+  description: decl.comment,
+  deprecated: decl.isDeprecated,
+  ...renderType(options, decl.type.value),
+})
+
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) => ({
   description: decl.comment,
   deprecated: decl.isDeprecated,
@@ -233,6 +240,8 @@ const renderDecl: RenderFn<Decl> = (options, decl) => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
       return renderEntityDecl({ ...options, parentDecl: decl }, decl)
+    case NodeKind.SingletonEntityDecl:
+      return renderSingletonEntityDecl({ ...options, parentDecl: decl }, decl)
     case NodeKind.EnumDecl:
       return renderEnumDecl({ ...options, parentDecl: decl }, decl)
     case NodeKind.TypeAliasDecl:

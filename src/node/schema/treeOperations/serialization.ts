@@ -1,6 +1,7 @@
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { SerializedEntityDecl } from "../../../shared/schema/declarations/EntityDecl.ts"
 import type { SerializedEnumDecl } from "../../../shared/schema/declarations/EnumDecl.ts"
+import type { SerializedSingletonEntityDecl } from "../../../shared/schema/declarations/SingletonEntityDecl.ts"
 import type { SerializedTypeAliasDecl } from "../../../shared/schema/declarations/TypeAliasDecl.ts"
 import { NodeKind } from "../../../shared/schema/Node.js"
 import type { SerializedTypeParameter } from "../../../shared/schema/TypeParameter.ts"
@@ -26,6 +27,7 @@ import type { SerializedTranslationObjectType } from "../../../shared/schema/typ
 import type { SerializedTypeArgumentType } from "../../../shared/schema/types/TypeArgumentType.ts"
 import { type EntityDecl } from "../dsl/declarations/EntityDecl.ts"
 import { type EnumDecl } from "../dsl/declarations/EnumDecl.ts"
+import type { SingletonEntityDecl } from "../dsl/declarations/SingletonEntityDecl.ts"
 import { type TypeAliasDecl } from "../dsl/declarations/TypeAliasDecl.ts"
 import type { Node, Type } from "../dsl/index.ts"
 import { type TypeParameter } from "../dsl/TypeParameter.ts"
@@ -46,6 +48,7 @@ import { type TypeArgumentType } from "../dsl/types/TypeArgumentType.ts"
 
 export type SerializedNodeMap = {
   [NodeKind.EntityDecl]: [EntityDecl, SerializedEntityDecl]
+  [NodeKind.SingletonEntityDecl]: [EntityDecl, SerializedSingletonEntityDecl]
   [NodeKind.EnumDecl]: [EnumDecl, SerializedEnumDecl]
   [NodeKind.TypeAliasDecl]: [TypeAliasDecl, SerializedTypeAliasDecl]
   [NodeKind.ArrayType]: [ArrayType, SerializedArrayType]
@@ -86,6 +89,7 @@ export type SerializedEnumCaseDeclObject<T extends Record<string, EnumCaseDecl>>
 // prettier-ignore
 export type Serialized<T extends Node> =
   T extends EntityDecl<infer Name, infer T, infer FK> ? SerializedEntityDecl<Name, SerializedMemberDeclObject<T>, FK> :
+  T extends SingletonEntityDecl<infer Name, infer T> ? SerializedSingletonEntityDecl<Name, SerializedMemberDeclObject<T>> :
   T extends EnumDecl<infer Name, infer T, infer Params> ? SerializedEnumDecl<Name, SerializedEnumCaseDeclObject<T>, SerializedTypeParameters<Params>> :
   T extends TypeAliasDecl<infer Name, infer T, infer Params> ? SerializedTypeAliasDecl<Name, Serialized<T>, SerializedTypeParameters<Params>> :
   T extends ArrayType<infer T> ? SerializedArrayType<Serialized<T>> :
@@ -118,6 +122,14 @@ export const serializeNode = <T extends Node>(node: T): Serialized<T> => {
         type: serializeNode(node.type.value),
         instanceDisplayName: node.instanceDisplayName,
         instanceDisplayNameCustomizer: node.instanceDisplayNameCustomizer !== undefined,
+        customConstraints: node.customConstraints !== undefined,
+      }
+      return serializedNode as SN
+    }
+    case NodeKind.SingletonEntityDecl: {
+      const serializedNode: SerializedSingletonEntityDecl = {
+        ...node,
+        type: serializeNode(node.type.value),
         customConstraints: node.customConstraints !== undefined,
       }
       return serializedNode as SN

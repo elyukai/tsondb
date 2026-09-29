@@ -2,7 +2,7 @@ import Debug from "debug"
 import { join } from "path"
 import type { SimpleGit } from "simple-git"
 import type { InstanceContainerOverview } from "../shared/utils/instances.ts"
-import type { DefaultTSONDBTypes, EntityName, TSONDB } from "./index.ts"
+import type { DefaultTSONDBTypes, StoringEntityName, TSONDB } from "./index.ts"
 import type { DatabaseInMemory } from "./utils/databaseInMemory.ts"
 import { getAllInstanceOverviewsByEntityName } from "./utils/displayName.ts"
 import { HTTPError } from "./utils/error.js"
@@ -97,7 +97,7 @@ export class Git<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    *
    * @throws {HTTPError} when no git repository is found
    */
-  async stage(entity?: EntityName<T>, id?: string): Promise<void> {
+  async stage(entity?: StoringEntityName<T>, id?: string): Promise<void> {
     if (entity) {
       if (id) {
         debug("add instance %s of entity %s", id, entity)
@@ -121,7 +121,7 @@ export class Git<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    *
    * @throws {HTTPError} when no git repository is found
    */
-  async unstage(entity?: EntityName<T>, id?: string): Promise<void> {
+  async unstage(entity?: StoringEntityName<T>, id?: string): Promise<void> {
     if (entity) {
       if (id) {
         debug("reset HEAD instance %s of entity %s", id, entity)
@@ -145,7 +145,7 @@ export class Git<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    *
    * @throws {HTTPError} when no git repository is found
    */
-  async restore(entity?: EntityName<T>, id?: string): Promise<void> {
+  async restore(entity?: StoringEntityName<T>, id?: string): Promise<void> {
     if (entity) {
       if (id) {
         debug("restore instance %s of entity %s", id, entity)

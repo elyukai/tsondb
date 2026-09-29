@@ -1,10 +1,12 @@
 import { error, isError, mapError, ok, type Result } from "@elyukai/utils/result"
+import { NodeKind } from "../../shared/schema/Node.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
-import type { DefaultTSONDBTypes, EntityName } from "../index.ts"
-import { type EntityDecl } from "../schema/dsl/index.ts"
+import type { DefaultTSONDBTypes, EntityName, SingletonEntityName } from "../index.ts"
+import { type EntityDecl, type SingletonEntityDecl } from "../schema/dsl/index.ts"
 import type {
   AnyChildEntityMap,
   AnyEntityMap,
+  AnySingletonEntityMap,
   GetAllChildInstanceContainersForParent,
   GetAllInstanceContainers,
   GetAllInstances,
@@ -13,17 +15,23 @@ import type {
   GetEntityByName,
   GetInstanceById,
   GetInstanceOverviewOfEntityById,
+  GetSingletonInstance,
   RegisteredChildEntityMap,
   RegisteredEntity,
   RegisteredEntityMap,
   RegisteredEnumOrTypeAlias,
+  RegisteredSingletonEntityMap,
 } from "../schema/generatedTypeHelpers.ts"
-import { checkCustomConstraints } from "../schema/treeOperations/customConstraints.ts"
+import {
+  checkCustomConstraintsInEntityDecl,
+  checkCustomConstraintsInSingletonEntityDecl,
+} from "../schema/treeOperations/customConstraints.ts"
 import type { DatabaseInMemory } from "./databaseInMemory.ts"
 
 export type CustomConstraintHelpers<
   EM extends AnyEntityMap = RegisteredEntityMap,
   CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
+  SEM extends AnySingletonEntityMap = RegisteredSingletonEntityMap,
 > = {
   getInstanceById: GetInstanceById<EM>
   getAllInstances: GetAllInstances<EM>
@@ -31,6 +39,7 @@ export type CustomConstraintHelpers<
   getAllChildInstancesForParent: GetAllChildInstanceContainersForParent<CEM>
   getDisplayName: GetDisplayName<EM>
   getDisplayNameAndId: GetDisplayNameAndId<EM>
+  getSingletonInstance: GetSingletonInstance<SEM>
 }
 
 /**
@@ -111,40 +120,19 @@ export type TypedNestedCustomConstraint<
   } & CustomConstraintHelpers<EM, CEM>,
 ) => string[]
 
-/**
- * Checks all custom constraints for all provided entities and their instances.
- *
- * Returns `Ok` when no violations have been found and an `Error` with a list of
- * `AggregateError`s for each entity if there are any violations of any custom
- * constraint.
- */
-export const checkCustomConstraintsForAllEntities = <T extends DefaultTSONDBTypes>(
-  getDisplayName: GetDisplayName<T["entityMap"]>,
-  getDisplayNameAndId: GetDisplayNameAndId<T["entityMap"]>,
+const collectErrorsForEntity = <T extends DefaultTSONDBTypes>(
+  data: DatabaseInMemory<T["entityMap"], T["singletonEntityMap"]>,
+  entity: EntityDecl<EntityName<T>> | SingletonEntityDecl<SingletonEntityName<T>>,
   getInstanceOverviewOfEntityById: GetInstanceOverviewOfEntityById<T["entityMap"]>,
-  getEntityByName: GetEntityByName<T["entityMap"]>,
-  data: DatabaseInMemory<T["entityMap"]>,
-  entities: EntityDecl<EntityName<T>>[],
-): Result<void, AggregateError> => {
-  const helpers: CustomConstraintHelpers<T["entityMap"], T["childEntityMap"]> = {
-    getInstanceById: data.getInstanceOfEntityById.bind(data),
-    getAllInstances: data.getAllInstancesOfEntity.bind(data),
-    getAllInstanceContainers: data.getAllInstanceContainersOfEntity.bind(data),
-    getAllChildInstancesForParent: data.getAllChildInstanceContainersForParent.bind(
-      data,
-      getEntityByName,
-    ),
-    getDisplayName,
-    getDisplayNameAndId,
-  }
-
-  return mapError(
-    entities.reduce<Result<void, AggregateError[]>>((acc, entity) => {
-      const errors = data
+  helpers: CustomConstraintHelpers<T["entityMap"], T["childEntityMap"]>,
+) => {
+  switch (entity.kind) {
+    case NodeKind.EntityDecl:
+      return data
         .getAllInstanceContainersOfEntity(entity.name)
         .map((instance): [InstanceContainer, string[]] => [
           instance,
-          checkCustomConstraints(entity, [instance.id, instance.content], helpers),
+          checkCustomConstraintsInEntityDecl(entity, [instance.id, instance.content], helpers),
         ])
         .filter(([, violations]) => violations.length > 0)
         .map(([instance, violations]) => {
@@ -157,6 +145,54 @@ export const checkCustomConstraintsForAllEntities = <T extends DefaultTSONDBType
             `in instance ${name}`,
           )
         })
+    case NodeKind.SingletonEntityDecl: {
+      const instance = data.getSingletonInstanceContainerOfEntity(entity.name)
+      if (instance) {
+        return checkCustomConstraintsInSingletonEntityDecl(entity, instance.content, helpers)
+      } else {
+        return []
+      }
+    }
+    default:
+      return []
+  }
+}
+
+/**
+ * Checks all custom constraints for all provided entities and their instances.
+ *
+ * Returns `Ok` when no violations have been found and an `Error` with a list of
+ * `AggregateError`s for each entity if there are any violations of any custom
+ * constraint.
+ */
+export const checkCustomConstraintsForAllEntities = <T extends DefaultTSONDBTypes>(
+  getDisplayName: GetDisplayName<T["entityMap"]>,
+  getDisplayNameAndId: GetDisplayNameAndId<T["entityMap"]>,
+  getInstanceOverviewOfEntityById: GetInstanceOverviewOfEntityById<T["entityMap"]>,
+  getEntityByName: GetEntityByName<T["entityMap"]>,
+  data: DatabaseInMemory<T["entityMap"], T["singletonEntityMap"]>,
+  entities: (EntityDecl<EntityName<T>> | SingletonEntityDecl<SingletonEntityName<T>>)[],
+): Result<void, AggregateError> => {
+  const helpers: CustomConstraintHelpers<
+    T["entityMap"],
+    T["childEntityMap"],
+    T["singletonEntityMap"]
+  > = {
+    getInstanceById: data.getInstanceOfEntityById.bind(data),
+    getAllInstances: data.getAllInstancesOfEntity.bind(data),
+    getAllInstanceContainers: data.getAllInstanceContainersOfEntity.bind(data),
+    getAllChildInstancesForParent: data.getAllChildInstanceContainersForParent.bind(
+      data,
+      getEntityByName,
+    ),
+    getDisplayName,
+    getDisplayNameAndId,
+    getSingletonInstance: data.getSingletonInstanceOfEntity.bind(data),
+  }
+
+  return mapError(
+    entities.reduce<Result<void, AggregateError[]>>((acc, entity) => {
+      const errors = collectErrorsForEntity(data, entity, getInstanceOverviewOfEntityById, helpers)
 
       const aggregate =
         errors.length > 0 ? new AggregateError(errors, `in entity "${entity.name}"`) : undefined

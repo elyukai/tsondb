@@ -78,6 +78,7 @@ export const reduceNodes = <R>(
   ): { results: R[]; reducedDecls: Decl[] } => {
     switch (node.kind) {
       case NodeKind.EntityDecl:
+      case NodeKind.SingletonEntityDecl:
       case NodeKind.EnumDecl:
       case NodeKind.TypeAliasDecl:
         return reduceNodeTree(

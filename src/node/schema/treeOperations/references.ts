@@ -8,6 +8,7 @@ import { resolveTypeArguments } from "./typeResolution.ts"
 export const getReferences = (node: Node, value: unknown, inDecl: Decl[]): string[] => {
   switch (node.kind) {
     case NodeKind.EntityDecl:
+    case NodeKind.SingletonEntityDecl:
     case NodeKind.EnumDecl:
     case NodeKind.TypeAliasDecl:
       return getReferences(node.type.value, value, [...inDecl, node])

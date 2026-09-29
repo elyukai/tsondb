@@ -633,6 +633,7 @@ select {
 @container (min-width: 40rem) {
   .entries-item__subtitle {
     padding-block: var(--text-padding);
+    text-align: right;
   }
 }
 

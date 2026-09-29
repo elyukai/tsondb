@@ -1,10 +1,17 @@
 import { randomUUID } from "node:crypto"
-import type { InstanceContainer, InstanceContent } from "../shared/utils/instances.ts"
-import { type EntityDecl } from "./schema/dsl/index.ts"
+import type {
+  InstanceContainer,
+  InstanceContent,
+  SingletonInstanceContainer,
+} from "../shared/utils/instances.ts"
+import { type EntityDecl, type SingletonEntityDecl } from "./schema/dsl/index.ts"
 import type {
   AnyEntityMap,
+  AnySingletonEntityMap,
   GetEntityByName,
+  GetSingletonEntityByName,
   RegisteredEntityMap,
+  RegisteredSingletonEntityMap,
 } from "./schema/generatedTypeHelpers.ts"
 import { type DatabaseInMemory } from "./utils/databaseInMemory.ts"
 import { getErrorMessageForDisplay, HTTPError } from "./utils/error.js"
@@ -34,13 +41,33 @@ export type TransactionStep =
       instanceId: string
       oldInstance: InstanceContent
     }
+  | {
+      kind: "createSingleton"
+      entity: SingletonEntityDecl
+      instanceContent: InstanceContent
+    }
+  | {
+      kind: "updateSingleton"
+      entity: SingletonEntityDecl
+      instanceContent: InstanceContent
+      oldInstance: InstanceContent
+    }
+  | {
+      kind: "deleteSingleton"
+      entity: SingletonEntityDecl
+      oldInstance: InstanceContent
+    }
 
-type TransactionShared<EM extends AnyEntityMap = RegisteredEntityMap> = {
-  data: DatabaseInMemory<EM>
+type TransactionShared<
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  SEM extends AnySingletonEntityMap = RegisteredSingletonEntityMap,
+> = {
+  data: DatabaseInMemory<EM, SEM>
   referencesToInstances: ReferencesToInstances
   steps: TransactionStep[]
   getEntity: GetEntityByName<EM>
-  validate: (entity: EntityDecl, instanceContent: InstanceContent) => Error[]
+  getSingletonEntity: GetSingletonEntityByName<EM>
+  validate: (entity: EntityDecl | SingletonEntityDecl, instanceContent: InstanceContent) => Error[]
   localeEntity: EntityDecl | undefined
 }
 
@@ -99,10 +126,48 @@ const checkDeleteInstancePossible = (
   }
 }
 
-export class Transaction<EM extends AnyEntityMap = RegisteredEntityMap> {
-  #values: TransactionShared<EM>
+/**
+ * @throws {HTTPError}
+ */
+const checkCreateSingletonInstancePossible = (
+  validate: (entity: SingletonEntityDecl, instanceContent: InstanceContent) => Error[],
+  databaseInMemory: DatabaseInMemory,
+  entity: SingletonEntityDecl,
+  instanceContent: InstanceContent,
+): void => {
+  if (databaseInMemory.hasInstanceOfSingletonEntity(entity.name)) {
+    throw new HTTPError(400, `Duplicate instance for singleton entity`)
+  }
 
-  constructor(values: TransactionShared<EM>) {
+  checkUpdateSingletonInstancePossible(validate, entity, instanceContent)
+}
+
+/**
+ * @throws {HTTPError}
+ */
+const checkUpdateSingletonInstancePossible = (
+  validate: (entity: SingletonEntityDecl, instanceContent: InstanceContent) => Error[],
+  entity: SingletonEntityDecl,
+  instanceContent: InstanceContent,
+): void => {
+  const validationErrors = validate(entity, instanceContent)
+
+  if (validationErrors.length > 0) {
+    throw new HTTPError(400, validationErrors.map(getErrorMessageForDisplay).join("\n\n"))
+  }
+}
+
+const checkDeleteSingletonInstancePossible = (): void => {
+  // cannot be referenced and does not have any integration into other areas, so no checks needed
+}
+
+export class Transaction<
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  SEM extends AnySingletonEntityMap = RegisteredSingletonEntityMap,
+> {
+  #values: TransactionShared<EM, SEM>
+
+  constructor(values: TransactionShared<EM, SEM>) {
     this.#values = values
   }
 
@@ -110,7 +175,7 @@ export class Transaction<EM extends AnyEntityMap = RegisteredEntityMap> {
     entity: EntityDecl<Extract<keyof EM, string>>,
     instanceContent: InstanceContent,
     instanceId?: string,
-  ): [Transaction<EM>, InstanceContainer] {
+  ): [Transaction<EM, SEM>, InstanceContainer] {
     const { data, steps, referencesToInstances, getEntity, validate, localeEntity } = this.#values
     const newId = checkCreateInstancePossible(
       validate,
@@ -156,7 +221,7 @@ export class Transaction<EM extends AnyEntityMap = RegisteredEntityMap> {
     entity: EntityDecl<Extract<keyof EM, string>>,
     instanceId: string,
     instanceContent: InstanceContent,
-  ): [Transaction<EM>, InstanceContainer] {
+  ): [Transaction<EM, SEM>, InstanceContainer] {
     const { data, steps, referencesToInstances, getEntity, validate } = this.#values
     checkUpdateInstancePossible(validate, entity, instanceContent)
     const [updatedDb, oldInstance] = data.setInstanceContainerOfEntityById(entity.name, {
@@ -202,7 +267,7 @@ export class Transaction<EM extends AnyEntityMap = RegisteredEntityMap> {
   deleteInstance(
     entity: EntityDecl<Extract<keyof EM, string>>,
     instanceId: string,
-  ): [Transaction<EM>, InstanceContainer] {
+  ): [Transaction<EM, SEM>, InstanceContainer] {
     const { data, steps, referencesToInstances, getEntity } = this.#values
     checkDeleteInstancePossible(referencesToInstances, instanceId)
     const [updatedDb, oldInstance] = data.deleteInstanceContainerOfEntityById(
@@ -239,6 +304,121 @@ export class Transaction<EM extends AnyEntityMap = RegisteredEntityMap> {
         referencesToInstances: updatedRefs,
       }),
       { id: instanceId, content: oldInstance },
+    ]
+  }
+
+  createSingletonInstance(
+    entity: SingletonEntityDecl<Extract<keyof SEM, string>>,
+    instanceContent: InstanceContent,
+  ): [Transaction<EM, SEM>, SingletonInstanceContainer] {
+    const { data, steps, referencesToInstances, getEntity, validate } = this.#values
+    checkCreateSingletonInstancePossible(validate, data, entity, instanceContent)
+    const [updatedDb] = data.setInstanceContainerOfSingletonEntity(entity.name, {
+      content: instanceContent,
+    })
+
+    const updatedRefs = updateReferencesToInstances(
+      getEntity,
+      referencesToInstances,
+      entity.name,
+      entity.name,
+      undefined,
+      instanceContent,
+    )
+
+    const step: TransactionStep = {
+      kind: "createSingleton",
+      entity,
+      instanceContent,
+    }
+
+    return [
+      new Transaction({
+        ...this.#values,
+        data: updatedDb,
+        steps: [...steps, step],
+        referencesToInstances: updatedRefs,
+      }),
+      { content: instanceContent },
+    ]
+  }
+
+  updateSingletonInstance(
+    entity: SingletonEntityDecl<Extract<keyof SEM, string>>,
+    instanceContent: InstanceContent,
+  ): [Transaction<EM, SEM>, SingletonInstanceContainer] {
+    const { data, steps, referencesToInstances, getEntity, validate } = this.#values
+    checkUpdateSingletonInstancePossible(validate, entity, instanceContent)
+    const [updatedDb, oldInstance] = data.setInstanceContainerOfSingletonEntity(entity.name, {
+      content: instanceContent,
+    })
+
+    if (oldInstance === undefined) {
+      throw new HTTPError(400, `Singleton instance of entity "${entity.name}" did not yet exist`)
+    }
+
+    const updatedRefs = updateReferencesToInstances(
+      getEntity,
+      referencesToInstances,
+      entity.name,
+      entity.name,
+      oldInstance,
+      instanceContent,
+    )
+
+    const step: TransactionStep = {
+      kind: "updateSingleton",
+      entity,
+      instanceContent,
+      oldInstance,
+    }
+
+    return [
+      new Transaction({
+        ...this.#values,
+        data: updatedDb,
+        steps: [...steps, step],
+        referencesToInstances: updatedRefs,
+      }),
+      { content: instanceContent },
+    ]
+  }
+
+  deleteSingletonInstance(
+    entity: SingletonEntityDecl<Extract<keyof SEM, string>>,
+  ): [Transaction<EM, SEM>, SingletonInstanceContainer] {
+    const { data, steps, referencesToInstances, getEntity } = this.#values
+    checkDeleteSingletonInstancePossible()
+    const [updatedDb, oldInstance] = data.deleteInstanceContainerOfSingletonEntity(entity.name)
+
+    if (oldInstance === undefined) {
+      // instance did not exist
+      throw new Error("Instance did not exist")
+    }
+
+    const updatedRefs = updateReferencesToInstances(
+      getEntity,
+      referencesToInstances,
+      entity.name,
+      entity.name,
+      oldInstance,
+      undefined,
+    )
+
+    const step: TransactionStep = {
+      kind: "deleteSingleton",
+      entity,
+      oldInstance,
+    }
+
+    return [
+      new Transaction({
+        ...this.#values,
+        data: updatedDb,
+        steps: [...steps, step],
+        referencesToInstances: updatedRefs,
+      }),
+      { content: oldInstance },
     ]
   }
 

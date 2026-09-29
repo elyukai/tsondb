@@ -5,6 +5,7 @@ import type {
 } from "../../shared/schema/declarations/Declaration.ts"
 import { isSerializedEntityDeclWithParentReference } from "../../shared/schema/declarations/EntityDecl.ts"
 import { isSerializedEnumDecl } from "../../shared/schema/declarations/EnumDecl.ts"
+import { isSerializedSingletonEntityDecl } from "../../shared/schema/declarations/SingletonEntityDecl.ts"
 import { isSerializedTypeAliasDecl } from "../../shared/schema/declarations/TypeAliasDecl.ts"
 import { getAllDeclarations } from "../api/declarations.ts"
 import { useSetting } from "./useSettings.ts"
@@ -23,7 +24,8 @@ export const useGetDeclFromDeclName = (): [GetDeclFromDeclName, loaded: boolean]
               decl =>
                 isSerializedEnumDecl(decl) ||
                 isSerializedTypeAliasDecl(decl) ||
-                isSerializedEntityDeclWithParentReference(decl),
+                (!isSerializedSingletonEntityDecl(decl) &&
+                  isSerializedEntityDeclWithParentReference(decl)),
             ),
         )
       })

@@ -1,43 +1,7 @@
-import { error, isError, ok, type Result } from "@elyukai/utils/result"
-import type { InstanceContent } from "../../shared/utils/instances.ts"
+import { error, ok } from "@elyukai/utils/result"
 import type { FormatterOptions } from "../config.ts"
-import type { EntityDecl } from "../schema/dsl/index.ts"
 import type { TransactionStep } from "../transaction.ts"
 import * as DatabaseFilesystem from "./files.ts"
-
-const setInstanceOnDisk = async (
-  root: string,
-  entity: EntityDecl,
-  instanceId: string,
-  instanceContent: InstanceContent,
-  formatterOptions: Partial<FormatterOptions> | undefined,
-): Promise<Result<void, Error>> => {
-  try {
-    await DatabaseFilesystem.writeInstance(
-      root,
-      entity,
-      instanceId,
-      instanceContent,
-      formatterOptions,
-    )
-    return ok()
-  } catch (e) {
-    return error(e as Error)
-  }
-}
-
-const deleteInstanceOnDisk = async (
-  root: string,
-  entityName: string,
-  instanceId: string,
-): Promise<Result<void, Error>> => {
-  try {
-    await DatabaseFilesystem.deleteInstance(root, entityName, instanceId)
-    return ok()
-  } catch (e) {
-    return error(e as Error)
-  }
-}
 
 const rollbackChanges = async (
   root: string,
@@ -45,9 +9,10 @@ const rollbackChanges = async (
   formatterOptions: Partial<FormatterOptions> | undefined,
 ) => {
   for (const step of steps) {
-    const res = await runReverseStepAction(root, step, formatterOptions)
-    if (isError(res)) {
-      return res
+    try {
+      await runReverseStepAction(root, step, formatterOptions)
+    } catch (e: unknown) {
+      return error(e as Error)
     }
   }
 
@@ -58,11 +23,11 @@ const runStepAction = (
   root: string,
   step: TransactionStep,
   formatterOptions: Partial<FormatterOptions> | undefined,
-): Promise<Result<void, Error>> => {
+): Promise<void> => {
   switch (step.kind) {
     case "create":
     case "update":
-      return setInstanceOnDisk(
+      return DatabaseFilesystem.writeInstance(
         root,
         step.entity,
         step.instanceId,
@@ -70,7 +35,17 @@ const runStepAction = (
         formatterOptions,
       )
     case "delete":
-      return deleteInstanceOnDisk(root, step.entity.name, step.instanceId)
+      return DatabaseFilesystem.deleteInstance(root, step.entity.name, step.instanceId)
+    case "createSingleton":
+    case "updateSingleton":
+      return DatabaseFilesystem.writeSingletonInstance(
+        root,
+        step.entity,
+        step.instanceContent,
+        formatterOptions,
+      )
+    case "deleteSingleton":
+      return DatabaseFilesystem.deleteSingletonInstance(root, step.entity.name)
   }
 }
 
@@ -78,12 +53,12 @@ const runReverseStepAction = (
   root: string,
   step: TransactionStep,
   formatterOptions: Partial<FormatterOptions> | undefined,
-): Promise<Result<void, Error>> => {
+): Promise<void> => {
   switch (step.kind) {
     case "create":
-      return deleteInstanceOnDisk(root, step.entity.name, step.instanceId)
+      return DatabaseFilesystem.deleteInstance(root, step.entity.name, step.instanceId)
     case "update":
-      return setInstanceOnDisk(
+      return DatabaseFilesystem.writeInstance(
         root,
         step.entity,
         step.instanceId,
@@ -91,10 +66,26 @@ const runReverseStepAction = (
         formatterOptions,
       )
     case "delete":
-      return setInstanceOnDisk(
+      return DatabaseFilesystem.writeInstance(
         root,
         step.entity,
         step.instanceId,
+        step.oldInstance,
+        formatterOptions,
+      )
+    case "createSingleton":
+      return DatabaseFilesystem.deleteSingletonInstance(root, step.entity.name)
+    case "updateSingleton":
+      return DatabaseFilesystem.writeSingletonInstance(
+        root,
+        step.entity,
+        step.oldInstance,
+        formatterOptions,
+      )
+    case "deleteSingleton":
+      return DatabaseFilesystem.writeSingletonInstance(
+        root,
+        step.entity,
         step.oldInstance,
         formatterOptions,
       )
@@ -109,10 +100,12 @@ export const applyStepsToDisk = async (
   for (let i = 0; i < steps.length; i++) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const step = steps[i]!
-    const res = await runStepAction(root, step, formatterOptions)
-    if (isError(res)) {
+
+    try {
+      await runStepAction(root, step, formatterOptions)
+    } catch (e: unknown) {
       await rollbackChanges(root, steps.slice(0, i), formatterOptions)
-      return res
+      return error(e as Error)
     }
   }
 

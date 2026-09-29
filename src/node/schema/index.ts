@@ -6,7 +6,12 @@ import Debug from "debug"
 import { NodeKind } from "../../shared/schema/Node.ts"
 import { renderKeyPath, type KeyPath } from "../../shared/schema/utils/keyPath.ts"
 import type { UniquingElement } from "../../shared/schema/utils/uniqueConstraint.ts"
-import type { DeclarationName, DefaultTSONDBTypes, EntityName } from "../index.ts"
+import type {
+  DeclarationName,
+  DefaultTSONDBTypes,
+  EntityName,
+  SingletonEntityName,
+} from "../index.ts"
 import type { Decl } from "./dsl/declarations/Decl.ts"
 import {
   getParameterNames,
@@ -16,7 +21,8 @@ import {
 import type { EntityDecl } from "./dsl/declarations/EntityDecl.ts"
 import { isEntityDecl } from "./dsl/declarations/EntityDecl.ts"
 import { cases, isEnumDecl } from "./dsl/declarations/EnumDecl.ts"
-import type { Node, Type } from "./dsl/index.ts"
+import { isSingletonEntityDecl } from "./dsl/declarations/SingletonEntityDecl.ts"
+import type { Node, SingletonEntityDecl, Type } from "./dsl/index.ts"
 import { isChildEntitiesType } from "./dsl/types/ChildEntitiesType.ts"
 import type { EnumCaseDecl } from "./dsl/types/EnumType.ts"
 import { isFloatType } from "./dsl/types/FloatType.ts"
@@ -39,8 +45,10 @@ const debug = Debug("tsondb:schema")
 export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   readonly #declarations: Decl<DeclarationName<T>>[]
   readonly #entities: EntityDecl<EntityName<T>>[]
+  readonly #singletonEntities: SingletonEntityDecl<SingletonEntityName<T>>[]
   readonly #resolvedDeclarations: Decl<DeclarationName<T>>[]
   readonly #resolvedEntities: EntityDecl<EntityName<T>>[]
+  readonly #resolvedSingletonEntities: SingletonEntityDecl<SingletonEntityName<T>>[]
   readonly #localeEntity?: EntityDecl<EntityName<T>>
   readonly #declarationMap: Dictionary<Decl<DeclarationName<T>>>
   readonly #resolvedDeclarationMap: Dictionary<Decl<DeclarationName<T>>>
@@ -94,6 +102,12 @@ export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     this.#resolvedEntities = this.#resolvedDeclarations.filter(isEntityDecl) as EntityDecl<
       EntityName<T>
     >[]
+    this.#singletonEntities = allDeclsWithoutNestedEntities.filter(
+      isSingletonEntityDecl,
+    ) as SingletonEntityDecl<SingletonEntityName<T>>[]
+    this.#resolvedSingletonEntities = this.#resolvedDeclarations.filter(
+      isSingletonEntityDecl,
+    ) as SingletonEntityDecl<SingletonEntityName<T>>[]
     this.#declarationMap = Dictionary.fromEntries(
       allDeclsWithoutNestedEntities.map(decl => [decl.name, decl]),
     )
@@ -119,6 +133,28 @@ export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   getResolvedEntity<E extends EntityName<T>>(name: E): EntityDecl<E> | undefined {
     const decl = this.#resolvedDeclarationMap.get(name)
     return decl && isEntityDecl(decl) ? (decl as EntityDecl<E>) : undefined
+  }
+
+  get singletonEntities(): SingletonEntityDecl<SingletonEntityName<T>>[] {
+    return this.#singletonEntities
+  }
+
+  get resolvedSingletonEntities(): SingletonEntityDecl<SingletonEntityName<T>>[] {
+    return this.#resolvedSingletonEntities
+  }
+
+  getSingletonEntity<E extends SingletonEntityName<T>>(
+    name: E,
+  ): SingletonEntityDecl<E> | undefined {
+    const decl = this.#declarationMap.get(name)
+    return decl && isSingletonEntityDecl(decl) ? (decl as SingletonEntityDecl<E>) : undefined
+  }
+
+  getResolvedSingletonEntity<E extends SingletonEntityName<T>>(
+    name: E,
+  ): SingletonEntityDecl<E> | undefined {
+    const decl = this.#resolvedDeclarationMap.get(name)
+    return decl && isSingletonEntityDecl(decl) ? (decl as SingletonEntityDecl<E>) : undefined
   }
 
   get declarations(): Decl[] {
@@ -148,6 +184,15 @@ export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    */
   isEntityName(name: string): name is EntityName<T> {
     return this.#entities.some(entity => entity.name === name)
+  }
+
+  /**
+   * Checks if the given name is a valid singleton entity name in the schema.
+   *
+   * This includes all entity declarations, but not nested entity declarations, as they cannot be referenced directly by their name.
+   */
+  isSingletonEntityName(name: string): name is SingletonEntityName<T> {
+    return this.#singletonEntities.some(entity => entity.name === name)
   }
 
   /**
@@ -346,6 +391,24 @@ const checkChildEntityTypeInEntityDecl = (
   }
 }
 
+const checkChildEntityTypeInSingletonEntityDecl = (
+  checkedDecls: Set<Decl>,
+  entityDecl: SingletonEntityDecl,
+  decl: Decl,
+) => {
+  if (!checkedDecls.has(decl)) {
+    checkedDecls.add(decl)
+    walkNodeTree(node => {
+      if (isIncludeIdentifierType(node)) {
+        checkChildEntityTypeInSingletonEntityDecl(checkedDecls, entityDecl, node.reference)
+      } else if (isChildEntitiesType(node)) {
+        throw new Error(
+          `Child entities type for entity "${node.entity.name}" in entity declaration "${entityDecl.name}" is not allowed in a singleton entity. Use a regular entity instead.`,
+        )
+      }
+    }, decl)
+  }
+}
 const checkChildEntityTypes = (localeEntity: EntityDecl | undefined, decls: Decl[]) => {
   if (localeEntity && localeEntity.parentReferenceKey !== undefined) {
     throw new TypeError(
@@ -362,6 +425,10 @@ const checkChildEntityTypes = (localeEntity: EntityDecl | undefined, decls: Decl
 
     if (isEntityDecl(decl)) {
       checkChildEntityTypeInEntityDecl(new Set<Decl>(), decl, decl)
+    }
+
+    if (isSingletonEntityDecl(decl)) {
+      checkChildEntityTypeInSingletonEntityDecl(new Set<Decl>(), decl, decl)
     }
   }
 }
@@ -394,6 +461,7 @@ const isDeclarationRecursive = (declToCheck: Decl): boolean => {
   const isDeclarationIncludedInNode = (visitedDecls: Decl[], node: Node): boolean => {
     switch (node.kind) {
       case NodeKind.EntityDecl:
+      case NodeKind.SingletonEntityDecl:
       case NodeKind.EnumDecl:
       case NodeKind.TypeAliasDecl:
         return visitedDecls.includes(node)

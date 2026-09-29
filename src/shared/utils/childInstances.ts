@@ -13,6 +13,11 @@ export interface EntityTaggedInstanceContainer {
   content: InstanceContent
 }
 
+export interface EntityTaggedSingletonInstanceContainer {
+  entityName: string
+  content: InstanceContent
+}
+
 export interface CreatedEntityTaggedInstanceContainerWithChildInstances extends GenEntityTaggedInstanceContainerWithChildInstances<
   undefined,
   UnsafeEntityTaggedInstanceContainerWithChildInstances

@@ -8,6 +8,11 @@ export interface InstanceContainer<T = InstanceContent> {
   gitStatus?: GitFileStatus
 }
 
+export interface SingletonInstanceContainer<T = InstanceContent> {
+  content: T
+  gitStatus?: GitFileStatus
+}
+
 export interface InstanceContainerOverview {
   id: string
   gitStatus?: GitFileStatus

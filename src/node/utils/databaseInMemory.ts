@@ -3,40 +3,61 @@ import { Dictionary } from "@elyukai/utils/dictionary"
 import { deepEqual } from "@elyukai/utils/equality"
 import { Lazy } from "@elyukai/utils/lazy"
 import child_process from "node:child_process"
-import { readdir, readFile } from "node:fs/promises"
+import { readdir, readFile, stat } from "node:fs/promises"
 import { basename, extname, join } from "node:path"
 import { platform } from "node:process"
 import { promisify } from "node:util"
-import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
-import type { EntityDecl } from "../schema/dsl/index.ts"
+import type {
+  InstanceContainer,
+  InstanceContent,
+  SingletonInstanceContainer,
+} from "../../shared/utils/instances.ts"
+import type { EntityDecl, SingletonEntityDecl } from "../schema/dsl/index.ts"
 import {
   normalizedIdArgs,
   type AnyChildEntityMap,
   type AnyEntityMap,
+  type AnySingletonEntityMap,
   type GetEntityByName,
   type IdArgsVariant,
   type RegisteredEntityMap,
+  type RegisteredSingletonEntityMap,
 } from "../schema/generatedTypeHelpers.ts"
+import { getPathToSingletonInstance, readSingletonInstance } from "./files.ts"
 
 type DatabaseDict<EM extends AnyEntityMap> = Dictionary<
   Dictionary<InstanceContainer>,
   Extract<keyof EM, string>
 >
 
+type DatabaseSingletonDict<SEM extends AnySingletonEntityMap> = Dictionary<
+  SingletonInstanceContainer,
+  Extract<keyof SEM, string>
+>
+
 const exec = promisify(child_process.exec)
 const ulimit = platform === "win32" ? 2048 : Number.parseInt((await exec("ulimit -n")).stdout)
 
-export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
+export class DatabaseInMemory<
+  EM extends AnyEntityMap = RegisteredEntityMap,
+  SEM extends AnySingletonEntityMap = RegisteredSingletonEntityMap,
+> {
   #data: DatabaseDict<EM>
+  #singletonData: DatabaseSingletonDict<SEM>
 
-  private constructor(data: Dictionary<Dictionary<InstanceContainer>, Extract<keyof EM, string>>) {
+  private constructor(data: DatabaseDict<EM>, singletonData: DatabaseSingletonDict<SEM>) {
     this.#data = data
+    this.#singletonData = singletonData
   }
 
-  static async load<EM extends AnyEntityMap = RegisteredEntityMap>(
+  static async load<
+    EM extends AnyEntityMap = RegisteredEntityMap,
+    SEM extends AnySingletonEntityMap = RegisteredSingletonEntityMap,
+  >(
     dataRoot: string,
     entities: readonly EntityDecl<Extract<keyof EM, string>>[],
-  ): Promise<DatabaseInMemory<EM>> {
+    singletonEntities: readonly SingletonEntityDecl<Extract<keyof SEM, string>>[],
+  ): Promise<DatabaseInMemory<EM, SEM>> {
     return new DatabaseInMemory(
       Dictionary.fromEntries(
         await mapAsync(
@@ -72,6 +93,36 @@ export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
           1,
         ),
       ),
+      Dictionary.fromEntries(
+        (
+          await mapAsync(
+            singletonEntities,
+            async (
+              singletonEntity,
+            ): Promise<[Extract<keyof SEM, string>, SingletonInstanceContainer | undefined]> => {
+              const pathToSingletonFile = getPathToSingletonInstance(dataRoot, singletonEntity.name)
+
+              try {
+                await stat(pathToSingletonFile)
+                return [
+                  singletonEntity.name,
+                  {
+                    content: JSON.parse(
+                      await readSingletonInstance(dataRoot, singletonEntity),
+                    ) as InstanceContent,
+                  },
+                ]
+              } catch {
+                return [singletonEntity.name, undefined]
+              }
+            },
+            1,
+          )
+        ).filter(
+          (pair): pair is [(typeof pair)[0], NonNullable<(typeof pair)[1]>] =>
+            pair[1] !== undefined,
+        ),
+      ),
     )
   }
 
@@ -94,6 +145,13 @@ export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
     return this.#data.entries().map(([entityName, instances]) => [entityName, instances.values()])
   }
 
+  getAllSingletonInstances(): [
+    entityName: Extract<keyof SEM, string>,
+    instance: SingletonInstanceContainer,
+  ][] {
+    return this.#singletonData.entries()
+  }
+
   getInstanceContainerOfEntityById<E extends Extract<keyof EM, string>>(
     ...args: IdArgsVariant<EM, E>
   ): InstanceContainer<EM[E]> | undefined {
@@ -110,11 +168,27 @@ export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
     return this.getInstanceContainerOfEntityById(...args)?.content
   }
 
+  getSingletonInstanceContainerOfEntity<E extends Extract<keyof SEM, string>>(
+    entityName: E,
+  ): SingletonInstanceContainer<SEM[E]> | undefined {
+    return this.#singletonData.get(entityName) as SingletonInstanceContainer<SEM[E]> | undefined
+  }
+
+  getSingletonInstanceOfEntity<E extends Extract<keyof SEM, string>>(
+    entityName: E,
+  ): SEM[E] | undefined {
+    return this.getSingletonInstanceContainerOfEntity(entityName)?.content
+  }
+
   hasInstanceOfEntityById<E extends Extract<keyof EM, string>>(
     ...args: IdArgsVariant<EM, E>
   ): boolean {
     const { entityName, id } = normalizedIdArgs(args)
     return this.#data.getMap(entityName, instances => instances.has(id)) ?? false
+  }
+
+  hasInstanceOfSingletonEntity(entityName: Extract<keyof SEM, string>): boolean {
+    return this.#singletonData.get(entityName) !== undefined
   }
 
   forEachInstance(
@@ -151,11 +225,52 @@ export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
     }
   }
 
+  forEachSingletonInstance(
+    fn: (
+      entityName: Extract<keyof SEM, string>,
+      instance: SingletonInstanceContainer,
+    ) => Promise<void>,
+    async: true,
+  ): Promise<void>
+  forEachSingletonInstance(
+    fn: (entityName: Extract<keyof SEM, string>, instance: SingletonInstanceContainer) => void,
+    async?: false,
+  ): void
+  forEachSingletonInstance(
+    ...args:
+      | [
+          fn: (
+            entityName: Extract<keyof SEM, string>,
+            instance: SingletonInstanceContainer,
+          ) => Promise<void>,
+          async: true,
+        ]
+      | [
+          fn: (
+            entityName: Extract<keyof SEM, string>,
+            instance: SingletonInstanceContainer,
+          ) => void,
+          async?: false,
+        ]
+  ): void | Promise<void> {
+    const [fn, async] = args
+    if (async) {
+      return this.#singletonData.forEach((instance, entityName) => fn(entityName, instance), true)
+    } else {
+      this.#singletonData.forEach((instance, entityName) => {
+        fn(entityName, instance)
+      })
+    }
+  }
+
   countInstancesOfEntity(entityName: Extract<keyof EM, string>): number {
     return this.#data.getMap(entityName, instances => instances.size) ?? 0
   }
 
-  #totalSize = Lazy.of(() => this.#data.reduce((total, instances) => total + instances.size, 0))
+  #totalSize = Lazy.of(
+    () =>
+      this.#data.reduce((total, instances) => total + instances.size, 0) + this.#singletonData.size,
+  )
 
   get totalSize(): number {
     return this.#totalSize.value
@@ -202,18 +317,31 @@ export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
   setInstanceContainerOfEntityById(
     entityName: Extract<keyof EM, string>,
     instance: InstanceContainer,
-  ): [DatabaseInMemory<EM>, oldInstance: InstanceContent | undefined] {
+  ): [DatabaseInMemory<EM, SEM>, oldInstance: InstanceContent | undefined] {
     const instances: Dictionary<InstanceContainer> = this.#data.get(entityName) ?? Dictionary.empty
     return [
-      new DatabaseInMemory(this.#data.set(entityName, instances.set(instance.id, instance))),
-      instances.get(instance.id),
+      new DatabaseInMemory(
+        this.#data.set(entityName, instances.set(instance.id, instance)),
+        this.#singletonData,
+      ),
+      instances.get(instance.id)?.content,
+    ]
+  }
+
+  setInstanceContainerOfSingletonEntity(
+    entityName: Extract<keyof SEM, string>,
+    instance: SingletonInstanceContainer,
+  ): [DatabaseInMemory<EM, SEM>, oldInstance: InstanceContent | undefined] {
+    return [
+      new DatabaseInMemory(this.#data, this.#singletonData.set(entityName, instance)),
+      this.#singletonData.get(entityName)?.content,
     ]
   }
 
   deleteInstanceContainerOfEntityById(
     entityName: Extract<keyof EM, string>,
     instanceId: string,
-  ): [DatabaseInMemory<EM>, oldInstance: InstanceContent | undefined] {
+  ): [DatabaseInMemory<EM, SEM>, oldInstance: InstanceContent | undefined] {
     const instances: Dictionary<InstanceContainer> = this.#data.get(entityName) ?? Dictionary.empty
     const oldInstance = instances.get(instanceId)
     return oldInstance
@@ -226,7 +354,20 @@ export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
               const remainingInstances = instances.remove(instanceId)
               return remainingInstances.size === 0 ? undefined : remainingInstances
             }),
+            this.#singletonData,
           ),
+          oldInstance.content,
+        ]
+      : [this, undefined]
+  }
+
+  deleteInstanceContainerOfSingletonEntity(
+    entityName: Extract<keyof SEM, string>,
+  ): [DatabaseInMemory<EM, SEM>, oldInstance: InstanceContent | undefined] {
+    const oldInstance = this.#singletonData.get(entityName)
+    return oldInstance
+      ? [
+          new DatabaseInMemory(this.#data, this.#singletonData.remove(entityName)),
           oldInstance.content,
         ]
       : [this, undefined]
@@ -237,8 +378,17 @@ export class DatabaseInMemory<EM extends AnyEntityMap = RegisteredEntityMap> {
       instances: Dictionary<InstanceContainer>,
       entityName: Extract<keyof EM, string>,
     ) => Dictionary<InstanceContainer>,
-  ): DatabaseInMemory<EM> {
-    return new DatabaseInMemory(this.#data.map(fn))
+  ): DatabaseInMemory<EM, SEM> {
+    return new DatabaseInMemory(this.#data.map(fn), this.#singletonData)
+  }
+
+  mapSingletons(
+    fn: (
+      instance: SingletonInstanceContainer,
+      entityName: Extract<keyof SEM, string>,
+    ) => SingletonInstanceContainer,
+  ): DatabaseInMemory<EM, SEM> {
+    return new DatabaseInMemory(this.#data, this.#singletonData.map(fn))
   }
 
   getEntityNameOfInstanceId(id: string): Extract<keyof EM, string> | undefined {

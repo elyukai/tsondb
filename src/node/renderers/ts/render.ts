@@ -18,6 +18,10 @@ import {
   isEntityDeclWithParentReference,
 } from "../../schema/dsl/declarations/EntityDecl.ts"
 import { isEnumDecl, type EnumDecl } from "../../schema/dsl/declarations/EnumDecl.ts"
+import {
+  isSingletonEntityDecl,
+  type SingletonEntityDecl,
+} from "../../schema/dsl/declarations/SingletonEntityDecl.ts"
 import { isTypeAliasDecl, TypeAliasDecl } from "../../schema/dsl/declarations/TypeAliasDecl.ts"
 import type { Type } from "../../schema/dsl/index.ts"
 import type { TypeParameter } from "../../schema/dsl/TypeParameter.ts"
@@ -60,6 +64,11 @@ export type TypeScriptRendererOptions = {
          * If `true` or a string, generates an object type with all names of the entities as the key and their corresponding generated type as their respective value. Uses `EntityMap` as a default name when using `true` or the string if set to a string.
          */
         entityMap: boolean | string
+
+        /**
+         * If `true` or a string, generates an object type with all names of the singleton entities as the key and their corresponding generated type as their respective value. Uses `SingletonEntityMap` as a default name when using `true` or the string if set to a string.
+         */
+        singletonEntityMap: boolean | string
 
         /**
          * If `true` or a string, generates an object type with all names of entities with parent references as the key and their corresponding generated type as well as their parent reference key as their respective value. Uses `ChildEntityMap` as a default name when using `true` or the string if set to a string.
@@ -336,6 +345,14 @@ const renderEntityDecl: RenderFn<EntityDecl> = (options, decl) =>
     options.addIdentifierToEntities ? addEphemeralUUIDToType(decl) : decl.type.value,
   )}`
 
+const renderSingletonEntityDecl: RenderFn<SingletonEntityDecl> = (options, decl) =>
+  syntax`${renderDocumentation(decl.comment, decl.isDeprecated)}export ${
+    options.objectTypeKeyword
+  } ${decl.name} ${options.objectTypeKeyword === "type" ? "= " : ""}${renderType(
+    options,
+    decl.type.value,
+  )}`
+
 const renderEnumDecl: RenderFn<EnumDecl> = (options, decl) =>
   syntax`${renderDocumentation(decl.comment, decl.isDeprecated)}export type ${
     decl.name
@@ -356,6 +373,8 @@ const renderDecl: RenderFn<Decl> = (options, decl) => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
       return renderEntityDecl(options, decl)
+    case NodeKind.SingletonEntityDecl:
+      return renderSingletonEntityDecl(options, decl)
     case NodeKind.EnumDecl:
       return renderEnumDecl(options, decl)
     case NodeKind.TypeAliasDecl:
@@ -421,6 +440,18 @@ const renderMapHelperType = <T extends Decl>(
 
 const renderEntityMapType = (options: TypeScriptRendererOptions, declarations: readonly Decl[]) =>
   renderMapHelperType(options, declarations, "entityMap", "EntityMap", isEntityDecl)
+
+const renderSingletonEntityMapType = (
+  options: TypeScriptRendererOptions,
+  declarations: readonly Decl[],
+) =>
+  renderMapHelperType(
+    options,
+    declarations,
+    "singletonEntityMap",
+    "SingletonEntityMap",
+    isSingletonEntityDecl,
+  )
 
 const renderChildEntityMapType = (
   options: TypeScriptRendererOptions,
@@ -517,6 +548,7 @@ export const render = (
   )
   return (
     renderEntityMapType(finalOptions, declarations) +
+    renderSingletonEntityMapType(finalOptions, declarations) +
     renderChildEntityMapType(finalOptions, declarations) +
     renderEnumMapType(finalOptions, declarations) +
     renderTypeAliasMapType(finalOptions, declarations) +

@@ -86,6 +86,7 @@ export const validateDeclStructuralIntegrity = (
 ): TypeError[] => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
+    case NodeKind.SingletonEntityDecl:
       return validateTypeStructuralIntegrity(helpers, inDecls, decl.type.value, value)
     case NodeKind.EnumDecl:
     case NodeKind.TypeAliasDecl:
@@ -521,6 +522,7 @@ export const validateDeclReferentialIntegrity = (
 ): ReferenceError[] => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
+    case NodeKind.SingletonEntityDecl:
       return validateTypeReferentialIntegrity(
         helpers,
         checkEntityName,

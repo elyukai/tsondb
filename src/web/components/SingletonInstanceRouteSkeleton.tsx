@@ -1,22 +1,17 @@
 import { deepEqual } from "@elyukai/utils/equality"
+import { constant } from "@elyukai/utils/function"
 import { toTitleCase } from "@elyukai/utils/string"
 import type { FunctionalComponent } from "preact"
 import { useLocation, useRoute, type LocationHook } from "preact-iso"
 import type { SetStateAction } from "preact/compat"
 import { useCallback, useContext, useEffect, useMemo, useState, type Dispatch } from "preact/hooks"
 import type { GetDeclFromDeclName } from "../../shared/schema/declarations/Declaration.ts"
-import type { SerializedEntityDecl } from "../../shared/schema/declarations/EntityDecl.ts"
-import type { UnsafeEntityTaggedInstanceContainerWithChildInstances } from "../../shared/utils/childInstances.ts"
-import { getSerializedDisplayNameFromEntityInstance } from "../../shared/utils/displayName.ts"
+import type { SerializedSingletonEntityDecl } from "../../shared/schema/declarations/SingletonEntityDecl.ts"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
-import { validateLocaleIdentifier } from "../../shared/validation/identifier.ts"
-import {
-  deleteInstanceByEntityNameAndId,
-  getChildInstancesForInstanceByEntityName,
-} from "../api/declarations.ts"
-import { EntitiesContext } from "../context/entities.ts"
+import { deleteSingletonInstanceByEntityName } from "../api/declarations.ts"
+import { SingletonEntitiesContext } from "../context/entities.ts"
 import { GitClientContext } from "../context/gitClient.ts"
-import { useEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
+import { useSingletonEntityFromRoute } from "../hooks/useEntityFromRoute.ts"
 import { useInstanceNamesByEntity } from "../hooks/useInstanceNamesByEntity.ts"
 import { useGetDeclFromDeclName } from "../hooks/useSecondaryDeclarations.ts"
 import { useSetting } from "../hooks/useSettings.ts"
@@ -25,77 +20,62 @@ import { NotFound } from "../routes/NotFound.tsx"
 import { runWithLoading } from "../signals/loading.ts"
 import { Layout } from "./Layout.tsx"
 import { TypeInput } from "./typeInputs/TypeInput.tsx"
-import { ValidationErrors } from "./typeInputs/utils/ValidationErrors.tsx"
 
-export type InstanceRouteSkeletonInitializer = (values: {
+export type SingletonInstanceRouteSkeletonInitializer = (values: {
   locales: string[]
-  entity: SerializedEntityDecl
-  instanceId: string | undefined
+  entity: SerializedSingletonEntityDecl
   setInstanceContent: Dispatch<SetStateAction<InstanceContent>>
   getDeclFromDeclName: GetDeclFromDeclName
 }) => Promise<void>
 
-export type InstanceRouteSkeletonSubmitHandler<A extends string = string> = (values: {
+export type SingletonInstanceRouteSkeletonSubmitHandler<A extends string = string> = (values: {
   locales: string[]
-  entity: SerializedEntityDecl
-  instanceId: string | undefined
+  entity: SerializedSingletonEntityDecl
   instanceContent: InstanceContent
   action: A
-  customId: string
-  isLocaleEntity: boolean | undefined
-  childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   route: LocationHook["route"]
   setInstanceContent: Dispatch<SetStateAction<InstanceContent>>
-  setCustomId: Dispatch<SetStateAction<string>>
   getDeclFromDeclName: GetDeclFromDeclName
   updateLocalGitState?: () => Promise<void>
+  reloadSingletonEntities: () => Promise<void>
 }) => Promise<void>
 
-export type InstanceRouteSkeletonOnSubmitHandler = (values: {
+export type SingletonInstanceRouteSkeletonOnSubmitHandler = (values: {
   locales: string[]
-  entity: SerializedEntityDecl
-  instanceId: string | undefined
+  entity: SerializedSingletonEntityDecl
   instanceContent: InstanceContent
   buttonName: string | undefined
-  customId: string
-  isLocaleEntity: boolean | undefined
-  childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   route: LocationHook["route"]
   setInstanceContent: Dispatch<SetStateAction<InstanceContent>>
-  setCustomId: Dispatch<SetStateAction<string>>
   getDeclFromDeclName: GetDeclFromDeclName
   updateLocalGitState?: () => Promise<void>
+  reloadSingletonEntities: () => Promise<void>
 }) => Promise<void>
 
-export type InstanceRouteSkeletonOnSaveHandler = (values: {
+export type SingletonInstanceRouteSkeletonOnSaveHandler = (values: {
   locales: string[]
-  entity: SerializedEntityDecl
-  instanceId: string | undefined
+  entity: SerializedSingletonEntityDecl
   instanceContent: InstanceContent
-  customId: string
-  isLocaleEntity: boolean | undefined
-  childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[]
   route: LocationHook["route"]
   setInstanceContent: Dispatch<SetStateAction<InstanceContent>>
-  setCustomId: Dispatch<SetStateAction<string>>
   getDeclFromDeclName: GetDeclFromDeclName
   updateLocalGitState?: () => Promise<void>
+  reloadSingletonEntities: () => Promise<void>
 }) => Promise<void>
 
-export type InstanceRouteSkeletonTitleBuilder = (values: {
+export type SingletonInstanceRouteSkeletonTitleBuilder = (values: {
   locales: string[]
-  entity: SerializedEntityDecl
-  instanceId: string | undefined
+  entity: SerializedSingletonEntityDecl
   instanceContent: InstanceContent | undefined
 }) => string | undefined
 
 type Props = {
   mode: "create" | "edit"
   buttons: { label: string; name: string; primary?: boolean }[]
-  init: InstanceRouteSkeletonInitializer
-  titleBuilder: InstanceRouteSkeletonTitleBuilder
-  onSubmit: InstanceRouteSkeletonOnSubmitHandler
-  onSave: InstanceRouteSkeletonOnSaveHandler
+  init: SingletonInstanceRouteSkeletonInitializer
+  titleBuilder: SingletonInstanceRouteSkeletonTitleBuilder
+  onSubmit: SingletonInstanceRouteSkeletonOnSubmitHandler
+  onSave: SingletonInstanceRouteSkeletonOnSaveHandler
 }
 
 const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -110,7 +90,7 @@ const isApplePlatform = () => applePlatformPattern.test(window.navigator.platfor
 
 const checkCmdOrCtrl = (event: KeyboardEvent) => (isApplePlatform() ? event.metaKey : event.ctrlKey)
 
-export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
+export const SingletonInstanceRouteSkeleton: FunctionalComponent<Props> = ({
   mode,
   buttons,
   init,
@@ -119,32 +99,23 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
   onSave,
 }) => {
   const {
-    params: { name, id },
+    params: { name },
   } = useRoute()
 
   const [locales] = useSetting("displayedLocales")
   const [getDeclFromDeclName, declsLoaded] = useGetDeclFromDeclName()
-  const { declaration: entity, isLocaleEntity } = useEntityFromRoute() ?? {}
-  const { entities } = useContext(EntitiesContext)
+  const { declaration: entity } = useSingletonEntityFromRoute() ?? {}
   const [instanceNamesByEntity] = useInstanceNamesByEntity()
   const [instanceContent, setInstanceContent] = useState<InstanceContent>()
   const [savedInstanceContent, setSavedInstanceContent] = useState<unknown>()
-  const [savedChildInstances, setSavedChildInstances] = useState<
-    UnsafeEntityTaggedInstanceContainerWithChildInstances[]
-  >([])
-  const [childInstances, setChildInstances] = useState<
-    UnsafeEntityTaggedInstanceContainerWithChildInstances[]
-  >([])
-  const [customId, setCustomId] = useState("")
   const client = useContext(GitClientContext)
+  const { reloadSingletonEntities } = useContext(SingletonEntitiesContext)
 
   const { route } = useLocation()
 
   const hasUnsavedChanges = useMemo(
-    () =>
-      !deepEqual(instanceContent, savedInstanceContent) ||
-      !deepEqual(childInstances, savedChildInstances),
-    [childInstances, instanceContent, savedChildInstances, savedInstanceContent],
+    () => !deepEqual(instanceContent, savedInstanceContent),
+    [instanceContent, savedInstanceContent],
   )
 
   const saveHandler = useCallback(
@@ -155,19 +126,15 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           onSave({
             locales,
             entity,
-            instanceId: id,
             instanceContent,
             route,
-            customId,
             getDeclFromDeclName,
-            isLocaleEntity,
-            setCustomId,
             setInstanceContent: value => {
               setInstanceContent(value)
               setSavedInstanceContent(value)
             },
-            childInstances,
             updateLocalGitState: client?.updateLocalState,
+            reloadSingletonEntities,
           }),
         ).catch((error: unknown) => {
           console.error("Error submitting instance data:", error)
@@ -175,17 +142,14 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
       }
     },
     [
-      childInstances,
       client?.updateLocalState,
-      customId,
       entity,
       getDeclFromDeclName,
-      id,
       instanceContent,
-      isLocaleEntity,
       locales,
       onSave,
       route,
+      reloadSingletonEntities,
     ],
   )
 
@@ -215,9 +179,8 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
 
   useEffect(() => {
     document.title =
-      (entity && titleBuilder({ locales, entity, instanceContent, instanceId: id })) ??
-      "Not found — TSONDB"
-  }, [entity, id, instanceContent, locales, titleBuilder])
+      (entity && titleBuilder({ locales, entity, instanceContent })) ?? "Not found — TSONDB"
+  }, [entity, instanceContent, locales, titleBuilder])
 
   useEffect(() => {
     if (entity && instanceContent === undefined && declsLoaded) {
@@ -225,33 +188,17 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
         init({
           locales,
           entity,
-          instanceId: id,
           setInstanceContent: value => {
             setInstanceContent(value)
             setSavedInstanceContent(value)
           },
           getDeclFromDeclName,
         }),
-      )
-        .then(() =>
-          id
-            ? getChildInstancesForInstanceByEntityName(locales, entity.name, id).then(result => {
-                setChildInstances(result.instances)
-                setSavedChildInstances(result.instances)
-              })
-            : Promise.resolve(),
-        )
-        .catch((error: unknown) => {
-          console.error("Error initializing instance route skeleton:", error)
-        })
+      ).catch((error: unknown) => {
+        console.error("Error initializing instance route skeleton:", error)
+      })
     }
-  }, [entity, declsLoaded, getDeclFromDeclName, id, init, instanceContent, locales, name])
-
-  const checkIsLocaleEntity = useCallback(
-    (entityName: string) =>
-      entities.some(entity => entity.declaration.name === entityName && entity.isLocaleEntity),
-    [entities],
-  )
+  }, [entity, declsLoaded, getDeclFromDeclName, init, instanceContent, locales, name])
 
   const handleSubmit = (event: SubmitEvent) => {
     event.preventDefault()
@@ -261,21 +208,16 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
         onSubmit({
           locales,
           entity,
-          instanceId: id,
           instanceContent,
           buttonName,
           route,
-          customId,
           getDeclFromDeclName,
-          isLocaleEntity,
-          setCustomId,
           setInstanceContent: value => {
             setInstanceContent(value)
             setSavedInstanceContent(value)
-            setSavedChildInstances(childInstances)
           },
-          childInstances,
           updateLocalGitState: client?.updateLocalState,
+          reloadSingletonEntities,
         }),
       ).catch((error: unknown) => {
         console.error("Error submitting instance data:", error)
@@ -283,29 +225,16 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
     }
   }
 
-  if (!name || (mode === "edit" && !id)) {
+  if (!name) {
     return <NotFound />
   }
 
   if (!entity || instanceContent === undefined || !instanceNamesByEntity || !declsLoaded) {
     return (
-      <Layout
-        breadcrumbs={[
-          { url: "/", label: homeTitle },
-          {
-            url: `/entities/${name}`,
-            label: entity ? (entity.displayNamePlural ?? toTitleCase(entity.namePlural)) : name,
-          },
-        ]}
-      >
+      <Layout breadcrumbs={[{ url: "/", label: homeTitle }]}>
         <div class="header-with-btns">
           <h1 class="empty-name">
-            <span>{id}</span>{" "}
-            {id && (
-              <span class="id" aria-hidden>
-                {id}
-              </span>
-            )}
+            <span>{entity ? (entity.displayName ?? toTitleCase(entity.name)) : name}</span>
           </h1>
           <button class="destructive" disabled>
             Delete
@@ -316,43 +245,26 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Already checked for NotFound above
-  const defaultName = mode === "edit" ? id! : customId || `New ${toTitleCase(entity.name)}`
-  const instanceName = getSerializedDisplayNameFromEntityInstance(
-    entity,
-    instanceContent,
-    defaultName,
-    locales,
-  ).name
-  const idErrors = mode === "create" && isLocaleEntity ? validateLocaleIdentifier(customId) : []
+  const defaultName =
+    mode === "edit"
+      ? (entity.displayName ?? toTitleCase(entity.name))
+      : `New ${entity.displayName ?? toTitleCase(entity.name)}`
 
   return (
-    <Layout
-      breadcrumbs={[
-        { url: "/", label: homeTitle },
-        {
-          url: `/entities/${name}`,
-          label: entity.displayNamePlural ?? toTitleCase(entity.namePlural),
-        },
-      ]}
-    >
+    <Layout breadcrumbs={[{ url: "/", label: homeTitle }]}>
       <div class="header-with-btns">
-        <h1 class={instanceName.length === 0 ? "empty-name" : undefined}>
-          <span>{instanceName || defaultName}</span>{" "}
-          {id && (
-            <span class="id" aria-hidden>
-              {id}
-            </span>
-          )}
+        <h1>
+          <span>{defaultName}</span>
         </h1>
-        {id && (
+        {mode === "edit" && (
           <button
             class="destructive"
             onClick={() => {
               if (confirm("Are you sure you want to delete this instance?")) {
-                deleteInstanceByEntityNameAndId(locales, entity.name, id)
+                deleteSingletonInstanceByEntityName(locales, entity.name)
+                  .then(() => reloadSingletonEntities())
                   .then(() => {
-                    route(`/entities/${name}`)
+                    route(`/`)
                   })
                   .catch((error: unknown) => {
                     if (error instanceof Error) {
@@ -366,36 +278,17 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
           </button>
         )}
       </div>
-      {!id && isLocaleEntity && (
-        <div class="field field--id">
-          <label htmlFor="id">ID</label>
-          <p className="comment">The instance’s identifier. An IETF language tag (BCP47).</p>
-          <input
-            type="text"
-            id="id"
-            value={customId}
-            required
-            pattern="[a-z]{2,3}(-[A-Z]{2,3})?"
-            placeholder="en-US, de-DE, …"
-            onInput={event => {
-              setCustomId(event.currentTarget.value)
-            }}
-            aria-invalid={idErrors.length > 0}
-          />
-          <ValidationErrors errors={idErrors} />
-        </div>
-      )}
       <form onSubmit={handleSubmit}>
         <TypeInput
           type={entity.type}
           value={instanceContent}
           path={undefined}
           instanceNamesByEntity={instanceNamesByEntity}
-          childInstances={childInstances}
+          childInstances={[]} // not used for singleton instances
           getDeclFromDeclName={getDeclFromDeclName}
           onChange={setInstanceContent as Dispatch<SetStateAction<unknown>>} // guaranteed to be an object because of the ObjectType in the entity
-          setChildInstances={setChildInstances}
-          checkIsLocaleEntity={checkIsLocaleEntity}
+          setChildInstances={() => undefined} // not used for singleton instances
+          checkIsLocaleEntity={constant(false)} // not used for singleton instances
         />
         <div class="form-footer btns">
           {buttons.map(button => (
