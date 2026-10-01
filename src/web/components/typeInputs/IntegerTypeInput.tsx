@@ -29,7 +29,7 @@ export const IntegerTypeInput: FunctionComponent<Props> = ({ type, value, disabl
             onChange(numericValue)
           }
         }}
-        step={0.01}
+        step={1}
         aria-invalid={errors.length > 0}
         disabled={disabled}
       />
