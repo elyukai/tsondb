@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.21.4](https://github.com/elyukai/tsondb/compare/v0.21.3...v0.21.4) (2026-10-03)
+
+### Bug Fixes
+
+* reversed reorder button condition ([69aa203](https://github.com/elyukai/tsondb/commit/69aa203b8f97e34e99a7a459edd1cf83fe44ae5e))
+
 ## [0.21.3](https://github.com/elyukai/tsondb/compare/v0.21.2...v0.21.3) (2026-10-03)
 
 ### Features
