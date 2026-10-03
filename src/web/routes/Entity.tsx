@@ -229,9 +229,9 @@ export const Entity: FunctionalComponent = () => {
       <div class="header-with-btns">
         <h1>{toTitleCase(entity.namePlural)}</h1>
         <div className="btns">
-          {isReorderableSortOrder(entity.sortOrder) ? null : (
+          {isReorderableSortOrder(entity.sortOrder) ? (
             <button onClick={toggleEditMode}>{inEditMode ? "Apply new order" : "Reorder"}</button>
-          )}
+          ) : null}
           <a class="btn btn--primary" href={`/entities/${entity.name}/instances/create`}>
             Add
           </a>
