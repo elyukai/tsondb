@@ -11,20 +11,14 @@ import { getValueAtKeyPath, type KeyPath } from "./keyPath.ts"
  * @default "displayName"
  */
 export type SortOrder = "displayName" | { keyPath: KeyPath; isIndex?: boolean }
-// | { entityMapKeyPath: KeyPath; keyPathInEntityMap: KeyPath }
 
 const getSortOrderValue = (
   instanceContent: InstanceContent,
   sortOrder: Exclude<SortOrder, "displayName">,
-): unknown => {
+): string | number | undefined => {
   if ("keyPath" in sortOrder) {
-    return getValueAtKeyPath(instanceContent, sortOrder.keyPath)
+    return getValueAtKeyPath(instanceContent, sortOrder.keyPath) as string | number
   } else {
-    // const entityMap = instance.getValueAtKeyPath(sortOrder.entityMapKeyPath)
-    // if (entityMap && typeof entityMap === "object") {
-    //   const nestedInstance = InstanceContent.fromUnknown(entityMap)
-    //   return nestedInstance.getValueAtKeyPath(sortOrder.keyPathInEntityMap)
-    // }
     return
   }
 }
