@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.21.3](https://github.com/elyukai/tsondb/compare/v0.21.2...v0.21.3) (2026-10-03)
+
+### Features
+
+* reorder instances with sort order as index ([53ee9c6](https://github.com/elyukai/tsondb/commit/53ee9c6dc8b9ace78cf16de019d8f3f7d088fd0f))
+
+### Bug Fixes
+
+* **client:** only use integer steps in integer input field ([3cc9f91](https://github.com/elyukai/tsondb/commit/3cc9f91776a1fd58aaa97a11d1e1fcbc90c4427f))
+
 ## [0.21.2](https://github.com/elyukai/tsondb/compare/v0.21.1...v0.21.2) (2026-09-29)
 
 ### Features
