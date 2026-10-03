@@ -171,6 +171,60 @@ declarationsApi.post("/:name/instances", async (req, res) => {
   }
 })
 
+declarationsApi.put("/:name/instances/reorder", async (req, res) => {
+  const decl = req.db.schema.getResolvedDeclaration(req.params.name)
+
+  if (decl === undefined) {
+    res.status(404).send(`Declaration "${req.params.name}" not found`)
+    return
+  }
+
+  if (!isEntityDecl(decl)) {
+    res.status(400).send(`Declaration "${decl.name}" is not an entity`)
+    return
+  }
+
+  try {
+    const requestBody = req.body as API.ReorderAllInstancesOfEntityRequestBody
+    await req.db.reorderAllInstancesOfEntity(decl, requestBody.order)
+
+    const body: API.ReorderAllInstancesOfEntityResponseBody = {
+      instances: req.db.getAllInstanceOverviewsOfEntity(decl.name),
+    }
+
+    res.json(body)
+  } catch (err) {
+    sendErrorResponse(res, err)
+  }
+})
+
+declarationsApi.put("/:name/instances/reorder/:id", async (req, res) => {
+  const decl = req.db.schema.getResolvedDeclaration(req.params.name)
+
+  if (decl === undefined) {
+    res.status(404).send(`Declaration "${req.params.name}" not found`)
+    return
+  }
+
+  if (!isEntityDecl(decl)) {
+    res.status(400).send(`Declaration "${decl.name}" is not an entity`)
+    return
+  }
+
+  try {
+    const requestBody = req.body as API.ReorderInstanceOfEntityRequestBody
+    await req.db.reorderInstanceOfEntity(decl, req.params.id, requestBody.targetIndex)
+
+    const body: API.ReorderInstanceOfEntityResponseBody = {
+      instances: req.db.getAllInstanceOverviewsOfEntity(decl.name),
+    }
+
+    res.json(body)
+  } catch (err) {
+    sendErrorResponse(res, err)
+  }
+})
+
 declarationsApi.get("/:name/instances/:id", (req, res) => {
   const decl = req.db.schema.getResolvedDeclaration(req.params.name)
 

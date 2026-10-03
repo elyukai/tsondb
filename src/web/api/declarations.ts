@@ -13,6 +13,10 @@ import type {
   GetDeclarationResponseBody,
   GetInstanceOfEntityResponseBody,
   GetSingletonInstanceOfEntityResponseBody,
+  ReorderAllInstancesOfEntityRequestBody,
+  ReorderAllInstancesOfEntityResponseBody,
+  ReorderInstanceOfEntityRequestBody,
+  ReorderInstanceOfEntityResponseBody,
   UpdateInstanceOfEntityRequestBody,
   UpdateInstanceOfEntityResponseBody,
   UpdateSingletonInstanceOfEntityRequestBody,
@@ -67,6 +71,43 @@ export const getInstancesByEntityName = async (locales: string[], name: string) 
   getResource<GetAllInstancesOfEntityResponseBody>(`/api/declarations/${name}/instances`, {
     locales,
   })
+
+export const reorderAllInstancesInEntity = async (
+  locales: string[],
+  name: string,
+  newOrder: string[],
+) => {
+  const body: ReorderAllInstancesOfEntityRequestBody = {
+    order: newOrder,
+  }
+
+  return putResource<ReorderAllInstancesOfEntityResponseBody>(
+    `/api/declarations/${name}/instances/reorder`,
+    {
+      locales,
+      body,
+    },
+  )
+}
+
+export const reorderInstanceInEntity = async (
+  locales: string[],
+  name: string,
+  id: string,
+  newIndex: number,
+) => {
+  const body: ReorderInstanceOfEntityRequestBody = {
+    targetIndex: newIndex,
+  }
+
+  return putResource<ReorderInstanceOfEntityResponseBody>(
+    `/api/declarations/${name}/instances/reorder/${id}`,
+    {
+      locales,
+      body,
+    },
+  )
+}
 
 export const getLocaleInstances = (
   locales: string[],

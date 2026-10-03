@@ -1,5 +1,6 @@
 import { mergeObjects } from "@elyukai/utils/object"
-import { EOL } from "node:os"
+
+const EOL = await import("node:os").then(module => module.EOL).catch(() => "\n")
 
 export const prefixLines = (
   prefix: string,

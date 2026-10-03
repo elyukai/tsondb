@@ -12,6 +12,9 @@ export default defineConfig({
     target: "web",
     emitCss: false,
     emitAssets: false,
+    externals: {
+      "node:os": "node:os",
+    },
   },
   source: {
     entry: {

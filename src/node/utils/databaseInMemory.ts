@@ -1,12 +1,21 @@
+import { reorder } from "@elyukai/utils/array/modify"
 import { mapAsync } from "@elyukai/utils/async"
 import { Dictionary } from "@elyukai/utils/dictionary"
 import { deepEqual } from "@elyukai/utils/equality"
+import { on } from "@elyukai/utils/function"
 import { Lazy } from "@elyukai/utils/lazy"
+import { compareNumber } from "@elyukai/utils/ordering"
 import child_process from "node:child_process"
 import { readdir, readFile, stat } from "node:fs/promises"
 import { basename, extname, join } from "node:path"
 import { platform } from "node:process"
 import { promisify } from "node:util"
+import {
+  getValueAtKeyPathIfDefined,
+  setValueAtKeyPath,
+  type KeyPath,
+} from "../../shared/schema/utils/keyPath.ts"
+import { HTTPError } from "../../shared/utils/error.ts"
 import type {
   InstanceContainer,
   InstanceContent,
@@ -225,6 +234,30 @@ export class DatabaseInMemory<
     }
   }
 
+  forEachInstanceOfEntity(
+    entityName: Extract<keyof EM, string>,
+    fn: (instance: InstanceContainer) => Promise<void>,
+    async: true,
+  ): Promise<void>
+  forEachInstanceOfEntity(
+    entityName: Extract<keyof EM, string>,
+    fn: (instance: InstanceContainer) => void,
+    async?: false,
+  ): void
+  forEachInstanceOfEntity(
+    entityName: Extract<keyof EM, string>,
+    ...args:
+      | [fn: (instance: InstanceContainer) => Promise<void>, async: true]
+      | [fn: (instance: InstanceContainer) => void, async?: false]
+  ): void | Promise<void> {
+    const [fn, async] = args
+    if (async) {
+      return this.#data.get(entityName)?.forEach(fn, true)
+    } else {
+      this.#data.get(entityName)?.forEach(fn)
+    }
+  }
+
   forEachSingletonInstance(
     fn: (
       entityName: Extract<keyof SEM, string>,
@@ -393,5 +426,132 @@ export class DatabaseInMemory<
 
   getEntityNameOfInstanceId(id: string): Extract<keyof EM, string> | undefined {
     return this.#data.findKey(instances => instances.has(id))
+  }
+
+  reorderAllInstancesOfEntity(
+    entityName: Extract<keyof EM, string>,
+    keyPath: KeyPath,
+    newOrder: string[],
+    startIndex = 0,
+  ): DatabaseInMemory<EM, SEM> {
+    const instancesWithPositions = this.getAllInstanceContainersOfEntity(entityName).map(
+      instance =>
+        [instance.id, getValueAtKeyPathIfDefined(instance.content, keyPath) as number] as const,
+    )
+
+    if (newOrder.length !== instancesWithPositions.length) {
+      throw new HTTPError(
+        400,
+        `New order of instances (${newOrder.length.toFixed()} elements) does not match the amount of instances in entity "${entityName}" (${instancesWithPositions.length.toFixed()} instances)`,
+      )
+    }
+
+    if (instancesWithPositions.some(([id]) => !newOrder.includes(id))) {
+      throw new HTTPError(
+        400,
+        `Identifiers in the new order do not match existing instance identifiers for entity "${entityName}"`,
+      )
+    }
+
+    return new DatabaseInMemory(
+      instancesWithPositions.reduce(
+        (db, [id]) =>
+          db.modify(entityName, instances =>
+            instances?.modify(id, instanceContainer =>
+              instanceContainer === undefined
+                ? undefined
+                : {
+                    ...instanceContainer,
+                    content: setValueAtKeyPath(
+                      instanceContainer.content,
+                      keyPath,
+                      newOrder.indexOf(id) + startIndex,
+                    ) as InstanceContent,
+                  },
+            ),
+          ),
+        this.#data,
+      ),
+      this.#singletonData,
+    )
+  }
+
+  reorderInstanceOfEntity(
+    entityName: Extract<keyof EM, string>,
+    keyPath: KeyPath,
+    instanceId: string,
+    newIndex: number,
+    startIndex = 0,
+  ): [
+    DatabaseInMemory<EM, SEM>,
+    changedInstances: [id: string, oldContent: InstanceContent, newContent: InstanceContent][],
+  ] {
+    const instancesWithPositions = this.getAllInstanceContainersOfEntity(entityName).map(
+      instance =>
+        [instance.id, getValueAtKeyPathIfDefined(instance.content, keyPath) as number] as const,
+    )
+
+    const normalizedInstancesWithPositions = instancesWithPositions.toSorted(
+      on(([_, position]) => position, compareNumber),
+    )
+    const currentIndex = normalizedInstancesWithPositions.findIndex(([id]) => id === instanceId)
+
+    if (currentIndex === -1) {
+      throw new HTTPError(
+        400,
+        `Instance with ID "${instanceId}" does not exist in entity "${entityName}"`,
+      )
+    }
+
+    const newSafeIndex = Math.max(
+      0,
+      Math.min(newIndex, normalizedInstancesWithPositions.length - 1),
+    )
+
+    if (currentIndex === newSafeIndex) {
+      return [this, []]
+    }
+
+    const reorderedInstances = reorder(normalizedInstancesWithPositions, currentIndex, newSafeIndex)
+
+    const changedInstances: [
+      id: string,
+      oldContent: InstanceContent,
+      newContent: InstanceContent,
+    ][] = []
+
+    return [
+      new DatabaseInMemory(
+        reorderedInstances.reduce(
+          (db, [id], index) =>
+            db.modify(entityName, instances =>
+              instances?.modify(id, instanceContainer => {
+                if (instanceContainer === undefined) {
+                  return undefined
+                }
+
+                const oldContent = instanceContainer.content
+                const currentPosition = getValueAtKeyPathIfDefined(oldContent, keyPath)
+                if (currentPosition === index + startIndex) {
+                  return instanceContainer
+                }
+
+                const newContent = setValueAtKeyPath(
+                  oldContent,
+                  keyPath,
+                  index + startIndex,
+                ) as InstanceContent
+
+                changedInstances.push([id, oldContent, newContent])
+
+                return { ...instanceContainer, content: newContent }
+              }),
+            ),
+          this.#data,
+        ),
+        this.#singletonData,
+      ),
+      changedInstances,
+    ]
   }
 }

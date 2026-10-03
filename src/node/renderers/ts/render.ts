@@ -5,6 +5,15 @@ import { EOL } from "node:os"
 import { dirname, relative } from "node:path"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import { NodeKind } from "../../../shared/schema/Node.ts"
+import type { RenderResult } from "../../../shared/utils/render.ts"
+import {
+  combineSyntaxes,
+  emptyRenderResult,
+  getIndentation,
+  indent,
+  prefixLines,
+  syntax,
+} from "../../../shared/utils/render.ts"
 import {
   extractParameterTypeNamesFromMessage,
   mapParameterTypeNames,
@@ -44,15 +53,6 @@ import { getTypeOfKey } from "../../schema/dsl/types/TranslationObjectType.ts"
 import type { TypeArgumentType } from "../../schema/dsl/types/TypeArgumentType.ts"
 import { flatMapAuxiliaryDecls, isFinalChildEntitiesType } from "../../schema/helpers.ts"
 import { ensureSpecialDirStart } from "../../utils/path.ts"
-import type { RenderResult } from "../../utils/render.ts"
-import {
-  combineSyntaxes,
-  emptyRenderResult,
-  getIndentation,
-  indent,
-  prefixLines,
-  syntax,
-} from "../../utils/render.ts"
 
 export type TypeScriptRendererOptions = {
   indentation: number

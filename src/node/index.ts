@@ -11,6 +11,13 @@ import { stderr } from "node:process"
 import { styleText } from "node:util"
 import { simpleGit, type SimpleGit, type StatusResult } from "simple-git"
 import { NodeKind } from "../shared/schema/Node.ts"
+import {
+  countError,
+  countErrors,
+  getErrorMessageForDisplay,
+  HTTPError,
+  wrapErrorsIfAny,
+} from "../shared/utils/error.ts"
 import type {
   InstanceContainer,
   InstanceContainerOverview,
@@ -54,13 +61,6 @@ import {
   getInstanceOverviewsByEntityName,
 } from "./utils/displayName.ts"
 import {
-  countError,
-  countErrors,
-  getErrorMessageForDisplay,
-  HTTPError,
-  wrapErrorsIfAny,
-} from "./utils/error.ts"
-import {
   formatInstance,
   getFileNameForId,
   getSingletonFileName,
@@ -85,7 +85,10 @@ export interface DefaultTSONDBTypes {
   typeAliasMap: AnyTypeAliasMap
 }
 
-export type Entity<T extends DefaultTSONDBTypes, E extends EntityName<T>> = T["entityMap"][E]
+export type Entity<
+  T extends DefaultTSONDBTypes,
+  E extends EntityName<T> = EntityName<T>,
+> = T["entityMap"][E]
 
 export type EntityName<T extends DefaultTSONDBTypes> = Extract<keyof T["entityMap"], string>
 
@@ -1001,6 +1004,49 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     )
 
     return res.content as SingletonEntity<T, E>
+  }
+
+  /**
+   * Reorders all instances of an entity in the database.
+   *
+   * The entity must have a custom sort order via an integer field defined.
+   *
+   * @throws {Error}
+   */
+  async reorderAllInstancesOfEntity(
+    entityName: EntityName<T> | EntityDecl<EntityName<T>>,
+    newOrder: string[],
+  ): Promise<void> {
+    return this.runTransaction(txn => [
+      txn.reorderAllInstancesOfEntity(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        typeof entityName === "string" ? this.#schema.getEntity(entityName)! : entityName,
+        newOrder,
+      ),
+      undefined,
+    ])
+  }
+
+  /**
+   * Reorders an instance of an entity in the database.
+   *
+   * The entity must have a custom sort order via an integer field defined.
+   *
+   * @throws {Error}
+   */
+  async reorderInstanceOfEntity(
+    entityName: EntityName<T> | EntityDecl<EntityName<T>>,
+    instanceId: string,
+    newIndex: number,
+  ): Promise<[id: string, oldContent: InstanceContent, newContent: InstanceContent][]> {
+    return this.runTransaction(txn =>
+      txn.reorderInstanceOfEntity(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        typeof entityName === "string" ? this.#schema.getEntity(entityName)! : entityName,
+        instanceId,
+        newIndex,
+      ),
+    )
   }
 
   /**

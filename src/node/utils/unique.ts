@@ -9,16 +9,9 @@ import {
 } from "../../shared/schema/utils/keyPath.ts"
 import type { UniqueConstraint } from "../../shared/schema/utils/uniqueConstraint.ts"
 import type { InstanceContainer, InstanceContainerOverview } from "../../shared/utils/instances.ts"
+import { UniqueConstraintError } from "../../shared/utils/unique.ts"
 import type { EntityDecl } from "../schema/dsl/index.ts"
 import { type DatabaseInMemory } from "./databaseInMemory.ts"
-
-export class UniqueConstraintError extends Error {
-  readonly parts: string[]
-  constructor(message: string, parts: string[]) {
-    super(message)
-    this.parts = parts
-  }
-}
 
 const printUniqueConstraint = (constraint: UniqueConstraint, values: unknown[]) =>
   (Array.isArray(constraint) ? constraint : [constraint])

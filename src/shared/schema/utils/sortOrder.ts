@@ -1,3 +1,4 @@
+import { HTTPError } from "../../utils/error.ts"
 import type {
   InstanceContainer,
   InstanceContainerOverview,
@@ -9,7 +10,7 @@ import { getValueAtKeyPath, type KeyPath } from "./keyPath.ts"
  * The order in which instances of an entity are sorted in the editor. This affects entity details pages and reference options.
  * @default "displayName"
  */
-export type SortOrder = "displayName" | { keyPath: KeyPath }
+export type SortOrder = "displayName" | { keyPath: KeyPath; isIndex?: boolean }
 // | { entityMapKeyPath: KeyPath; keyPathInEntityMap: KeyPath }
 
 const getSortOrderValue = (
@@ -62,3 +63,26 @@ export const sortBySortOrder = <T extends SortableInstance>(
       .map(({ instance }) => instance)
   }
 }
+
+export const getSortOrderKeyPathForReorder = (decl: {
+  name: string
+  sortOrder?: SortOrder
+}): KeyPath => {
+  const { sortOrder } = decl
+
+  if (isReorderableSortOrder(sortOrder)) {
+    return sortOrder.keyPath
+  } else {
+    throw new HTTPError(
+      400,
+      `Declaration "${decl.name}" does not have the sort order defined correctly. Please check the validity of the whole schema as any incorrect configuration should have been caught during schema intialization.`,
+    )
+  }
+}
+
+export const isReorderableSortOrder = (
+  sortOrder: SortOrder | undefined,
+): sortOrder is {
+  keyPath: KeyPath
+  isIndex: true
+} => typeof sortOrder === "object" && sortOrder.isIndex === true

@@ -76,6 +76,28 @@ export interface CreateInstanceOfEntityResponseBody {
   isLocaleEntity: boolean
 }
 
+export interface ReorderAllInstancesOfEntityRequestBody {
+  /**
+   * All identifiers in the requested order.
+   */
+  order: string[]
+}
+
+export interface ReorderAllInstancesOfEntityResponseBody {
+  instances: InstanceContainerOverview[]
+}
+
+export interface ReorderInstanceOfEntityRequestBody {
+  /**
+   * The 0-based index of the instance in the new order.
+   */
+  targetIndex: number
+}
+
+export interface ReorderInstanceOfEntityResponseBody {
+  instances: InstanceContainerOverview[]
+}
+
 export interface GetInstanceOfEntityResponseBody {
   instance: InstanceContainer
   isLocaleEntity: boolean

@@ -8,6 +8,7 @@ import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { MessageError, parseMessage, validate } from "messageformat"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import { NodeKind } from "../../../shared/schema/Node.ts"
+import { wrapErrorsIfAny } from "../../../shared/utils/error.ts"
 import {
   extendsParameterTypes,
   extractParameterTypeNamesFromMessage,
@@ -24,7 +25,6 @@ import {
 import { validateStringConstraints } from "../../../shared/validation/string.ts"
 import type { ValidationOptions } from "../../index.ts"
 import { type DatabaseInMemory } from "../../utils/databaseInMemory.ts"
-import { wrapErrorsIfAny } from "../../utils/error.ts"
 import { entity, json, key } from "../../utils/errorFormatting.ts"
 import { getTypeArgumentsRecord, type Decl } from "../dsl/declarations/Decl.ts"
 import { createEntityIdentifierType } from "../dsl/declarations/EntityDecl.ts"

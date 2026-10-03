@@ -1,4 +1,7 @@
+import { isEmpty } from "@elyukai/utils/array/nonEmpty"
 import { randomUUID } from "node:crypto"
+import { getSortOrderKeyPathForReorder } from "../shared/schema/utils/sortOrder.ts"
+import { getErrorMessageForDisplay, HTTPError } from "../shared/utils/error.ts"
 import type {
   InstanceContainer,
   InstanceContent,
@@ -14,12 +17,12 @@ import type {
   RegisteredSingletonEntityMap,
 } from "./schema/generatedTypeHelpers.ts"
 import { type DatabaseInMemory } from "./utils/databaseInMemory.ts"
-import { getErrorMessageForDisplay, HTTPError } from "./utils/error.js"
 import {
   isReferencedByOtherInstances,
   updateReferencesToInstances,
   type ReferencesToInstances,
 } from "./utils/references.ts"
+import { getSortOrderStartIndex } from "./utils/sortOrder.ts"
 
 export type TransactionStep =
   | {
@@ -419,6 +422,81 @@ export class Transaction<
         referencesToInstances: updatedRefs,
       }),
       { content: oldInstance },
+    ]
+  }
+
+  reorderAllInstancesOfEntity(
+    entity: EntityDecl<Extract<keyof EM, string>>,
+    newOrder: string[],
+  ): Transaction<EM, SEM> {
+    const { data, steps } = this.#values
+    const positionKeyPath = getSortOrderKeyPathForReorder(entity)
+    const startIndex = getSortOrderStartIndex(entity)
+
+    const newData = data.reorderAllInstancesOfEntity(
+      entity.name,
+      positionKeyPath,
+      newOrder,
+      startIndex,
+    )
+
+    const newSteps: TransactionStep[] = newData
+      .getAllInstanceContainersOfEntity(entity.name)
+      .map(instance => ({
+        kind: "update",
+        entity,
+        instanceId: instance.id,
+        instanceContent: instance.content,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        oldInstance: data.getInstanceContainerOfEntityById(entity.name, instance.id)!.content,
+      }))
+
+    return new Transaction({
+      ...this.#values,
+      data: newData,
+      steps: [...steps, ...newSteps],
+    })
+  }
+
+  reorderInstanceOfEntity(
+    entity: EntityDecl<Extract<keyof EM, string>>,
+    instanceId: string,
+    newIndex: number,
+  ): [
+    Transaction<EM, SEM>,
+    changedInstances: [id: string, oldContent: InstanceContent, newContent: InstanceContent][],
+  ] {
+    const { data, steps } = this.#values
+    const startIndex = getSortOrderStartIndex(entity)
+    const positionKeyPath = getSortOrderKeyPathForReorder(entity)
+
+    const [newData, changedInstances] = data.reorderInstanceOfEntity(
+      entity.name,
+      positionKeyPath,
+      instanceId,
+      newIndex,
+      startIndex,
+    )
+
+    if (isEmpty(changedInstances)) {
+      return [this, changedInstances]
+    }
+
+    const newSteps: TransactionStep[] = changedInstances.map(([id, oldContent, newContent]) => ({
+      kind: "update",
+      entity,
+      instanceId: id,
+      instanceContent: newContent,
+      oldInstance: oldContent,
+    }))
+
+    return [
+      new Transaction({
+        ...this.#values,
+        data: newData,
+        steps: [...steps, ...newSteps],
+      }),
+      changedInstances,
     ]
   }
 

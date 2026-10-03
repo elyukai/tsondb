@@ -487,8 +487,9 @@ select {
   align-items: start;
 }
 
-.header-with-btns button,
-.header-with-btns .btn {
+.header-with-btns > .btns,
+.header-with-btns > button,
+.header-with-btns > .btn {
   margin-top: 2.3rem;
 }
 

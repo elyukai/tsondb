@@ -135,3 +135,46 @@ export const getValueAtKeyPath = (
 
 export const getValueAtKeyPathIfDefined = (value: unknown, keyPath: KeyPath): unknown =>
   trySafe(() => getValueAtKeyPath(value, keyPath, true))
+
+const _setValueAtKeyPath = (value: unknown, keyPath: ParsedKeyPath, newValue: unknown): unknown => {
+  if (isNotEmpty(keyPath)) {
+    const [key, ...remainingPath] = keyPath
+
+    switch (key.kind) {
+      case "index":
+        if (!Array.isArray(value)) {
+          throw new TypeError(
+            `Key path "${renderParsedKeyPath(keyPath)}" does not contain an array.`,
+          )
+        }
+
+        return [
+          ...(value.slice(0, key.index) as unknown[]),
+          _setValueAtKeyPath(value[key.index], remainingPath, newValue),
+          ...(value.slice(key.index + 1) as unknown[]),
+        ]
+      case "property":
+        if (typeof value !== "object" || value === null) {
+          throw new TypeError(
+            `Key path "${renderParsedKeyPath(keyPath)}" does not contain an object.`,
+          )
+        }
+
+        return {
+          ...value,
+          [key.name]: _setValueAtKeyPath(
+            (value as Record<string, unknown>)[key.name],
+            remainingPath,
+            newValue,
+          ),
+        }
+      default:
+        return assertExhaustive(key)
+    }
+  } else {
+    return newValue
+  }
+}
+
+export const setValueAtKeyPath = (value: unknown, keyPath: KeyPath, newValue: unknown): unknown =>
+  _setValueAtKeyPath(value, parseKeyPath(keyPath), newValue)

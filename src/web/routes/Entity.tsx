@@ -1,14 +1,17 @@
+import { reorder } from "@elyukai/utils/array/modify"
 import { toTitleCase } from "@elyukai/utils/string"
 import type { FunctionalComponent } from "preact"
 import { useRoute } from "preact-iso"
-import { useContext, useEffect, useState } from "preact/hooks"
+import { useCallback, useContext, useEffect, useState } from "preact/hooks"
 import type { GetAllInstancesOfEntityResponseBody } from "../../shared/api.ts"
+import { isReorderableSortOrder } from "../../shared/schema/utils/sortOrder.ts"
 import { getGitStatusForDisplay } from "../../shared/utils/git.ts"
 import type { InstanceContainerOverview } from "../../shared/utils/instances.ts"
 import {
   deleteInstanceByEntityNameAndId,
   getInstancesByEntityName,
   getLocaleInstances,
+  reorderAllInstancesInEntity,
 } from "../api/declarations.ts"
 import { GitStatusIndicator } from "../components/git/GitStatusIndicator.tsx"
 import { Layout } from "../components/Layout.tsx"
@@ -24,7 +27,8 @@ import { homeTitle } from "./Home.tsx"
 import { NotFound } from "./NotFound.tsx"
 
 const localeMapper = (result: GetAllInstancesOfEntityResponseBody) => result.instances
-const mapInstances = (data: GetAllInstancesOfEntityResponseBody) => data.instances
+const mapInstances = (data: Pick<GetAllInstancesOfEntityResponseBody, "instances">) =>
+  data.instances
 
 export const Entity: FunctionalComponent = () => {
   const {
@@ -39,18 +43,46 @@ export const Entity: FunctionalComponent = () => {
   const gitClient = useContext(GitClientContext)
   const { reloadEntities } = useContext(EntitiesContext)
   const { declaration: entity, isLocaleEntity } = entityFromRoute ?? {}
-  const [instances, reloadInstances] = useMappedAPIResource(
-    getInstancesByEntityName,
-    mapInstances,
-    locales,
-    entity?.name ?? name ?? "",
-  )
+  const [instances, reloadInstances, setInstances] = useMappedAPIResource<
+    Pick<GetAllInstancesOfEntityResponseBody, "instances">,
+    [string[], string],
+    InstanceContainerOverview[]
+  >(getInstancesByEntityName, mapInstances, locales, entity?.name ?? name ?? "")
   const [localeInstances, reloadLocaleInstances] = useMappedAPIResource(
     getLocaleInstances,
     localeMapper,
     locales,
     config.localeEntityName,
   )
+  const [inEditMode, setInEditMode] = useState(false)
+  const [inApplyingNewOrder, setInApplyingNewOrder] = useState(false)
+  const [orderedInstances, setOrderedInstances] = useState<InstanceContainerOverview[]>([])
+
+  useEffect(() => {
+    setOrderedInstances(instances ?? [])
+  }, [instances])
+
+  const toggleEditMode = useCallback(() => {
+    if (entity && !inApplyingNewOrder) {
+      if (inEditMode) {
+        setInApplyingNewOrder(true)
+        reorderAllInstancesInEntity(
+          locales,
+          entity.name,
+          orderedInstances.map(i => i.id),
+        )
+          .then(res => {
+            setInstances(res)
+            setInEditMode(false)
+          }, logAndAlertError)
+          .finally(() => {
+            setInApplyingNewOrder(false)
+          })
+      } else {
+        setInEditMode(true)
+      }
+    }
+  }, [entity, inApplyingNewOrder, inEditMode, locales, orderedInstances, setInstances])
 
   const { latestCommit } = useContext(GitClientContext) ?? {}
 
@@ -122,7 +154,11 @@ export const Entity: FunctionalComponent = () => {
     }))
     .filter(group => group.instances.length > 0)
 
-  const instanceMapper = (instance: InstanceContainerOverview) => {
+  const instanceMapper = (
+    instance: InstanceContainerOverview,
+    index: number,
+    instancesArr: InstanceContainerOverview[],
+  ) => {
     const gitStatusForDisplay = getGitStatusForDisplay(instance.gitStatus)
     return (
       <li
@@ -136,31 +172,54 @@ export const Entity: FunctionalComponent = () => {
         <p aria-hidden class="entries-item__subtitle entries-item__subtitle--id">
           {instance.id}
         </p>
-        <div class="entries-item__side">
-          <GitStatusIndicator status={instance.gitStatus} />
-          <div class="btns">
-            <a href={`/entities/${entity.name}/instances/${instance.id}`} class="btn">
-              Edit
-            </a>
-            <button
-              class="destructive"
-              onClick={() => {
-                if (confirm("Are you sure you want to delete this instance?")) {
-                  deleteInstanceByEntityNameAndId(locales, entity.name, instance.id)
-                    .then(() => reloadInstances())
-                    .then(() => reloadEntities())
-                    .catch((error: unknown) => {
-                      if (error instanceof Error) {
-                        alert("Error deleting instance:\n\n" + error.toString())
-                      }
-                    })
-                }
-              }}
-            >
-              Delete
-            </button>
+        {inEditMode ? (
+          <div class="entries-item__side">
+            <div class="btns">
+              <button
+                disabled={index <= 0}
+                onClick={() => {
+                  setOrderedInstances(ins => reorder(ins, index, index - 1))
+                }}
+              >
+                Move up
+              </button>
+              <button
+                disabled={index >= instancesArr.length - 1}
+                onClick={() => {
+                  setOrderedInstances(ins => reorder(ins, index, index + 1))
+                }}
+              >
+                Move down
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div class="entries-item__side">
+            <GitStatusIndicator status={instance.gitStatus} />
+            <div class="btns">
+              <a href={`/entities/${entity.name}/instances/${instance.id}`} class="btn">
+                Edit
+              </a>
+              <button
+                class="destructive"
+                onClick={() => {
+                  if (confirm("Are you sure you want to delete this instance?")) {
+                    deleteInstanceByEntityNameAndId(locales, entity.name, instance.id)
+                      .then(() => reloadInstances())
+                      .then(() => reloadEntities())
+                      .catch((error: unknown) => {
+                        if (error instanceof Error) {
+                          alert("Error deleting instance:\n\n" + error.toString())
+                        }
+                      })
+                  }
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
       </li>
     )
   }
@@ -169,9 +228,14 @@ export const Entity: FunctionalComponent = () => {
     <Layout breadcrumbs={[{ url: "/", label: homeTitle }]}>
       <div class="header-with-btns">
         <h1>{toTitleCase(entity.namePlural)}</h1>
-        <a class="btn btn--primary" href={`/entities/${entity.name}/instances/create`}>
-          Add
-        </a>
+        <div className="btns">
+          {isReorderableSortOrder(entity.sortOrder) ? null : (
+            <button onClick={toggleEditMode}>{inEditMode ? "Apply new order" : "Reorder"}</button>
+          )}
+          <a class="btn btn--primary" href={`/entities/${entity.name}/instances/create`}>
+            Add
+          </a>
+        </div>
       </div>
       {entity.comment && <Markdown class="description" string={entity.comment} />}
       <div className="list-header">
@@ -196,13 +260,16 @@ export const Entity: FunctionalComponent = () => {
             onInput={event => {
               setSearchText(event.currentTarget.value)
             }}
+            disabled={inEditMode}
           />
         </form>
       </div>
-      {isLocaleEntity ||
-      (groupedInstances.length === 1 &&
-        groupedInstances[0]?.id !== "undefined" &&
-        locales[0] === groupedInstances[0]?.id) ? (
+      {inEditMode ? (
+        <ul class="entries entries--instances">{orderedInstances.map(instanceMapper)}</ul>
+      ) : isLocaleEntity ||
+        (groupedInstances.length === 1 &&
+          groupedInstances[0]?.id !== "undefined" &&
+          locales[0] === groupedInstances[0]?.id) ? (
         <ul class="entries entries--instances">{filteredInstances.map(instanceMapper)}</ul>
       ) : (
         <ul class="entry-groups">

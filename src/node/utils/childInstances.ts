@@ -9,6 +9,7 @@ import type {
   EntityTaggedInstanceContainerWithChildInstances,
   UnsafeEntityTaggedInstanceContainerWithChildInstances,
 } from "../../shared/utils/childInstances.ts"
+import { HTTPError } from "../../shared/utils/error.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import type { TSONDB } from "../index.ts"
 import type {
@@ -27,7 +28,6 @@ import {
 import { reduceNodes } from "../schema/helpers.ts"
 import type { Transaction } from "../transaction.ts"
 import { type DatabaseInMemory } from "./databaseInMemory.ts"
-import { HTTPError } from "./error.ts"
 
 const isParentReferenceReferencingParent = (
   value: unknown,

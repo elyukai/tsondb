@@ -5,7 +5,7 @@ export const useMappedAPIResource = <T, A extends unknown[], U>(
   apiFn: (...args: A) => Promise<T>,
   mapFn: (data: T) => U,
   ...args: A
-): [U | undefined, () => Promise<void>] => {
+): [U | undefined, () => Promise<void>, (newData: T) => void] => {
   const [data, setData] = useState<U>()
 
   const fetchData = useCallback(
@@ -17,11 +17,19 @@ export const useMappedAPIResource = <T, A extends unknown[], U>(
     [apiFn, mapFn, ...args],
   )
 
+  const setNewData = useCallback(
+    (result: T) => {
+      setData(mapFn(result))
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [apiFn, mapFn, ...args],
+  )
+
   useEffect(() => {
     fetchData().catch(logAndAlertError)
   }, [fetchData])
 
   const reload = useCallback(fetchData, [fetchData])
 
-  return [data, reload]
+  return [data, reload, setNewData]
 }

@@ -2,14 +2,12 @@ import { isError, ok } from "@elyukai/utils/result"
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import * as DSL from "../../../src/node/schema/dsl/index.ts"
-import {
-  checkUniqueConstraintsForEntity,
-  UniqueConstraintError,
-} from "../../../src/node/utils/unique.ts"
+import { checkUniqueConstraintsForEntity } from "../../../src/node/utils/unique.ts"
 import type {
   InstanceContainer,
   InstanceContainerOverview,
 } from "../../../src/shared/utils/instances.ts"
+import { UniqueConstraintError } from "../../../src/shared/utils/unique.ts"
 
 describe("checkUniqueConstraintsForEntity", () => {
   describe("simple key path", () => {

@@ -1,11 +1,11 @@
 import Debug from "debug"
 import { join } from "path"
 import type { SimpleGit } from "simple-git"
+import { HTTPError } from "../shared/utils/error.js"
 import type { InstanceContainerOverview } from "../shared/utils/instances.ts"
 import type { DefaultTSONDBTypes, StoringEntityName, TSONDB } from "./index.ts"
 import type { DatabaseInMemory } from "./utils/databaseInMemory.ts"
 import { getAllInstanceOverviewsByEntityName } from "./utils/displayName.ts"
-import { HTTPError } from "./utils/error.js"
 import { getFileNameForId } from "./utils/files.js"
 import { attachGitStatusToDatabaseInMemory } from "./utils/git.ts"
 

@@ -640,6 +640,19 @@ const checkSortOrders = (declarations: Decl[]) => {
             )}" is not a valid sort order type (string, integer, or float) in entity "${decl.name}"`,
           )
         }
+        if (
+          sortOrder.isIndex &&
+          (!isIntegerType(type) ||
+            type.maximum !== undefined ||
+            (typeof type.minimum === "object" && type.minimum.isExclusive) ||
+            type.multipleOf !== undefined)
+        ) {
+          throw TypeError(
+            `type at key path ${renderKeyPath(
+              sortOrder.keyPath,
+            )} is not a valid index sort order type (integer, optional inclusive minimum, no other constraints) in entity "${decl.name}"`,
+          )
+        }
       } else {
         // const entityMapType = getType(decl.type.value, sortOrder.entityMapKeyPath)
         // if (!isNestedEntityMapType(entityMapType)) {
