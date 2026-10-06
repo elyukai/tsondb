@@ -4,7 +4,7 @@ const isNullableString = (value: unknown): value is string | undefined => {
   return typeof value === "string" || value === undefined
 }
 
-export const Select: FunctionalComponent<preact.SelectHTMLAttributes> = props => (
+export const Select: FunctionalComponent<preact.AccessibleSelectHTMLAttributes> = props => (
   <div class="select-wrapper">
     <select
       {...props}

@@ -34,8 +34,7 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
         </p>
       )
     case "heading":
-      const Tag =
-        `h${(node.level + outerHeadingLevel).toString()}` as keyof preact.JSX.IntrinsicElements
+      const Tag = `h${(node.level + outerHeadingLevel).toString()}` as `h${1 | 2 | 3 | 4 | 5 | 6}`
       return (
         <Tag>
           {insertBefore}
@@ -183,7 +182,7 @@ const TableRow = ({
   cells: TableCell[]
   cellType?: "td" | "th"
 }) => {
-  const CellTag = cellType as keyof preact.JSX.IntrinsicElements
+  const CellTag = cellType
 
   return (
     <tr>
