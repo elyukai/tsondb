@@ -1360,3 +1360,5 @@ export type TSONDBWithGit<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = T
 }
 
 export type { Config } from "./config.ts"
+
+export { createServer } from "./server/index.ts"
