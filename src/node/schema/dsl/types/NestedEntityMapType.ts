@@ -4,7 +4,7 @@ import type { EntityDecl } from "../declarations/EntityDecl.ts"
 import type { TypeAliasDecl } from "../declarations/TypeAliasDecl.ts"
 import type { Node } from "../index.ts"
 import type { TypeParameter } from "../TypeParameter.ts"
-import { type IncludeIdentifier } from "./IncludeIdentifierType.ts"
+import type { IncludeIdentifier } from "./IncludeIdentifierType.ts"
 import type { MemberDecl, ObjectType } from "./ObjectType.ts"
 import type { BaseType } from "./Type.ts"
 
@@ -18,7 +18,8 @@ export type PossibleNestedType<T extends TConstraint> =
     >
 
 export type PossibleType<T extends TConstraint> =
-  ObjectType<T> | IncludeIdentifier<[], TypeAliasDecl<string, PossibleNestedType<T>, []>>
+  | ObjectType<T>
+  | IncludeIdentifier<[], TypeAliasDecl<string, PossibleNestedType<T>, []>>
 
 export interface NestedEntityMapType<
   Name extends string = string,

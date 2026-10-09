@@ -45,7 +45,7 @@ type DatabaseSingletonDict<SEM extends AnySingletonEntityMap> = Dictionary<
 >
 
 const exec = promisify(child_process.exec)
-const ulimit = platform === "win32" ? 2048 : Number.parseInt((await exec("ulimit -n")).stdout)
+const ulimit = platform === "win32" ? 2048 : Number.parseInt((await exec("ulimit -n")).stdout, 10)
 
 export class DatabaseInMemory<
   EM extends AnyEntityMap = RegisteredEntityMap,
@@ -339,13 +339,10 @@ export class DatabaseInMemory<
     getEntityByName: GetEntityByName<EM>,
     childEntityName: CE,
     parentId: CEM[CE][2],
-  ): CEM[CE][0][] => {
-    return this.getAllChildInstanceContainersForParent(
-      getEntityByName,
-      childEntityName,
-      parentId,
-    ).map(container => container.content)
-  }
+  ): CEM[CE][0][] =>
+    this.getAllChildInstanceContainersForParent(getEntityByName, childEntityName, parentId).map(
+      container => container.content,
+    )
 
   setInstanceContainerOfEntityById(
     entityName: Extract<keyof EM, string>,
@@ -375,23 +372,22 @@ export class DatabaseInMemory<
     entityName: Extract<keyof EM, string>,
     instanceId: string,
   ): [DatabaseInMemory<EM, SEM>, oldInstance: InstanceContent | undefined] {
-    const instances: Dictionary<InstanceContainer> = this.#data.get(entityName) ?? Dictionary.empty
-    const oldInstance = instances.get(instanceId)
-    return oldInstance
-      ? [
-          new DatabaseInMemory(
-            this.#data.modify(entityName, instances => {
-              if (instances === undefined) {
-                return instances
-              }
-              const remainingInstances = instances.remove(instanceId)
-              return remainingInstances.size === 0 ? undefined : remainingInstances
-            }),
-            this.#singletonData,
-          ),
-          oldInstance.content,
-        ]
-      : [this, undefined]
+    const instances: Dictionary<InstanceContainer> | undefined = this.#data.get(entityName)
+    const oldInstance = instances?.get(instanceId)
+    if (oldInstance !== undefined) {
+      const remainingInstances = instances?.remove(instanceId) ?? Dictionary.empty
+      return [
+        remainingInstances.size === 0
+          ? new DatabaseInMemory(this.#data.remove(entityName), this.#singletonData)
+          : new DatabaseInMemory(
+              this.#data.set(entityName, remainingInstances),
+              this.#singletonData,
+            ),
+        oldInstance.content,
+      ]
+    } else {
+      return [this, undefined]
+    }
   }
 
   deleteInstanceContainerOfSingletonEntity(
@@ -492,7 +488,7 @@ export class DatabaseInMemory<
     )
 
     const normalizedInstancesWithPositions = instancesWithPositions.toSorted(
-      on(([_, position]) => position, compareNumber),
+      on(([_id, position]) => position, compareNumber),
     )
     const currentIndex = normalizedInstancesWithPositions.findIndex(([id]) => id === instanceId)
 

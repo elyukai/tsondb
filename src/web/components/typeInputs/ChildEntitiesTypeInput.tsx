@@ -8,7 +8,7 @@ import type { InstanceContent } from "../../../shared/utils/instances.ts"
 import { useSetting } from "../../hooks/useSettings.ts"
 import { createTypeSkeleton } from "../../utils/typeSkeleton.ts"
 import { ChildEntitiesTypeInputElement } from "./ChildEntitiesTypeInputElement.tsx"
-import { type TypeInputProps } from "./TypeInput.tsx"
+import type { TypeInputProps } from "./TypeInput.tsx"
 
 type Props = TypeInputProps<SerializedChildEntitiesType>
 
@@ -70,9 +70,9 @@ export const ChildEntitiesTypeInput: FunctionComponent<Props> = props => {
   const onChildDuplicate = useCallback(
     (index: number) => {
       const setChildInstancesAsNew = (
-        childInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[],
+        oldChildInstances: UnsafeEntityTaggedInstanceContainerWithChildInstances[],
       ): UnsafeEntityTaggedInstanceContainerWithChildInstances[] =>
-        childInstances.map(ci => ({
+        oldChildInstances.map(ci => ({
           ...ci,
           childInstances: setChildInstancesAsNew(ci.childInstances),
           id: undefined,

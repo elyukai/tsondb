@@ -1,3 +1,4 @@
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { FunctionComponent } from "preact"
 import { useCallback, useState } from "preact/hooks"
 import type { InstanceContainerOverview } from "../../../shared/utils/instances.ts"
@@ -13,19 +14,19 @@ export const GitFileManager: FunctionComponent<Props> = ({ client, manageBranche
   const [commitMessage, setCommitMessage] = useState("")
 
   const commit = () => {
-    void client.commit(commitMessage)
+    client.commit(commitMessage)
   }
 
   const onCreateBranch = () => {
     const newBranchName = prompt("Enter new branch name:")
 
     if (newBranchName !== null) {
-      void client.createBranch(newBranchName)
+      client.createBranch(newBranchName)
     }
   }
 
   const onSwitchBranch = (event: preact.TargetedEvent<HTMLSelectElement>) => {
-    void client.switchBranch(event.currentTarget.value)
+    client.switchBranch(event.currentTarget.value)
   }
 
   const onFileButtonClick = useCallback(
@@ -41,6 +42,8 @@ export const GitFileManager: FunctionComponent<Props> = ({ client, manageBranche
           return client.unstage(entityName, instance)
         case "reset":
           return client.reset(entityName, instance)
+        default:
+          return assertExhaustive(action)
       }
     },
     [client],
@@ -50,10 +53,10 @@ export const GitFileManager: FunctionComponent<Props> = ({ client, manageBranche
     <div class="git-files">
       <div class="form-row form-row--sides">
         <div class="form-row__group">
-          <button onClick={() => void client.push()}>
+          <button onClick={() => client.push()}>
             Push{client.commitsAhead > 0 ? ` (${client.commitsAhead.toString()})` : ""}
           </button>
-          <button onClick={() => void client.pull()}>
+          <button onClick={() => client.pull()}>
             Pull{client.commitsBehind > 0 ? ` (${client.commitsBehind.toString()})` : ""}
           </button>
         </div>
@@ -90,7 +93,7 @@ export const GitFileManager: FunctionComponent<Props> = ({ client, manageBranche
       </div>
       <div class="git-section-title">
         <h3>Files to be committed</h3>
-        <button onClick={() => void client.unstageAll()}>Unstage all</button>
+        <button onClick={() => client.unstageAll()}>Unstage all</button>
       </div>
       <GitFileList
         filesByEntity={client.indexFiles}
@@ -99,7 +102,7 @@ export const GitFileManager: FunctionComponent<Props> = ({ client, manageBranche
       />
       <div class="git-section-title">
         <h3>Working tree changes</h3>
-        <button onClick={() => void client.stageAll()}>Stage all</button>
+        <button onClick={() => client.stageAll()}>Stage all</button>
       </div>
       <GitFileList
         filesByEntity={client.workingTreeFiles}

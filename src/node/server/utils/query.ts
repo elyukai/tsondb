@@ -10,5 +10,5 @@ export const getQueryParamString = (
     return value
   }
 
-  return
+  return undefined
 }

@@ -25,11 +25,11 @@ describe("validateStringConstraints", () => {
       RangeError(`expected a string with at least 20 characters, but got 11 characters`),
     ])
     deepEqual(validateStringConstraints({ pattern: "\\w+" }, "lorem ipsum"), [])
-    deepEqual(validateStringConstraints({ pattern: /\w+/ }, "lorem ipsum"), [])
+    deepEqual(validateStringConstraints({ pattern: /\w+/u }, "lorem ipsum"), [])
     deepEqual(validateStringConstraints({ pattern: "\\w+" }, " "), [
       TypeError(`string does not match the pattern /\\w+/`),
     ])
-    deepEqual(validateStringConstraints({ pattern: /\w+/ }, " "), [
+    deepEqual(validateStringConstraints({ pattern: /\w+/u }, " "), [
       TypeError(`string does not match the pattern /\\w+/`),
     ])
   })

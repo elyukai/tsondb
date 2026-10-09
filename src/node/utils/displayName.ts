@@ -24,7 +24,7 @@ import {
   type RegisteredEntityMap,
 } from "../schema/generatedTypeHelpers.js"
 import { serializeNode } from "../schema/treeOperations/serialization.ts"
-import { type DatabaseInMemory } from "./databaseInMemory.ts"
+import type { DatabaseInMemory } from "./databaseInMemory.ts"
 
 export type GetChildInstancesForInstanceId = (
   parentEntityName: string,
@@ -75,7 +75,8 @@ export const getDisplayNameFromEntityInstance = <
   useCustomizer = true,
 ): DisplayNameResult => {
   const instanceDisplayNameCustomizer = entity.instanceDisplayNameCustomizer as
-    TypedDisplayNameCustomizer<string, EM, CEM> | undefined
+    | TypedDisplayNameCustomizer<string, EM, CEM>
+    | undefined
 
   if (useCustomizer && instanceDisplayNameCustomizer) {
     const calculatedName = getDisplayNameFromEntityInstance(
@@ -99,10 +100,10 @@ export const getDisplayNameFromEntityInstance = <
       getDisplayNameForInstanceId: (...args) => {
         const instance = getInstanceById(...args)
         const { entityName } = normalizedIdArgs(args)
-        const entity = getEntityByName(entityName)
-        if (instance && entity) {
+        const entityOfInstance = getEntityByName(entityName)
+        if (instance && entityOfInstance) {
           return getDisplayNameFromEntityInstance(
-            entity,
+            entityOfInstance,
             instance,
             getEntityByName,
             getInstanceById,
@@ -172,8 +173,8 @@ export const getInstanceOverviewsByEntityName = <
   entity: EntityDecl,
   instances: InstanceContainer[],
   locales: string[],
-): InstanceContainerOverview[] => {
-  return sortBySortOrder(
+): InstanceContainerOverview[] =>
+  sortBySortOrder(
     instances.map((instance): SortableInstance => {
       const { name, localeId } = getDisplayNameFromEntityInstance(
         entity,
@@ -196,14 +197,13 @@ export const getInstanceOverviewsByEntityName = <
     }),
     entity.sortOrder,
   ).map(arr => arr[1])
-}
 
 export const getAllInstanceOverviewsByEntityName = <EM extends AnyEntityMap = RegisteredEntityMap>(
   getEntityByName: GetEntityByName<EM>,
   databaseInMemory: DatabaseInMemory<EM>,
   locales: string[],
-): Record<string, InstanceContainerOverview[]> => {
-  return Object.fromEntries(
+): Record<string, InstanceContainerOverview[]> =>
+  Object.fromEntries(
     databaseInMemory.getAllInstances().map(([entityName, instances]) => {
       const entity = getEntityByName(entityName)
       return [
@@ -223,4 +223,3 @@ export const getAllInstanceOverviewsByEntityName = <EM extends AnyEntityMap = Re
       ]
     }),
   )
-}

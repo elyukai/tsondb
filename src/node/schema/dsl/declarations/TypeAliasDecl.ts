@@ -8,8 +8,7 @@ import type {
 import type { Node } from "../index.ts"
 import type { TypeParameter } from "../TypeParameter.ts"
 import type { Type } from "../types/Type.ts"
-import type { BaseDecl } from "./Decl.ts"
-import { validateDeclName } from "./Decl.ts"
+import { type BaseDecl, validateDeclName } from "./Decl.ts"
 
 export interface TypeAliasDecl<
   Name extends string = string,

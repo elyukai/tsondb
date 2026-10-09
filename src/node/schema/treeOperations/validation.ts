@@ -24,7 +24,7 @@ import {
 } from "../../../shared/validation/object.ts"
 import { validateStringConstraints } from "../../../shared/validation/string.ts"
 import type { ValidationOptions } from "../../index.ts"
-import { type DatabaseInMemory } from "../../utils/databaseInMemory.ts"
+import type { DatabaseInMemory } from "../../utils/databaseInMemory.ts"
 import { entity, json, key } from "../../utils/errorFormatting.ts"
 import { getTypeArgumentsRecord, type Decl } from "../dsl/declarations/Decl.ts"
 import { createEntityIdentifierType } from "../dsl/declarations/EntityDecl.ts"
@@ -114,7 +114,7 @@ const validateTranslationObjectStructuralIntegrity = (
     return [TypeError(`expected an object, but got ${json(value, context.useStyling)}`)]
   }
 
-  const expectedKeys = Object.keys(type).filter(key => type[key] !== undefined)
+  const expectedKeys = Object.keys(type).filter(transKey => type[transKey] !== undefined)
 
   return parallelizeErrors([
     ...validateUnknownKeys(expectedKeys, Object.keys(value)),
@@ -211,14 +211,14 @@ const createStructuralAttributedStringKeyValidator = (
 
   if (checkAttributedStringKeys !== undefined) {
     const generalTest: (key: string) => boolean = Array.isArray(checkAttributedStringKeys)
-      ? key => checkAttributedStringKeys.includes(key)
-      : key => checkAttributedStringKeys.test(key)
+      ? attr => checkAttributedStringKeys.includes(attr)
+      : attr => checkAttributedStringKeys.test(attr)
 
     if (checkAttrRefs === true || typeof checkAttrRefs === "object") {
       const { entityKey, instanceKey } = normalizeAttributedStringReferenceKeys(checkAttrRefs)
       const additionalValidKeys = [entityKey, instanceKey]
 
-      return key => generalTest(key) || additionalValidKeys.includes(key)
+      return attr => generalTest(attr) || additionalValidKeys.includes(attr)
     }
 
     return generalTest
@@ -473,7 +473,7 @@ export const validateTypeStructuralIntegrity = (
 
       const associatedType = type.values[caseName]?.type
 
-      if (associatedType != null) {
+      if (isNotNullish(associatedType)) {
         if (!(caseName in value)) {
           return [
             TypeError(

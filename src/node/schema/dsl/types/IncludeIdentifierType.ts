@@ -1,14 +1,15 @@
 import { NodeKind } from "../../../../shared/schema/Node.ts"
 import type { IncludableDeclP, TypeArguments } from "../declarations/Decl.ts"
 import type { EnumDecl } from "../declarations/EnumDecl.ts"
-import { type TypeAliasDecl } from "../declarations/TypeAliasDecl.ts"
+import type { TypeAliasDecl } from "../declarations/TypeAliasDecl.ts"
 import type { Node } from "../index.ts"
 import type { TypeParameter } from "../TypeParameter.ts"
 import type { EnumCaseDecl } from "./EnumType.ts"
 import type { BaseType, Type } from "./Type.ts"
 
 type TConstraint<Params extends TypeParameter[]> =
-  TypeAliasDecl<string, Type, Params> | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
+  | TypeAliasDecl<string, Type, Params>
+  | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
 
 export interface IncludeIdentifierType<
   Params extends TypeParameter[] = TypeParameter[],

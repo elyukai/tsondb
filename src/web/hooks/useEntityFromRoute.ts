@@ -5,7 +5,8 @@ import type { SerializedSingletonEntityDecl } from "../../shared/schema/declarat
 import { EntitiesContext, SingletonEntitiesContext } from "../context/entities.ts"
 
 export const useEntityFromRoute = ():
-  { declaration: SerializedEntityDecl; isLocaleEntity: boolean } | undefined => {
+  | { declaration: SerializedEntityDecl; isLocaleEntity: boolean }
+  | undefined => {
   const {
     params: { name },
   } = useRoute()
@@ -23,7 +24,8 @@ export const useEntityFromRoute = ():
 }
 
 export const useSingletonEntityFromRoute = ():
-  { declaration: SerializedSingletonEntityDecl } | undefined => {
+  | { declaration: SerializedSingletonEntityDecl }
+  | undefined => {
   const {
     params: { name },
   } = useRoute()

@@ -87,10 +87,10 @@ export const useGitClient = (): GitClient => {
   const [isDetached, setIsDetached] = useState(false)
 
   const updateGitStatus = useCallback(async () => {
-    const { isRepo } = await GitApi.isRepo(locales)
-    setIsRepo(isRepo)
+    const isRepoResult = await GitApi.isRepo(locales)
+    setIsRepo(isRepoResult.isRepo)
 
-    if (isRepo && entities.length > 0) {
+    if (isRepoResult.isRepo && entities.length > 0) {
       try {
         const [statusData, branchesData] = await Promise.all([
           GitApi.getStatus(locales),
@@ -130,7 +130,7 @@ export const useGitClient = (): GitClient => {
   }, [entities, locales])
 
   useEffect(() => {
-    void updateGitStatus()
+    updateGitStatus()
   }, [updateGitStatus])
 
   const getGitStatusOfInstance = useCallback(

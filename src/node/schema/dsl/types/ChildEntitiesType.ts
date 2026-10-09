@@ -1,5 +1,5 @@
 import { NodeKind } from "../../../../shared/schema/Node.ts"
-import { type EntityDecl } from "../declarations/EntityDecl.ts"
+import type { EntityDecl } from "../declarations/EntityDecl.ts"
 import type { Node } from "../index.ts"
 import type { MemberDecl } from "./ObjectType.ts"
 import type { BaseType } from "./Type.ts"

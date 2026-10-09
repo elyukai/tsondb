@@ -93,8 +93,7 @@ export const Entity: FunctionalComponent = () => {
   }, [latestCommit, reloadInstances, reloadLocaleInstances])
 
   useEffect(() => {
-    document.title =
-      (entity?.displayNamePlural ?? toTitleCase(entity?.namePlural ?? name ?? "")) + " — TSONDB"
+    document.title = `${entity?.displayNamePlural ?? toTitleCase(entity?.namePlural ?? name ?? "")} — TSONDB`
   }, [entity?.displayNamePlural, entity?.namePlural, name])
 
   useEffect(() => {
@@ -209,7 +208,7 @@ export const Entity: FunctionalComponent = () => {
                       .then(() => reloadEntities())
                       .catch((error: unknown) => {
                         if (error instanceof Error) {
-                          alert("Error deleting instance:\n\n" + error.toString())
+                          alert(`Error deleting instance:\n\n${error.toString()}`)
                         }
                       })
                   }

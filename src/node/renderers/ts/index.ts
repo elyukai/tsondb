@@ -7,8 +7,7 @@ import type { DefaultTSONDBTypes } from "../../index.ts"
 import type { Output } from "../../output.ts"
 import { groupDeclarationsBySourceUrl } from "../../schema/dsl/declarations/Decl.ts"
 import type { Schema } from "../../schema/index.ts"
-import type { TypeScriptRendererOptions } from "./render.ts"
-import { render } from "./render.ts"
+import { type TypeScriptRendererOptions, render } from "./render.ts"
 
 const debug = Debug("tsondb:renderer:ts")
 
@@ -29,16 +28,18 @@ export const TypeScriptOutput = (options: {
       const sourceRootPath = fileURLToPath(commonPrefix(...Object.keys(declarationsBySourceUrl)))
       debug("common source root path: %s", sourceRootPath)
       if (sourceRootPath) {
-        for (const [sourceUrl, decls] of Object.entries(declarationsBySourceUrl)) {
-          const sourcePath = fileURLToPath(sourceUrl)
-          const relativePath = dirname(relative(sourceRootPath, sourcePath))
-          const newDir = join(options.targetPath, relativePath)
-          const newPath = join(newDir, basename(sourcePath, extname(sourcePath)) + extension)
-          await mkdir(newDir, { recursive: true })
-          await writeFile(newPath, pragma + render(options.rendererOptions, decls ?? []), {
-            encoding: "utf-8",
-          })
-        }
+        await Promise.all(
+          Object.entries(declarationsBySourceUrl).map(async ([sourceUrl, decls]) => {
+            const sourcePath = fileURLToPath(sourceUrl)
+            const relativePath = dirname(relative(sourceRootPath, sourcePath))
+            const newDir = join(options.targetPath, relativePath)
+            const newPath = join(newDir, basename(sourcePath, extname(sourcePath)) + extension)
+            await mkdir(newDir, { recursive: true })
+            await writeFile(newPath, pragma + render(options.rendererOptions, decls ?? []), {
+              encoding: "utf-8",
+            })
+          }),
+        )
         debug("emitted declaration files to %s", options.targetPath)
       }
     } else {

@@ -32,11 +32,11 @@ export const resolveTypeArgumentsInSerializedEnumType: SerializedTypeArgumentsRe
 > = (decls, args, type) => ({
   ...type,
   values: Object.fromEntries(
-    Object.entries(type.values).map(([key, { type, ...caseMember }]) => [
+    Object.entries(type.values).map(([key, { type: caseType, ...caseMember }]) => [
       key,
       {
         ...caseMember,
-        type: type === null ? null : resolveSerializedTypeArguments(decls, args, type),
+        type: caseType === null ? null : resolveSerializedTypeArguments(decls, args, caseType),
       },
     ]),
   ),

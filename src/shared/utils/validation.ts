@@ -6,7 +6,7 @@ export const parallelizeErrors = (errors: (Error | undefined)[]): Error[] =>
 export type NumerusLabel = [singular: string, plural: string]
 
 const normalizeLabel = (label: string | NumerusLabel): NumerusLabel =>
-  Array.isArray(label) ? label : [label, label + "s"]
+  Array.isArray(label) ? label : [label, `${label}s`]
 
 export const validateLengthRangeBound = (
   end: "lower" | "upper",
@@ -15,11 +15,11 @@ export const validateLengthRangeBound = (
   value: unknown[],
 ): Error | undefined => {
   if (rangeBound === undefined) {
-    return
+    return undefined
   }
 
   const [operator, description] = end === "lower" ? [gte, "least"] : [lte, "most"]
-  const length = value.length
+  const { length } = value
   const normalizedLabel = normalizeLabel(label)
 
   if (!operator(length, rangeBound)) {
@@ -30,5 +30,5 @@ export const validateLengthRangeBound = (
     )
   }
 
-  return
+  return undefined
 }

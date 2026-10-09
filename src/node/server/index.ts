@@ -39,7 +39,10 @@ const staticNodeModule = (moduleName: string) => {
   return express.static(dirname(pathToPackageJson))
 }
 
-export const createServer = <T extends DefaultTSONDBTypes = DefaultTSONDBTypes>(db: TSONDB<T>, config: Omit<ServerConfig<T>, "locales">): void => {
+export const createServer = <T extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
+  db: TSONDB<T>,
+  config: Omit<ServerConfig<T>, "locales">,
+): void => {
   const {
     serverOptions: options,
     homeLayoutSections,
@@ -96,7 +99,7 @@ export const createServer = <T extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
     app.use("/assets/custom", express.static(customAssetsPath))
   }
 
-  app.get(/^\/.*/, (_req, res) => {
+  app.get(/^\/.*/u, (_req, res) => {
     res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>

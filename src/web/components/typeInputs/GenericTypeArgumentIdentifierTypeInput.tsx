@@ -4,10 +4,8 @@ import type { TypeInputProps } from "./TypeInput.tsx"
 
 type Props = TypeInputProps<SerializedTypeArgumentType>
 
-export const TypeArgumentTypeInput: FunctionComponent<Props> = ({ type }) => {
-  return (
-    <div role="alert">
-      Unresolved type argument <code>{type.argument.name}</code>
-    </div>
-  )
-}
+export const TypeArgumentTypeInput: FunctionComponent<Props> = ({ type }) => (
+  <div role="alert">
+    Unresolved type argument <code>{type.argument.name}</code>
+  </div>
+)

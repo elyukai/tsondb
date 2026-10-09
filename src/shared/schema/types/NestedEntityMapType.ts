@@ -1,5 +1,5 @@
-import type { NodeKind } from "../Node.ts"
 import {
+  type NodeKind,
   resolveSerializedTypeArguments,
   type GetReferencesSerialized,
   type SerializedTypeArgumentsResolver,
@@ -19,7 +19,8 @@ import type { SerializedBaseType } from "./Type.ts"
 type TSerializedConstraint = Record<string, SerializedMemberDecl>
 
 type PossibleType<T extends TSerializedConstraint> =
-  SerializedObjectType<T> | SerializedIncludeIdentifierType<[]>
+  | SerializedObjectType<T>
+  | SerializedIncludeIdentifierType<[]>
 
 export interface SerializedNestedEntityMapType<
   Name extends string = string,

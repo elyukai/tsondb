@@ -24,17 +24,15 @@ export const ArrayTypeInput: FunctionComponent<Props> = props => {
 
   return (
     <div
-      class={
-        "field field--container field--array" +
-        (disabled ? " field--disabled" : "") +
-        (hasOnlySimpleItems ? " field--simple-container field--simple-array" : "")
-      }
+      class={`field field--container field--array${
+        disabled ? " field--disabled" : ""
+      }${hasOnlySimpleItems ? " field--simple-container field--simple-array" : ""}`}
     >
       {value.length > 0 && (
         <ol>
           {value.map((item, i) => (
             <li
-              class={"container-item array-item" + (hasOnlySimpleItems ? " simple-item" : "")}
+              class={`container-item array-item${hasOnlySimpleItems ? " simple-item" : ""}`}
               key={i}
             >
               {isTuple ? null : (

@@ -1,5 +1,5 @@
-import type { TypeParameter } from "./TypeParameter.ts"
 import type { Decl } from "./declarations/Decl.ts"
+import type { TypeParameter } from "./TypeParameter.ts"
 import type { Type } from "./types/Type.ts"
 
 export { Param, TypeParameter } from "./TypeParameter.ts"

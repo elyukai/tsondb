@@ -91,7 +91,7 @@ const EntityRow: FunctionalComponent<{ entity: DisplayEntity }> = ({ entity }) =
                       .then(() => reloadSingletonEntities())
                       .catch((error: unknown) => {
                         if (error instanceof Error) {
-                          alert("Error deleting instance:\n\n" + error.toString())
+                          alert(`Error deleting instance:\n\n${error.toString()}`)
                         }
                       })
                   }
@@ -120,7 +120,7 @@ export const Home: FunctionalComponent = () => {
   const { singletonEntities } = useContext(SingletonEntitiesContext)
 
   useEffect(() => {
-    document.title = homeTitle + " — TSONDB"
+    document.title = `${homeTitle} — TSONDB`
   }, [])
 
   const [searchText, setSearchText] = useState("")

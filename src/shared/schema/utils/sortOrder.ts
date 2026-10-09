@@ -19,7 +19,7 @@ const getSortOrderValue = (
   if ("keyPath" in sortOrder) {
     return getValueAtKeyPath(instanceContent, sortOrder.keyPath) as string | number
   } else {
-    return
+    return undefined
   }
 }
 

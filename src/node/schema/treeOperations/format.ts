@@ -2,6 +2,7 @@ import {
   format as formatMarkdown,
   formatInline as formatMarkdownInline,
 } from "@elyukai/markdown/format"
+import { isNullish } from "@elyukai/utils/nullable"
 import { mapObject, sortObjectKeys, sortObjectKeysByIndex } from "@elyukai/utils/object"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
@@ -113,7 +114,7 @@ export const formatValue = (
 
         return {
           [ENUM_DISCRIMINATOR_KEY]: caseName,
-          ...(caseValue == null || caseType == null
+          ...(isNullish(caseValue) || isNullish(caseType)
             ? {}
             : { [caseName]: formatValue(caseType, caseValue, typeArguments, options) }),
         }

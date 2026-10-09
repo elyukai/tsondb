@@ -1,4 +1,5 @@
 import { error, ok } from "@elyukai/utils/result"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { FormatterOptions } from "../config.ts"
 import type { TransactionStep } from "../transaction.ts"
 import * as DatabaseFilesystem from "./files.ts"
@@ -10,6 +11,7 @@ const rollbackChanges = async (
 ) => {
   for (const step of steps) {
     try {
+      // oxlint-disable-next-line no-await-in-loop
       await runReverseStepAction(root, step, formatterOptions)
     } catch (e: unknown) {
       return error(e as Error)
@@ -46,6 +48,8 @@ const runStepAction = (
       )
     case "deleteSingleton":
       return DatabaseFilesystem.deleteSingletonInstance(root, step.entity.name)
+    default:
+      return assertExhaustive(step)
   }
 }
 
@@ -89,6 +93,8 @@ const runReverseStepAction = (
         step.oldInstance,
         formatterOptions,
       )
+    default:
+      return assertExhaustive(step)
   }
 }
 
@@ -102,8 +108,10 @@ export const applyStepsToDisk = async (
     const step = steps[i]!
 
     try {
+      // oxlint-disable-next-line no-await-in-loop
       await runStepAction(root, step, formatterOptions)
     } catch (e: unknown) {
+      // oxlint-disable-next-line no-await-in-loop
       await rollbackChanges(root, steps.slice(0, i), formatterOptions)
       return error(e as Error)
     }

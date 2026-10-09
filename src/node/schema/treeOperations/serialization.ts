@@ -25,26 +25,26 @@ import type { SerializedReferenceIdentifierType } from "../../../shared/schema/t
 import type { SerializedStringType } from "../../../shared/schema/types/StringType.ts"
 import type { SerializedTranslationObjectType } from "../../../shared/schema/types/TranslationObjectType.ts"
 import type { SerializedTypeArgumentType } from "../../../shared/schema/types/TypeArgumentType.ts"
-import { type EntityDecl } from "../dsl/declarations/EntityDecl.ts"
-import { type EnumDecl } from "../dsl/declarations/EnumDecl.ts"
+import type { EntityDecl } from "../dsl/declarations/EntityDecl.ts"
+import type { EnumDecl } from "../dsl/declarations/EnumDecl.ts"
 import type { SingletonEntityDecl } from "../dsl/declarations/SingletonEntityDecl.ts"
-import { type TypeAliasDecl } from "../dsl/declarations/TypeAliasDecl.ts"
+import type { TypeAliasDecl } from "../dsl/declarations/TypeAliasDecl.ts"
 import type { Node, Type } from "../dsl/index.ts"
-import { type TypeParameter } from "../dsl/TypeParameter.ts"
-import { type ArrayType } from "../dsl/types/ArrayType.ts"
-import { type BooleanType } from "../dsl/types/BooleanType.ts"
-import { type ChildEntitiesType } from "../dsl/types/ChildEntitiesType.ts"
-import { type DateType } from "../dsl/types/DateType.ts"
-import { type EnumCaseDecl, type EnumType } from "../dsl/types/EnumType.ts"
-import { type FloatType } from "../dsl/types/FloatType.ts"
-import { type IncludeIdentifierType } from "../dsl/types/IncludeIdentifierType.ts"
-import { type IntegerType } from "../dsl/types/IntegerType.ts"
-import { type NestedEntityMapType } from "../dsl/types/NestedEntityMapType.ts"
-import { type MemberDecl, type ObjectType } from "../dsl/types/ObjectType.ts"
-import { type ReferenceIdentifierType } from "../dsl/types/ReferenceIdentifierType.ts"
-import { type StringType } from "../dsl/types/StringType.ts"
-import { type TranslationObjectType } from "../dsl/types/TranslationObjectType.ts"
-import { type TypeArgumentType } from "../dsl/types/TypeArgumentType.ts"
+import type { TypeParameter } from "../dsl/TypeParameter.ts"
+import type { ArrayType } from "../dsl/types/ArrayType.ts"
+import type { BooleanType } from "../dsl/types/BooleanType.ts"
+import type { ChildEntitiesType } from "../dsl/types/ChildEntitiesType.ts"
+import type { DateType } from "../dsl/types/DateType.ts"
+import type { EnumCaseDecl, EnumType } from "../dsl/types/EnumType.ts"
+import type { FloatType } from "../dsl/types/FloatType.ts"
+import type { IncludeIdentifierType } from "../dsl/types/IncludeIdentifierType.ts"
+import type { IntegerType } from "../dsl/types/IntegerType.ts"
+import type { NestedEntityMapType } from "../dsl/types/NestedEntityMapType.ts"
+import type { MemberDecl, ObjectType } from "../dsl/types/ObjectType.ts"
+import type { ReferenceIdentifierType } from "../dsl/types/ReferenceIdentifierType.ts"
+import type { StringType } from "../dsl/types/StringType.ts"
+import type { TranslationObjectType } from "../dsl/types/TranslationObjectType.ts"
+import type { TypeArgumentType } from "../dsl/types/TypeArgumentType.ts"
 
 export type SerializedNodeMap = {
   [NodeKind.EntityDecl]: [EntityDecl, SerializedEntityDecl]
@@ -88,22 +88,22 @@ export type SerializedEnumCaseDeclObject<T extends Record<string, EnumCaseDecl>>
 
 // prettier-ignore
 export type Serialized<T extends Node> =
-  T extends EntityDecl<infer Name, infer T, infer FK> ? SerializedEntityDecl<Name, SerializedMemberDeclObject<T>, FK> :
-  T extends SingletonEntityDecl<infer Name, infer T> ? SerializedSingletonEntityDecl<Name, SerializedMemberDeclObject<T>> :
-  T extends EnumDecl<infer Name, infer T, infer Params> ? SerializedEnumDecl<Name, SerializedEnumCaseDeclObject<T>, SerializedTypeParameters<Params>> :
-  T extends TypeAliasDecl<infer Name, infer T, infer Params> ? SerializedTypeAliasDecl<Name, Serialized<T>, SerializedTypeParameters<Params>> :
-  T extends ArrayType<infer T> ? SerializedArrayType<Serialized<T>> :
-  T extends ObjectType<infer T> ? SerializedObjectType<SerializedMemberDeclObject<T>> :
+  T extends EntityDecl<infer Name, infer TC, infer FK> ? SerializedEntityDecl<Name, SerializedMemberDeclObject<TC>, FK> :
+  T extends SingletonEntityDecl<infer Name, infer TC> ? SerializedSingletonEntityDecl<Name, SerializedMemberDeclObject<TC>> :
+  T extends EnumDecl<infer Name, infer TC, infer Params> ? SerializedEnumDecl<Name, SerializedEnumCaseDeclObject<TC>, SerializedTypeParameters<Params>> :
+  T extends TypeAliasDecl<infer Name, infer TC, infer Params> ? SerializedTypeAliasDecl<Name, Serialized<TC>, SerializedTypeParameters<Params>> :
+  T extends ArrayType<infer TC> ? SerializedArrayType<Serialized<TC>> :
+  T extends ObjectType<infer TC> ? SerializedObjectType<SerializedMemberDeclObject<TC>> :
   T extends BooleanType ? SerializedBooleanType :
   T extends DateType ? SerializedDateType :
   T extends FloatType ? SerializedFloatType :
   T extends IntegerType ? SerializedIntegerType :
   T extends StringType ? SerializedStringType :
-  T extends TypeArgumentType<infer T> ? SerializedTypeArgumentType<Serialized<T>> :
+  T extends TypeArgumentType<infer TC> ? SerializedTypeArgumentType<Serialized<TC>> :
   T extends ReferenceIdentifierType ? SerializedReferenceIdentifierType :
   T extends IncludeIdentifierType<infer Params> ? SerializedIncludeIdentifierType<SerializedTypeParameters<Params>> :
-  T extends NestedEntityMapType<infer Name, infer T> ? SerializedNestedEntityMapType<Name, SerializedMemberDeclObject<T>> :
-  T extends EnumType<infer T> ? SerializedEnumType<SerializedEnumCaseDeclObject<T>> :
+  T extends NestedEntityMapType<infer Name, infer TC> ? SerializedNestedEntityMapType<Name, SerializedMemberDeclObject<TC>> :
+  T extends EnumType<infer TC> ? SerializedEnumType<SerializedEnumCaseDeclObject<TC>> :
   T extends TypeParameter<infer N, infer C> ? SerializedTypeParameter<N, C extends Type ? Serialized<C> : undefined> :
   T extends ChildEntitiesType ? SerializedChildEntitiesType :
   T extends TranslationObjectType<infer E> ? SerializedTranslationObjectType<E> :

@@ -23,7 +23,7 @@ export const Git: FunctionComponent = () => {
     <>
       <ModalDialog
         open={isOpen}
-        class={"git" + (!isGitAlwaysOpen ? " git--no-sidebar" : "")}
+        class={`git${!isGitAlwaysOpen ? " git--no-sidebar" : ""}`}
         closedBy="any"
         onClose={() => {
           setIsOpen(false)
@@ -45,7 +45,7 @@ export const Git: FunctionComponent = () => {
           {mode === "branches" ? (
             <button
               onClick={() => {
-                void client.fetch()
+                client.fetch()
               }}
             >
               Fetch

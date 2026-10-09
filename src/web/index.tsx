@@ -1,5 +1,4 @@
-import type { FunctionComponent } from "preact"
-import { render } from "preact"
+import { type FunctionComponent, render } from "preact"
 import { LocationProvider, Route, Router, useLocation } from "preact-iso"
 import { useEffect, useState } from "preact/hooks"
 import type {
@@ -68,7 +67,7 @@ const App: FunctionComponent<Props> = ({ config }) => {
 
   useEffect(() => {
     reloadEntities().catch((error: unknown) => {
-      alert("Error reloading entities: " + String(error))
+      alert(`Error reloading entities: ${String(error)}`)
     })
   }, [location.path, reloadEntities])
 

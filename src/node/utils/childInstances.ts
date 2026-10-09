@@ -1,5 +1,6 @@
 import { hasKey } from "@elyukai/utils/object"
 import { error, isError, ok, type Result } from "@elyukai/utils/result"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import {
   createEnumCaseValue,
   ENUM_DISCRIMINATOR_KEY,
@@ -16,7 +17,7 @@ import type {
   EntityDecl,
   EntityDeclWithParentReference,
 } from "../schema/dsl/declarations/EntityDecl.ts"
-import { type Type } from "../schema/dsl/index.ts"
+import type { Type } from "../schema/dsl/index.ts"
 import { isChildEntitiesType } from "../schema/dsl/types/ChildEntitiesType.ts"
 import { Case } from "../schema/generatedTypeHelpers.ts"
 import {
@@ -27,7 +28,7 @@ import {
 } from "../schema/guards.ts"
 import { reduceNodes } from "../schema/helpers.ts"
 import type { Transaction } from "../transaction.ts"
-import { type DatabaseInMemory } from "./databaseInMemory.ts"
+import type { DatabaseInMemory } from "./databaseInMemory.ts"
 
 const isParentReferenceReferencingParent = (
   value: unknown,
@@ -72,6 +73,8 @@ const getParentReferenceTypeAux = (type: Type): "single" | "enum" => {
         return "enum"
       case NodeKind.TypeAliasDecl:
         return getParentReferenceTypeAux(type.reference.type.value)
+      default:
+        return assertExhaustive(type.reference)
     }
   } else if (isReferenceIdentifierType(type)) {
     return "single"

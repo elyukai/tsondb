@@ -29,13 +29,11 @@ export const isSerializedEnumDecl = (node: SerializedNode): node is SerializedEn
 
 export const resolveTypeArgumentsInSerializedEnumDecl: SerializedTypeArgumentsResolver<
   SerializedEnumDecl
-> = (decls, args, decl) => {
-  return {
-    ...decl,
-    parameters: [],
-    type: resolveTypeArgumentsInSerializedEnumType(decls, args, decl.type),
-  }
-}
+> = (decls, args, decl) => ({
+  ...decl,
+  parameters: [],
+  type: resolveTypeArgumentsInSerializedEnumType(decls, args, decl.type),
+})
 
 export const getReferencesForSerializedEnumDecl: GetReferencesSerialized<SerializedEnumDecl> = (
   decls,

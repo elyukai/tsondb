@@ -11,10 +11,8 @@ import type {
 } from "../../../utils/customConstraints.ts"
 import type { Node } from "../index.ts"
 import type { TypeParameter } from "../TypeParameter.ts"
-import type { EnumCaseDecl } from "../types/EnumType.ts"
-import { EnumType } from "../types/EnumType.ts"
-import type { BaseDecl } from "./Decl.ts"
-import { validateDeclName } from "./Decl.ts"
+import { type EnumCaseDecl, EnumType } from "../types/EnumType.ts"
+import { type BaseDecl, validateDeclName } from "./Decl.ts"
 
 type TConstraint = Record<string, EnumCaseDecl>
 

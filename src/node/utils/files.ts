@@ -2,7 +2,7 @@ import { readFile, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import type { InstanceContent } from "../../shared/utils/instances.ts"
 import type { FormatterOptions } from "../config.ts"
-import { type EntityDecl, type SingletonEntityDecl } from "../schema/dsl/index.ts"
+import type { EntityDecl, SingletonEntityDecl } from "../schema/dsl/index.ts"
 import { formatValue } from "../schema/treeOperations/format.ts"
 
 export const getFileNameForId = (id: string): string => `${id}.json`
@@ -68,4 +68,4 @@ export const formatInstance = (
   instanceContent: InstanceContent,
   options: Partial<FormatterOptions> | undefined,
 ): string =>
-  JSON.stringify(formatValue(entity.type.value, instanceContent, {}, options), undefined, 2) + "\n"
+  `${JSON.stringify(formatValue(entity.type.value, instanceContent, {}, options), undefined, 2)}\n`

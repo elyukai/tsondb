@@ -12,7 +12,7 @@ export interface ObjectType<T extends TConstraint = TConstraint>
   properties: T
 }
 
-const keyPattern = /^[a-zA-Z0-9][a-zA-Z0-9_]*$/
+const keyPattern = /^[a-zA-Z0-9][a-zA-Z0-9_]*$/u
 
 export const ObjectType = <T extends TConstraint>(
   properties: T,

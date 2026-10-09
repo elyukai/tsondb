@@ -5,8 +5,8 @@ import { EOL } from "node:os"
 import { dirname, relative } from "node:path"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import { NodeKind } from "../../../shared/schema/Node.ts"
-import type { RenderResult } from "../../../shared/utils/render.ts"
 import {
+  type RenderResult,
   combineSyntaxes,
   emptyRenderResult,
   getIndentation,
@@ -18,18 +18,18 @@ import {
   extractParameterTypeNamesFromMessage,
   mapParameterTypeNames,
 } from "../../../shared/utils/translation.ts"
-import { asDecl, type Decl } from "../../schema/dsl/declarations/Decl.ts"
-import type { EntityDecl } from "../../schema/dsl/declarations/EntityDecl.ts"
+import { type Decl, asDecl } from "../../schema/dsl/declarations/Decl.ts"
 import {
+  type EntityDecl,
   addEphemeralUUIDToType,
   createEntityIdentifierTypeAsDecl,
   isEntityDecl,
   isEntityDeclWithParentReference,
 } from "../../schema/dsl/declarations/EntityDecl.ts"
-import { isEnumDecl, type EnumDecl } from "../../schema/dsl/declarations/EnumDecl.ts"
+import { type EnumDecl, isEnumDecl } from "../../schema/dsl/declarations/EnumDecl.ts"
 import {
-  isSingletonEntityDecl,
   type SingletonEntityDecl,
+  isSingletonEntityDecl,
 } from "../../schema/dsl/declarations/SingletonEntityDecl.ts"
 import { isTypeAliasDecl, TypeAliasDecl } from "../../schema/dsl/declarations/TypeAliasDecl.ts"
 import type { Type } from "../../schema/dsl/index.ts"
@@ -42,14 +42,21 @@ import type { EnumType } from "../../schema/dsl/types/EnumType.ts"
 import type { FloatType } from "../../schema/dsl/types/FloatType.ts"
 import type { IncludeIdentifierType } from "../../schema/dsl/types/IncludeIdentifierType.ts"
 import type { IntegerType } from "../../schema/dsl/types/IntegerType.ts"
-import type { NestedEntityMapType } from "../../schema/dsl/types/NestedEntityMapType.ts"
-import { isNestedEntityMapType } from "../../schema/dsl/types/NestedEntityMapType.ts"
-import type { MemberDecl, ObjectType } from "../../schema/dsl/types/ObjectType.ts"
-import { isObjectType } from "../../schema/dsl/types/ObjectType.ts"
+import {
+  type NestedEntityMapType,
+  isNestedEntityMapType,
+} from "../../schema/dsl/types/NestedEntityMapType.ts"
+import {
+  type MemberDecl,
+  type ObjectType,
+  isObjectType,
+} from "../../schema/dsl/types/ObjectType.ts"
 import type { ReferenceIdentifierType } from "../../schema/dsl/types/ReferenceIdentifierType.ts"
 import type { StringType } from "../../schema/dsl/types/StringType.ts"
-import type { TranslationObjectType } from "../../schema/dsl/types/TranslationObjectType.ts"
-import { getTypeOfKey } from "../../schema/dsl/types/TranslationObjectType.ts"
+import {
+  type TranslationObjectType,
+  getTypeOfKey,
+} from "../../schema/dsl/types/TranslationObjectType.ts"
 import type { TypeArgumentType } from "../../schema/dsl/types/TypeArgumentType.ts"
 import { flatMapAuxiliaryDecls, isFinalChildEntitiesType } from "../../schema/helpers.ts"
 import { ensureSpecialDirStart } from "../../utils/path.ts"
@@ -171,12 +178,12 @@ const renderArrayType: RenderFn<ArrayType> = (options, type) =>
 const wrapAsObject: RenderFn<RenderResult> = (options, str) =>
   syntax`{${EOL}${indent(options.indentation, 1, str)}${EOL}}`
 
-const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (options, type) => {
-  return wrapAsObject(
+const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (options, type) =>
+  wrapAsObject(
     options,
     combineSyntaxes(
       Object.entries(type.properties)
-        .filter(([_, config]) => !isFinalChildEntitiesType(config.type))
+        .filter(([_key, config]) => !isFinalChildEntitiesType(config.type))
         .map(
           ([name, config]) =>
             syntax`${renderDocumentation(config.comment, config.isDeprecated)}${name}${
@@ -186,7 +193,6 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (opti
       Object.values(type.properties).some(prop => prop.comment !== undefined) ? EOL + EOL : EOL,
     ),
   )
-}
 
 const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => syntax`boolean`
 
@@ -203,8 +209,8 @@ const renderTypeArgumentType: RenderFn<TypeArgumentType> = (_options, type) =>
   syntax`${type.argument.name}`
 
 const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_options, type) => [
-  { [type.entity.sourceUrl]: [type.entity.name + "_ID"] },
-  type.entity.name + "_ID",
+  { [type.entity.sourceUrl]: [`${type.entity.name}_ID`] },
+  `${type.entity.name}_ID`,
 ]
 
 const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (options, type) =>
@@ -282,8 +288,8 @@ const renderTranslationParameterBrand: RenderFn<Record<string, string>> = (optio
   return syntax` & { __params: { ${entries.map(([name, type]) => `"${name}": ${type}`).join("; ")} } }`
 }
 
-const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, type) => {
-  return wrapAsObject(
+const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, type) =>
+  wrapAsObject(
     options,
     combineSyntaxes(
       Object.entries(type.properties).map(
@@ -300,7 +306,6 @@ const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, t
       EOL,
     ),
   )
-}
 
 const renderType: RenderFn<Type> = (options, type) => {
   switch (type.kind) {
@@ -431,7 +436,7 @@ const renderMapHelperType = <T extends Decl>(
           .map(
             renderKeyFn ??
               (decl =>
-                `${decl.name}: ${decl.name}${decl.parameters.length > 0 ? "<" + decl.parameters.map(param => (param.constraint ? renderType(options, param.constraint)[1] : "unknown")).join(", ") + ">" : ""}`),
+                `${decl.name}: ${decl.name}${decl.parameters.length > 0 ? `<${decl.parameters.map(param => (param.constraint ? renderType(options, param.constraint)[1] : "unknown")).join(", ")}>` : ""}`),
           )
           .join(EOL),
       )}${EOL}}${EOL + EOL}`
@@ -480,13 +485,10 @@ const renderStringableTranslationParameterType = (options: TypeScriptRendererOpt
   (options.inferTranslationParameters.defaultTranslationParameterType === undefined ||
     options.inferTranslationParameters.defaultTranslationParameterType ===
       "StringableTranslationParameter")
-    ? "export type StringableTranslationParameter = {" +
-      EOL +
-      prefixLines(getIndentation(options.indentation, 1), "toString(): string") +
-      EOL +
-      "}" +
-      EOL +
-      EOL
+    ? `export type StringableTranslationParameter = {${EOL}${prefixLines(
+        getIndentation(options.indentation, 1),
+        "toString(): string",
+      )}${EOL}}${EOL}${EOL}`
     : ""
 
 // const renderGetterConstruct = (

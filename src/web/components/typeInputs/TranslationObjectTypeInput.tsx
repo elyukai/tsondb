@@ -22,7 +22,7 @@ export const TranslationObjectTypeInput: FunctionComponent<Props> = props => {
   const errors = validateUnknownKeys(Object.keys(type.properties), Object.keys(value))
 
   return (
-    <div class={"field field--container field--object" + (disabled ? " field--disabled" : "")}>
+    <div class={`field field--container field--object${disabled ? " field--disabled" : ""}`}>
       <ul>
         {Object.entries(type.properties)
           .filter(([key]) => key !== parentKey)
@@ -30,10 +30,9 @@ export const TranslationObjectTypeInput: FunctionComponent<Props> = props => {
             const keyType = getSerializedTypeOfKey(memberDecl, type)
             return (
               <li
-                class={
-                  "container-item object-item object-item--translation" +
-                  (memberDecl === null ? "" : "object-item--translation-object")
-                }
+                class={`container-item object-item object-item--translation${
+                  memberDecl === null ? "" : "object-item--translation-object"
+                }`}
                 key={key}
               >
                 <div className="container-item-title">{key}</div>

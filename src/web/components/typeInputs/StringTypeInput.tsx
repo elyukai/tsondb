@@ -47,7 +47,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({
                 aria-invalid={errors.length > 0}
                 disabled={disabled}
               />
-              <div class="textarea-grow-wrap__mirror">{value + " "}</div>
+              <div class="textarea-grow-wrap__mirror">{`${value} `}</div>
             </div>
             <ValidationErrors disabled={disabled} errors={errors} />
           </div>
@@ -80,7 +80,7 @@ export const StringTypeInput: FunctionComponent<Props> = ({
               </p>
               <MarkdownHighlighting
                 class="textarea-grow-wrap__mirror editor-highlighting"
-                string={value + " "}
+                string={`${value} `}
                 inline={markdown === "inline"}
               />
             </div>

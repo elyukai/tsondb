@@ -1,4 +1,5 @@
 import { toTitleCase } from "@elyukai/utils/string"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { FunctionalComponent } from "preact"
 import { createInstanceByEntityNameAndId } from "../api/declarations.ts"
 import {
@@ -22,7 +23,7 @@ const init: InstanceRouteSkeletonInitializer = ({
 
 const titleBuilder: InstanceRouteSkeletonTitleBuilder = ({ entity }) => {
   const entityName = entity.name
-  return "New " + toTitleCase(entityName) + " — TSONDB"
+  return `New ${toTitleCase(entityName)} — TSONDB`
 }
 
 const submit: InstanceRouteSkeletonSubmitHandler<
@@ -74,6 +75,8 @@ const submit: InstanceRouteSkeletonSubmitHandler<
         route(`/entities/${entity.name}?created=${encodeURIComponent(createdInstance.instance.id)}`)
         break
       }
+      default:
+        return assertExhaustive(action)
     }
   } catch (error) {
     if (error instanceof Error) {

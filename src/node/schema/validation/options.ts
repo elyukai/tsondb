@@ -1,3 +1,5 @@
+import { isNotNullish } from "@elyukai/utils/nullable"
+
 export class OptionError extends Error {
   constructor(message: string) {
     super(message)
@@ -10,7 +12,7 @@ export const validateOption = <T>(
   name: string,
   validator: (option: NonNullable<T>) => boolean,
 ): T => {
-  if (value == null || validator(value)) {
+  if (!isNotNullish(value) || validator(value)) {
     return value
   }
 

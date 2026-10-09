@@ -10,11 +10,9 @@ import type {
 } from "../../../utils/displayName.ts"
 import type { Node } from "../index.ts"
 import type { NestedEntityMapType } from "../types/NestedEntityMapType.ts"
-import type { MemberDecl, ObjectType } from "../types/ObjectType.ts"
-import { Required } from "../types/ObjectType.ts"
+import { type MemberDecl, type ObjectType, Required } from "../types/ObjectType.ts"
 import { StringType } from "../types/StringType.ts"
-import type { BaseDecl } from "./Decl.ts"
-import { validateDeclName } from "./Decl.ts"
+import { type BaseDecl, validateDeclName } from "./Decl.ts"
 import { TypeAliasDecl } from "./TypeAliasDecl.ts"
 
 export type EntityDisplayName<T extends TConstraint> =
@@ -266,6 +264,6 @@ export const createEntityIdentifierType = () => StringType()
 export const createEntityIdentifierTypeAsDecl = <Name extends string>(decl: EntityDecl<Name>) =>
   TypeAliasDecl(decl.sourceUrl, {
     comment: createEntityIdentifierComment(),
-    name: (decl.name + "_ID") as `${Name}_ID`,
+    name: `${decl.name}_ID` as `${Name}_ID`,
     type: createEntityIdentifierType,
   })

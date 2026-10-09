@@ -94,7 +94,7 @@ export const InlineMarkdown: FunctionalComponent<Props> = ({ node }) => {
     case "footnoteRef": {
       return (
         <sup
-          class={"footnote-ref" + (typeof node.label === "number" ? " footnote-ref--numeric" : "")}
+          class={`footnote-ref${typeof node.label === "number" ? " footnote-ref--numeric" : ""}`}
           data-reference={node.label}
           style={{ "--label": node.label }}
         >

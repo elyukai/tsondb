@@ -25,7 +25,7 @@ export const validateRangeBound = (
   value: number,
 ): Error | undefined => {
   if (rangeBound === undefined) {
-    return
+    return undefined
   }
 
   const normalizedRangeBound = normalizeRangeBound(rangeBound)
@@ -45,7 +45,7 @@ export const validateRangeBound = (
     )
   }
 
-  return
+  return undefined
 }
 
 export const validateMultipleOf = (
@@ -62,5 +62,5 @@ export const validateMultipleOf = (
     )
   }
 
-  return
+  return undefined
 }

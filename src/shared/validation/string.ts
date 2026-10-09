@@ -33,7 +33,7 @@ export const validateStringConstraints = (constraints: StringConstraints, value:
 
       const pattern =
         typeof constraints.pattern === "string"
-          ? new RegExp(constraints.pattern)
+          ? new RegExp(constraints.pattern, "u")
           : constraints.pattern
 
       return !pattern.test(value)

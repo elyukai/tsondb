@@ -59,7 +59,7 @@ export const createTypeSkeleton = <T extends SerializedType>(
       return {} as SerializedAsType<T>
 
     case "EnumType": {
-      const firstCase = Object.entries(type.values)[0]
+      const [firstCase] = Object.entries(type.values)
 
       if (firstCase === undefined) {
         return {} as SerializedAsType<T>
@@ -78,10 +78,10 @@ export const createTypeSkeleton = <T extends SerializedType>(
 
     case "TranslationObjectType": {
       const createObject = (
-        type: SerializedTranslationObjectTypeConstraint,
+        innerType: SerializedTranslationObjectTypeConstraint,
       ): Record<string, unknown> =>
         Object.fromEntries(
-          Object.entries(type).map(([key, propType]) => [
+          Object.entries(innerType).map(([key, propType]) => [
             key,
             propType === null ? "" : createObject(propType),
           ]),

@@ -2,18 +2,11 @@ import { error, ok } from "@elyukai/utils/result"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { NodeKind } from "../../shared/schema/Node.ts"
 import { getAtKeyPath, parseKeyPath, type KeyPath } from "../../shared/schema/utils/keyPath.ts"
-import {
-  type Decl,
-  type EntityDecl,
-  type EnumDecl,
-  type Node,
-  type Type,
-  type TypeAliasDecl,
-} from "./dsl/index.ts"
+import type { Decl, EntityDecl, EnumDecl, Node, Type, TypeAliasDecl } from "./dsl/index.ts"
 import type { TypeParameter } from "./dsl/TypeParameter.ts"
 import type { ArrayType } from "./dsl/types/ArrayType.ts"
 import type { BooleanType } from "./dsl/types/BooleanType.ts"
-import { type ChildEntitiesType } from "./dsl/types/ChildEntitiesType.ts"
+import type { ChildEntitiesType } from "./dsl/types/ChildEntitiesType.ts"
 import type { DateType } from "./dsl/types/DateType.ts"
 import type { EnumCaseDecl, EnumType } from "./dsl/types/EnumType.ts"
 import type { FloatType } from "./dsl/types/FloatType.ts"
@@ -23,7 +16,7 @@ import type { NestedEntityMapType } from "./dsl/types/NestedEntityMapType.ts"
 import type { MemberDecl, ObjectType } from "./dsl/types/ObjectType.ts"
 import type { ReferenceIdentifierType } from "./dsl/types/ReferenceIdentifierType.ts"
 import type { StringType } from "./dsl/types/StringType.ts"
-import { type TranslationObjectType } from "./dsl/types/TranslationObjectType.ts"
+import type { TranslationObjectType } from "./dsl/types/TranslationObjectType.ts"
 import type { TypeArgumentType } from "./dsl/types/TypeArgumentType.ts"
 import {
   isArrayType,
@@ -292,10 +285,10 @@ export type AsDeepType<T extends Type> =
                 ? string
                 : T extends TypeArgumentType
                   ? unknown
-                  : T extends IncludeIdentifierType<TypeParameter[], infer Decl>
-                    ? Decl extends TypeAliasDecl<string, infer TA>
+                  : T extends IncludeIdentifierType<TypeParameter[], infer InnerDecl>
+                    ? InnerDecl extends TypeAliasDecl<string, infer TA>
                       ? AsDeepType<TA>
-                      : Decl extends EnumDecl<string, infer EC>
+                      : InnerDecl extends EnumDecl<string, infer EC>
                         ? AsDeepType<EnumType<EC>>
                         : unknown
                     : T extends NestedEntityMapType<string, infer TC>
@@ -381,13 +374,13 @@ export const findTypeAtPath = (
     [],
     parseKeyPath(path),
     options.throwOnPathMismatch ?? false,
-    type =>
-      isArrayType(type)
-        ? ok(type.items)
+    innerType =>
+      isArrayType(innerType)
+        ? ok(innerType.items)
         : error(previousPath => `Key path "${previousPath}" does not contain an array type.`),
-    (type, name) => {
-      if (isObjectType(type)) {
-        const prop = type.properties[name]
+    (innerType, name) => {
+      if (isObjectType(innerType)) {
+        const prop = innerType.properties[name]
         if (prop) {
           return ok(prop.type)
         } else {
@@ -402,11 +395,11 @@ export const findTypeAtPath = (
     },
     // recursively resolves type aliases in includes as this is automatically
     // called recursively if needed
-    type =>
-      isIncludeIdentifierType(type) &&
+    innerType =>
+      isIncludeIdentifierType(innerType) &&
       options.followTypeAliasIncludes &&
-      isTypeAliasDecl(type.reference)
-        ? ok([type.reference.type.value, true])
+      isTypeAliasDecl(innerType.reference)
+        ? ok([innerType.reference.type.value, true])
         : error(),
   )
 

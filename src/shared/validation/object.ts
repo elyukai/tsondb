@@ -1,5 +1,8 @@
-import type { NumerusLabel } from "../utils/validation.ts"
-import { parallelizeErrors, validateLengthRangeBound } from "../utils/validation.ts"
+import {
+  type NumerusLabel,
+  parallelizeErrors,
+  validateLengthRangeBound,
+} from "../utils/validation.ts"
 
 export interface ObjectConstraints {
   additionalProperties?: boolean

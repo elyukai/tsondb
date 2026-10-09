@@ -4,8 +4,8 @@ export interface DateConstraints {
   time?: boolean
 }
 
-const datePattern = /^\d{4}-\d{2}-\d{2}$/
-const dateTimePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+const datePattern = /^\d{4}-\d{2}-\d{2}$/u
+const dateTimePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/u
 
 const isValidISODateString = (dateString: string) => !isNaN(new Date(dateString).getTime())
 

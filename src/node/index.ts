@@ -29,15 +29,15 @@ import type { FormatterOptions } from "./config.ts"
 import { Git } from "./git.js"
 import type { Output } from "./output.ts"
 import { getDisplayName, getDisplayNameWithId } from "./schema/detached.ts"
-import { type EntityDecl, type SingletonEntityDecl } from "./schema/dsl/index.ts"
+import type { EntityDecl, SingletonEntityDecl } from "./schema/dsl/index.ts"
 import type {
   AnyChildEntityMap,
   AnyEntityMap,
   AnyEnumMap,
   AnySingletonEntityMap,
   AnyTypeAliasMap,
+  IdArgsVariant,
 } from "./schema/generatedTypeHelpers.ts"
-import { type IdArgsVariant } from "./schema/generatedTypeHelpers.ts"
 import { isEntityDecl, isEntityDeclWithParentReference } from "./schema/guards.ts"
 import type { Schema } from "./schema/index.ts"
 import { serializeNode } from "./schema/treeOperations/serialization.ts"
@@ -109,7 +109,10 @@ export type TypeAliasName<T extends DefaultTSONDBTypes> = Extract<keyof T["typeA
 export type StoringEntityName<T extends DefaultTSONDBTypes> = EntityName<T> | SingletonEntityName<T>
 
 export type DeclarationName<T extends DefaultTSONDBTypes> =
-  EntityName<T> | SingletonEntityName<T> | EnumName<T> | TypeAliasName<T>
+  | EntityName<T>
+  | SingletonEntityName<T>
+  | EnumName<T>
+  | TypeAliasName<T>
 
 export type ChildEntity<
   T extends DefaultTSONDBTypes,
@@ -214,19 +217,16 @@ const debug = Debug("tsondb:class")
 const prepareFolders = async (dataRootPath: string, entities: EntityDecl[]) => {
   await mkdir(dataRootPath, { recursive: true })
 
-  for (const entity of entities) {
-    const entityDir = join(dataRootPath, entity.name)
-    await mkdir(entityDir, { recursive: true })
-  }
+  await Promise.all(
+    entities.map(entity => mkdir(join(dataRootPath, entity.name), { recursive: true })),
+  )
 }
 
 const generateOutputs = async <T extends DefaultTSONDBTypes>(
   schema: Schema<T>,
   outputs: Output[],
 ): Promise<void> => {
-  for (const output of outputs) {
-    await output.run(schema)
-  }
+  await Promise.all(outputs.map(output => output.run(schema)))
 }
 
 const getGit = async (dataRootPath: string) => {
@@ -249,7 +249,7 @@ const checkLocales = <T extends DefaultTSONDBTypes>(
   data: DatabaseInMemory<T["entityMap"]>,
   locales: string[],
 ) => {
-  const localeEntity = schema.localeEntity
+  const { localeEntity } = schema
   if (
     localeEntity &&
     !locales.every(locale => data.hasInstanceOfEntityById(localeEntity.name, locale))
@@ -283,14 +283,13 @@ const initData = async <T extends DefaultTSONDBTypes>(
     schema.resolvedDeclarations.map(decl => [decl.name, serializeNode(decl)]),
   )
 
-  let referencesToInstances: ReferencesToInstances
+  let referencesToInstances: ReferencesToInstances = {}
   if (!skipReferenceCache) {
     debug("creating references cache ...")
     referencesToInstances = await getReferencesToInstances(data, serializedDeclarationsByName)
     debug("done")
   } else {
     debug("skipping references cache creation")
-    referencesToInstances = {}
   }
 
   if (git) {
@@ -363,7 +362,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     options: TSONDBOptions<Types>,
     skipReferenceCache = false,
   ): Promise<TSONDB<Types>> {
-    const entities = options.schema.entities
+    const { entities } = options.schema
 
     debug("using data root path: %s", options.dataRootPath)
     await prepareFolders(options.dataRootPath, entities)
@@ -377,7 +376,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       debug("no git repository found")
     }
 
-    const localeEntity = options.schema.localeEntity
+    const { localeEntity } = options.schema
 
     if (!localeEntity && options.locales) {
       throw new Error("Schema does not contain a locale entity, locales cannot be provided.")

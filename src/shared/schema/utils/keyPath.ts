@@ -8,7 +8,7 @@ export type KeyPathElement = { kind: "property"; name: string } | { kind: "index
 
 export type ParsedKeyPath = KeyPathElement[]
 
-const intPattern = /^(?:0|[1-9][0-9])*$/
+const intPattern = /^(?:0|[1-9][0-9])*$/u
 
 export const parseKeyPath = (keyPath: KeyPath): ParsedKeyPath =>
   normalizeKeyPath(keyPath).map(part => {
@@ -48,7 +48,7 @@ export const getAtKeyPath = <T>(
   ...fs: ((value: T, key: KeyPathElement) => Result<[T, skipKey?: boolean], void>)[]
 ): T => {
   if (isNotEmpty(remainingKeyPath)) {
-    const [key, ...remainingPath] = remainingKeyPath
+    const [firstKey, ...remainingPath] = remainingKeyPath
 
     const getCaseAtKeyPath = <K extends KeyPathElement>(
       key: K,
@@ -66,7 +66,7 @@ export const getAtKeyPath = <T>(
             fObject,
             ...fs,
           ),
-        error => {
+        err => {
           for (const f of fs) {
             const result = f(value, key)
             if (isOk(result)) {
@@ -83,20 +83,20 @@ export const getAtKeyPath = <T>(
           }
 
           if (throwOnPathMismatch) {
-            throw new TypeError(error(renderParsedKeyPath(previousPath)))
+            throw new TypeError(err(renderParsedKeyPath(previousPath)))
           } else {
             return value
           }
         },
       )
 
-    switch (key.kind) {
+    switch (firstKey.kind) {
       case "index":
-        return getCaseAtKeyPath(key, (key, value) => fArray(value, key.index))
+        return getCaseAtKeyPath(firstKey, (key, innerValue) => fArray(innerValue, key.index))
       case "property":
-        return getCaseAtKeyPath(key, (key, value) => fObject(value, key.name))
+        return getCaseAtKeyPath(firstKey, (key, innerValue) => fObject(innerValue, key.name))
       default:
-        return assertExhaustive(key)
+        return assertExhaustive(firstKey)
     }
   } else {
     return value
@@ -113,19 +113,19 @@ export const getValueAtKeyPath = (
     [],
     parseKeyPath(keyPath),
     throwOnPathMismatch,
-    (value, index) =>
-      Array.isArray(value)
-        ? index >= 0 && index < value.length
-          ? ok(value[index])
+    (innerValue, index) =>
+      Array.isArray(innerValue)
+        ? index >= 0 && index < innerValue.length
+          ? ok(innerValue[index])
           : error(
               previousPath =>
                 `Array at key path "${previousPath}" does not contain the index ${index.toString()}.`,
             )
         : error(previousPath => `Key path "${previousPath}" does not contain an array.`),
-    (value, name) =>
-      typeof value === "object" && value !== null
-        ? name in value
-          ? ok((value as Record<typeof name, unknown>)[name])
+    (innerValue, name) =>
+      typeof innerValue === "object" && innerValue !== null
+        ? name in innerValue
+          ? ok((innerValue as Record<typeof name, unknown>)[name])
           : error(
               previousPath =>
                 `Object at key path "${previousPath}" does not contain the key ${name}.`,

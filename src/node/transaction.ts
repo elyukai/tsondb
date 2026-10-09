@@ -7,7 +7,7 @@ import type {
   InstanceContent,
   SingletonInstanceContainer,
 } from "../shared/utils/instances.ts"
-import { type EntityDecl, type SingletonEntityDecl } from "./schema/dsl/index.ts"
+import type { EntityDecl, SingletonEntityDecl } from "./schema/dsl/index.ts"
 import type {
   AnyEntityMap,
   AnySingletonEntityMap,
@@ -16,7 +16,7 @@ import type {
   RegisteredEntityMap,
   RegisteredSingletonEntityMap,
 } from "./schema/generatedTypeHelpers.ts"
-import { type DatabaseInMemory } from "./utils/databaseInMemory.ts"
+import type { DatabaseInMemory } from "./utils/databaseInMemory.ts"
 import {
   isReferencedByOtherInstances,
   updateReferencesToInstances,

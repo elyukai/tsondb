@@ -11,7 +11,7 @@ import type { UniqueConstraint } from "../../shared/schema/utils/uniqueConstrain
 import type { InstanceContainer, InstanceContainerOverview } from "../../shared/utils/instances.ts"
 import { UniqueConstraintError } from "../../shared/utils/unique.ts"
 import type { EntityDecl } from "../schema/dsl/index.ts"
-import { type DatabaseInMemory } from "./databaseInMemory.ts"
+import type { DatabaseInMemory } from "./databaseInMemory.ts"
 
 const printUniqueConstraint = (constraint: UniqueConstraint, values: unknown[]) =>
   (Array.isArray(constraint) ? constraint : [constraint])
@@ -19,17 +19,15 @@ const printUniqueConstraint = (constraint: UniqueConstraint, values: unknown[]) 
       "keyPath" in elem
         ? renderKeyPath(elem.keyPath) +
           (elem.keyPathFallback ? "|" + renderKeyPath(elem.keyPathFallback) : "")
-        : renderKeyPath(elem.entityMapKeyPath) +
-          "[" +
-          (Array.isArray(values[i]) ? (values[i][0] as string) : "...") +
-          "]." +
-          (elem.keyPathInEntityMapFallback
-            ? "(" +
-              renderKeyPath(elem.keyPathInEntityMap) +
-              "|" +
-              renderKeyPath(elem.keyPathInEntityMapFallback) +
-              ")"
-            : renderKeyPath(elem.keyPathInEntityMap)),
+        : `${renderKeyPath(elem.entityMapKeyPath)}[${
+            Array.isArray(values[i]) ? (values[i][0] as string) : "..."
+          }].${
+            elem.keyPathInEntityMapFallback
+              ? `(${renderKeyPath(elem.keyPathInEntityMap)}|${renderKeyPath(
+                  elem.keyPathInEntityMapFallback,
+                )})`
+              : renderKeyPath(elem.keyPathInEntityMap)
+          }`,
     )
     .join("+")
 
@@ -44,7 +42,7 @@ export const checkUniqueConstraintsForEntity = (
   instances: InstanceContainer[],
   instanceOverviews: InstanceContainerOverview[],
 ): Result<void, AggregateError> => {
-  const constraintErrors: [index: number, duplicates: [id: string, row: unknown[]][][]][] = []
+  const constraintErrorsList: [index: number, duplicates: [id: string, row: unknown[]][][]][] = []
   const constraints = entity.uniqueConstraints ?? []
 
   for (const [constraintIndex, constraint] of constraints.entries()) {
@@ -79,7 +77,7 @@ export const checkUniqueConstraintsForEntity = (
     const duplicates = anySameIndices(index, (a, b) => deepEqual(a[1], b[1]))
 
     if (duplicates.length > 0) {
-      constraintErrors.push([
+      constraintErrorsList.push([
         constraintIndex,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Indices returned by anySameIndices must exist
         duplicates.map(duplicateSet => duplicateSet.map(rowIndex => index[rowIndex]!)),
@@ -87,16 +85,16 @@ export const checkUniqueConstraintsForEntity = (
     }
   }
 
-  if (constraintErrors.length > 0) {
+  if (constraintErrorsList.length > 0) {
     return error(
       new AggregateError(
-        constraintErrors.flatMap(([constraintIndex, constraintErrors]) =>
+        constraintErrorsList.flatMap(([constraintIndex, constraintErrors]) =>
           constraintErrors.map(
-            error =>
+            constraintError =>
               new UniqueConstraintError(
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- constraint must be present
-                `for unique constraint ${printUniqueConstraint(constraints[constraintIndex]!, error[0]![1])}:`,
-                error.map(row => {
+                `for unique constraint ${printUniqueConstraint(constraints[constraintIndex]!, constraintError[0]![1])}:`,
+                constraintError.map(row => {
                   const instanceOverview = instanceOverviews.find(o => o.id === row[0])
                   return instanceOverview ? `"${instanceOverview.displayName}" (${row[0]})` : row[0]
                 }),

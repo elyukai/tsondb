@@ -3,9 +3,9 @@ import { dirname, relative } from "node:path"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import { NodeKind } from "../../../shared/schema/Node.ts"
 import type { RangeBound } from "../../../shared/validation/number.ts"
-import { asDecl, type Decl } from "../../schema/dsl/declarations/Decl.ts"
-import type { EntityDecl } from "../../schema/dsl/declarations/EntityDecl.ts"
+import { type Decl, asDecl } from "../../schema/dsl/declarations/Decl.ts"
 import {
+  type EntityDecl,
   addEphemeralUUIDToType,
   createEntityIdentifierTypeAsDecl,
   isEntityDecl,
@@ -22,13 +22,17 @@ import type { EnumType } from "../../schema/dsl/types/EnumType.ts"
 import type { FloatType } from "../../schema/dsl/types/FloatType.ts"
 import type { IncludeIdentifierType } from "../../schema/dsl/types/IncludeIdentifierType.ts"
 import type { IntegerType } from "../../schema/dsl/types/IntegerType.ts"
-import type { NestedEntityMapType } from "../../schema/dsl/types/NestedEntityMapType.ts"
-import { isNestedEntityMapType } from "../../schema/dsl/types/NestedEntityMapType.ts"
+import {
+  type NestedEntityMapType,
+  isNestedEntityMapType,
+} from "../../schema/dsl/types/NestedEntityMapType.ts"
 import type { MemberDecl, ObjectType } from "../../schema/dsl/types/ObjectType.ts"
 import type { ReferenceIdentifierType } from "../../schema/dsl/types/ReferenceIdentifierType.ts"
 import type { StringType } from "../../schema/dsl/types/StringType.ts"
-import type { TranslationObjectType } from "../../schema/dsl/types/TranslationObjectType.ts"
-import { getTypeOfKey } from "../../schema/dsl/types/TranslationObjectType.ts"
+import {
+  type TranslationObjectType,
+  getTypeOfKey,
+} from "../../schema/dsl/types/TranslationObjectType.ts"
 import type { TypeArgumentType } from "../../schema/dsl/types/TypeArgumentType.ts"
 import { flatMapAuxiliaryDecls, isFinalChildEntitiesType } from "../../schema/helpers.ts"
 import { ensureSpecialDirStart } from "../../utils/path.ts"
@@ -59,7 +63,7 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (opti
   type: "object",
   properties: Object.fromEntries(
     Object.entries(type.properties)
-      .filter(([_, config]) => !isFinalChildEntitiesType(config.type))
+      .filter(([_key, config]) => !isFinalChildEntitiesType(config.type))
       .map(([name, config]) => [
         name,
         {
@@ -266,9 +270,9 @@ export const render = (
         flatMapAuxiliaryDecls((parentNodes, node, existingDecls) => {
           if (isNestedEntityMapType(node)) {
             if (existingDecls.some(decl => decl.name === node.name)) {
-              // this may happen when a nested entity map is defined in a generic declaration and the generic declaration is used multiple times
-              // TODO: circumvent by defining the nested entity declaration outside the generic declaration
-              return undefined
+              throw new Error(
+                "A nested entity map type with the same name has already been defined in this schema. Make sure the nested entity map type is defined only once in the schema. If the nested entity map type is defined in a generic declaration, consider defining it outside the generic declaration to avoid this issue.",
+              )
             }
             return TypeAliasDecl(asDecl(parentNodes[0])?.sourceUrl ?? "", {
               name: node.name,

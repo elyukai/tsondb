@@ -1,7 +1,6 @@
 import { equal } from "assert"
 import { describe, it } from "node:test"
 import { render } from "../../../../src/node/renderers/ts/render.ts"
-import type { Type } from "../../../../src/node/schema/dsl/index.ts"
 import {
   Array,
   Boolean,
@@ -14,6 +13,7 @@ import {
   Required,
   TypeAliasDecl,
   TypeArgumentType,
+  type Type,
 } from "../../../../src/node/schema/dsl/index.ts"
 import { Param } from "../../../../src/node/schema/dsl/TypeParameter.ts"
 import { String } from "../../../../src/node/schema/dsl/types/StringType.ts"

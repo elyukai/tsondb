@@ -26,11 +26,9 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
 
   return (
     <div
-      class={
-        "field field--container field--object" +
-        (disabled ? " field--disabled" : "") +
-        (hasOnlySimpleItems ? " field--simple-container field--simple-object" : "")
-      }
+      class={`field field--container field--object${
+        disabled ? " field--disabled" : ""
+      }${hasOnlySimpleItems ? " field--simple-container field--simple-object" : ""}`}
     >
       <ul>
         {Object.entries(type.properties)
@@ -39,7 +37,7 @@ export const ObjectTypeInput: FunctionComponent<Props> = props => {
             const isSimpleItem = isSinglularInputFieldType(getDeclFromDeclName, memberDecl.type)
             return (
               <li
-                class={"container-item object-item" + (isSimpleItem ? " simple-item" : "")}
+                class={`container-item object-item${isSimpleItem ? " simple-item" : ""}`}
                 key={key}
               >
                 <div className="container-item-title">

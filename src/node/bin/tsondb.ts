@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { omitUndefinedKeys } from "@elyukai/utils/object"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import Debug from "debug"
 import { access, constants } from "node:fs/promises"
 import { join } from "node:path"
@@ -93,12 +94,14 @@ const config: Config | undefined = await (async () => {
     const fullPath = join(cwd(), configName)
 
     try {
+      // oxlint-disable-next-line no-await-in-loop
       await access(fullPath, constants.R_OK)
     } catch {
       debug(`could not use config file ${fullPath}, not found`)
       continue
     }
 
+    // oxlint-disable-next-line no-await-in-loop
     const foundConfigModule = (await import(pathToFileURL(fullPath).toString())) as object
     if ("default" in foundConfigModule) {
       debug(`config file ${fullPath} found with config`)
@@ -122,25 +125,27 @@ if (passedArguments.command === undefined) {
 }
 
 const createDB = (
-  config: DataConfig,
+  dataConfig: DataConfig,
   validationOptions: Partial<ValidationOptions> | undefined,
   skipReferenceCache: boolean,
 ) =>
   TSONDB.create(
     {
-      ...config,
+      ...dataConfig,
       validationOptions,
     },
     skipReferenceCache,
   )
 
-if (passedArguments.command.name === "generate") {
+const commandName = passedArguments.command.name
+
+if (commandName === "generate") {
   debug(`running command: generate`)
   validateConfigForGeneration(config)
   await TSONDB.generateOutputs(config)
 } else {
   validateConfigForData(config)
-  switch (passedArguments.command.name) {
+  switch (commandName) {
     case "serve": {
       debug(`running command: serve`)
       validateConfigForServer(config)
@@ -224,5 +229,7 @@ if (passedArguments.command.name === "generate") {
       }
       break
     }
+    default:
+      assertExhaustive(commandName)
   }
 }

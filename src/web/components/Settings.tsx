@@ -75,7 +75,7 @@ export const Settings: FunctionComponent = () => {
                 </span>
                 <button
                   onClick={() => {
-                    setLocales(locales => reorder(locales, index, index - 1))
+                    setLocales(oldLocales => reorder(oldLocales, index, index - 1))
                   }}
                   disabled={index === 0}
                 >
@@ -83,7 +83,7 @@ export const Settings: FunctionComponent = () => {
                 </button>
                 <button
                   onClick={() => {
-                    setLocales(locales => reorder(locales, index, index + 1))
+                    setLocales(oldLocales => reorder(oldLocales, index, index + 1))
                   }}
                   disabled={index === locales.length - 1}
                 >
@@ -91,7 +91,7 @@ export const Settings: FunctionComponent = () => {
                 </button>
                 <button
                   onClick={() => {
-                    setLocales(locales => removeAt(locales, index))
+                    setLocales(oldLocales => removeAt(oldLocales, index))
                   }}
                   disabled={locales.length < 2}
                 >
@@ -124,7 +124,7 @@ export const Settings: FunctionComponent = () => {
           </Select>
           <button
             onClick={() => {
-              setLocales(locales => [...locales, newLocale])
+              setLocales(oldLocales => [...oldLocales, newLocale])
               setNewLocale("")
             }}
             disabled={newLocale === ""}

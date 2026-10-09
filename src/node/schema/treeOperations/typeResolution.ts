@@ -14,23 +14,21 @@ import { isTypeAliasDecl, TypeAliasDecl } from "../dsl/declarations/TypeAliasDec
 import type { Node, Type } from "../dsl/index.ts"
 import type { TypeParameter } from "../dsl/TypeParameter.ts"
 import { ArrayType } from "../dsl/types/ArrayType.ts"
-import { type BooleanType } from "../dsl/types/BooleanType.ts"
-import { type ChildEntitiesType } from "../dsl/types/ChildEntitiesType.ts"
-import { type DateType } from "../dsl/types/DateType.ts"
-import type { EnumCaseDecl } from "../dsl/types/EnumType.ts"
-import { EnumType } from "../dsl/types/EnumType.ts"
-import { type FloatType } from "../dsl/types/FloatType.ts"
+import type { BooleanType } from "../dsl/types/BooleanType.ts"
+import type { ChildEntitiesType } from "../dsl/types/ChildEntitiesType.ts"
+import type { DateType } from "../dsl/types/DateType.ts"
+import { type EnumCaseDecl, EnumType } from "../dsl/types/EnumType.ts"
+import type { FloatType } from "../dsl/types/FloatType.ts"
 import {
   IncludeIdentifierType,
   isIncludeIdentifierType,
   isNoGenericIncludeIdentifierType,
 } from "../dsl/types/IncludeIdentifierType.ts"
-import { type IntegerType } from "../dsl/types/IntegerType.ts"
+import type { IntegerType } from "../dsl/types/IntegerType.ts"
 import { _NestedEntityMapType, type NestedEntityMapType } from "../dsl/types/NestedEntityMapType.ts"
-import type { MemberDecl } from "../dsl/types/ObjectType.ts"
-import { ObjectType } from "../dsl/types/ObjectType.ts"
-import { type ReferenceIdentifierType } from "../dsl/types/ReferenceIdentifierType.ts"
-import { type StringType } from "../dsl/types/StringType.ts"
+import { type MemberDecl, ObjectType } from "../dsl/types/ObjectType.ts"
+import type { ReferenceIdentifierType } from "../dsl/types/ReferenceIdentifierType.ts"
+import type { StringType } from "../dsl/types/StringType.ts"
 import type { TranslationObjectType } from "../dsl/types/TranslationObjectType.ts"
 import { isTypeArgumentType, type TypeArgumentType } from "../dsl/types/TypeArgumentType.ts"
 
@@ -139,7 +137,8 @@ export const resolveTypeArguments = <T extends Node = Node>(
         ...node,
         type: () => resolveTypeArguments(args, node.type.value, [...inDecl, node]),
         customConstraints: node.customConstraints as
-          TypedNestedCustomConstraint<string> | undefined, // ignore contravariance of registered type alias type
+          | TypedNestedCustomConstraint<string>
+          | undefined, // ignore contravariance of registered type alias type
       }) as RN
     case NodeKind.ArrayType:
       return ArrayType(resolveTypeArguments(args, node.items, inDecl), {

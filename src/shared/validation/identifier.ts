@@ -1,6 +1,6 @@
-export const validateLocaleIdentifier = (value: string): Error[] => {
-  const localePattern = /^[a-z]{2,3}(-[A-Z]{2,3})?$/
+const localePattern = /^[a-z]{2,3}(-[A-Z]{2,3})?$/u
 
+export const validateLocaleIdentifier = (value: string): Error[] => {
   if (localePattern.test(value)) {
     return []
   }

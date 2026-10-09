@@ -246,7 +246,7 @@ declarationsApi.get("/:name/instances/:id", (req, res) => {
   }
 
   const body: API.GetInstanceOfEntityResponseBody = {
-    instance: instance,
+    instance,
     isLocaleEntity: decl === req.db.schema.localeEntity,
   }
 
@@ -350,7 +350,7 @@ declarationsApi.get("/:name/instance", (req, res) => {
   }
 
   const body: API.GetSingletonInstanceOfEntityResponseBody = {
-    instance: instance,
+    instance,
   }
 
   res.json(body)

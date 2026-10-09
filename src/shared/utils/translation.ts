@@ -5,10 +5,9 @@ const mergeAssoc = <V extends string | null>(
   acc: Record<string, V>,
   key: string,
   value: V,
-): Record<string, V> => {
+): Record<string, V> =>
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- if there is a previous value and the current result is null, keep the more specific one
-  return { ...acc, [key]: value ?? acc[key]! }
-}
+  ({ ...acc, [key]: value ?? acc[key]! })
 
 const reduceMapAssoc = <T, V extends string | null>(
   map: (item: T) => [string, V] | undefined,
@@ -59,44 +58,44 @@ const ignoreLocalVariables = (
   acc: Record<string, string | null>,
 ): Record<string, string | null> =>
   decls.reduce<Record<string, string | null>>(
-    (acc, decl) =>
+    (acc1, decl) =>
       reduceADT(
         {
-          local: (acc, localDecl) => {
-            const { [localDecl.name]: _, ...rest } = acc
+          local: (acc2, localDecl) => {
+            const { [localDecl.name]: _, ...rest } = acc2
             return rest
           },
         },
-        acc,
+        acc1,
         decl,
       ),
     acc,
   )
 
 const reduceParametersFromPattern = (acc: Record<string, string | null>, pattern: Model.Pattern) =>
-  pattern.reduce((acc, element) => {
+  pattern.reduce((acc1, element) => {
     if (typeof element === "string") {
-      return acc
+      return acc1
     }
 
     return reduceADT(
       {
-        expression: (acc, element) => {
-          if (!element.arg) {
-            return acc
+        expression: (acc2, element1) => {
+          if (!element1.arg) {
+            return acc2
           }
 
           return reduceADT(
             {
-              variable: (acc, variable) =>
-                mergeAssoc(acc, variable.name, element.functionRef?.name ?? null),
+              variable: (acc3, variable) =>
+                mergeAssoc(acc3, variable.name, element1.functionRef?.name ?? null),
             },
-            acc,
-            element.arg,
+            acc2,
+            element1.arg,
           )
         },
       },
-      acc,
+      acc1,
       element,
     )
   }, acc)

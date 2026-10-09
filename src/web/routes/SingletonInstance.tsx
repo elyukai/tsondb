@@ -1,4 +1,5 @@
 import { toTitleCase } from "@elyukai/utils/string"
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { FunctionalComponent } from "preact"
 import {
   getSingletonInstanceByEntityName,
@@ -28,7 +29,7 @@ const init: SingletonInstanceRouteSkeletonInitializer = async ({
 
 const titleBuilder: SingletonInstanceRouteSkeletonTitleBuilder = ({ entity, instanceContent }) => {
   if (instanceContent) {
-    return toTitleCase(entity.name) + " — TSONDB"
+    return `${toTitleCase(entity.name)} — TSONDB`
   }
 
   return undefined
@@ -60,6 +61,8 @@ const submit: SingletonInstanceRouteSkeletonSubmitHandler<"saveandcontinue" | "s
         route(`/`)
         break
       }
+      default:
+        return assertExhaustive(action)
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -80,18 +83,16 @@ const onSubmit: SingletonInstanceRouteSkeletonOnSubmitHandler = async ({
 const onSave: SingletonInstanceRouteSkeletonOnSaveHandler = other =>
   submit({ ...other, action: "saveandcontinue" })
 
-export const SingletonInstance: FunctionalComponent = () => {
-  return (
-    <SingletonInstanceRouteSkeleton
-      mode="edit"
-      buttons={[
-        { label: "Save", name: "save", primary: true },
-        { label: "Save and continue", name: "saveandcontinue" },
-      ]}
-      init={init}
-      titleBuilder={titleBuilder}
-      onSubmit={onSubmit}
-      onSave={onSave}
-    />
-  )
-}
+export const SingletonInstance: FunctionalComponent = () => (
+  <SingletonInstanceRouteSkeleton
+    mode="edit"
+    buttons={[
+      { label: "Save", name: "save", primary: true },
+      { label: "Save and continue", name: "saveandcontinue" },
+    ]}
+    init={init}
+    titleBuilder={titleBuilder}
+    onSubmit={onSubmit}
+    onSave={onSave}
+  />
+)

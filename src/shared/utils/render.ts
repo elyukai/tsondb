@@ -50,14 +50,14 @@ export const syntax = (
   strings.reduce((acc, str, i) => {
     const nextValue = values[i]
     if (typeof nextValue === "string") {
-      return [acc[0], acc[1] + str.replace(/\n/g, EOL) + nextValue]
+      return [acc[0], acc[1] + str.replace(/\n/gu, EOL) + nextValue]
     } else if (Array.isArray(nextValue)) {
       return [
         mergeArraysByKey(acc[0], nextValue[0]),
-        acc[1] + str.replace(/\n/g, EOL) + nextValue[1],
+        acc[1] + str.replace(/\n/gu, EOL) + nextValue[1],
       ]
     } else {
-      return [acc[0], acc[1] + str.replace(/\n/g, EOL)]
+      return [acc[0], acc[1] + str.replace(/\n/gu, EOL)]
     }
   }, emptyRenderResult)
 

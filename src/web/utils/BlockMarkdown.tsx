@@ -33,7 +33,7 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
           )}
         </p>
       )
-    case "heading":
+    case "heading": {
       const Tag = `h${(node.level + outerHeadingLevel).toString()}` as `h${1 | 2 | 3 | 4 | 5 | 6}`
       return (
         <Tag>
@@ -43,6 +43,7 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
           ))}
         </Tag>
       )
+    }
     case "list": {
       const Tag = node.ordered ? "ol" : "ul"
       return (
@@ -120,10 +121,9 @@ export const BlockMarkdown: FunctionalComponent<Props> = ({
       const label = (
         <>
           <span
-            class={
-              "footnote__label" +
-              (typeof node.label === "number" ? " footnote__label--numeric" : "")
-            }
+            class={`footnote__label${
+              typeof node.label === "number" ? " footnote__label--numeric" : ""
+            }`}
             data-reference={node.label}
             style={{ "--label": node.label }}
           >

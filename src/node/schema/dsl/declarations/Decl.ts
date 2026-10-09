@@ -5,13 +5,10 @@ import type { Node } from "../index.ts"
 import type { TypeParameter } from "../TypeParameter.ts"
 import type { EnumCaseDecl } from "../types/EnumType.ts"
 import type { Type } from "../types/Type.ts"
-import type { EntityDecl } from "./EntityDecl.ts"
-import { isEntityDecl } from "./EntityDecl.ts"
-import type { EnumDecl } from "./EnumDecl.ts"
-import { isEnumDecl } from "./EnumDecl.ts"
+import { type EntityDecl, isEntityDecl } from "./EntityDecl.ts"
+import { type EnumDecl, isEnumDecl } from "./EnumDecl.ts"
 import { isSingletonEntityDecl, type SingletonEntityDecl } from "./SingletonEntityDecl.ts"
-import type { TypeAliasDecl } from "./TypeAliasDecl.ts"
-import { isTypeAliasDecl } from "./TypeAliasDecl.ts"
+import { isTypeAliasDecl, type TypeAliasDecl } from "./TypeAliasDecl.ts"
 
 export type TypeArguments<Params extends TypeParameter[]> = {
   [K in keyof Params]: Params[K] extends TypeParameter<string, infer T> ? T : Type
@@ -29,7 +26,10 @@ export const getTypeArgumentsRecord = <Params extends TypeParameter[]>(
   )
 
 export type Decl<Name extends string = string> =
-  EntityDecl<Name> | SingletonEntityDecl<Name> | EnumDecl<Name> | TypeAliasDecl<Name>
+  | EntityDecl<Name>
+  | SingletonEntityDecl<Name>
+  | EnumDecl<Name>
+  | TypeAliasDecl<Name>
 
 export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
   | EntityDecl
@@ -38,7 +38,8 @@ export type DeclP<Params extends TypeParameter[] = TypeParameter[]> =
   | TypeAliasDecl<string, Type, Params>
 
 export type IncludableDeclP<Params extends TypeParameter[] = TypeParameter[]> =
-  EnumDecl<string, Record<string, EnumCaseDecl>, Params> | TypeAliasDecl<string, Type, Params>
+  | EnumDecl<string, Record<string, EnumCaseDecl>, Params>
+  | TypeAliasDecl<string, Type, Params>
 
 export type SecondaryDecl = EnumDecl | TypeAliasDecl
 
@@ -58,7 +59,7 @@ export interface BaseDecl<
   parameters: Params
 }
 
-const declNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+const declNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/u
 
 export const validateDeclName = (name: string) => {
   if (!declNamePattern.test(name)) {

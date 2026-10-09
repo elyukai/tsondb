@@ -210,7 +210,7 @@ gitApi.post("/reset/:entityName/:instanceId", async (req, res) => {
 type CreateCommitRequest = Request<unknown, unknown, CreateCommitRequestBody>
 
 gitApi.post("/commit", async (req: CreateCommitRequest, res) => {
-  const message = req.body.message
+  const { message } = req.body
 
   if (typeof message !== "string" || message.length === 0) {
     res.set("Content-Type", "text/plain")
@@ -262,7 +262,7 @@ gitApi.get("/branch", async (req, res) => {
 type CreateBranchRequest = Request<unknown, unknown, CreateBranchRequestBody>
 
 gitApi.post("/branch", async (req: CreateBranchRequest, res) => {
-  const branchName = req.body.branchName
+  const { branchName } = req.body
 
   if (typeof branchName !== "string" || branchName.length === 0) {
     res.set("Content-Type", "text/plain")

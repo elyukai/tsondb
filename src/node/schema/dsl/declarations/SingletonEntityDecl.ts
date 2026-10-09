@@ -4,8 +4,7 @@ import type { SortOrder } from "../../../../shared/schema/utils/sortOrder.ts"
 import type { CustomConstraint, TypedCustomConstraint } from "../../../utils/customConstraints.ts"
 import type { Node } from "../index.ts"
 import type { MemberDecl, ObjectType } from "../types/ObjectType.ts"
-import type { BaseDecl } from "./Decl.ts"
-import { validateDeclName } from "./Decl.ts"
+import { type BaseDecl, validateDeclName } from "./Decl.ts"
 
 type TConstraint = Record<string, MemberDecl>
 

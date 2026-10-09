@@ -1,7 +1,7 @@
 import { removeAt } from "@elyukai/utils/array/modify"
 import { difference } from "@elyukai/utils/array/sets"
 import { isOk } from "@elyukai/utils/result"
-import { resolve } from "node:path"
+import { resolve as resolvePath } from "node:path"
 import type { SerializedDecl } from "../../shared/schema/declarations/Declaration.ts"
 import {
   getReferencesForSerializedSingletonEntityDecl,
@@ -14,7 +14,7 @@ import type {
   RegisteredEntityMap,
 } from "../schema/generatedTypeHelpers.ts"
 import { getReferences } from "../schema/treeOperations/references.ts"
-import { type DatabaseInMemory } from "./databaseInMemory.ts"
+import type { DatabaseInMemory } from "./databaseInMemory.ts"
 import type { ReferencesWorkerTask } from "./referencesWorker.ts"
 import { WorkerPool } from "./workers.ts"
 
@@ -57,7 +57,9 @@ const mergeReferences = (
   toMerge: ReferencesToInstances,
 ): ReferencesToInstances => {
   for (const instanceId in toMerge) {
-    ;(acc[instanceId] ??= []).push(...(toMerge[instanceId] ?? []))
+    if (Object.hasOwn(toMerge, instanceId)) {
+      ;(acc[instanceId] ??= []).push(...(toMerge[instanceId] ?? []))
+    }
   }
   return acc
 }
@@ -96,7 +98,7 @@ export const getReferencesToInstances = async (
     ReferencesWorkerTask,
     ReferencesToInstances,
     Record<string, SerializedDecl>
-  >(6, resolve(import.meta.dirname, "./referencesWorker.js"), serializedDeclarationsByName)
+  >(6, resolvePath(import.meta.dirname, "./referencesWorker.js"), serializedDeclarationsByName)
 
   const separateResults = await Promise.all(
     databaseInMemory.getAllInstances().map(

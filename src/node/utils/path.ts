@@ -1,4 +1,6 @@
 import { sep } from "node:path"
 
+const specialDirStartRegex = new RegExp(`^\\.\\.?\\${sep}`, "u")
+
 export const ensureSpecialDirStart = (path: string): string =>
-  new RegExp(`^\\.\\.?\\${sep}`).test(path) ? path : `./${path}`
+  specialDirStartRegex.test(path) ? path : `./${path}`

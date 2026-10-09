@@ -1,6 +1,6 @@
 import { createContext } from "preact"
 import type { SetStateAction } from "preact/compat"
-import { type UserSettings } from "../hooks/useSettings.ts"
+import type { UserSettings } from "../hooks/useSettings.ts"
 
 export const defaultSettings: UserSettings = {
   displayedLocales: [],

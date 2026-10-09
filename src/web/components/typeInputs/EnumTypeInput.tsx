@@ -1,3 +1,4 @@
+import { isNullish } from "@elyukai/utils/nullable"
 import { toTitleCase } from "@elyukai/utils/string"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import type { FunctionComponent } from "preact"
@@ -35,12 +36,12 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
   switch (enumDisplay) {
     case "select":
       return (
-        <div class={"field field--enum" + (isSimpleEnum ? " field--simple-enum" : "")}>
+        <div class={`field field--enum${isSimpleEnum ? " field--simple-enum" : ""}`}>
           <Select
             value={activeEnumCase}
             onInput={event => {
               const caseMember = type.values[event.currentTarget.value]
-              if (caseMember?.type == null) {
+              if (isNullish(caseMember?.type)) {
                 onChange({
                   [ENUM_DISCRIMINATOR_KEY]: event.currentTarget.value,
                 })
@@ -65,7 +66,7 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
           {activeCaseMember?.comment === undefined ? null : (
             <Markdown class="comment" string={activeCaseMember.comment} />
           )}
-          {activeCaseMember?.type == null ? null : (
+          {isNullish(activeCaseMember?.type) ? null : (
             <div className="associated-type">
               <TypeInput
                 {...props}
@@ -87,7 +88,7 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
 
     case "radio":
       return (
-        <div class={"field field--enum" + (isSimpleEnum ? " field--simple-enum" : "")}>
+        <div class={`field field--enum${isSimpleEnum ? " field--simple-enum" : ""}`}>
           {enumValues.map(([enumValue, caseMember]) => (
             <div class="field--option" key={enumValue}>
               <input
@@ -97,7 +98,7 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
                 id={path === undefined ? enumValue : `${path}-${enumValue}`}
                 checked={enumValue === activeEnumCase}
                 onInput={() => {
-                  if (caseMember.type == null) {
+                  if (caseMember.type === null) {
                     onChange({
                       [ENUM_DISCRIMINATOR_KEY]: enumValue,
                     })
@@ -117,7 +118,7 @@ export const EnumTypeInput: FunctionComponent<Props> = props => {
                 {caseMember.comment === undefined ? null : (
                   <Markdown class="comment" string={caseMember.comment} />
                 )}
-                {caseMember.type == null ? null : (
+                {caseMember.type === null ? null : (
                   <div className="associated-type">
                     <TypeInput
                       {...props}

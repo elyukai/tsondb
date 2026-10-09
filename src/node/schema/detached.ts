@@ -2,7 +2,7 @@
  * Standalone functions for database operations without needing a full TSONDB instance.
  */
 
-import { type DatabaseInMemory } from "../utils/databaseInMemory.ts"
+import type { DatabaseInMemory } from "../utils/databaseInMemory.ts"
 import { getDisplayNameFromEntityInstance } from "../utils/displayName.ts"
 import {
   normalizedIdArgs,

@@ -1,3 +1,5 @@
+import { assertExhaustive } from "@elyukai/utils/typeSafety"
+
 export type GitFileStatus = {
   index: GitFileStatusCode
   workingDir: GitFileStatusCode
@@ -19,6 +21,8 @@ export const isChangedInIndex = (fileStatus: GitFileStatus): boolean => {
     case "?":
     case "!":
       return false
+    default:
+      return assertExhaustive(index)
   }
 }
 
@@ -38,6 +42,8 @@ export const isChangedInWorkingDir = (fileStatus: GitFileStatus): boolean => {
     case "m":
     case "!":
       return false
+    default:
+      return assertExhaustive(workingDir)
   }
 }
 
@@ -117,7 +123,7 @@ export const getLabelForGitStatus = (status: GitFileStatusForDisplay): string =>
   }
 }
 
-const remotePattern = /^remotes\/(\w+?)\/(.+)$/
+const remotePattern = /^remotes\/(\w+?)\/(.+)$/u
 
 export const splitBranchName = (branch: string): { remote?: string; name: string } => {
   const [_, remote, actualBranch] = branch.match(remotePattern) ?? ["", undefined, branch]

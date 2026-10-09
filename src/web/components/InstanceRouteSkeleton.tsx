@@ -104,7 +104,7 @@ const onBeforeUnload = (event: BeforeUnloadEvent) => {
   event.returnValue = "unsaved changes"
 }
 
-const applePlatformPattern = /(Mac|iPhone|iPod|iPad)/i
+const applePlatformPattern = /(Mac|iPhone|iPod|iPad)/iu
 
 const isApplePlatform = () => applePlatformPattern.test(window.navigator.platform)
 
@@ -249,7 +249,10 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
 
   const checkIsLocaleEntity = useCallback(
     (entityName: string) =>
-      entities.some(entity => entity.declaration.name === entityName && entity.isLocaleEntity),
+      entities.some(
+        entitySummary =>
+          entitySummary.declaration.name === entityName && entitySummary.isLocaleEntity,
+      ),
     [entities],
   )
 
@@ -356,7 +359,7 @@ export const InstanceRouteSkeleton: FunctionalComponent<Props> = ({
                   })
                   .catch((error: unknown) => {
                     if (error instanceof Error) {
-                      alert("Error deleting instance:\n\n" + error.toString())
+                      alert(`Error deleting instance:\n\n${error.toString()}`)
                     }
                   })
               }

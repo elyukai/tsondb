@@ -4,7 +4,7 @@ import { deepEqual } from "@elyukai/utils/equality"
 import { assertExhaustive, trySafe } from "@elyukai/utils/typeSafety"
 import Debug from "debug"
 import { NodeKind } from "../../shared/schema/Node.ts"
-import { renderKeyPath, type KeyPath } from "../../shared/schema/utils/keyPath.ts"
+import { type KeyPath, renderKeyPath } from "../../shared/schema/utils/keyPath.ts"
 import type { UniquingElement } from "../../shared/schema/utils/uniqueConstraint.ts"
 import type {
   DeclarationName,
@@ -12,14 +12,13 @@ import type {
   EntityName,
   SingletonEntityName,
 } from "../index.ts"
-import type { Decl } from "./dsl/declarations/Decl.ts"
 import {
+  type Decl,
   getParameterNames,
   resolveTypeArgumentsInDecls,
   walkNodeTree,
 } from "./dsl/declarations/Decl.ts"
-import type { EntityDecl } from "./dsl/declarations/EntityDecl.ts"
-import { isEntityDecl } from "./dsl/declarations/EntityDecl.ts"
+import { type EntityDecl, isEntityDecl } from "./dsl/declarations/EntityDecl.ts"
 import { cases, isEnumDecl } from "./dsl/declarations/EnumDecl.ts"
 import { isSingletonEntityDecl } from "./dsl/declarations/SingletonEntityDecl.ts"
 import type { Node, SingletonEntityDecl, Type } from "./dsl/index.ts"
@@ -416,6 +415,7 @@ const checkChildEntityTypes = (localeEntity: EntityDecl | undefined, decls: Decl
     )
   }
 
+  // oxlint-disable-next-line no-warning-comments
   // TODO: Check that no cycles exist in child entity relations
 
   for (const decl of decls) {
@@ -440,14 +440,16 @@ const checkChildEntitiesProvideCorrectPathToParentReferenceIdentifierType = (dec
       if (valueAtParentReferenceKey) {
         const typeAtProperty = valueAtParentReferenceKey.type
         // the parent reference must either be an enum of reference types (for polymorphic relations) or a reference identifier type
-        if (!(
-          (isIncludeIdentifierType(typeAtProperty) &&
-            isEnumDecl(typeAtProperty.reference) &&
-            cases(typeAtProperty.reference).every(
-              caseDecl => caseDecl.type !== null && isReferenceIdentifierType(caseDecl.type),
-            )) ||
-          isReferenceIdentifierType(typeAtProperty)
-        )) {
+        if (
+          !(
+            (isIncludeIdentifierType(typeAtProperty) &&
+              isEnumDecl(typeAtProperty.reference) &&
+              cases(typeAtProperty.reference).every(
+                caseDecl => caseDecl.type !== null && isReferenceIdentifierType(caseDecl.type),
+              )) ||
+            isReferenceIdentifierType(typeAtProperty)
+          )
+        ) {
           throw new TypeError(
             `Parent reference key "${decl.parentReferenceKey}" in entity declaration "${decl.name}" must be an IncludeIdentifierType that references an enum declaration whose cases all have a ReferenceIdentifierType.`,
           )
@@ -482,7 +484,7 @@ const isDeclarationRecursive = (declToCheck: Decl): boolean => {
       case NodeKind.ArrayType:
         return isDeclarationIncludedInNode(visitedDecls, node.items)
       case NodeKind.ObjectType:
-        return Object.entries(node.properties).some(([_, memberDecl]) =>
+        return Object.entries(node.properties).some(([_key, memberDecl]) =>
           isDeclarationIncludedInNode(visitedDecls, memberDecl.type),
         )
       case NodeKind.IncludeIdentifierType:
@@ -494,7 +496,7 @@ const isDeclarationRecursive = (declToCheck: Decl): boolean => {
         return isDeclarationIncludedInNode(visitedDecls, node.type.value)
       case NodeKind.EnumType:
         return Object.entries(node.values).some(
-          ([_, caseDecl]) =>
+          ([_caseName, caseDecl]) =>
             caseDecl.type !== null && isDeclarationIncludedInNode(visitedDecls, caseDecl.type),
         )
       default:
@@ -627,7 +629,7 @@ const checkSortOrders = (declarations: Decl[]) => {
         }
       }
 
-      const sortOrder = decl.sortOrder
+      const { sortOrder } = decl
 
       if (sortOrder === "displayName") {
         continue

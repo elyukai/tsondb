@@ -84,7 +84,7 @@ const onBeforeUnload = (event: BeforeUnloadEvent) => {
   event.returnValue = "unsaved changes"
 }
 
-const applePlatformPattern = /(Mac|iPhone|iPod|iPad)/i
+const applePlatformPattern = /(Mac|iPhone|iPod|iPad)/iu
 
 const isApplePlatform = () => applePlatformPattern.test(window.navigator.platform)
 
@@ -268,7 +268,7 @@ export const SingletonInstanceRouteSkeleton: FunctionalComponent<Props> = ({
                   })
                   .catch((error: unknown) => {
                     if (error instanceof Error) {
-                      alert("Error deleting instance:\n\n" + error.toString())
+                      alert(`Error deleting instance:\n\n${error.toString()}`)
                     }
                   })
               }

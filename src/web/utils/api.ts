@@ -26,7 +26,7 @@ const request = async <R>(
   }
 
   const response = await fetch(resolvedUrl, {
-    method: method,
+    method,
     body: options.body ? JSON.stringify(options.body) : undefined,
     headers,
   })
@@ -37,9 +37,9 @@ const request = async <R>(
 
   return (
     options.getResult ??
-    (response => {
-      if (response.headers.get("Content-Type")?.startsWith("application/json") === true) {
-        return response.json() as Promise<R>
+    (response1 => {
+      if (response1.headers.get("Content-Type")?.startsWith("application/json") === true) {
+        return response1.json() as Promise<R>
       } else {
         return Promise.resolve() as Promise<R>
       }

@@ -2,7 +2,7 @@ import { error, isError, mapError, ok, type Result } from "@elyukai/utils/result
 import { NodeKind } from "../../shared/schema/Node.ts"
 import type { InstanceContainer, InstanceContent } from "../../shared/utils/instances.ts"
 import type { DefaultTSONDBTypes, EntityName, SingletonEntityName } from "../index.ts"
-import { type EntityDecl, type SingletonEntityDecl } from "../schema/dsl/index.ts"
+import type { EntityDecl, SingletonEntityDecl } from "../schema/dsl/index.ts"
 import type {
   AnyChildEntityMap,
   AnyEntityMap,

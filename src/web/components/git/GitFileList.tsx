@@ -52,7 +52,7 @@ export const GitFileList: <A extends string>(props: Props<A>) => ComponentChildr
                   <button
                     key={label}
                     onClick={() => {
-                      void onFileButtonClick(entityName, instance, action)
+                      onFileButtonClick(entityName, instance, action)
                     }}
                   >
                     {label}
