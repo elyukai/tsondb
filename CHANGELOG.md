@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.21.6](https://github.com/elyukai/tsondb/compare/v0.21.5...v0.21.6) (2026-10-09)
+
+### Features
+
+* export createServer function ([aab502b](https://github.com/elyukai/tsondb/commit/aab502ba2be4da244161bbe425b25cd1bf4ab53e))
+* transaction start and end hooks ([0e965bd](https://github.com/elyukai/tsondb/commit/0e965bd0eb9452a248476c667db6728ecb3a10c5))
+
 ## [0.21.5](https://github.com/elyukai/tsondb/compare/v0.21.4...v0.21.5) (2026-10-06)
 
 ## [0.21.4](https://github.com/elyukai/tsondb/compare/v0.21.3...v0.21.4) (2026-10-03)
