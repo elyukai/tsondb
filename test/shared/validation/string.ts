@@ -27,10 +27,10 @@ describe("validateStringConstraints", () => {
     deepEqual(validateStringConstraints({ pattern: "\\w+" }, "lorem ipsum"), [])
     deepEqual(validateStringConstraints({ pattern: /\w+/u }, "lorem ipsum"), [])
     deepEqual(validateStringConstraints({ pattern: "\\w+" }, " "), [
-      TypeError(`string does not match the pattern /\\w+/`),
+      TypeError(`string does not match the pattern /\\w+/u`),
     ])
     deepEqual(validateStringConstraints({ pattern: /\w+/u }, " "), [
-      TypeError(`string does not match the pattern /\\w+/`),
+      TypeError(`string does not match the pattern /\\w+/u`),
     ])
   })
 })
