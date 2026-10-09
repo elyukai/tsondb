@@ -319,7 +319,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   #formatterOptions: Partial<FormatterOptions> | undefined
   #gitWrapper: Lazy<Git<T> | undefined>
   #locked: boolean = false
-  #hooks: Partial<Record<HookTrigger, ((tsondb: TSONDB<T>) => void | Promise<void>)[]>> = {}
+  #hooks: Partial<Record<HookTrigger, ((tsondb: TSONDB<T>) => void)[]>> = {}
 
   private constructor(options: {
     dataRootPath: string

@@ -67,7 +67,7 @@ export const createServer = <T extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
 
   const defaultLocales = db.locales
   const requestLocals: Omit<TSONDBRequestLocals, "setLocal"> = {
-    db,
+    db: db as TSONDB,
     defaultLocales,
     locales: defaultLocales,
     homeLayoutSections,
