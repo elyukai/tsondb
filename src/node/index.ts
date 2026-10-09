@@ -303,6 +303,8 @@ const initData = async <T extends DefaultTSONDBTypes>(
 
 type TSONDBGit = { client: SimpleGit; root: string }
 
+export type HookTrigger = "transaction:before" | "transaction:after"
+
 /**
  * The main class for managing a typed JSON database.
  */
@@ -317,6 +319,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   #formatterOptions: Partial<FormatterOptions> | undefined
   #gitWrapper: Lazy<Git<T> | undefined>
   #locked: boolean = false
+  #hooks: Partial<Record<HookTrigger, ((tsondb: TSONDB<T>) => void | Promise<void>)[]>> = {}
 
   private constructor(options: {
     dataRootPath: string
@@ -823,6 +826,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     }
 
     debug("Starting transaction, locking database ...")
+    this.#hooks["transaction:before"]?.forEach(hook => hook(this))
     this.#locked = true
 
     try {
@@ -896,6 +900,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
       this.#locked = false
       debug("Transaction successful, released lock")
+      this.#hooks["transaction:after"]?.forEach(hook => hook(this))
       return res
     } catch (error) {
       this.#locked = false
@@ -1351,6 +1356,26 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    */
   async compressToSingleFile(path: string): Promise<void> {
     await writeFile(path, JSON.stringify(this.#data), "utf-8")
+  }
+
+  /**
+   * Registers a new hook for the specified trigger. The callback will be invoked whenever the trigger is activated.
+   */
+  registerHook(trigger: HookTrigger, callback: (db: TSONDB<T>) => void): void {
+    ;(this.#hooks[trigger] ??= []).push(callback)
+  }
+
+  /**
+   * Unregisters a hook for the specified trigger.
+   */
+  unregisterHook(trigger: HookTrigger, callback: (db: TSONDB<T>) => void): void {
+    const callbacks = this.#hooks[trigger]
+    if (callbacks) {
+      const index = callbacks.indexOf(callback)
+      if (index !== -1) {
+        callbacks.splice(index, 1)
+      }
+    }
   }
 }
 
