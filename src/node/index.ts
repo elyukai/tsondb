@@ -473,6 +473,12 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     }
 
     const errors: Error[] = []
+    const summary: string[] = []
+
+    const debugAndAddToSummary = (message: string) => {
+      debug(message)
+      summary.push(message)
+    }
 
     if (!skipStructuralValidation) {
       debug("Checking structural integrity ...")
@@ -525,7 +531,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
       if (structureErrors.length > 0) {
         const errorCount = countErrors(structureErrors)
-        debug(
+        debugAndAddToSummary(
           `${errorCount.toString()} structural integrity violation${errorCount === 1 ? "" : "s"} found`,
         )
         errors.push(...structureErrors)
@@ -602,7 +608,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
           if (referenceErrors.length > 0) {
             const errorCount = countErrors(referenceErrors)
-            debug(
+            debugAndAddToSummary(
               `${errorCount.toString()} referential integrity violation${errorCount === 1 ? "" : "s"} found`,
             )
             errors.push(...referenceErrors)
@@ -630,7 +636,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
       if (isError(uniqueConstraintResult)) {
         const errorCount = countError(uniqueConstraintResult.error)
-        debug(
+        debugAndAddToSummary(
           `${errorCount.toString()} unique constraint violation${errorCount === 1 ? "" : "s"} found`,
         )
         errors.push(uniqueConstraintResult.error)
@@ -658,7 +664,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
       if (isError(customConstraintResult)) {
         const errorCount = countError(customConstraintResult.error)
-        debug(
+        debugAndAddToSummary(
           `${errorCount.toString()} custom constraint violation${errorCount === 1 ? "" : "s"} found`,
         )
         errors.push(customConstraintResult.error)
@@ -666,7 +672,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         debug("No custom constraint violations found")
       }
     } else {
-      debug("Skipping further checks due to previous structural integrity errors")
+      debugAndAddToSummary("Skipping further checks due to previous structural integrity errors")
     }
 
     if (logToConsole) {
@@ -677,9 +683,18 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       } else {
         const errorCount = countErrors(errors)
         console.error(
+          styleText("red", `${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}\n`, {
+            stream: stderr,
+          }),
+        )
+        console.error(styleText(["red", "bold"], "Summary", { stream: stderr }))
+        console.error(
           styleText(
             "red",
-            `${errorCount.toString()} validation error${errorCount === 1 ? "" : "s"} found\n\n${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}`,
+            [
+              `${errorCount.toString()} validation error${errorCount === 1 ? "" : "s"} found`,
+              ...summary,
+            ].join("\n"),
             { stream: stderr },
           ),
         )
