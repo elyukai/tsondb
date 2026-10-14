@@ -139,6 +139,14 @@ export const reduceNodes = <R>(
           return { results: reducer(parentNodes, node, collectedResults), reducedDecls }
         }
 
+      case NodeKind.NestedEntityMapType:
+        return reduceNodeTree(
+          [...parentNodes, node],
+          node.type.value,
+          reducer(parentNodes, node, collectedResults),
+          reducedDecls,
+        )
+
       case NodeKind.BooleanType:
       case NodeKind.DateType:
       case NodeKind.FloatType:
@@ -146,7 +154,6 @@ export const reduceNodes = <R>(
       case NodeKind.StringType:
       case NodeKind.TypeArgumentType:
       case NodeKind.ReferenceIdentifierType:
-      case NodeKind.NestedEntityMapType:
       case NodeKind.TypeParameter:
       case NodeKind.TranslationObjectType:
         return { results: reducer(parentNodes, node, collectedResults), reducedDecls }
