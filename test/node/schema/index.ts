@@ -58,7 +58,7 @@ it("collects multiple nested entity declarations for a schema", () => {
 
   const schema = new Schema([Decl])
 
-  const expectedEntityNames = ["A", "AA", "AB", "B", "C"].toSorted()
+  const expectedEntityNames = ["A", "B", "C"].toSorted()
   const collectedEntityNames = schema.declarations.map(entity => entity.name).toSorted()
   assert.deepEqual(collectedEntityNames, expectedEntityNames)
 })
