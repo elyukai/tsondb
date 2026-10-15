@@ -456,6 +456,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     })
 
     const metaFile = await readMetaFile(options.dataRootPath)
+    metaFile.version = await getTSONDBVersion()
 
     if (metaFile.schemaVersion !== options.schema.version && options.migrationStages) {
       debug(
@@ -481,6 +482,8 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
           // oxlint-disable-next-line no-await-in-loop
           await stage.willMigrate?.(db)
           metaFile.schemaVersion = stage.toVersion
+          // oxlint-disable-next-line no-await-in-loop
+          await writeMetaFile(options.dataRootPath, metaFile)
         } else {
           debug("skipping migration stage from %s to %s", stage.fromVersion, stage.toVersion)
         }
@@ -488,11 +491,6 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     } else {
       debug("no migration needed, schema version is up to date")
     }
-
-    metaFile.version = await getTSONDBVersion()
-    metaFile.schemaVersion = options.schema.version
-
-    await writeMetaFile(options.dataRootPath, metaFile)
 
     return db
   }
