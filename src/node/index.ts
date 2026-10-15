@@ -1,3 +1,4 @@
+import { exists } from "@elyukai/utils/async/node"
 import { on } from "@elyukai/utils/function"
 import { Lazy } from "@elyukai/utils/lazy"
 import { nullableToArray } from "@elyukai/utils/nullable"
@@ -5,10 +6,12 @@ import { compareNumber, reduceCompare } from "@elyukai/utils/ordering"
 import { isError } from "@elyukai/utils/result"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import Debug from "debug"
-import { mkdir, writeFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { findPackageJSON } from "node:module"
 import { join, sep } from "node:path"
 import { stderr } from "node:process"
 import { styleText } from "node:util"
+import semver from "semver"
 import { simpleGit, type SimpleGit, type StatusResult } from "simple-git"
 import { NodeKind } from "../shared/schema/Node.ts"
 import {
@@ -155,6 +158,10 @@ export interface TSONDBOptions<T extends DefaultTSONDBTypes = DefaultTSONDBTypes
    * Options for formatting the data in the database.
    */
   formatterOptions?: Partial<FormatterOptions>
+  /**
+   * If set, the database will be migrated through the specified migration stages before being used.
+   */
+  migrationStages?: MigrationStage<T>[]
 }
 
 /**
@@ -212,14 +219,54 @@ export interface TranslationValidationOptions {
   matchParametersInKeys?: boolean
 }
 
+export interface MigrationStage<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
+  fromVersion: string
+  toVersion: string
+  willMigrate?(context: TSONDB<T>): Promise<void>
+}
+
 const debug = Debug("tsondb:class")
 
-const prepareFolders = async (dataRootPath: string, entities: EntityDecl[]) => {
+interface MetaFile {
+  version: string
+  schemaVersion: string
+}
+
+const getMetaFilePath = (dataRootPath: string) => join(dataRootPath, ".meta.json")
+
+const getTSONDBVersion = async (): Promise<string> => {
+  const packageJsonPath = findPackageJSON(".", import.meta.url)
+  if (!packageJsonPath) {
+    throw new Error("Could not find package.json for TSONDB")
+  }
+  const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8"))
+  return packageJson.version
+}
+
+const readMetaFile = async (dataRootPath: string): Promise<MetaFile> =>
+  JSON.parse(await readFile(getMetaFilePath(dataRootPath), "utf-8")) as MetaFile
+
+const writeMetaFile = async (dataRootPath: string, meta: MetaFile): Promise<void> =>
+  writeFile(getMetaFilePath(dataRootPath), JSON.stringify(meta, null, 2), "utf-8")
+
+const prepareFolders = async (
+  schemaVersion: string,
+  dataRootPath: string,
+  entities: EntityDecl[],
+) => {
   await mkdir(dataRootPath, { recursive: true })
 
   await Promise.all(
     entities.map(entity => mkdir(join(dataRootPath, entity.name), { recursive: true })),
   )
+
+  if (!(await exists(getMetaFilePath(dataRootPath)))) {
+    const newMetaFile: MetaFile = {
+      version: await getTSONDBVersion(),
+      schemaVersion,
+    }
+    await writeMetaFile(dataRootPath, newMetaFile)
+  }
 }
 
 const generateOutputs = async <T extends DefaultTSONDBTypes>(
@@ -368,7 +415,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     const { entities } = options.schema
 
     debug("using data root path: %s", options.dataRootPath)
-    await prepareFolders(options.dataRootPath, entities)
+    await prepareFolders(options.schema.version, options.dataRootPath, entities)
     debug("prepared folders")
 
     const { git: gitClient, root: gitRoot, status: gitStatus } = await getGit(options.dataRootPath)
@@ -396,7 +443,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       skipReferenceCache,
     )
 
-    return new TSONDB<Types>({
+    const db = new TSONDB<Types>({
       ...options,
       data,
       referencesToInstances,
@@ -407,6 +454,47 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         ...options.validationOptions,
       },
     })
+
+    const metaFile = await readMetaFile(options.dataRootPath)
+
+    if (metaFile.schemaVersion !== options.schema.version && options.migrationStages) {
+      debug(
+        "migrating database from schema version %s to %s",
+        metaFile.schemaVersion,
+        options.schema.version,
+      )
+
+      for (const stage of options.migrationStages) {
+        if (
+          semver.valid(stage.toVersion) === null ||
+          semver.validRange(stage.fromVersion) === null
+        ) {
+          throw new Error(
+            `Invalid semver version in migration stage from ${stage.fromVersion} to ${stage.toVersion}`,
+          )
+        }
+      }
+
+      for (const stage of options.migrationStages) {
+        if (semver.satisfies(metaFile.schemaVersion, stage.fromVersion)) {
+          debug("applying migration stage from %s to %s", stage.fromVersion, stage.toVersion)
+          // oxlint-disable-next-line no-await-in-loop
+          await stage.willMigrate?.(db)
+          metaFile.schemaVersion = stage.toVersion
+        } else {
+          debug("skipping migration stage from %s to %s", stage.fromVersion, stage.toVersion)
+        }
+      }
+    } else {
+      debug("no migration needed, schema version is up to date")
+    }
+
+    metaFile.version = await getTSONDBVersion()
+    metaFile.schemaVersion = options.schema.version
+
+    await writeMetaFile(options.dataRootPath, metaFile)
+
+    return db
   }
 
   /**

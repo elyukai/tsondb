@@ -158,7 +158,7 @@ it("renders nested entity declarations", () => {
       }),
   })
 
-  const schema = new Schema([Decl])
+  const schema = new Schema("1.0.0", [Decl])
 
   equal(
     render(undefined, schema.declarations),

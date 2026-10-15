@@ -56,7 +56,7 @@ it("collects multiple nested entity declarations for a schema", () => {
       }),
   })
 
-  const schema = new Schema([Decl])
+  const schema = new Schema("1.0.0", [Decl])
 
   const expectedEntityNames = ["A", "B", "C"].toSorted()
   const collectedEntityNames = schema.declarations.map(entity => entity.name).toSorted()

@@ -3,6 +3,7 @@ import { Dictionary } from "@elyukai/utils/dictionary"
 import { deepEqual } from "@elyukai/utils/equality"
 import { assertExhaustive, trySafe } from "@elyukai/utils/typeSafety"
 import Debug from "debug"
+import semver from "semver"
 import { NodeKind } from "../../shared/schema/Node.ts"
 import { type KeyPath, renderKeyPath } from "../../shared/schema/utils/keyPath.ts"
 import type { UniquingElement } from "../../shared/schema/utils/uniqueConstraint.ts"
@@ -42,6 +43,7 @@ const debug = Debug("tsondb:schema")
 // const RESERVED_DECLARATION_IDENTIFIER = ["EntityMap", "StringableTranslationParameter"]
 
 export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
+  readonly #version: string
   readonly #declarations: Decl<DeclarationName<T>>[]
   readonly #entities: EntityDecl<EntityName<T>>[]
   readonly #singletonEntities: SingletonEntityDecl<SingletonEntityName<T>>[]
@@ -52,7 +54,11 @@ export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   readonly #declarationMap: Dictionary<Decl<DeclarationName<T>>>
   readonly #resolvedDeclarationMap: Dictionary<Decl<DeclarationName<T>>>
 
-  constructor(declarations: Decl[], localeEntity?: EntityDecl) {
+  constructor(version: string, declarations: Decl[], localeEntity?: EntityDecl) {
+    if (semver.valid(version) === null) {
+      throw new TypeError(`Invalid schema version "${version}". Must be a valid semver string.`)
+    }
+
     debug("creating schema from %d declarations", declarations.length)
     debug("collecting nested declarations ...")
     const allDecls = addDeclarations(
@@ -90,6 +96,7 @@ export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     debug("checking sort orders ...")
     checkSortOrders(allDeclsWithoutNestedEntities)
 
+    this.#version = version
     this.#localeEntity = localeEntity as EntityDecl<EntityName<T>> | undefined
     this.#declarations = allDeclsWithoutNestedEntities
     this.#resolvedDeclarations = resolveTypeArgumentsInDecls(allDeclsWithoutNestedEntities) as Decl<
@@ -114,6 +121,10 @@ export class Schema<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       this.#resolvedDeclarations.map(decl => [decl.name, decl]),
     )
     debug("created schema, no integrity violations found")
+  }
+
+  get version(): string {
+    return this.#version
   }
 
   get entities(): EntityDecl<EntityName<T>>[] {
