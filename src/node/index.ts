@@ -1,37 +1,18 @@
-import { exists } from "@elyukai/utils/async/node"
-import { on } from "@elyukai/utils/function"
 import { Lazy } from "@elyukai/utils/lazy"
-import { nullableToArray } from "@elyukai/utils/nullable"
-import { compareNumber, reduceCompare } from "@elyukai/utils/ordering"
 import { isError } from "@elyukai/utils/result"
-import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import Debug from "debug"
-import { mkdir, readFile, writeFile } from "node:fs/promises"
-import { findPackageJSON } from "node:module"
-import { join, sep } from "node:path"
-import { stderr } from "node:process"
-import { styleText } from "node:util"
+import { writeFile } from "node:fs/promises"
 import semver from "semver"
-import { simpleGit, type SimpleGit, type StatusResult } from "simple-git"
-import { NodeKind } from "../shared/schema/Node.ts"
-import {
-  countError,
-  countErrors,
-  getErrorMessageForDisplay,
-  HTTPError,
-  wrapErrorsIfAny,
-} from "../shared/utils/error.ts"
+import { simpleGit } from "simple-git"
+import { HTTPError } from "../shared/utils/error.ts"
 import type {
   InstanceContainer,
-  InstanceContainerOverview,
   InstanceContent,
   SingletonInstanceContainer,
 } from "../shared/utils/instances.ts"
-import { parallelizeErrors } from "../shared/utils/validation.ts"
 import type { FormatterOptions, ServerOptions } from "./config.ts"
 import { Git } from "./git.js"
-import type { Output } from "./output.ts"
-import { getDisplayName, getDisplayNameWithId } from "./schema/detached.ts"
+import { ReadonlyTSONDB } from "./readonly.ts"
 import type { EntityDecl, SingletonEntityDecl } from "./schema/dsl/index.ts"
 import type {
   AnyChildEntityMap,
@@ -39,47 +20,28 @@ import type {
   AnyEnumMap,
   AnySingletonEntityMap,
   AnyTypeAliasMap,
-  IdArgsVariant,
 } from "./schema/generatedTypeHelpers.ts"
-import { isEntityDecl, isEntityDeclWithParentReference } from "./schema/guards.ts"
 import type { Schema } from "./schema/index.ts"
-import { serializeNode } from "./schema/treeOperations/serialization.ts"
 import {
-  createEntityNameValidator,
-  createReferenceValidator,
-  validateDeclReferentialIntegrity,
   validateDeclStructuralIntegrity,
-  type EntityNameValidator,
-  type ReferenceValidator,
   type ValidationContext,
 } from "./schema/treeOperations/validation.ts"
 import { createServer } from "./server/index.ts"
+import {
+  createCompressedDatabaseFile,
+  getTSONDBVersion,
+  initData,
+  prepareFolders,
+  validate,
+  writeMetaFile,
+  type TSONDBGit,
+} from "./shared.ts"
 import { Transaction } from "./transaction.ts"
-import { checkCustomConstraintsForAllEntities } from "./utils/customConstraints.ts"
 import { DatabaseInMemory } from "./utils/databaseInMemory.ts"
 import { applyStepsToDisk } from "./utils/databaseOnDisk.ts"
-import {
-  getAllInstanceOverviewsByEntityName,
-  getDisplayNameFromEntityInstance,
-  getInstanceOverview,
-  getInstanceOverviewsByEntityName,
-} from "./utils/displayName.ts"
-import {
-  formatInstance,
-  getFileNameForId,
-  getSingletonFileName,
-  readInstance,
-  readSingletonInstance,
-  writeInstance,
-  writeSingletonInstance,
-} from "./utils/files.ts"
+import { writeInstance, writeSingletonInstance } from "./utils/files.ts"
 import { attachGitStatusToDatabaseInMemory } from "./utils/git.ts"
-import {
-  getReferencesToInstances,
-  isReferencedByOtherInstances,
-  type ReferencesToInstances,
-} from "./utils/references.ts"
-import { checkUniqueConstraintsForAllEntities } from "./utils/unique.ts"
+import type { ReferencesToInstances } from "./utils/references.ts"
 
 export interface DefaultTSONDBTypes {
   entityMap: AnyEntityMap
@@ -226,56 +188,7 @@ export interface MigrationStage<T extends DefaultTSONDBTypes = DefaultTSONDBType
   willMigrate?(context: TSONDB<T>): Promise<void>
 }
 
-const debug = Debug("tsondb:class")
-
-interface MetaFile {
-  version: string
-  schemaVersion: string
-}
-
-const getMetaFilePath = (dataRootPath: string) => join(dataRootPath, ".meta.json")
-
-const getTSONDBVersion = async (): Promise<string> => {
-  const packageJsonPath = findPackageJSON(".", import.meta.url)
-  if (!packageJsonPath) {
-    throw new Error("Could not find package.json for TSONDB")
-  }
-  const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8"))
-  return packageJson.version
-}
-
-const readMetaFile = async (dataRootPath: string): Promise<MetaFile> =>
-  JSON.parse(await readFile(getMetaFilePath(dataRootPath), "utf-8")) as MetaFile
-
-const writeMetaFile = async (dataRootPath: string, meta: MetaFile): Promise<void> =>
-  writeFile(getMetaFilePath(dataRootPath), JSON.stringify(meta, null, 2), "utf-8")
-
-const prepareFolders = async (
-  schemaVersion: string,
-  dataRootPath: string,
-  entities: EntityDecl[],
-) => {
-  await mkdir(dataRootPath, { recursive: true })
-
-  await Promise.all(
-    entities.map(entity => mkdir(join(dataRootPath, entity.name), { recursive: true })),
-  )
-
-  if (!(await exists(getMetaFilePath(dataRootPath)))) {
-    const newMetaFile: MetaFile = {
-      version: await getTSONDBVersion(),
-      schemaVersion,
-    }
-    await writeMetaFile(dataRootPath, newMetaFile)
-  }
-}
-
-const generateOutputs = async <T extends DefaultTSONDBTypes>(
-  schema: Schema<T>,
-  outputs: Output[],
-): Promise<void> => {
-  await Promise.all(outputs.map(output => output.run(schema)))
-}
+const debug = Debug("tsondb:main")
 
 const getGit = async (dataRootPath: string) => {
   const git = simpleGit({ baseDir: dataRootPath })
@@ -292,79 +205,13 @@ const getGit = async (dataRootPath: string) => {
   }
 }
 
-const checkLocales = <T extends DefaultTSONDBTypes>(
-  schema: Schema<T>,
-  data: DatabaseInMemory<T["entityMap"]>,
-  locales: string[],
-) => {
-  const { localeEntity } = schema
-  if (
-    localeEntity &&
-    !locales.every(locale => data.hasInstanceOfEntityById(localeEntity.name, locale))
-  ) {
-    throw new Error("All provided locales must exist in the database.")
-  }
-}
-
-const initData = async <T extends DefaultTSONDBTypes>(
-  dataRootPath: string,
-  schema: Schema<T>,
-  locales: string[],
-  git: TSONDBGit | undefined,
-  gitStatus: StatusResult | undefined,
-  skipReferenceCache: boolean,
-): Promise<{
-  data: DatabaseInMemory<T["entityMap"], T["singletonEntityMap"]>
-  referencesToInstances: ReferencesToInstances
-}> => {
-  debug("loading database into memory ...")
-  let data = await DatabaseInMemory.load<T["entityMap"], T["singletonEntityMap"]>(
-    dataRootPath,
-    schema.entities,
-    schema.singletonEntities,
-  )
-  debug("done")
-
-  checkLocales(schema, data, locales)
-
-  const serializedDeclarationsByName = Object.fromEntries(
-    schema.resolvedDeclarations.map(decl => [decl.name, serializeNode(decl)]),
-  )
-
-  let referencesToInstances: ReferencesToInstances = {}
-  if (!skipReferenceCache) {
-    debug("creating references cache ...")
-    referencesToInstances = await getReferencesToInstances(data, serializedDeclarationsByName)
-    debug("done")
-  } else {
-    debug("skipping references cache creation")
-  }
-
-  if (git) {
-    const status = gitStatus ?? (await git.client.status())
-    data = attachGitStatusToDatabaseInMemory(data, dataRootPath, git.root, status)
-    debug("attached git status to instances")
-  }
-
-  return { data, referencesToInstances }
-}
-
-type TSONDBGit = { client: SimpleGit; root: string }
-
 export type HookTrigger = "transaction:before" | "transaction:after"
 
 /**
  * The main class for managing a typed JSON database.
  */
-export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
-  #data: DatabaseInMemory<T["entityMap"], T["singletonEntityMap"]>
-  #dataRootPath: string
-  #schema: Schema<T>
-  #locales: string[]
+export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> extends ReadonlyTSONDB<T> {
   #git: TSONDBGit | undefined
-  #referencesToInstances: ReferencesToInstances
-  #validationOptions: ValidationOptions
-  #formatterOptions: Partial<FormatterOptions> | undefined
   #gitWrapper: Lazy<Git<T> | undefined>
   #locked: boolean = false
   #hooks: Partial<Record<HookTrigger, ((tsondb: TSONDB<T>) => void)[]>> = {}
@@ -379,24 +226,18 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     validationOptions: ValidationOptions
     formatterOptions?: Partial<FormatterOptions> | undefined
   }) {
-    this.#dataRootPath = options.dataRootPath
-    this.#data = options.data
-    this.#schema = options.schema
-    this.#locales = options.locales ?? []
+    super(options)
     this.#git = options.git
-    this.#referencesToInstances = options.referencesToInstances
-    this.#validationOptions = options.validationOptions
-    this.#formatterOptions = options.formatterOptions
     this.#gitWrapper = Lazy.of(() =>
       this.#git
         ? new Git<T>(
             this,
             this.#git.client,
             this.#git.root,
-            this.#dataRootPath,
-            () => this.#data,
+            this.dataRootPath,
+            () => this._data,
             (data: DatabaseInMemory<T["entityMap"], T["singletonEntityMap"]>) => {
-              this.#data = data
+              this._data = data
             },
           )
         : undefined,
@@ -409,7 +250,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    * @param options The options for creating the TSONDB instance.
    * @param skipReferenceCache If set to `true`, the reference cache will not be created during initialization. This can speed up the initialization process, but referential integrity checks will not work correctly until the cache is created. This should only be set to `true` if you plan to call `sync()` immediately after initialization.
    */
-  static async create<Types extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
+  static override async create<Types extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
     options: TSONDBOptions<Types>,
     skipReferenceCache = false,
   ): Promise<TSONDB<Types>> {
@@ -435,13 +276,14 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
     const git = gitRoot ? { client: gitClient, root: gitRoot } : undefined
 
-    const { data, referencesToInstances } = await initData(
+    const { data, referencesToInstances, meta } = await initData(
       options.dataRootPath,
       options.schema,
       options.locales ?? [],
       git,
       gitStatus,
       skipReferenceCache,
+      false,
     )
 
     const db = new TSONDB<Types>({
@@ -456,13 +298,12 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       },
     })
 
-    const metaFile = await readMetaFile(options.dataRootPath)
-    metaFile.version = await getTSONDBVersion()
+    meta.version = await getTSONDBVersion()
 
-    if (metaFile.schemaVersion !== options.schema.version && options.migrationStages) {
+    if (meta.schemaVersion !== options.schema.version && options.migrationStages) {
       debug(
         "migrating database from schema version %s to %s",
-        metaFile.schemaVersion,
+        meta.schemaVersion,
         options.schema.version,
       )
 
@@ -478,13 +319,13 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       }
 
       for (const stage of options.migrationStages) {
-        if (semver.satisfies(metaFile.schemaVersion, stage.fromVersion)) {
+        if (semver.satisfies(meta.schemaVersion, stage.fromVersion)) {
           debug("applying migration stage from %s to %s", stage.fromVersion, stage.toVersion)
           // oxlint-disable-next-line no-await-in-loop
           await stage.willMigrate?.(db)
-          metaFile.schemaVersion = stage.toVersion
+          meta.schemaVersion = stage.toVersion
           // oxlint-disable-next-line no-await-in-loop
-          await writeMetaFile(options.dataRootPath, metaFile)
+          await writeMetaFile(options.dataRootPath, meta)
         } else {
           debug("skipping migration stage from %s to %s", stage.fromVersion, stage.toVersion)
         }
@@ -496,26 +337,12 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     return db
   }
 
-  /**
-   * Generates outputs based on the provided schema and output configurations.
-   */
-  static async generateOutputs(options: { schema: Schema; outputs: Output[] }): Promise<void> {
-    await generateOutputs(options.schema, options.outputs)
-  }
-
-  /**
-   * Generates outputs based on the current schema and the provided output configurations.
-   */
-  async generateOutputs(outputs: Output[]): Promise<void> {
-    await generateOutputs(this.#schema, outputs)
-  }
-
   #strucurallyValidateInstance(
     entity: EntityDecl | SingletonEntityDecl,
     instanceContent: InstanceContent,
   ): Error[] {
     const validationContext: ValidationContext = {
-      validationOptions: this.#validationOptions,
+      validationOptions: this._validationOptions,
       useStyling: true,
     }
 
@@ -524,281 +351,22 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
 
   #validate(
     data: DatabaseInMemory<T["entityMap"], T["singletonEntityMap"]>,
-    options: {
+    options?: {
       logToConsole?: boolean
       skipStructuralValidation?: boolean
       changedEntities?: Extract<keyof (T["entityMap"] & T["singletonEntityMap"]), string>[]
-    } = {},
+    },
   ): Error[] {
-    const { checkReferentialIntegrity, checkOnlyEntities } = this.#validationOptions
-    const {
-      skipStructuralValidation = false,
-      logToConsole = true,
-      changedEntities: changedEntityNames,
-    } = options
-    const entities = [...this.#schema.entities, ...this.#schema.singletonEntities]
-    const getEntity = this.#schema.getEntity.bind(this.#schema)
-
-    for (const onlyEntity of checkOnlyEntities) {
-      if (!entities.find(entity => entity.name === onlyEntity)) {
-        throw new Error(`Entity "${onlyEntity}" not found in schema`)
-      }
-    }
-
-    const onlyEntities =
-      checkOnlyEntities.length > 0
-        ? entities.filter(entity => checkOnlyEntities.includes(entity.name))
-        : entities
-
-    const changedEntities = changedEntityNames
-      ? entities.filter(entity => changedEntityNames.includes(entity.name))
-      : undefined
-
-    const validationContext: ValidationContext = {
-      validationOptions: this.#validationOptions,
-      useStyling: true,
-    }
-
-    const errors: Error[] = []
-    const summary: string[] = []
-
-    const debugAndAddToSummary = (message: string) => {
-      debug(message)
-      summary.push(message)
-    }
-
-    if (!skipStructuralValidation) {
-      debug("Checking structural integrity ...")
-
-      const structureErrors = onlyEntities
-        .flatMap(entity => {
-          switch (entity.kind) {
-            case NodeKind.EntityDecl:
-              return parallelizeErrors(
-                data
-                  .getAllInstanceContainersOfEntity(entity.name)
-                  .map(instance =>
-                    wrapErrorsIfAny(
-                      `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
-                      validateDeclStructuralIntegrity(
-                        validationContext,
-                        [],
-                        entity,
-                        [],
-                        instance.content,
-                      ),
-                    ),
-                  ),
-              )
-
-            case NodeKind.SingletonEntityDecl: {
-              const instance = data.getSingletonInstanceContainerOfEntity(entity.name)
-              if (instance) {
-                return nullableToArray(
-                  wrapErrorsIfAny(
-                    `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", getSingletonFileName(entity.name))}"`)}`,
-                    validateDeclStructuralIntegrity(
-                      validationContext,
-                      [],
-                      entity,
-                      [],
-                      instance.content,
-                    ),
-                  ),
-                )
-              }
-
-              return []
-            }
-            default:
-              return assertExhaustive(entity)
-          }
-        })
-        .toSorted((a, b) => a.message.localeCompare(b.message))
-
-      if (structureErrors.length > 0) {
-        const errorCount = countErrors(structureErrors)
-        debugAndAddToSummary(
-          `${errorCount.toString()} structural integrity violation${errorCount === 1 ? "" : "s"} found`,
-        )
-        errors.push(...structureErrors)
-      } else {
-        debug("No structural integrity violations found")
-      }
-    }
-
-    if (errors.length === 0) {
-      if (!skipStructuralValidation) {
-        if (checkReferentialIntegrity) {
-          debug("Checking referential integrity ...")
-
-          const entityNameValidator: EntityNameValidator = createEntityNameValidator(
-            this.#schema.isEntityName.bind(this.#schema),
-            true,
-          )
-
-          const referenceValidator: ReferenceValidator = createReferenceValidator(
-            this.#schema.isEntityName.bind(this.#schema),
-            data,
-            true,
-          )
-
-          const referenceErrors = onlyEntities
-            .flatMap(entity => {
-              switch (entity.kind) {
-                case NodeKind.EntityDecl:
-                  return parallelizeErrors(
-                    data
-                      .getAllInstanceContainersOfEntity(entity.name)
-                      .map(instance =>
-                        wrapErrorsIfAny(
-                          `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", join(entity.name, getFileNameForId(instance.id)))}"`)}`,
-                          validateDeclReferentialIntegrity(
-                            validationContext,
-                            entityNameValidator,
-                            referenceValidator,
-                            [],
-                            entity,
-                            [],
-                            instance.content,
-                          ),
-                        ),
-                      ),
-                  )
-
-                case NodeKind.SingletonEntityDecl: {
-                  const instance = data.getSingletonInstanceContainerOfEntity(entity.name)
-                  if (instance) {
-                    return nullableToArray(
-                      wrapErrorsIfAny(
-                        `in file ${styleText("white", `"${this.#dataRootPath}${sep}${styleText("bold", getSingletonFileName(entity.name))}"`)}`,
-                        validateDeclReferentialIntegrity(
-                          validationContext,
-                          entityNameValidator,
-                          referenceValidator,
-                          [],
-                          entity,
-                          [],
-                          instance.content,
-                        ),
-                      ),
-                    )
-                  }
-
-                  return []
-                }
-                default:
-                  return assertExhaustive(entity)
-              }
-            })
-            .toSorted((a, b) => a.message.localeCompare(b.message))
-
-          if (referenceErrors.length > 0) {
-            const errorCount = countErrors(referenceErrors)
-            debugAndAddToSummary(
-              `${errorCount.toString()} referential integrity violation${errorCount === 1 ? "" : "s"} found`,
-            )
-            errors.push(...referenceErrors)
-          } else {
-            debug("No referential integrity violations found")
-          }
-        } else {
-          debug("Disabled referential integrity checks, skipping them")
-        }
-      }
-
-      debug("Checking unique constraints ...")
-
-      const instanceOverviewsByEntityName = getAllInstanceOverviewsByEntityName(
-        getEntity,
+    return validate(
+      {
         data,
-        this.#locales,
-      )
-
-      const uniqueConstraintResult = checkUniqueConstraintsForAllEntities(
-        data,
-        (changedEntities ?? onlyEntities).filter(e => isEntityDecl(e)),
-        instanceOverviewsByEntityName,
-      )
-
-      if (isError(uniqueConstraintResult)) {
-        const errorCount = countError(uniqueConstraintResult.error)
-        debugAndAddToSummary(
-          `${errorCount.toString()} unique constraint violation${errorCount === 1 ? "" : "s"} found`,
-        )
-        errors.push(uniqueConstraintResult.error)
-      } else {
-        debug("No unique constraint violations found")
-      }
-
-      debug("Checking custom constraints ...")
-
-      const customConstraintResult = checkCustomConstraintsForAllEntities(
-        (...args) => getDisplayName(getEntity, this.#locales, data, ...args),
-        (...args) => getDisplayNameWithId(getEntity, this.#locales, data, ...args),
-        (...args) =>
-          getInstanceOverview(
-            data.getInstanceContainerOfEntityById.bind(data),
-            data.getAllChildInstanceContainersForParent.bind(data, getEntity),
-            getEntity,
-            this.#locales,
-            args,
-          ),
-        getEntity,
-        data,
-        entities,
-      )
-
-      if (isError(customConstraintResult)) {
-        const errorCount = countError(customConstraintResult.error)
-        debugAndAddToSummary(
-          `${errorCount.toString()} custom constraint violation${errorCount === 1 ? "" : "s"} found`,
-        )
-        errors.push(customConstraintResult.error)
-      } else {
-        debug("No custom constraint violations found")
-      }
-    } else {
-      debugAndAddToSummary("Skipping further checks due to previous structural integrity errors")
-    }
-
-    if (logToConsole) {
-      console.log(`${data.totalSize.toString()} instance${data.totalSize === 1 ? "" : "s"} checked`)
-
-      if (errors.length === 0) {
-        console.log(styleText("green", "All instances are valid"))
-      } else {
-        const errorCount = countErrors(errors)
-        console.error(
-          styleText("red", `${errors.map(err => getErrorMessageForDisplay(err)).join("\n\n")}\n`, {
-            stream: stderr,
-          }),
-        )
-        console.error(styleText(["red", "bold"], "Summary", { stream: stderr }))
-        console.error(
-          styleText(
-            "red",
-            [
-              `${errorCount.toString()} validation error${errorCount === 1 ? "" : "s"} found`,
-              ...summary,
-            ].join("\n"),
-            { stream: stderr },
-          ),
-        )
-      }
-    }
-
-    return errors
-  }
-
-  /**
-   * Validates the data in the database.
-   *
-   * Returns `true` if the data is valid, `false` otherwise.
-   */
-  validate(): boolean {
-    debug("Validating database ...")
-    return this.#validate(this.#data).length === 0
+        dataRootPath: this.dataRootPath,
+        locales: this.locales,
+        schema: this.schema,
+        validationOptions: this._validationOptions,
+      },
+      options,
+    )
   }
 
   /**
@@ -806,106 +374,28 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    */
   async format(): Promise<void> {
     debug("Formatting database ...")
-    await this.#data.forEachInstance(async (entityName, instance) => {
+    await this._data.forEachInstance(async (entityName, instance) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const entity = this.#schema.getEntity(entityName)!
+      const entity = this.schema.getEntity(entityName)!
       await writeInstance(
-        this.#dataRootPath,
+        this.dataRootPath,
         entity,
         instance.id,
         instance.content,
-        this.#formatterOptions,
+        this._formatterOptions,
       )
     }, true)
-    await this.#data.forEachSingletonInstance(async (entityName, instance) => {
+    await this._data.forEachSingletonInstance(async (entityName, instance) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const entity = this.#schema.getSingletonEntity(entityName)!
+      const entity = this.schema.getSingletonEntity(entityName)!
       await writeSingletonInstance(
-        this.#dataRootPath,
+        this.dataRootPath,
         entity,
         instance.content,
-        this.#formatterOptions,
+        this._formatterOptions,
       )
     }, true)
     debug("All data is formatted")
-  }
-
-  /**
-   * Checks if the data on disk is formatted according to the current in-memory representation.
-   */
-  async checkFormat(): Promise<boolean> {
-    debug("Check database formatting ...")
-
-    let counter = 0
-    let total = 0
-
-    await this.#data.forEachInstance(async (entityName, instance) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const entity = this.#schema.getEntity(entityName)!
-      const instanceOnDisk = await readInstance(this.#dataRootPath, entity, instance.id)
-      const currentFormatted = formatInstance(entity, instance.content, this.#formatterOptions)
-      if (instanceOnDisk !== currentFormatted) {
-        console.log(
-          `Instance ${styleText("yellow", instance.id)} of entity ${styleText("cyan", entityName)} is not formatted correctly.`,
-        )
-        counter++
-      }
-      total++
-    }, true)
-
-    await this.#data.forEachSingletonInstance(async (entityName, instance) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const entity = this.#schema.getSingletonEntity(entityName)!
-      const instanceOnDisk = await readSingletonInstance(this.#dataRootPath, entity)
-      const currentFormatted = formatInstance(entity, instance.content, this.#formatterOptions)
-      if (instanceOnDisk !== currentFormatted) {
-        console.log(
-          `Singleton instance of entity ${styleText("cyan", entityName)} is not formatted correctly.`,
-        )
-        counter++
-      }
-      total++
-    }, true)
-
-    if (counter === 0) {
-      console.log(
-        styleText(
-          "green",
-          `All ${total.toFixed()} instance${total === 1 ? "" : "s"} are formatted correctly`,
-        ),
-      )
-      return true
-    } else {
-      console.error(
-        styleText(
-          "red",
-          `${counter.toFixed()} instance${counter === 1 ? "" : "s"} of ${total.toFixed()} instance${total === 1 ? "" : "s"} are not formatted correctly`,
-          {
-            stream: stderr,
-          },
-        ),
-      )
-      return false
-    }
-  }
-
-  /**
-   * Reloads the data from disk into memory.
-   */
-  async sync(): Promise<void> {
-    debug("Syncing with disk ...")
-    const { data, referencesToInstances } = await initData(
-      this.#dataRootPath,
-      this.#schema,
-      this.#locales,
-      this.#git,
-      undefined,
-      false,
-    )
-
-    this.#data = data
-    this.#referencesToInstances = referencesToInstances
-    debug("Synced with disk")
   }
 
   /**
@@ -932,17 +422,17 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     this.#locked = true
 
     try {
-      const getEntity = this.#schema.getEntity.bind(this.#schema)
-      const getSingletonEntity = this.#schema.getSingletonEntity.bind(this.#schema)
+      const getEntity = this.schema.getEntity.bind(this.schema)
+      const getSingletonEntity = this.schema.getSingletonEntity.bind(this.schema)
 
       const [txn, res] = fn(
         new Transaction({
-          data: this.#data,
+          data: this._data,
           getEntity,
           getSingletonEntity,
-          referencesToInstances: this.#referencesToInstances,
+          referencesToInstances: this._referencesToInstances,
           validate: this.#strucurallyValidateInstance.bind(this),
-          localeEntity: this.#schema.localeEntity,
+          localeEntity: this.schema.localeEntity,
           steps: [],
         }),
       )
@@ -972,7 +462,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       }
 
       debug("Applying changes to disk ...")
-      const diskResult = await applyStepsToDisk(this.#dataRootPath, steps, this.#formatterOptions)
+      const diskResult = await applyStepsToDisk(this.dataRootPath, steps, this._formatterOptions)
 
       if (isError(diskResult)) {
         debug("Error applying changes to disk: %s", diskResult.error.message)
@@ -986,19 +476,19 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         const status = await this.#git.client.status()
         const newDbWithUpdatedGit = attachGitStatusToDatabaseInMemory(
           newData,
-          this.#dataRootPath,
+          this.dataRootPath,
           this.#git.root,
           status,
         )
         debug("Git status updated")
 
-        this.#data = newDbWithUpdatedGit
+        this._data = newDbWithUpdatedGit
       } else {
         debug("No git repository, skipping git status update")
-        this.#data = newData
+        this._data = newData
       }
 
-      this.#referencesToInstances = newRefs
+      this._referencesToInstances = newRefs
 
       this.#locked = false
       debug("Transaction successful, released lock")
@@ -1023,7 +513,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   ): Promise<InstanceContainer<Entity<T, E>>> {
     const res = await this.runTransaction(txn =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      txn.createInstance(this.#schema.getEntity(entityName)!, content, id),
+      txn.createInstance(this.schema.getEntity(entityName)!, content, id),
     )
 
     return res as InstanceContainer<Entity<T, E>>
@@ -1041,7 +531,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   ): Promise<InstanceContainer<Entity<T, E>>> {
     const res = await this.runTransaction(txn =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      txn.updateInstance(this.#schema.getEntity(entityName)!, id, content),
+      txn.updateInstance(this.schema.getEntity(entityName)!, id, content),
     )
 
     return res as InstanceContainer<Entity<T, E>>
@@ -1055,7 +545,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   async deleteInstance<E extends EntityName<T>>(entityName: E, id: string): Promise<Entity<T, E>> {
     const res = await this.runTransaction(txn =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      txn.deleteInstance(this.#schema.getEntity(entityName)!, id),
+      txn.deleteInstance(this.schema.getEntity(entityName)!, id),
     )
 
     return res.content as Entity<T, E>
@@ -1073,7 +563,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   ): Promise<SingletonInstanceContainer<SingletonEntity<T, E>>> {
     const res = await this.runTransaction(txn =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      txn.createSingletonInstance(this.#schema.getSingletonEntity(entityName)!, content),
+      txn.createSingletonInstance(this.schema.getSingletonEntity(entityName)!, content),
     )
 
     return res as SingletonInstanceContainer<SingletonEntity<T, E>>
@@ -1090,7 +580,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   ): Promise<SingletonInstanceContainer<SingletonEntity<T, E>>> {
     const res = await this.runTransaction(txn =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      txn.updateSingletonInstance(this.#schema.getSingletonEntity(entityName)!, content),
+      txn.updateSingletonInstance(this.schema.getSingletonEntity(entityName)!, content),
     )
 
     return res as SingletonInstanceContainer<SingletonEntity<T, E>>
@@ -1106,7 +596,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   ): Promise<SingletonEntity<T, E>> {
     const res = await this.runTransaction(txn =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      txn.deleteSingletonInstance(this.#schema.getSingletonEntity(entityName)!),
+      txn.deleteSingletonInstance(this.schema.getSingletonEntity(entityName)!),
     )
 
     return res.content as SingletonEntity<T, E>
@@ -1126,7 +616,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     return this.runTransaction(txn => [
       txn.reorderAllInstancesOfEntity(
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        typeof entityName === "string" ? this.#schema.getEntity(entityName)! : entityName,
+        typeof entityName === "string" ? this.schema.getEntity(entityName)! : entityName,
         newOrder,
       ),
       undefined,
@@ -1148,200 +638,11 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     return this.runTransaction(txn =>
       txn.reorderInstanceOfEntity(
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        typeof entityName === "string" ? this.#schema.getEntity(entityName)! : entityName,
+        typeof entityName === "string" ? this.schema.getEntity(entityName)! : entityName,
         instanceId,
         newIndex,
       ),
     )
-  }
-
-  /**
-   * Retrieves an instance of the specified entity by its identifier.
-   */
-  getInstanceOfEntityById<E extends EntityName<T>>(
-    ...args: IdArgsVariant<T["entityMap"], E>
-  ): T["entityMap"][E] | undefined {
-    return this.#data.getInstanceContainerOfEntityById(...args)?.content
-  }
-
-  /**
-   * Retrieves the instance container of the specified entity by its identifier.
-   */
-  getInstanceContainerOfEntityById<E extends EntityName<T>>(
-    ...args: IdArgsVariant<T["entityMap"], E>
-  ): InstanceContainer<T["entityMap"][E]> | undefined {
-    return this.#data.getInstanceContainerOfEntityById(...args)
-  }
-
-  /**
-   * Retrieves the overview of an instance of the specified entity by its identifier.
-   */
-  getInstanceOverviewOfEntityById(
-    ...args: IdArgsVariant<T["entityMap"]>
-  ): InstanceContainerOverview | undefined {
-    return getInstanceOverview(
-      this.getInstanceContainerOfEntityById.bind(this),
-      this.getAllChildInstanceContainersForParent.bind(this),
-      this.#schema.getEntity.bind(this.#schema),
-      this.#locales,
-      args,
-    )
-  }
-
-  /**
-   * Retrieves all instances of the specified entity.
-   */
-  getAllInstancesOfEntity<E extends EntityName<T>>(entityName: E): Entity<T, E>[] {
-    return this.#data.getAllInstanceContainersOfEntity(entityName).map(ic => ic.content)
-  }
-
-  /**
-   * Retrieves all instance containers of the specified entity.
-   */
-  getAllInstanceContainersOfEntity<E extends EntityName<T>>(
-    entityName: E,
-  ): InstanceContainer<Entity<T, E>>[] {
-    return this.#data.getAllInstanceContainersOfEntity(entityName)
-  }
-
-  /**
-   * Retrieves all instance overviews of the specified entity.
-   */
-  getAllInstanceOverviewsOfEntity(
-    entity: EntityDecl<EntityName<T>> | EntityName<T>,
-  ): InstanceContainerOverview[] {
-    const normEntity = typeof entity === "object" ? entity : this.#schema.getEntity(entity)
-
-    if (!normEntity) {
-      return []
-    }
-
-    return getInstanceOverviewsByEntityName<T["entityMap"], T["childEntityMap"]>(
-      this.getInstanceContainerOfEntityById.bind(this),
-      this.getAllChildInstanceContainersForParent.bind(this),
-      this.#schema.getEntity.bind(this.#schema),
-      normEntity,
-      this.getAllInstanceContainersOfEntity(normEntity.name),
-      this.#locales,
-    )
-  }
-
-  /**
-   * Retrieves an instance of the specified entity by its identifier.
-   */
-  getSingletonInstanceOfEntity<E extends SingletonEntityName<T>>(
-    entityName: E,
-  ): T["singletonEntityMap"][E] | undefined {
-    return this.#data.getSingletonInstanceOfEntity(entityName)
-  }
-
-  /**
-   * Retrieves the instance container of the specified entity by its identifier.
-   */
-  getSingletonInstanceContainerOfEntity<E extends SingletonEntityName<T>>(
-    entityName: E,
-  ): SingletonInstanceContainer<T["singletonEntityMap"][E]> | undefined {
-    return this.#data.getSingletonInstanceContainerOfEntity(entityName)
-  }
-
-  /**
-   * Counts the number of instances registered for the specified entity.
-   */
-  countInstancesOfEntity(entityName: EntityName<T>): number {
-    return this.#data.countInstancesOfEntity(entityName)
-  }
-
-  /**
-   * Returns whether the singleton entity has an instance.
-   */
-  hasInstanceOfSingletonEntity(entityName: SingletonEntityName<T>): boolean {
-    return this.#data.hasInstanceOfSingletonEntity(entityName)
-  }
-
-  /**
-   * Retrieves overviews for all instances in the database, grouped by entity name.
-   */
-  getAllInstanceOverviews(): Record<EntityName<T>, InstanceContainerOverview[]> {
-    return getAllInstanceOverviewsByEntityName(
-      this.#schema.getEntity.bind(this.#schema),
-      this.#data,
-      this.#locales,
-    )
-  }
-
-  /**
-   * Retrieves all instance containers of the specified child entity for a given parent instance.
-   */
-  getAllChildInstanceContainersForParent<U extends ChildEntityName<T>>(
-    childEntityName: U,
-    parentId: ChildEntityConfig<T, U>[2],
-  ): InstanceContainer<ChildEntity<T, U>>[] {
-    return this.#data.getAllChildInstanceContainersForParent(
-      this.#schema.getEntity.bind(this.#schema),
-      childEntityName,
-      parentId,
-    )
-  }
-
-  /**
-   * Displays the name of an entity instance including its ID. If no display name is found, `undefined` is returned.
-   */
-  getDisplayName(...args: IdArgsVariant<T["entityMap"]>): string | undefined {
-    return getDisplayName(
-      this.#schema.getEntity.bind(this.#schema),
-      this.#locales,
-      this.#data,
-      ...args,
-    )
-  }
-
-  /**
-   * Displays the name of an entity instance including its ID. If no display name is found, only the ID is returned.
-   */
-  getDisplayNameWithId(...args: IdArgsVariant<T["entityMap"]>): string {
-    return getDisplayNameWithId(
-      this.#schema.getEntity.bind(this.#schema),
-      this.#locales,
-      this.#data,
-      ...args,
-    )
-  }
-
-  /**
-   * Checks if a given instance is referenced by other instances in the database.
-   *
-   * If `otherInstancesToDelete` is provided, those instances will be excluded from the check. This can be useful when planning to delete multiple instances at once and wanting to ignore references from those instances.
-   */
-  isReferencedByOtherInstances(instance: string, otherInstancesToDelete?: string[]): boolean {
-    return isReferencedByOtherInstances(
-      this.#referencesToInstances,
-      instance,
-      otherInstancesToDelete,
-    )
-  }
-
-  /**
-   * The configured locales for this TSONDB instance.
-   */
-  get locales(): string[] {
-    return this.#locales
-  }
-
-  /**
-   * Sets the locales for this TSONDB instance.
-   *
-   * The provided locales must exist in the database if a locale entity is defined in the schema.
-   */
-  setLocales(locales: string[]): void {
-    checkLocales(this.#schema, this.#data, locales)
-    this.#locales = locales
-  }
-
-  /**
-   * The loaded schema for this TSONDB instance.
-   */
-  get schema(): Schema<T> {
-    return this.#schema
   }
 
   /**
@@ -1356,108 +657,6 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
    */
   isGitRepo(): this is TSONDBWithGit<T> {
     return this.#git !== undefined
-  }
-
-  /**
-   * Searches for instances matching the provided query in their ID or display name.
-   *
-   * The results are sorted by relevance. A custom relevance score function can be provided.
-   */
-  search(
-    query: string,
-    options: Partial<{
-      getRelevanceScore: <E extends EntityName<T>>(args: {
-        entityName: E
-        id: string
-        content: Entity<T, E>
-        displayName: string
-        displayNameLocaleId: string | undefined
-        query: string
-        queryLowerCase: string
-      }) => number
-    }> = {},
-  ): [string, InstanceContainerOverview][] {
-    if (!query || query.trim().length === 0) {
-      return []
-    }
-
-    const {
-      getRelevanceScore = ({ id, displayName }) => {
-        const searchableName = displayName.toLowerCase()
-        return id.startsWith(query) || searchableName.startsWith(lowerCaseQuery)
-          ? 1
-          : id.includes(query) || searchableName.includes(lowerCaseQuery)
-            ? 0.5
-            : 0
-      },
-    } = options
-
-    const lowerCaseQuery = query.toLowerCase()
-
-    return this.#data
-      .getAllInstances()
-      .flatMap(([entityName, instances]) => {
-        const entity = this.#schema.getEntity(entityName)
-
-        if (entity && isEntityDeclWithParentReference(entity)) {
-          return []
-        }
-
-        return instances
-          .map((instance): [string, InstanceContainerOverview & { relevance: number }] => {
-            const { name, localeId } = getDisplayNameFromEntityInstance(
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              entity!,
-              instance,
-              this.#schema.getEntity.bind(this.#schema),
-              this.getInstanceContainerOfEntityById.bind(this),
-              this.getAllChildInstanceContainersForParent.bind(this),
-              this.#locales,
-            )
-
-            return [
-              entityName,
-              {
-                id: instance.id,
-                displayName: name,
-                displayNameLocaleId: localeId,
-                relevance: getRelevanceScore({
-                  entityName,
-                  id: instance.id,
-                  content: instance.content as Entity<T, EntityName<T>>,
-                  displayName: name,
-                  displayNameLocaleId: localeId,
-                  query,
-                  queryLowerCase: lowerCaseQuery,
-                }),
-              },
-            ]
-          })
-          .filter(instance => instance[1].relevance > 0)
-      })
-      .toSorted(
-        reduceCompare(
-          on(item => item[1].relevance, compareNumber),
-          (a, b) => a[1].displayName.localeCompare(b[1].displayName, a[1].displayNameLocaleId),
-        ),
-      )
-  }
-
-  /**
-   * Retrieves the name of the entity for a given instance ID. If no instance with the provided ID is found, `undefined` is returned.
-   */
-  getEntityNameOfInstanceId(id: string): string | undefined {
-    return this.#data.getEntityNameOfInstanceId(id)
-  }
-
-  /**
-   * Compresses the entire database into a single JSON file at the specified path.
-   *
-   * Instead of storing each instance in its own file, this method serializes the entire database into a single JSON file. This can be useful for backup, transfer or archiving purposes. The resulting file contains all instances organized by entity names. No spaces or indentation are used in the JSON output to minimize file size.
-   * @param path The file path where the compressed database will be saved.
-   */
-  async compressToSingleFile(path: string): Promise<void> {
-    await writeFile(path, JSON.stringify(this.#data), "utf-8")
   }
 
   /**
@@ -1480,10 +679,29 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     }
   }
 
+  /**
+   * Compresses the entire database into a single JSON file at the specified path.
+   *
+   * Instead of storing each instance in its own file, this method serializes the entire database into a single JSON file. This can be useful for backup, transfer or archiving purposes. The resulting file contains all instances organized by entity names. No spaces or indentation are used in the JSON output to minimize file size.
+   * @param path The file path where the compressed database will be saved.
+   * @param indentation Optional. If provided, the JSON output will be formatted with the specified number of spaces for indentation. If not provided, the output will be minified without any extra spaces.
+   */
+  async compressToSingleFile(path: string, indentation?: number): Promise<void> {
+    await writeFile(
+      path,
+      JSON.stringify(
+        createCompressedDatabaseFile(this._data, this.schema.version),
+        undefined,
+        indentation,
+      ),
+      "utf-8",
+    )
+  }
+
   serve(config: ServerOptions, callback?: (error?: NodeJS.ErrnoException) => void): void {
     createServer(
       this,
-      { serverOptions: config, validationOptions: this.#validationOptions },
+      { serverOptions: config, validationOptions: this._validationOptions },
       callback,
     )
   }

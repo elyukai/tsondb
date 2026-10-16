@@ -1,3 +1,4 @@
+import { partition } from "@elyukai/utils/array/groups"
 import { reorder } from "@elyukai/utils/array/modify"
 import { mapAsync } from "@elyukai/utils/async"
 import { Dictionary } from "@elyukai/utils/dictionary"
@@ -32,6 +33,7 @@ import {
   type RegisteredEntityMap,
   type RegisteredSingletonEntityMap,
 } from "../schema/generatedTypeHelpers.ts"
+import { isEntityPair, type CompressedDatabaseFile } from "../shared.ts"
 import { getPathToSingletonInstance, readSingletonInstance } from "./files.ts"
 
 type DatabaseDict<EM extends AnyEntityMap> = Dictionary<
@@ -131,6 +133,42 @@ export class DatabaseInMemory<
           (pair): pair is [(typeof pair)[0], NonNullable<(typeof pair)[1]>] =>
             pair[1] !== undefined,
         ),
+      ),
+    )
+  }
+
+  static async loadFromCompressedFile<
+    EM extends AnyEntityMap = RegisteredEntityMap,
+    SEM extends AnySingletonEntityMap = RegisteredSingletonEntityMap,
+  >(
+    file: CompressedDatabaseFile<EM, SEM>,
+    isEntityName: (
+      entityName: Extract<keyof EM | keyof SEM, string>,
+    ) => entityName is Extract<keyof EM, string>,
+  ): Promise<DatabaseInMemory<EM, SEM>> {
+    const dataEntries = Object.entries(file.data) as (
+      | [Extract<keyof EM, string>, Record<string, InstanceContent>]
+      | [Extract<keyof SEM, string>, InstanceContent]
+    )[]
+
+    const [entityEntries, singletonEntityEntries] = partition(dataEntries, pair =>
+      isEntityPair<EM, SEM>(pair, isEntityName),
+    ) as [
+      [Extract<keyof EM, string>, Record<string, InstanceContent>][],
+      [Extract<keyof SEM, string>, InstanceContent][],
+    ]
+
+    return new DatabaseInMemory(
+      Dictionary.fromEntries(
+        entityEntries.map(([entityName, instances]) => [
+          entityName,
+          Dictionary.fromEntries(
+            Object.entries(instances).map(([id, content]) => [id, { id, content }] as const),
+          ),
+        ]),
+      ),
+      Dictionary.fromEntries(
+        singletonEntityEntries.map(([entityName, content]) => [entityName, { content }] as const),
       ),
     )
   }
