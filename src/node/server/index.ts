@@ -43,14 +43,11 @@ export const createServer = <T extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
   db: TSONDB<T>,
   config: Omit<ServerConfig<T>, "locales">,
 ): void => {
-  const {
-    serverOptions: options,
-    homeLayoutSections,
-    validationOptions,
-    customAssetsPath,
-    customStylesheetPath,
-  } = config
-  const { port } = { ...defaultOptions, ...options }
+  const { serverOptions: options, validationOptions } = config
+  const { port, homeLayoutSections, customAssetsPath, customStylesheetPath } = {
+    ...defaultOptions,
+    ...options,
+  }
 
   const app = express()
 

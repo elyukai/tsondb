@@ -17,9 +17,6 @@ export type Config<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = {
    */
   locales?: string[]
   dataRootPath?: string
-  homeLayoutSections?: HomeLayoutSection[]
-  customStylesheetPath?: string
-  customAssetsPath?: string
   validationOptions?: Partial<ValidationOptions>
   formattingOptions?: Partial<FormatterOptions>
 }
@@ -33,6 +30,9 @@ export type FormatterOptions = {
 
 export type ServerOptions = {
   port: number
+  homeLayoutSections?: HomeLayoutSection[]
+  customStylesheetPath?: string
+  customAssetsPath?: string
 }
 
 export type HomeLayoutSection = {
@@ -78,10 +78,7 @@ export const validateConfigForData: (config: Config) => asserts config is DataCo
 export type ServerConfig<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = DataConfig<T> & {
   serverOptions?: ServerOptions
   locales: string[]
-  homeLayoutSections?: HomeLayoutSection[]
   validationOptions?: Partial<ValidationOptions>
-  customStylesheetPath?: string
-  customAssetsPath?: string
   formattingOptions?: Partial<FormatterOptions>
 }
 
