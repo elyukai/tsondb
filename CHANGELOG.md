@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.0](https://github.com/elyukai/tsondb/compare/v0.22.0...v0.23.0) (2026-10-16)
+
+### ⚠ BREAKING CHANGES
+
+* integrate createServer into TSONDB class
+* move server-exclusive configs in server options
+
+* integrate createServer into TSONDB class ([df79767](https://github.com/elyukai/tsondb/commit/df797676c9530f53ba9eb24149e72838bee3de81))
+* move server-exclusive configs in server options ([1172a50](https://github.com/elyukai/tsondb/commit/1172a50e58625bf04921eaaba7729961e00fe788))
+
+### Features
+
+* read-only database runtime ([7d8e3ac](https://github.com/elyukai/tsondb/commit/7d8e3ac842a3c5f0fbabccf6a4bb7f02c43b3425))
+
 ## [0.22.0](https://github.com/elyukai/tsondb/compare/v0.21.11...v0.22.0) (2026-10-15)
 
 ### ⚠ BREAKING CHANGES
