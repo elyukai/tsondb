@@ -2,16 +2,14 @@ import Debug from "debug"
 import express from "express"
 import { findPackageJSON } from "node:module"
 import { dirname, join } from "node:path"
-import type { HomeLayoutSection, ServerConfig } from "../config.ts"
+import type { HomeLayoutSection, ServerOptions } from "../config.ts"
 import type { DefaultTSONDBTypes, TSONDB, ValidationOptions } from "../index.ts"
 import { api } from "./api/index.ts"
 import { getLocalesFromRequest } from "./utils/locales.ts"
 
 const debug = Debug("tsondb:server")
 
-export type ServerOptions = {
-  port: number
-}
+export type { ServerOptions }
 
 const defaultOptions: ServerOptions = {
   port: 3000,
@@ -41,7 +39,8 @@ const staticNodeModule = (moduleName: string) => {
 
 export const createServer = <T extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
   db: TSONDB<T>,
-  config: Omit<ServerConfig<T>, "locales">,
+  config: { serverOptions?: ServerOptions; validationOptions?: Partial<ValidationOptions> },
+  callback?: (error?: NodeJS.ErrnoException) => void,
 ): void => {
   const { serverOptions: options, validationOptions } = config
   const { port, homeLayoutSections, customAssetsPath, customStylesheetPath } = {
@@ -122,5 +121,6 @@ export const createServer = <T extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
     } else {
       debug(`server listening on http://localhost:${port.toString()}`)
     }
+    callback?.(error)
   })
 }

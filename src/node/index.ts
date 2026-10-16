@@ -28,7 +28,7 @@ import type {
   SingletonInstanceContainer,
 } from "../shared/utils/instances.ts"
 import { parallelizeErrors } from "../shared/utils/validation.ts"
-import type { FormatterOptions } from "./config.ts"
+import type { FormatterOptions, ServerOptions } from "./config.ts"
 import { Git } from "./git.js"
 import type { Output } from "./output.ts"
 import { getDisplayName, getDisplayNameWithId } from "./schema/detached.ts"
@@ -53,6 +53,7 @@ import {
   type ReferenceValidator,
   type ValidationContext,
 } from "./schema/treeOperations/validation.ts"
+import { createServer } from "./server/index.ts"
 import { Transaction } from "./transaction.ts"
 import { checkCustomConstraintsForAllEntities } from "./utils/customConstraints.ts"
 import { DatabaseInMemory } from "./utils/databaseInMemory.ts"
@@ -1478,6 +1479,14 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       }
     }
   }
+
+  serve(config: ServerOptions, callback?: (error?: NodeJS.ErrnoException) => void): void {
+    createServer(
+      this,
+      { serverOptions: config, validationOptions: this.#validationOptions },
+      callback,
+    )
+  }
 }
 
 export type TSONDBWithGit<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = TSONDB<T> & {
@@ -1485,5 +1494,3 @@ export type TSONDBWithGit<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> = T
 }
 
 export type { Config } from "./config.ts"
-
-export { createServer } from "./server/index.ts"
