@@ -29,7 +29,7 @@ export type FormatterOptions = {
 }
 
 export type ServerOptions = {
-  port: number
+  port?: number
   homeLayoutSections?: HomeLayoutSection[]
   customStylesheetPath?: string
   customAssetsPath?: string

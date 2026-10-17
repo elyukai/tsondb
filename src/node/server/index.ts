@@ -11,9 +11,7 @@ const debug = Debug("tsondb:server")
 
 export type { ServerOptions }
 
-const defaultOptions: ServerOptions = {
-  port: 3000,
-}
+const DEFAULT_PORT = 3000
 
 export interface TSONDBRequestLocals {
   db: TSONDB
@@ -43,10 +41,12 @@ export const createServer = <T extends DefaultTSONDBTypes = DefaultTSONDBTypes>(
   callback?: (error?: NodeJS.ErrnoException) => void,
 ): void => {
   const { serverOptions: options, validationOptions } = config
-  const { port, homeLayoutSections, customAssetsPath, customStylesheetPath } = {
-    ...defaultOptions,
-    ...options,
-  }
+  const {
+    port = DEFAULT_PORT,
+    homeLayoutSections,
+    customAssetsPath,
+    customStylesheetPath,
+  } = options ?? {}
 
   const app = express()
 

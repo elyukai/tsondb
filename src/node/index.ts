@@ -698,10 +698,17 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> extends R
     )
   }
 
-  serve(config: ServerOptions, callback?: (error?: NodeJS.ErrnoException) => void): void {
+  serve(
+    config?:
+      | (ServerOptions & { callback?: (error?: NodeJS.ErrnoException) => void })
+      | ((error?: NodeJS.ErrnoException) => void),
+  ): void {
+    const { callback, ...otherConfig } =
+      typeof config === "function" ? { callback: config } : (config ?? {})
+
     createServer(
       this,
-      { serverOptions: config, validationOptions: this._validationOptions },
+      { serverOptions: otherConfig, validationOptions: this._validationOptions },
       callback,
     )
   }
