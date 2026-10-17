@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.1](https://github.com/elyukai/tsondb/compare/v0.23.0...v0.23.1) (2026-10-17)
+
+### Features
+
+* optional port and options for serve method ([6de013c](https://github.com/elyukai/tsondb/commit/6de013c4e621f53feb520a76995428fa73a46938))
+
 ## [0.23.0](https://github.com/elyukai/tsondb/compare/v0.22.0...v0.23.0) (2026-10-16)
 
 ### ⚠ BREAKING CHANGES
