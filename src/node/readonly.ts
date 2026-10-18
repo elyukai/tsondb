@@ -26,7 +26,7 @@ import type { EntityDecl } from "./schema/dsl/index.ts"
 import type { IdArgsVariant } from "./schema/generatedTypeHelpers.ts"
 import { isEntityDeclWithParentReference } from "./schema/guards.ts"
 import type { Schema } from "./schema/index.ts"
-import { checkLocales, generateOutputs, initData, prepareFolders, validate } from "./shared.ts"
+import { checkLocales, generateOutputs, initData, validate } from "./shared.ts"
 import { DatabaseInMemory } from "./utils/databaseInMemory.ts"
 import {
   getAllInstanceOverviewsByEntityName,
@@ -82,11 +82,7 @@ export class ReadonlyTSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     options: TSONDBOptions<Types>,
     skipReferenceCache = false,
   ): Promise<ReadonlyTSONDB<Types>> {
-    const { entities } = options.schema
-
     debug("using data root path: %s", options.dataRootPath)
-    await prepareFolders(options.schema.version, options.dataRootPath, entities)
-    debug("prepared folders")
 
     const { localeEntity } = options.schema
 
