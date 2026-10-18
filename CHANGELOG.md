@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.2](https://github.com/elyukai/tsondb/compare/v0.23.1...v0.23.2) (2026-10-18)
+
+### Bug Fixes
+
+* export readonly database ([8c22e0b](https://github.com/elyukai/tsondb/commit/8c22e0b4329c6d63d458bff491885b36b8d0c71f))
+
 ## [0.23.1](https://github.com/elyukai/tsondb/compare/v0.23.0...v0.23.1) (2026-10-17)
 
 ### Features
