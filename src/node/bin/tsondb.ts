@@ -78,16 +78,24 @@ const passedArguments = parseArguments({
       },
     },
   },
+  options: {
+    config: {
+      name: "config",
+      alias: "c",
+      type: String,
+    },
+  },
 })
 
 // import the config
 
 const possibleConfigNames = [
+  passedArguments.options?.config,
   "tsondb.config.mts",
   "tsondb.config.ts",
   "tsondb.config.mjs",
   "tsondb.config.js",
-]
+].filter(isNotNullish)
 
 const config: Config | undefined = await (async () => {
   for (const configName of possibleConfigNames) {
