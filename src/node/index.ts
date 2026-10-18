@@ -226,7 +226,7 @@ export class TSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> extends R
     validationOptions: ValidationOptions
     formatterOptions?: Partial<FormatterOptions> | undefined
   }) {
-    super(options)
+    super({ ...options, allowCompressedFile: false })
     this.#git = options.git
     this.#gitWrapper = Lazy.of(() =>
       this.#git

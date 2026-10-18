@@ -9,17 +9,16 @@ import type {
   SingletonInstanceContainer,
 } from "../shared/utils/instances.ts"
 import type { FormatterOptions } from "./config.ts"
-import {
-  TSONDB,
-  type ChildEntity,
-  type ChildEntityConfig,
-  type ChildEntityName,
-  type DefaultTSONDBTypes,
-  type Entity,
-  type EntityName,
-  type SingletonEntityName,
-  type TSONDBOptions,
-  type ValidationOptions,
+import type {
+  ChildEntity,
+  ChildEntityConfig,
+  ChildEntityName,
+  DefaultTSONDBTypes,
+  Entity,
+  EntityName,
+  SingletonEntityName,
+  TSONDBOptions,
+  ValidationOptions,
 } from "./index.ts"
 import type { Output } from "./output.ts"
 import { getDisplayName, getDisplayNameWithId } from "./schema/detached.ts"
@@ -48,6 +47,7 @@ export class ReadonlyTSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
   #dataRootPath: string
   #schema: Schema<T>
   #locales: string[]
+  #allowCompressedFile: boolean
   protected _referencesToInstances: ReferencesToInstances
   protected _validationOptions: ValidationOptions
   protected _formatterOptions: Partial<FormatterOptions> | undefined
@@ -60,6 +60,7 @@ export class ReadonlyTSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     referencesToInstances: ReferencesToInstances
     validationOptions: ValidationOptions
     formatterOptions?: Partial<FormatterOptions> | undefined
+    allowCompressedFile: boolean
   }) {
     this.#dataRootPath = options.dataRootPath
     this._data = options.data
@@ -68,6 +69,7 @@ export class ReadonlyTSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
     this._referencesToInstances = options.referencesToInstances
     this._validationOptions = options.validationOptions
     this._formatterOptions = options.formatterOptions
+    this.#allowCompressedFile = options.allowCompressedFile
   }
 
   /**
@@ -111,6 +113,7 @@ export class ReadonlyTSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
         checkOnlyEntities: [],
         ...options.validationOptions,
       },
+      allowCompressedFile: true,
     })
 
     return db
@@ -231,7 +234,7 @@ export class ReadonlyTSONDB<T extends DefaultTSONDBTypes = DefaultTSONDBTypes> {
       undefined,
       undefined,
       false,
-      !(this instanceof TSONDB),
+      this.#allowCompressedFile,
     )
 
     this._data = data
