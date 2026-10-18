@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.3](https://github.com/elyukai/tsondb/compare/v0.23.2...v0.23.3) (2026-10-18)
+
+### Features
+
+* **cli:** compress command ([f535e3a](https://github.com/elyukai/tsondb/commit/f535e3a38fd0a3d3381cede5799b9abb7c6cfddb))
+* **cli:** config path option ([9551712](https://github.com/elyukai/tsondb/commit/955171241d2e4fc046dfd8357f1ee9b53d1b091f))
+
+### Bug Fixes
+
+* no folder preparation for readonly database ([660cdde](https://github.com/elyukai/tsondb/commit/660cdde62ff8371ad9377c79c2f189efe7ee82e5))
+
 ## [0.23.2](https://github.com/elyukai/tsondb/compare/v0.23.1...v0.23.2) (2026-10-18)
 
 ### Bug Fixes
