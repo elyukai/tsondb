@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { isNotNullish } from "@elyukai/utils/nullable"
 import { omitUndefinedKeys } from "@elyukai/utils/object"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import Debug from "debug"
@@ -74,6 +75,21 @@ const passedArguments = parseArguments({
           name: "entity",
           alias: "e",
           type: String,
+        },
+      },
+    },
+    compress: {
+      name: "compress",
+      options: {
+        path: {
+          name: "path",
+          alias: "p",
+          type: String,
+        },
+        indentation: {
+          name: "indentation",
+          alias: "i",
+          type: Number,
         },
       },
     },
@@ -235,6 +251,16 @@ if (commandName === "generate") {
       for (const instance of instances) {
         console.log(`${styleText(["yellow"], instance.id)}  ${instance.displayName}`)
       }
+      break
+    }
+    case "compress": {
+      debug(`running command: compress`)
+      const { path, indentation } = passedArguments.command.options ?? {}
+      if (path === undefined) {
+        throw new Error("No path specified for compress command.")
+      }
+      const db = await createDB(config, config.validationOptions, true)
+      await db.compressToSingleFile(join(cwd(), path), indentation)
       break
     }
     default:
