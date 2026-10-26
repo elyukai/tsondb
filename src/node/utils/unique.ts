@@ -18,7 +18,7 @@ const printUniqueConstraint = (constraint: UniqueConstraint, values: unknown[]) 
     .map((elem, i) =>
       "keyPath" in elem
         ? renderKeyPath(elem.keyPath) +
-          (elem.keyPathFallback ? "|" + renderKeyPath(elem.keyPathFallback) : "")
+          (elem.keyPathFallback ? `|${renderKeyPath(elem.keyPathFallback)}` : "")
         : `${renderKeyPath(elem.entityMapKeyPath)}[${
             Array.isArray(values[i]) ? (values[i][0] as string) : "..."
           }].${

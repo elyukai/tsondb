@@ -36,6 +36,7 @@
     "release:sign": "commit-and-tag-version --sign --signoff"
   },
   "devDependencies": {
+    "@elyukai/oxc-config": "^0.1.4",
     "@rsbuild/plugin-preact": "^2.1.0",
     "@rslib/core": "^1.0.3",
     "@types/debug": "^4.1.13",
@@ -49,15 +50,11 @@
   },
   "dependencies": {
     "@elyukai/markdown": "^0.4.0",
-    "@elyukai/oxc-config": "^0.1.2",
     "@elyukai/utils": "^0.3.11",
     "@preact/signals": "^2.11.3",
     "debug": "^4.4.3",
     "express": "^5.2.1",
     "messageformat": "^4.0.0",
-    "oxfmt": "^0.72.0",
-    "oxlint": "^1.87.0",
-    "oxlint-tsgolint": "^7.0.2003",
     "preact": "^11.0.0",
     "preact-iso": "^2.12.2",
     "semver": "^7.8.5",
