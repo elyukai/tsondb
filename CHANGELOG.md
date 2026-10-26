@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.4](https://github.com/elyukai/tsondb/compare/v0.23.3...v0.23.4) (2026-10-26)
+
+### Bug Fixes
+
+* changed export name from preact ([c0239d3](https://github.com/elyukai/tsondb/commit/c0239d36614292cc1870dbf899e87b361ca30da4))
+
 ## [0.23.3](https://github.com/elyukai/tsondb/compare/v0.23.2...v0.23.3) (2026-10-18)
 
 ### Features
