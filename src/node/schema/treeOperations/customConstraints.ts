@@ -19,7 +19,7 @@ export const checkCustomConstraintsInEntityDecl = (
       (
         node.customConstraints?.({ ...helpers, instanceId: value[0], instanceContent: value[1] }) ??
         []
-      ).concat(checkNestedCustomConstraints(node.type.value, value, helpers)),
+      ).concat(checkNestedCustomConstraints(node.type.value, value[1], helpers)),
     `in entity "${node.name}" with id "${value[0]}"`,
   )
 
