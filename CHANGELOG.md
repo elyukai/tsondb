@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.5](https://github.com/elyukai/tsondb/compare/v0.23.4...v0.23.5) (2026-11-03)
+
+### Bug Fixes
+
+* base value for constraint checks ([97e89a3](https://github.com/elyukai/tsondb/commit/97e89a34046f8fc6676193e6cff7e717832b76c5))
+* type argument resolution for custom contraints ([16777ff](https://github.com/elyukai/tsondb/commit/16777ffd873493849f7956f6e6234908b5756a78))
+* typed nested contraint value key ([f6795cd](https://github.com/elyukai/tsondb/commit/f6795cd49737b4d388f578c2e30333a72131dc33))
+
 ## [0.23.4](https://github.com/elyukai/tsondb/compare/v0.23.3...v0.23.4) (2026-10-26)
 
 ### Bug Fixes
