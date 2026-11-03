@@ -27,7 +27,10 @@ const formatTranslationObjectValue = (
       )
     : value
 
-const resolveNestedTypeArguments = (type: Type, typeArguments: Record<string, Type>): Type => {
+export const resolveNestedTypeArguments = (
+  type: Type,
+  typeArguments: Record<string, Type>,
+): Type => {
   switch (type.kind) {
     case NodeKind.TypeArgumentType:
       return typeArguments[type.argument.name] ?? type

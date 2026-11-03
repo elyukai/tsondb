@@ -38,6 +38,14 @@ export const wrapErrorsIfAny = (message: string, errors: Error[]): AggregateErro
   return new AggregateError(errors, message)
 }
 
+export const wrapThrownError = <R>(fn: () => R, wrapperMessage: string): R => {
+  try {
+    return fn()
+  } catch (error) {
+    throw new Error(wrapperMessage, { cause: error })
+  }
+}
+
 export class HTTPError extends Error {
   public code: number
   constructor(code: number, message: string) {
