@@ -116,7 +116,7 @@ export type TypedNestedCustomConstraint<
   CEM extends AnyChildEntityMap = RegisteredChildEntityMap,
 > = (
   params: {
-    instanceContent: RegisteredEnumOrTypeAlias<Name>
+    value: RegisteredEnumOrTypeAlias<Name>
   } & CustomConstraintHelpers<EM, CEM>,
 ) => string[]
 
