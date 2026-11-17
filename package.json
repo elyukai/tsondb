@@ -18,6 +18,7 @@
     "./readonly": "./dist/src/node/readonly.js",
     "./config": "./dist/src/node/config.js",
     "./renderer/jsonschema": "./dist/src/node/renderers/jsonschema/index.js",
+    "./renderer/swift": "./dist/src/node/renderers/swift/index.js",
     "./renderer/ts": "./dist/src/node/renderers/ts/index.js",
     "./schema": "./dist/src/node/schema/index.js",
     "./schema/dsl": "./dist/src/node/schema/dsl/index.js",
@@ -53,7 +54,7 @@
   },
   "dependencies": {
     "@elyukai/markdown": "^0.4.0",
-    "@elyukai/utils": "^0.3.11",
+    "@elyukai/utils": "^0.3.16",
     "@preact/signals": "^2.11.3",
     "debug": "^4.4.3",
     "express": "^5.3.0",

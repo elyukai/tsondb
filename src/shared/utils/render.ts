@@ -66,5 +66,8 @@ export const getIndentation = (spaces: number, indentLevel: number): string =>
 
 export const indent = (spaces: number, indentLevel: number, text: RenderResult): RenderResult => [
   text[0],
-  prefixLines(getIndentation(spaces, indentLevel), text[1]),
+  indentPlain(spaces, indentLevel, text[1]),
 ]
+
+export const indentPlain = (spaces: number, indentLevel: number, text: string): string =>
+  prefixLines(getIndentation(spaces, indentLevel), text)
