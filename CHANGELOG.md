@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.10](https://github.com/elyukai/tsondb/compare/v0.23.9...v0.23.10) (2026-11-17)
+
+### Bug Fixes
+
+* **swift-renderer:** visibility of explicit nested entity map type dictionary ([f5122e6](https://github.com/elyukai/tsondb/commit/f5122e6d429d0f73aa4640901967f6edd7534c9a))
+
 ## [0.23.9](https://github.com/elyukai/tsondb/compare/v0.23.8...v0.23.9) (2026-11-17)
 
 ### Bug Fixes
