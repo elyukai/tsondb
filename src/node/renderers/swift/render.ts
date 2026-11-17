@@ -633,6 +633,13 @@ ${renderVisibility(options)}protocol ChildEntity {
 }`
     : ""
 
+const formatWhitespace = (str: string): string => {
+  const withoutTrailingWhitespace = str.replace(/ *\n/gu, EOL)
+  return withoutTrailingWhitespace.endsWith(EOL)
+    ? withoutTrailingWhitespace
+    : `${withoutTrailingWhitespace}${EOL}`
+}
+
 export const renderUniqueHelpers = (
   options: Partial<SwiftRendererOptions> = defaultOptions,
   entities: readonly EntityDecl[],
@@ -646,7 +653,7 @@ export const renderUniqueHelpers = (
     generateChildEntityProtocol(finalOptions),
     decodableHelpers(finalOptions),
   ]
-  return `import Foundation${types.join("")}`.replaceAll("\n", EOL)
+  return formatWhitespace(`import Foundation${types.join("")}`)
 }
 
 export const render = (
@@ -657,8 +664,7 @@ export const render = (
   singleFile: boolean,
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
-  return `${singleFile ? renderUniqueHelpers(finalOptions, entities, singletonEntities) : `import Foundation`}
-
+  return formatWhitespace(`${singleFile ? renderUniqueHelpers(finalOptions, entities, singletonEntities) : `import Foundation\n`}
 ${renderDeclarations(
   finalOptions,
   flatMapAuxiliaryDecls((parentNodes, node, existingDecls) => {
@@ -674,5 +680,5 @@ ${renderDeclarations(
 
     return undefined
   }, declarations),
-)}`.replaceAll("\n", EOL)
+)}`)
 }
