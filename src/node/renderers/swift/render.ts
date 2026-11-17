@@ -451,13 +451,13 @@ const renderExplicitNestedEntityMapTypes = (options: SwiftRendererOptions) =>
       ([entityName, { comment, typeName }]) => `
 
 ${renderDocumentation(comment)}${renderVisibility(options)}struct ${typeName}<T${renderTypeConstraints(options, "parameters", "Equatable", "Sendable")}>${renderTypeConstraints(options, "struct", "Equatable", "Sendable")} {
-  let dict: [${entityName}.ID: T]${
+  ${renderVisibility(options)}let map: [${entityName}.ID: T]${
     options.generateDecodableConformance
       ? `
 
   ${renderVisibility(options)}init(from decoder: Decoder) throws {
     let container = try decoder.singleValueContainer()
-    self.dict = try container.decode([${entityName}.ID: T].self)
+    self.map = try container.decode([${entityName}.ID: T].self)
   }`
       : ""
   }
