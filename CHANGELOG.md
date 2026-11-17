@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.8](https://github.com/elyukai/tsondb/compare/v0.23.7...v0.23.8) (2026-11-17)
+
+### Bug Fixes
+
+* **swift-renderer:** apply visibility to all properties in database ([429b80a](https://github.com/elyukai/tsondb/commit/429b80a1391e3f82493585c3add5324ea8dcf1eb))
+
 ## [0.23.7](https://github.com/elyukai/tsondb/compare/v0.23.6...v0.23.7) (2026-11-17)
 
 ### Bug Fixes
