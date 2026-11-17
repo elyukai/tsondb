@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.9](https://github.com/elyukai/tsondb/compare/v0.23.8...v0.23.9) (2026-11-17)
+
+### Bug Fixes
+
+* **swift-renderer:** locale has no identifier of type UUID ([67b3d74](https://github.com/elyukai/tsondb/commit/67b3d741265fb1f6d951960ff76ed004bf32c1a2))
+
 ## [0.23.8](https://github.com/elyukai/tsondb/compare/v0.23.7...v0.23.8) (2026-11-17)
 
 ### Bug Fixes
