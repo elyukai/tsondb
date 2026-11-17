@@ -139,7 +139,7 @@ const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (opti
     .filter(([_key, config]) => !isFinalChildEntitiesType(config.type))
     .map(([name, config]) => {
       const safeName = makeSafeIdentifier(toCamelCase(name))
-      return `${renderDocumentation(config.comment, config.isDeprecated)}let ${safeName}: ${renderType(options, decl, config.type)}${
+      return `${renderDocumentation(config.comment, config.isDeprecated)}${renderVisibility(options)}let ${safeName}: ${renderType(options, decl, config.type)}${
         config.isRequired ? "" : "?"
       }`
     })
@@ -216,11 +216,11 @@ const renderEnumType: RenderFn<EnumType> = (options, decl, type) =>
 
 const renderChildEntitiesType: RenderFn<ChildEntitiesType> = () => `never`
 
-const renderTranslationObjectType: RenderFn<TranslationObjectType> = (_options, _decl, type) =>
+const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, _decl, type) =>
   Object.entries(type.properties)
     .map(
       ([name, _config]) =>
-        `let \`${name.replace('"', '\\"')}\`: String${type.allKeysAreRequired ? "" : "?"}`,
+        `${renderVisibility(options)}let \`${name.replace('"', '\\"')}\`: String${type.allKeysAreRequired ? "" : "?"}`,
     )
     .join("\n")
 
