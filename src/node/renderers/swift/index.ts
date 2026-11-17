@@ -28,7 +28,7 @@ export const SwiftOutput = (options: {
       if (sourceRootPath) {
         await writeFile(
           join(options.targetPath, "TSONDB+Helpers.swift"),
-          renderUniqueHelpers(options.rendererOptions, schema.entities, schema.singletonEntities),
+          renderUniqueHelpers(options.rendererOptions, schema),
           {
             encoding: "utf-8",
           },
@@ -40,19 +40,9 @@ export const SwiftOutput = (options: {
             const newDir = join(options.targetPath, relativePath)
             const newPath = join(newDir, basename(sourcePath, extname(sourcePath)) + extension)
             await mkdir(newDir, { recursive: true })
-            await writeFile(
-              newPath,
-              render(
-                options.rendererOptions,
-                decls ?? [],
-                schema.entities,
-                schema.singletonEntities,
-                false,
-              ),
-              {
-                encoding: "utf-8",
-              },
-            )
+            await writeFile(newPath, render(options.rendererOptions, decls ?? [], schema, false), {
+              encoding: "utf-8",
+            })
           }),
         )
         debug("emitted declaration files to %s", options.targetPath)
@@ -65,13 +55,7 @@ export const SwiftOutput = (options: {
       await mkdir(dirname(safePath), { recursive: true })
       await writeFile(
         safePath,
-        render(
-          options.rendererOptions,
-          schema.declarations,
-          schema.entities,
-          schema.singletonEntities,
-          true,
-        ),
+        render(options.rendererOptions, schema.declarations, schema, true),
         {
           encoding: "utf-8",
         },

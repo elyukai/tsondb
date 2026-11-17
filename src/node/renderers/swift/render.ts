@@ -49,6 +49,7 @@ import {
 } from "../../schema/dsl/types/TranslationObjectType.ts"
 import type { TypeArgumentType } from "../../schema/dsl/types/TypeArgumentType.ts"
 import { flatMapAuxiliaryDecls, isFinalChildEntitiesType } from "../../schema/helpers.ts"
+import type { Schema } from "../../schema/index.ts"
 
 export type SwiftRendererOptions = {
   visibility: "public" | "internal"
@@ -83,7 +84,7 @@ const defaultOptions: SwiftRendererOptions = {
 
 type RenderFn<T> = (options: SwiftRendererOptions, parentDecl: Decl, node: T) => string
 
-type DeclRenderFn<T> = (options: SwiftRendererOptions, node: T) => string
+type DeclRenderFn<T> = (options: SwiftRendererOptions, schema: Schema, node: T) => string
 
 const reservedKeywords = new Set(["default", "self", "throw"])
 
@@ -262,7 +263,7 @@ const renderType: RenderFn<Type> = (options, decl, type) => {
 const renderVisibility: (options: SwiftRendererOptions) => string = options =>
   options.visibility === "public" ? "public " : ""
 
-const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, decl) =>
+const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, schema, decl) =>
   `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", options.generateIdentifierPropertyForEntities ? "Identifiable" : undefined, options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl) ? "ChildEntity" : undefined)} {
   ${
     options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl)
@@ -274,7 +275,7 @@ const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, decl) =>
   `
         })()
       : ""
-  }${renderVisibility(options)}typealias ID = UUID
+  }${renderVisibility(options)}typealias ID = ${schema.localeEntity?.name === decl.name ? "String" : "UUID"}
 ${
   options.generateIdentifierPropertyForEntities
     ? `
@@ -339,14 +340,14 @@ ${indentPlain(
   }
 }`
 
-const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, decl) =>
+const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, _schema, decl) =>
   `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable")} ${wrapAsObject(
     options,
     decl,
     renderType(options, decl, decl.type.value),
   )}`
 
-const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, decl) =>
+const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, _schema, decl) =>
   `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}enum ${
     decl.name
   }${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "enum", "Equatable", "Sendable")} {
@@ -384,7 +385,7 @@ ${indentPlain(options.indentation, 1, renderEnumType(options, decl, decl.type.va
   }
 }`
 
-const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, decl) =>
+const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, _schema, decl) =>
   isObjectType(decl.type.value)
     ? `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "struct", "Equatable", "Sendable")} {
 ${indentPlain(options.indentation, 1, renderType(options, decl, decl.type.value))}${
@@ -426,23 +427,23 @@ ${indentPlain(
           decl.name
         }${renderTypeParameters(options, decl, decl.parameters)} = ${renderType(options, decl, decl.type.value)}`
 
-const renderDecl: DeclRenderFn<Decl> = (options, decl) => {
+const renderDecl: DeclRenderFn<Decl> = (options, schema, decl) => {
   switch (decl.kind) {
     case NodeKind.EntityDecl:
-      return renderEntityDecl(options, decl)
+      return renderEntityDecl(options, schema, decl)
     case NodeKind.SingletonEntityDecl:
-      return renderSingletonEntityDecl(options, decl)
+      return renderSingletonEntityDecl(options, schema, decl)
     case NodeKind.EnumDecl:
-      return renderEnumDecl(options, decl)
+      return renderEnumDecl(options, schema, decl)
     case NodeKind.TypeAliasDecl:
-      return renderTypeAliasDecl(options, decl)
+      return renderTypeAliasDecl(options, schema, decl)
     default:
       return assertExhaustive(decl, "Unknown declaration")
   }
 }
 
-const renderDeclarations: DeclRenderFn<readonly Decl[]> = (options, declarations) =>
-  declarations.map(decl => renderDecl(options, decl)).join("\n\n")
+const renderDeclarations: DeclRenderFn<readonly Decl[]> = (options, schema, declarations) =>
+  declarations.map(decl => renderDecl(options, schema, decl)).join("\n\n")
 
 const renderExplicitNestedEntityMapTypes = (options: SwiftRendererOptions) =>
   Object.entries(options.explicitNestedEntityMapTypes)
@@ -502,11 +503,7 @@ extension CodingUserInfoKey {
 }`
     : ""
 
-const renderEntityMap = (
-  options: SwiftRendererOptions,
-  entities: readonly EntityDecl[],
-  singletonEntities: readonly SingletonEntityDecl[],
-): string =>
+const renderEntityMap = (options: SwiftRendererOptions, schema: Schema): string =>
   options.generateEntityMap
     ? `
 
@@ -514,7 +511,7 @@ ${renderVisibility(options)}let EntityMap: [String: Any.Type] = [
 ${indentPlain(
   options.indentation,
   1,
-  [...entities, ...singletonEntities]
+  [...schema.entities, ...schema.singletonEntities]
     .toSorted(
       on(
         e => e.name,
@@ -529,8 +526,7 @@ ${indentPlain(
 
 const renderCompressedDatabaseRepresentationType = (
   options: SwiftRendererOptions,
-  entities: readonly EntityDecl[],
-  singletonEntities: readonly SingletonEntityDecl[],
+  schema: Schema,
 ): string =>
   options.generateCompressedDatabaseRepresentationType
     ? `
@@ -543,7 +539,7 @@ ${indentPlain(
 ${indentPlain(
   options.indentation,
   1,
-  [...entities, ...singletonEntities]
+  [...schema.entities, ...schema.singletonEntities]
     .toSorted(
       on(
         e => e.name,
@@ -559,7 +555,7 @@ ${indentPlain(
 )}
 }
 
-${[...entities, ...singletonEntities]
+${[...schema.entities, ...schema.singletonEntities]
   .toSorted(
     on(
       e => e.name,
@@ -579,7 +575,7 @@ ${[...entities, ...singletonEntities]
 ${indentPlain(
   options.indentation,
   2,
-  entities
+  schema.entities
     .toSorted(
       on(
         e => e.name,
@@ -602,7 +598,7 @@ ${indentPlain(
 ${indentPlain(
   options.indentation,
   2,
-  singletonEntities
+  schema.singletonEntities
     .toSorted(
       on(
         e => e.name,
@@ -642,13 +638,12 @@ const formatWhitespace = (str: string): string => {
 
 export const renderUniqueHelpers = (
   options: Partial<SwiftRendererOptions> = defaultOptions,
-  entities: readonly EntityDecl[],
-  singletonEntities: readonly SingletonEntityDecl[],
+  schema: Schema,
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
   const types = [
-    renderEntityMap(finalOptions, entities, singletonEntities),
-    renderCompressedDatabaseRepresentationType(finalOptions, entities, singletonEntities),
+    renderEntityMap(finalOptions, schema),
+    renderCompressedDatabaseRepresentationType(finalOptions, schema),
     renderExplicitNestedEntityMapTypes(finalOptions),
     generateChildEntityProtocol(finalOptions),
     decodableHelpers(finalOptions),
@@ -659,14 +654,14 @@ export const renderUniqueHelpers = (
 export const render = (
   options: Partial<SwiftRendererOptions> = defaultOptions,
   declarations: readonly Decl[],
-  entities: readonly EntityDecl[],
-  singletonEntities: readonly SingletonEntityDecl[],
+  schema: Schema,
   singleFile: boolean,
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
-  return formatWhitespace(`${singleFile ? renderUniqueHelpers(finalOptions, entities, singletonEntities) : `import Foundation\n`}
+  return formatWhitespace(`${singleFile ? renderUniqueHelpers(finalOptions, schema) : `import Foundation\n`}
 ${renderDeclarations(
   finalOptions,
+  schema,
   flatMapAuxiliaryDecls((parentNodes, node, existingDecls) => {
     if (isNestedEntityMapType(node)) {
       return existingDecls.some(exDecl => exDecl.name === node.name)
