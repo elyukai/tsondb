@@ -268,8 +268,8 @@ const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, decl) =>
     options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl)
       ? (() => {
           const parentType = decl.type.value.properties[decl.parentReferenceKey]
-          return `typealias ParentID = ${parentType !== undefined ? renderType(options, decl, parentType.type) : "<error>"}
-  static let parentId: KeyPath<Self, ParentID> & Sendable = \\.${makeSafeIdentifier(toCamelCase(decl.parentReferenceKey))}
+          return `${renderVisibility(options)}typealias ParentID = ${parentType !== undefined ? renderType(options, decl, parentType.type) : "<error>"}
+  ${renderVisibility(options)}static let parentId: KeyPath<Self, ParentID> & Sendable = \\.${makeSafeIdentifier(toCamelCase(decl.parentReferenceKey))}
 
   `
         })()
@@ -626,7 +626,7 @@ const generateChildEntityProtocol = (options: SwiftRendererOptions) =>
   options.generateChildEntityProtocol
     ? `
 
-protocol ChildEntity {
+${renderVisibility(options)}protocol ChildEntity {
   associatedtype ParentID: Equatable & Sendable
 
   static var parentId: KeyPath<Self, ParentID> & Sendable { get }
