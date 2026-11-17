@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.6](https://github.com/elyukai/tsondb/compare/v0.23.5...v0.23.6) (2026-11-17)
+
+### Features
+
+* swift renderer ([7aa4d25](https://github.com/elyukai/tsondb/commit/7aa4d25437ffefc95fbee97c57cb927ad1aee91b))
+
 ## [0.23.5](https://github.com/elyukai/tsondb/compare/v0.23.4...v0.23.5) (2026-11-03)
 
 ### Bug Fixes
