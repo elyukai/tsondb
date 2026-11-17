@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.7](https://github.com/elyukai/tsondb/compare/v0.23.6...v0.23.7) (2026-11-17)
+
+### Bug Fixes
+
+* **swift-renderer:** remove trailing whitespace and include newline at EOF ([cdcc1ca](https://github.com/elyukai/tsondb/commit/cdcc1ca858f8e64faca9d7b9d56d1413de990819))
+* **swift-renderer:** visibility of ChildEntity protocol ([36d6f8f](https://github.com/elyukai/tsondb/commit/36d6f8f9ede8cd5d389cd73bef707c4c0e917440))
+
 ## [0.23.6](https://github.com/elyukai/tsondb/compare/v0.23.5...v0.23.6) (2026-11-17)
 
 ### Features
