@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.11](https://github.com/elyukai/tsondb/compare/v0.23.10...v0.23.11) (2026-11-18)
+
+### Bug Fixes
+
+* **swift-renderer:** parse locale id as string ([eacab7d](https://github.com/elyukai/tsondb/commit/eacab7d8c9332d8c66c16d6c74552798719df4a8))
+* **swift-renderer:** remove addIdentifierToEntities option ([eaf9b42](https://github.com/elyukai/tsondb/commit/eaf9b4201c2130c2fb27f0bab50b297f075174c2))
+
 ## [0.23.10](https://github.com/elyukai/tsondb/compare/v0.23.9...v0.23.10) (2026-11-17)
 
 ### Bug Fixes
