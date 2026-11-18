@@ -10,7 +10,6 @@ import { indentPlain, prefixLines } from "../../../shared/utils/render.ts"
 import { type Decl, asDecl } from "../../schema/dsl/declarations/Decl.ts"
 import {
   type EntityDecl,
-  addEphemeralUUIDToType,
   isEntityDeclWithParentReference,
 } from "../../schema/dsl/declarations/EntityDecl.ts"
 import { type EnumDecl, isEnumDecl } from "../../schema/dsl/declarations/EnumDecl.ts"
@@ -60,7 +59,6 @@ export type SwiftRendererOptions = {
   generateCompressedDatabaseRepresentationType: boolean
   generateIdentifierPropertyForEntities: boolean
   generateDecodableConformance: Boolean
-  addIdentifierToEntities: boolean
   explicitNestedEntityMapTypes: {
     [entityName: string]: {
       comment?: string
@@ -78,7 +76,6 @@ const defaultOptions: SwiftRendererOptions = {
   generateCompressedDatabaseRepresentationType: false,
   generateIdentifierPropertyForEntities: true,
   generateDecodableConformance: true,
-  addIdentifierToEntities: false,
   explicitNestedEntityMapTypes: {},
 }
 
@@ -282,15 +279,7 @@ ${
   ${renderVisibility(options)}let id: ID${Object.values(decl.type.value.properties).some(prop => prop.comment !== undefined) ? "\n" : ""}`
     : ""
 }
-${indentPlain(
-  options.indentation,
-  1,
-  renderType(
-    options,
-    decl,
-    options.addIdentifierToEntities ? addEphemeralUUIDToType(decl) : decl.type.value,
-  ),
-)}${
+${indentPlain(options.indentation, 1, renderType(options, decl, decl.type.value))}${
     options.generateDecodableConformance
       ? `
 
