@@ -1,12 +1,9 @@
-import { ensureNonEmpty } from "@elyukai/utils/array/nonEmpty"
 import { on } from "@elyukai/utils/function"
 import { isNotNullish, mapNullable } from "@elyukai/utils/nullable"
 import { toCamelCase } from "@elyukai/utils/string"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
-import { EOL } from "node:os"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
 import { NodeKind } from "../../../shared/schema/Node.ts"
-import { indentPlain, prefixLines } from "../../../shared/utils/render.ts"
 import { type Decl, asDecl } from "../../schema/dsl/declarations/Decl.ts"
 import {
   type EntityDecl,
@@ -19,7 +16,6 @@ import {
 } from "../../schema/dsl/declarations/SingletonEntityDecl.ts"
 import { TypeAliasDecl } from "../../schema/dsl/declarations/TypeAliasDecl.ts"
 import type { EnumCaseDecl, Type } from "../../schema/dsl/index.ts"
-import type { TypeParameter } from "../../schema/dsl/TypeParameter.ts"
 import type { ArrayType } from "../../schema/dsl/types/ArrayType.ts"
 import type { BooleanType } from "../../schema/dsl/types/BooleanType.ts"
 import {
@@ -49,6 +45,7 @@ import {
 import type { TypeArgumentType } from "../../schema/dsl/types/TypeArgumentType.ts"
 import { flatMapAuxiliaryDecls, isFinalChildEntitiesType } from "../../schema/helpers.ts"
 import type { Schema } from "../../schema/index.ts"
+import * as AST from "./ast.ts"
 
 export type SwiftRendererOptions = {
   visibility: "public" | "internal"
@@ -83,97 +80,72 @@ const defaultOptions: SwiftRendererOptions = {
   explicitNestedEntityMapTypes: {},
 }
 
-type RenderFn<T> = (options: SwiftRendererOptions, parentDecl: Decl, node: T) => string
+type RenderFn<T, R = AST.Type> = (options: SwiftRendererOptions, parentDecl: Decl, node: T) => R
 
-type DeclRenderFn<T> = (options: SwiftRendererOptions, schema: Schema, node: T) => string
+type DeclRenderFn<T, R = AST.Declaration> = (
+  options: SwiftRendererOptions,
+  schema: Schema,
+  node: T,
+) => R
 
 const reservedKeywords = new Set(["default", "self", "throw"])
 
 const makeSafeIdentifier = (name: string): string =>
   reservedKeywords.has(name) ? `\`${name}\`` : name
 
-const renderDocumentation = (comment?: string, isDeprecated?: boolean): string =>
-  [
-    comment === undefined ? undefined : prefixLines("/// ", comment, true),
-    isDeprecated ? `@available(*, deprecated)` : undefined,
-  ]
-    .filter(isNotNullish)
-    .map(line => `${line}\n`)
-    .join("")
-
-const renderTypeConstraints = (
-  options: SwiftRendererOptions,
-  context: "parameters" | "protocol" | "struct" | "enum",
-  ...params: (string | undefined)[]
-): string =>
-  mapNullable(
-    ensureNonEmpty(
-      [options.generateDecodableConformance ? "Decodable" : undefined, ...params].filter(
-        isNotNullish,
-      ),
-    ),
-    list => `: ${list.join(context === "protocol" || context === "parameters" ? " & " : ", ")}`,
-  ) ?? ""
-
-const renderTypeParameters: RenderFn<TypeParameter[]> = (options, decl, params) =>
-  params.length === 0
-    ? ""
-    : `<${params
-        .map(param =>
-          param.constraint === undefined
-            ? `${param.name}${renderTypeConstraints(options, "parameters", "Equatable", "Sendable")}`
-            : `${param.name}${renderTypeConstraints(options, "parameters", "Equatable", "Sendable", renderType(options, decl, param.constraint))}`,
-        )
-        .join(", ")}>`
-
 const renderArrayType: RenderFn<ArrayType> = (options, decl, type) =>
   type.minItems !== undefined && type.minItems === type.maxItems
-    ? `[${type.minItems} of ${renderType(options, decl, type.items)}]` // `(${replicate(renderType(options, decl, type.items), type.minItems).join(", ")})`
-    : `[${renderType(options, decl, type.items)}]`
+    ? AST.typeLiteral(
+        `[${type.minItems} of ${AST.renderType(renderType(options, decl, type.items))}]`,
+      ) // `(${replicate(renderType(options, decl, type.items), type.minItems).join(", ")})`
+    : AST.typeLiteral(`[${AST.renderType(renderType(options, decl, type.items))}]`)
 
-const wrapAsObject: RenderFn<string> = (options, _decl, str) =>
-  `{
-${indentPlain(options.indentation, 1, str)}
-}`
-
-const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>> = (options, decl, type) =>
+const renderObjectType: RenderFn<ObjectType<Record<string, MemberDecl>>, AST.Member[]> = (
+  options,
+  decl,
+  type,
+) =>
   Object.entries(type.properties)
     .filter(([_key, config]) => !isFinalChildEntitiesType(config.type))
-    .map(([name, config]) => {
+    .map(([name, config]): AST.Member => {
       const safeName = makeSafeIdentifier(toCamelCase(name))
-      return `${renderDocumentation(config.comment, config.isDeprecated)}${renderVisibility(options)}let ${safeName}: ${renderType(options, decl, config.type)}${
-        config.isRequired ? "" : "?"
-      }`
+      return AST.member({
+        visibility: options.visibility,
+        comment: config.comment,
+        isDeprecated: config.isDeprecated,
+        keyword: "let",
+        name: safeName,
+        type: AST.optionalCond(renderType(options, decl, config.type), !config.isRequired),
+      })
     })
-    .join(Object.values(type.properties).some(prop => prop.comment !== undefined) ? "\n\n" : "\n")
 
-const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => `Bool`
+const renderBooleanType: RenderFn<BooleanType> = (_options, _type) => AST.typeIdentifier("Bool")
 
-const renderDateType: RenderFn<DateType> = (_options, _type) => "Date"
+const renderDateType: RenderFn<DateType> = (_options, _type) => AST.typeIdentifier("Date")
 
-const renderFloatType: RenderFn<FloatType> = (_options, _type) => `Float`
+const renderFloatType: RenderFn<FloatType> = (_options, _type) => AST.typeIdentifier("Double")
 
-const renderIntegerType: RenderFn<IntegerType> = (_options, _type) => `Int`
+const renderIntegerType: RenderFn<IntegerType> = (_options, _type) => AST.typeIdentifier("Int")
 
-const renderStringType: RenderFn<StringType> = (_options, _type) => `String`
+const renderStringType: RenderFn<StringType> = (_options, _type) => AST.typeIdentifier("String")
 
 const renderTypeArgumentType: RenderFn<TypeArgumentType> = (_options, _decl, type) =>
-  type.argument.name
+  AST.typeIdentifier(type.argument.name)
 
 const renderReferenceIdentifierType: RenderFn<ReferenceIdentifierType> = (_options, _decl, type) =>
-  `${type.entity.name}.ID`
+  AST.typeIdentifier(`${type.entity.name}.ID`)
 
 const renderIncludeIdentifierType: RenderFn<IncludeIdentifierType> = (options, decl, type) =>
-  type.reference.name +
-  (type.args.length === 0
-    ? ""
-    : `<${type.args.map(arg => renderType(options, decl, arg)).join(", ")}>`)
+  AST.typeIdentifier(
+    type.reference.name,
+    type.args.map(arg => renderType(options, decl, arg)),
+  )
 
 const renderNestedEntityMapType: RenderFn<NestedEntityMapType> = (options, _decl, type) => {
   const explicitType = options.explicitNestedEntityMapTypes[type.secondaryEntity.name]
   return explicitType !== undefined
-    ? `${explicitType.typeName}<${type.name}>`
-    : `[${type.secondaryEntity.name}.ID: ${type.name}]`
+    ? AST.typeIdentifier(explicitType.typeName, [AST.typeIdentifier(type.name)])
+    : AST.typeLiteral(`[${type.secondaryEntity.name}.ID: ${type.name}]`)
 }
 
 const isIndirectEnumCase = (parentDecl: Decl, caseDef: EnumCaseDecl): boolean => {
@@ -203,35 +175,40 @@ const isIndirectEnumCase = (parentDecl: Decl, caseDef: EnumCaseDecl): boolean =>
   return caseDef.type !== null && aux(caseDef.type)
 }
 
-const renderEnumType: RenderFn<EnumType> = (options, decl, type) =>
-  Object.entries(type.values)
-    .map(([caseName, caseDef]) => {
-      const safeName = makeSafeIdentifier(toCamelCase(caseName))
-      const isIndirect = isIndirectEnumCase(decl, caseDef)
-      const base = `${isIndirect ? "indirect " : ""}case ${safeName}`
+const renderEnumType: RenderFn<EnumType, AST.EnumCase[]> = (options, decl, type) =>
+  Object.entries(type.values).map(([caseName, caseDef]): AST.EnumCase => {
+    const safeName = makeSafeIdentifier(toCamelCase(caseName))
+    const isIndirect = isIndirectEnumCase(decl, caseDef)
 
-      return `${renderDocumentation(caseDef.comment, caseDef.isDeprecated)}${
-        caseDef.type === null ? base : `${base}(${renderType(options, decl, caseDef.type)})`
-      }`
+    return AST.enumCase({
+      comment: caseDef.comment,
+      isDeprecated: caseDef.isDeprecated,
+      isIndirect,
+      name: safeName,
+      associatedType: caseDef.type === null ? undefined : renderType(options, decl, caseDef.type),
     })
-    .join(Object.values(type.values).some(caseDef => caseDef.comment !== undefined) ? "\n\n" : "\n")
+  })
 
-const renderChildEntitiesType: RenderFn<ChildEntitiesType> = () => `never`
+const renderChildEntitiesType: RenderFn<ChildEntitiesType> = () => AST.typeIdentifier("Never")
 
-const renderTranslationObjectType: RenderFn<TranslationObjectType> = (options, _decl, type) =>
-  Object.entries(type.properties)
-    .map(
-      ([name, _config]) =>
-        `${renderVisibility(options)}let \`${name.replace('"', '\\"')}\`: String${type.allKeysAreRequired ? "" : "?"}`,
-    )
-    .join("\n")
+const renderTranslationObjectType: RenderFn<TranslationObjectType, AST.Member[]> = (
+  options,
+  _decl,
+  type,
+) =>
+  Object.entries(type.properties).map(([name, _config]) =>
+    AST.member({
+      visibility: options.visibility,
+      keyword: "let",
+      name: `\`${name}\``,
+      type: AST.optionalCond(AST.typeIdentifier("String"), !type.allKeysAreRequired),
+    }),
+  )
 
 const renderType: RenderFn<Type> = (options, decl, type) => {
   switch (type.kind) {
     case NodeKind.ArrayType:
       return renderArrayType(options, decl, type)
-    case NodeKind.ObjectType:
-      return renderObjectType(options, decl, type)
     case NodeKind.BooleanType:
       return renderBooleanType(options, decl, type)
     case NodeKind.DateType:
@@ -250,179 +227,309 @@ const renderType: RenderFn<Type> = (options, decl, type) => {
       return renderIncludeIdentifierType(options, decl, type)
     case NodeKind.NestedEntityMapType:
       return renderNestedEntityMapType(options, decl, type)
-    case NodeKind.EnumType:
-      return renderEnumType(options, decl, type)
     case NodeKind.ChildEntitiesType:
       return renderChildEntitiesType(options, decl, type)
+    case NodeKind.EnumType:
+    case NodeKind.ObjectType:
     case NodeKind.TranslationObjectType:
-      return renderTranslationObjectType(options, decl, type)
+      return AST.typeLiteral("<<error>>") // Object and enum types are rendered as members of the parent declaration, not as a type
     default:
       return assertExhaustive(type, "Unknown type")
   }
 }
 
-const renderVisibility: (options: SwiftRendererOptions) => string = options =>
-  options.visibility === "public" ? "public " : ""
-
 const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, schema, decl) =>
-  `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", options.generateIdentifierPropertyForEntities ? "Identifiable" : undefined, options.generateEntityProtocol ? (schema.localeEntity?.name === decl.name ? "LocaleEntity" : "GeneralEntity") : undefined, options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl) ? "ChildEntity" : undefined, ...(options.declareConformances[decl.name] ?? []))} {
-  ${
-    options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl)
-      ? (() => {
-          const parentType = decl.type.value.properties[decl.parentReferenceKey]
-          return `${renderVisibility(options)}typealias ParentID = ${parentType !== undefined ? renderType(options, decl, parentType.type) : "<error>"}
-  ${renderVisibility(options)}static let parentId: KeyPath<Self, ParentID> & Sendable = \\.${makeSafeIdentifier(toCamelCase(decl.parentReferenceKey))}
-
-  `
-        })()
-      : ""
-  }${renderVisibility(options)}typealias ID = ${schema.localeEntity?.name === decl.name ? "String" : "UUID"}
-${
-  options.generateIdentifierPropertyForEntities
-    ? `
-  ${renderVisibility(options)}let id: ID${Object.values(decl.type.value.properties).some(prop => prop.comment !== undefined) ? "\n" : ""}`
-    : ""
-}
-${indentPlain(options.indentation, 1, renderType(options, decl, decl.type.value))}${
-    options.generateDecodableConformance
-      ? `
-
-  private enum CodingKeys: String, CodingKey {
-${indentPlain(
-  options.indentation,
-  2,
-  Object.entries(decl.type.value.properties)
-    .filter(prop => !isChildEntitiesType(prop[1].type))
-    .map(([name]) => `case ${makeSafeIdentifier(toCamelCase(name))} = "${name}"`)
-    .join("\n"),
-)}
-  }
-
-  ${renderVisibility(options)}init(from decoder: Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-
-    let databaseInstanceIdKey = CodingUserInfoKey.databaseInstanceIdKey
-    let explicitId = if let databaseInstanceIdKey {
-      decoder.userInfo[databaseInstanceIdKey] as? String
-    } else {
-      String?.none
-    }
-    let derivedId = decoder.codingPath.last?.stringValue
-
-    guard let id = explicitId ?? derivedId else {
-        throw DatabaseInstanceIdDecodingError.missingIdentifierString
-    }
-${
-  schema.localeEntity?.name === decl.name
-    ? ""
-    : `    guard let uuid = UUID(uuidString: id) else {
-        throw DatabaseInstanceIdDecodingError.invalidUUID
-    }
-`
-}
-    self.id = ${schema.localeEntity?.name === decl.name ? "id" : "uuid"}
-${indentPlain(
-  options.indentation,
-  2,
-  Object.entries(decl.type.value.properties)
-    .filter(prop => !isChildEntitiesType(prop[1].type))
-    .map(([name, config]) => {
-      const safeName = makeSafeIdentifier(toCamelCase(name))
-      return `self.${safeName} = try container.${config.isRequired ? "decode" : "decodeIfPresent"}(${renderType(options, decl, config.type)}.self, forKey: .${safeName})`
-    })
-    .join("\n"),
-)}
-  }`
-      : ""
-  }
-}`
+  AST.struct({
+    visibility: options.visibility,
+    comment: decl.comment,
+    isDeprecated: decl.isDeprecated,
+    name: decl.name,
+    constraints: [
+      options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+      AST.typeIdentifier("Equatable"),
+      AST.typeIdentifier("Sendable"),
+      options.generateIdentifierPropertyForEntities
+        ? AST.typeIdentifier("Identifiable")
+        : undefined,
+      options.generateEntityProtocol
+        ? schema.localeEntity?.name === decl.name
+          ? AST.typeIdentifier("LocaleEntity")
+          : AST.typeIdentifier("GeneralEntity")
+        : undefined,
+      options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl)
+        ? AST.typeIdentifier("ChildEntity")
+        : undefined,
+      ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
+    ].filter(isNotNullish),
+    declarations: [
+      ...(options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl)
+        ? (() => {
+            const parentType = decl.type.value.properties[decl.parentReferenceKey]
+            return [
+              AST.typealias({
+                visibility: options.visibility,
+                name: "ParentID",
+                type:
+                  parentType !== undefined
+                    ? renderType(options, decl, parentType.type)
+                    : AST.typeLiteral("<error>"),
+              }),
+              AST.member({
+                visibility: options.visibility,
+                keyword: "let",
+                static: true,
+                name: "parentId",
+                type: AST.typeLiteral("KeyPath<Self, ParentID> & Sendable"),
+                value: AST.raw(`\\.${makeSafeIdentifier(toCamelCase(decl.parentReferenceKey))}`),
+              }),
+            ]
+          })()
+        : []),
+      AST.typealias({
+        visibility: options.visibility,
+        name: "ID",
+        type:
+          schema.localeEntity?.name === decl.name
+            ? AST.typeIdentifier("String")
+            : AST.typeIdentifier("UUID"),
+      }),
+      options.generateIdentifierPropertyForEntities
+        ? AST.member({
+            visibility: options.visibility,
+            keyword: "let",
+            name: "id",
+            type: AST.typeIdentifier("ID"),
+          })
+        : undefined,
+      ...renderObjectType(options, decl, decl.type.value),
+      ...(options.generateDecodableConformance
+        ? [
+            AST.enumeration({
+              visibility: "private",
+              name: "CodingKeys",
+              constraints: [AST.typeIdentifier("String"), AST.typeIdentifier("CodingKey")],
+              declarations: Object.entries(decl.type.value.properties)
+                .filter(([_name, config]) => !isChildEntitiesType(config.type))
+                .map(([name]) =>
+                  AST.enumCase({ name: makeSafeIdentifier(toCamelCase(name)), rawValue: name }),
+                ),
+            }),
+            options.generateIdentifierPropertyForEntities
+              ? AST.constructor({
+                  visibility: options.visibility,
+                  parameters: [
+                    { first: "from", second: "decoder", type: AST.typeIdentifier("Decoder") },
+                  ],
+                  throws: true,
+                  body: AST.raw(
+                    "let container = try decoder.container(keyedBy: CodingKeys.self)",
+                    "",
+                    "let databaseInstanceIdKey = CodingUserInfoKey.databaseInstanceIdKey",
+                    "let explicitId = if let databaseInstanceIdKey {",
+                    AST.raw("decoder.userInfo[databaseInstanceIdKey] as? String"),
+                    "} else {",
+                    AST.raw("String?.none"),
+                    "}",
+                    "let derivedId = decoder.codingPath.last?.stringValue",
+                    "",
+                    "guard let id = explicitId ?? derivedId else {",
+                    AST.raw("throw DatabaseInstanceIdDecodingError.missingIdentifierString"),
+                    "}",
+                    ...(schema.localeEntity?.name === decl.name
+                      ? []
+                      : [
+                          "guard let uuid = UUID(uuidString: id) else {",
+                          AST.raw("throw DatabaseInstanceIdDecodingError.invalidUUID"),
+                          "}",
+                        ]),
+                    "",
+                    `self.id = ${schema.localeEntity?.name === decl.name ? "id" : "uuid"}`,
+                    ...Object.entries(decl.type.value.properties)
+                      .filter(([_name, config]) => !isChildEntitiesType(config.type))
+                      .map(([name, config]) => {
+                        const safeName = makeSafeIdentifier(toCamelCase(name))
+                        return `self.${safeName} = try container.${config.isRequired ? "decode" : "decodeIfPresent"}(${AST.renderType(renderType(options, decl, config.type))}.self, forKey: .${safeName})`
+                      }),
+                  ),
+                })
+              : undefined,
+          ]
+        : []),
+    ].filter(isNotNullish),
+  })
 
 const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, _schema, decl) =>
-  `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", ...(options.declareConformances[decl.name] ?? []))} ${wrapAsObject(
-    options,
-    decl,
-    renderType(options, decl, decl.type.value),
-  )}`
+  AST.struct({
+    visibility: options.visibility,
+    comment: decl.comment,
+    isDeprecated: decl.isDeprecated,
+    name: decl.name,
+    constraints: [
+      options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+      AST.typeIdentifier("Equatable"),
+      AST.typeIdentifier("Sendable"),
+      ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
+    ].filter(isNotNullish),
+    declarations: [...renderObjectType(options, decl, decl.type.value)],
+  })
 
 const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, _schema, decl) =>
-  `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}enum ${
-    decl.name
-  }${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "enum", "Equatable", "Sendable", ...(options.declareConformances[decl.name] ?? []))} {
-${indentPlain(options.indentation, 1, renderEnumType(options, decl, decl.type.value))}${
-    options.generateDecodableConformance
-      ? `
-
-  private enum CodingKeys: String, CodingKey {
-    case tag = "${ENUM_DISCRIMINATOR_KEY}"
-    ${Object.keys(decl.type.value.values)
-      .map(name => `case ${makeSafeIdentifier(toCamelCase(name))} = "${name}"`)
-      .join("\n    ")}
-  }
-
-  private enum Discriminator: String, Decodable {
-    ${Object.keys(decl.type.value.values)
-      .map(name => `case ${makeSafeIdentifier(toCamelCase(name))} = "${name}"`)
-      .join("\n    ")}
-  }
-
-  ${renderVisibility(options)}init(from decoder: Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    let tag = try container.decode(Discriminator.self, forKey: .tag)
-    switch tag {
-    ${Object.entries(decl.type.value.values)
-      .map(([name, value]) => {
-        const safeName = makeSafeIdentifier(toCamelCase(name))
-        return `case .${safeName}:
-      self = .${safeName}${value.type === null ? "" : `(try container.decode(${renderType(options, decl, value.type)}.self, forKey: .${safeName}))`}`
-      })
-      .join("\n    ")}
-    }
-  }`
-      : ""
-  }
-}`
+  AST.enumeration({
+    visibility: options.visibility,
+    comment: decl.comment,
+    isDeprecated: decl.isDeprecated,
+    name: decl.name,
+    parameters: decl.parameters.map(param =>
+      AST.typeParameter(
+        param.name,
+        [
+          mapNullable(param.constraint, constraint => renderType(options, decl, constraint)),
+          options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+          AST.typeIdentifier("Equatable"),
+          AST.typeIdentifier("Sendable"),
+        ].filter(isNotNullish),
+      ),
+    ),
+    constraints: [
+      options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+      AST.typeIdentifier("Equatable"),
+      AST.typeIdentifier("Sendable"),
+      ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
+    ].filter(isNotNullish),
+    declarations: [
+      ...renderEnumType(options, decl, decl.type.value),
+      ...(options.generateDecodableConformance
+        ? [
+            AST.enumeration({
+              visibility: "private",
+              name: "CodingKeys",
+              constraints: [AST.typeIdentifier("String"), AST.typeIdentifier("CodingKey")],
+              declarations: [
+                AST.enumCase({ name: "tag", rawValue: ENUM_DISCRIMINATOR_KEY }),
+                ...Object.entries(decl.type.value.values).map(([name]) =>
+                  AST.enumCase({ name: makeSafeIdentifier(toCamelCase(name)), rawValue: name }),
+                ),
+              ],
+            }),
+            AST.enumeration({
+              visibility: "private",
+              name: "Discriminator",
+              constraints: [AST.typeIdentifier("String"), AST.typeIdentifier("Decodable")],
+              declarations: Object.entries(decl.type.value.values).map(([name]) =>
+                AST.enumCase({ name: makeSafeIdentifier(toCamelCase(name)), rawValue: name }),
+              ),
+            }),
+            AST.constructor({
+              visibility: options.visibility,
+              parameters: [
+                { first: "from", second: "decoder", type: AST.typeIdentifier("Decoder") },
+              ],
+              throws: true,
+              body: AST.raw(
+                "let container = try decoder.container(keyedBy: CodingKeys.self)",
+                "let tag = try container.decode(Discriminator.self, forKey: .tag)",
+                "switch tag {",
+                ...Object.entries(decl.type.value.values).flatMap(([name, value]) => {
+                  const safeName = makeSafeIdentifier(toCamelCase(name))
+                  return [
+                    `case .${safeName}:`,
+                    AST.raw(
+                      `self = .${safeName}${value.type === null ? "" : `(try container.decode(${AST.renderType(renderType(options, decl, value.type))}.self, forKey: .${safeName}))`}`,
+                    ),
+                  ]
+                }),
+                "}",
+              ),
+            }),
+          ]
+        : []),
+    ],
+  })
 
 const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, _schema, decl) =>
   isObjectType(decl.type.value)
-    ? `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", ...(options.declareConformances[decl.name] ?? []))} {
-${indentPlain(options.indentation, 1, renderType(options, decl, decl.type.value))}${
-        options.generateDecodableConformance
-          ? `
-
-  private enum CodingKeys: String, CodingKey {
-${indentPlain(
-  options.indentation,
-  2,
-  Object.entries(decl.type.value.properties)
-    .filter(prop => !isChildEntitiesType(prop[1].type))
-    .map(([name]) => `case ${makeSafeIdentifier(toCamelCase(name))} = "${name}"`)
-    .join("\n"),
-)}
-  }
-
-  ${renderVisibility(options)}init(from decoder: Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-
-${indentPlain(
-  options.indentation,
-  2,
-  Object.entries(decl.type.value.properties)
-    .filter(prop => !isChildEntitiesType(prop[1].type))
-    .map(([name, config]) => {
-      const safeName = makeSafeIdentifier(toCamelCase(name))
-      return `self.${safeName} = try container.${config.isRequired ? "decode" : "decodeIfPresent"}(${renderType(options, decl, config.type)}.self, forKey: .${safeName})`
-    })
-    .join("\n"),
-)}
-  }`
-          : ""
-      }
-}`
+    ? AST.struct({
+        visibility: options.visibility,
+        comment: decl.comment,
+        isDeprecated: decl.isDeprecated,
+        name: decl.name,
+        parameters: decl.parameters.map(param =>
+          AST.typeParameter(
+            param.name,
+            [
+              mapNullable(param.constraint, constraint => renderType(options, decl, constraint)),
+              options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+              AST.typeIdentifier("Equatable"),
+              AST.typeIdentifier("Sendable"),
+            ].filter(isNotNullish),
+          ),
+        ),
+        constraints: [
+          options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+          AST.typeIdentifier("Equatable"),
+          AST.typeIdentifier("Sendable"),
+          ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
+        ].filter(isNotNullish),
+        declarations: [
+          ...renderObjectType(options, decl, decl.type.value),
+          options.generateDecodableConformance
+            ? AST.enumeration({
+                visibility: "private",
+                name: "CodingKeys",
+                constraints: [AST.typeIdentifier("String"), AST.typeIdentifier("CodingKey")],
+                declarations: Object.entries(decl.type.value.properties)
+                  .filter(([_name, config]) => !isChildEntitiesType(config.type))
+                  .map(([name]) =>
+                    AST.enumCase({ name: makeSafeIdentifier(toCamelCase(name)), rawValue: name }),
+                  ),
+              })
+            : undefined,
+        ].filter(isNotNullish),
+      })
     : isTranslationObjectType(decl.type.value)
-      ? `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", ...(options.declareConformances[decl.name] ?? []))} ${wrapAsObject(options, decl, renderType(options, decl, decl.type.value))}`
-      : `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}typealias ${
-          decl.name
-        }${renderTypeParameters(options, decl, decl.parameters)} = ${renderType(options, decl, decl.type.value)}`
+      ? AST.struct({
+          visibility: options.visibility,
+          comment: decl.comment,
+          isDeprecated: decl.isDeprecated,
+          name: decl.name,
+          parameters: decl.parameters.map(param =>
+            AST.typeParameter(
+              param.name,
+              [
+                mapNullable(param.constraint, constraint => renderType(options, decl, constraint)),
+                options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+                AST.typeIdentifier("Equatable"),
+                AST.typeIdentifier("Sendable"),
+              ].filter(isNotNullish),
+            ),
+          ),
+          constraints: [
+            options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+            AST.typeIdentifier("Equatable"),
+            AST.typeIdentifier("Sendable"),
+            ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ??
+              []),
+          ].filter(isNotNullish),
+          declarations: renderTranslationObjectType(options, decl, decl.type.value),
+        })
+      : AST.typealias({
+          visibility: options.visibility,
+          comment: decl.comment,
+          isDeprecated: decl.isDeprecated,
+          name: decl.name,
+          parameters: decl.parameters.map(param =>
+            AST.typeParameter(
+              param.name,
+              [
+                mapNullable(param.constraint, constraint => renderType(options, decl, constraint)),
+                options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+                AST.typeIdentifier("Equatable"),
+                AST.typeIdentifier("Sendable"),
+              ].filter(isNotNullish),
+            ),
+          ),
+          type: renderType(options, decl, decl.type.value),
+        })
 
 const renderDecl: DeclRenderFn<Decl> = (options, schema, decl) => {
   switch (decl.kind) {
@@ -439,234 +546,344 @@ const renderDecl: DeclRenderFn<Decl> = (options, schema, decl) => {
   }
 }
 
-const renderDeclarations: DeclRenderFn<readonly Decl[]> = (options, schema, declarations) =>
-  declarations.map(decl => renderDecl(options, schema, decl)).join("\n\n")
+const renderDeclarations: DeclRenderFn<readonly Decl[], AST.Declaration[]> = (
+  options,
+  schema,
+  declarations,
+) => declarations.map(decl => renderDecl(options, schema, decl))
 
-const renderExplicitNestedEntityMapTypes = (options: SwiftRendererOptions) =>
-  Object.entries(options.explicitNestedEntityMapTypes)
-    .map(
-      ([entityName, { comment, typeName }]) => `
+const renderExplicitNestedEntityMapTypes = (options: SwiftRendererOptions): AST.Declaration[] =>
+  Object.entries(options.explicitNestedEntityMapTypes).map(([entityName, { comment, typeName }]) =>
+    AST.struct({
+      comment,
+      visibility: options.visibility,
+      name: typeName,
+      parameters: [
+        AST.typeParameter(
+          "T",
+          [
+            options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+            AST.typeIdentifier("Equatable"),
+            AST.typeIdentifier("Sendable"),
+          ].filter(isNotNullish),
+        ),
+      ],
+      constraints: [
+        options.generateDecodableConformance ? AST.typeIdentifier("Decodable") : undefined,
+        AST.typeIdentifier("Equatable"),
+        AST.typeIdentifier("Sendable"),
+      ].filter(isNotNullish),
+      declarations: [
+        AST.member({
+          visibility: options.visibility,
+          keyword: "let",
+          name: "map",
+          type: AST.typeLiteral(`[${entityName}.ID: T]`),
+        }),
+        options.generateDecodableConformance
+          ? AST.constructor({
+              visibility: options.visibility,
+              parameters: [
+                { first: "from", second: "decoder", type: AST.typeIdentifier("Decoder") },
+              ],
+              throws: true,
+              body: AST.raw(
+                "let container = try decoder.singleValueContainer()",
+                `self.map = try container.decode([${entityName}.ID: T].self)`,
+              ),
+            })
+          : undefined,
+        AST.constructor({
+          visibility: options.visibility,
+          parameters: [{ second: "map", type: AST.typeLiteral(`[${entityName}.ID: T]`) }],
+          body: AST.raw("self.map = map"),
+        }),
+      ].filter(isNotNullish),
+    }),
+  )
 
-${renderDocumentation(comment)}${renderVisibility(options)}struct ${typeName}<T${renderTypeConstraints(options, "parameters", "Equatable", "Sendable")}>${renderTypeConstraints(options, "struct", "Equatable", "Sendable")} {
-  ${renderVisibility(options)}let map: [${entityName}.ID: T]${
-    options.generateDecodableConformance
-      ? `
-
-  ${renderVisibility(options)}init(from decoder: Decoder) throws {
-    let container = try decoder.singleValueContainer()
-    self.map = try container.decode([${entityName}.ID: T].self)
-  }
-
-  ${renderVisibility(options)}init(_ map: [${entityName}.ID: T]) throws {
-    self.map = map
-  }`
-      : ""
-  }
-}`,
-    )
-    .join("")
-
-const decodableHelpers = (options: SwiftRendererOptions) =>
+const decodableHelpers = (options: SwiftRendererOptions): AST.Declaration[] =>
   options.generateDecodableConformance
-    ? `
+    ? [
+        AST.extension({
+          name: "InlineArray",
+          constraints: [AST.typeIdentifier("@retroactive Decodable")],
+          where: [{ name: "Element", constraints: [AST.typeIdentifier("Decodable")] }],
+          declarations: [
+            AST.constructor({
+              visibility: "public",
+              parameters: [
+                { first: "from", second: "decoder", type: AST.typeIdentifier("Decoder") },
+              ],
+              throws: true,
+              body: AST.raw(
+                "var container = try decoder.unkeyedContainer()",
+                "var elements: [Element] = []",
+                "while !container.isAtEnd {",
+                AST.raw(
+                  "let element = try container.decode(Element.self)",
+                  "elements.append(element)",
+                ),
+                "}",
+                "self.init { elements[$0] }",
+              ),
+            }),
+          ],
+        }),
+        AST.extension({
+          name: "InlineArray",
+          constraints: [AST.typeIdentifier("@retroactive Equatable")],
+          where: [{ name: "Element", constraints: [AST.typeIdentifier("Equatable")] }],
+          declarations: [
+            AST.func({
+              visibility: "public",
+              static: true,
+              name: "== ",
+              parameters: [
+                { first: "lhs", type: AST.typeIdentifier("InlineArray<count, Element>") },
+                { first: "rhs", type: AST.typeIdentifier("InlineArray<count, Element>") },
+              ],
+              returnType: AST.typeIdentifier("Bool"),
+              body: AST.raw(
+                "guard lhs.count == rhs.count else { return false }",
+                "for i in 0..<lhs.count {",
+                AST.raw("if lhs[i] != rhs[i] {", AST.raw("return false"), "}"),
+                "}",
+                "return true",
+              ),
+            }),
+          ],
+        }),
+        AST.enumeration({
+          visibility: options.visibility,
+          name: "DatabaseInstanceIdDecodingError",
+          constraints: [AST.typeIdentifier("Error")],
+          declarations: [
+            AST.enumCase({ name: "missingIdentifierString" }),
+            AST.enumCase({ name: "invalidUUID" }),
+          ],
+        }),
+        AST.extension({
+          name: "CodingUserInfoKey",
+          declarations: [
+            AST.member({
+              static: true,
+              keyword: "let",
+              name: "databaseInstanceIdKey",
+              value: AST.raw('CodingUserInfoKey(rawValue: "databaseInstanceIdKey")'),
+            }),
+          ],
+        }),
+      ]
+    : []
 
-extension InlineArray: @retroactive Decodable where Element: Decodable {
-  public init(from decoder: Decoder) throws {
-    var container = try decoder.unkeyedContainer()
-    var elements: [Element] = []
-    while !container.isAtEnd {
-      let element = try container.decode(Element.self)
-      elements.append(element)
-    }
-    self.init { elements[$0] }
-  }
-}
-
-extension InlineArray: @retroactive Equatable where Element: Equatable {
-  public static func == (lhs: InlineArray<count, Element>, rhs: InlineArray<count, Element>) -> Bool {
-    guard lhs.count == rhs.count else { return false }
-    for i in 0..<lhs.count {
-      if lhs[i] != rhs[i] {
-        return false
-      }
-    }
-    return true
-  }
-}
-
-${renderVisibility(options)}enum DatabaseInstanceIdDecodingError: Error {
-  case missingIdentifierString
-  case invalidUUID
-}
-
-extension CodingUserInfoKey {
-  static let databaseInstanceIdKey = CodingUserInfoKey(rawValue: "databaseInstanceIdKey")
-}`
-    : ""
-
-const renderEntityMap = (options: SwiftRendererOptions, schema: Schema): string =>
+const renderEntityMap = (options: SwiftRendererOptions, schema: Schema): AST.Declaration[] =>
   options.generateEntityMap
-    ? `
-
-${renderVisibility(options)}let EntityMap: [String: Any.Type] = [
-${indentPlain(
-  options.indentation,
-  1,
-  [...schema.entities, ...schema.singletonEntities]
-    .toSorted(
-      on(
-        e => e.name,
-        (a, b) => a.localeCompare(b),
-      ),
-    )
-    .map(entity => `"${entity.name}": ${entity.name}.self`)
-    .join(",\n"),
-)}
-]`
-    : ""
+    ? [
+        AST.member({
+          visibility: options.visibility,
+          keyword: "let",
+          name: "EntityMap",
+          type: AST.typeLiteral("[String: Any.Type]"),
+          value: AST.raw(
+            "[",
+            AST.raw(
+              [...schema.entities, ...schema.singletonEntities]
+                .toSorted(
+                  on(
+                    e => e.name,
+                    (a, b) => a.localeCompare(b),
+                  ),
+                )
+                .map(entity => `"${entity.name}": ${entity.name}.self`)
+                .join(",\n"),
+            ),
+            "]",
+          ),
+        }),
+      ]
+    : []
 
 const renderCompressedDatabaseRepresentationType = (
   options: SwiftRendererOptions,
   schema: Schema,
-): string =>
+): AST.Declaration[] =>
   options.generateCompressedDatabaseRepresentationType
-    ? `
+    ? [
+        AST.struct({
+          visibility: options.visibility,
+          name: "CompressedDatabaseRepresentation",
+          constraints: [AST.typeIdentifier("Decodable")],
+          declarations: [
+            AST.enumeration({
+              visibility: "private",
+              name: "CodingKeys",
+              constraints: [AST.typeIdentifier("String"), AST.typeIdentifier("CodingKey")],
+              declarations: [
+                ...[...schema.entities, ...schema.singletonEntities]
+                  .toSorted(
+                    on(
+                      e => e.name,
+                      (a, b) => a.localeCompare(b),
+                    ),
+                  )
+                  .map(entity =>
+                    isSingletonEntityDecl(entity)
+                      ? AST.enumCase({
+                          name: toCamelCase(entity.name),
+                          rawValue: entity.name,
+                        })
+                      : AST.enumCase({
+                          name: toCamelCase(entity.namePlural),
+                          rawValue: entity.name,
+                        }),
+                  ),
+              ],
+            }),
+            ...[...schema.entities, ...schema.singletonEntities]
+              .toSorted(
+                on(
+                  e => e.name,
+                  (a, b) => a.localeCompare(b),
+                ),
+              )
+              .map(entity =>
+                isSingletonEntityDecl(entity)
+                  ? AST.member({
+                      keyword: "let",
+                      name: toCamelCase(entity.name),
+                      type: AST.optional(AST.typeIdentifier(entity.name)),
+                    })
+                  : AST.member({
+                      keyword: "let",
+                      name: toCamelCase(entity.namePlural),
+                      type: AST.typeLiteral(`[String: ${entity.name}]`),
+                    }),
+              ),
+            AST.func({
+              name: "getDictionary",
+              typeParameters: [AST.typeParameter("T")],
+              parameters: [
+                {
+                  first: "for",
+                  second: "type",
+                  type: AST.typeIdentifier("T.Type"),
+                },
+              ],
+              returnType: AST.typeLiteral("[String: T]"),
+              body: AST.raw(
+                "switch type {",
+                ...schema.entities
+                  .toSorted(
+                    on(
+                      e => e.name,
+                      (a, b) => a.localeCompare(b),
+                    ),
+                  )
+                  .flatMap(entity => [
+                    `case is ${entity.name}.Type:`,
+                    AST.raw(`return ${toCamelCase(entity.namePlural)} as? [String: T] ?? [:]`),
+                  ]),
+                "default:",
+                AST.raw("return [:]"),
+                "}",
+              ),
+            }),
+            AST.func({
+              name: "getSingleton",
+              typeParameters: [AST.typeParameter("T")],
+              parameters: [
+                {
+                  first: "for",
+                  second: "type",
+                  type: AST.typeIdentifier("T.Type"),
+                },
+              ],
+              returnType: AST.optional(AST.typeIdentifier("T")),
+              body: AST.raw(
+                "switch type {",
+                ...schema.singletonEntities
+                  .toSorted(
+                    on(
+                      e => e.name,
+                      (a, b) => a.localeCompare(b),
+                    ),
+                  )
+                  .flatMap(entity => [
+                    `case is ${entity.name}.Type:`,
+                    AST.raw(`return ${toCamelCase(entity.name)} as? T`),
+                  ]),
+                "default:",
+                AST.raw("return nil"),
+                "}",
+              ),
+            }),
+          ],
+        }),
+      ]
+    : []
 
-${renderVisibility(options)}struct CompressedDatabaseRepresentation: Decodable {
-${indentPlain(
-  options.indentation,
-  1,
-  `private enum CodingKeys: String, CodingKey {
-${indentPlain(
-  options.indentation,
-  1,
-  [...schema.entities, ...schema.singletonEntities]
-    .toSorted(
-      on(
-        e => e.name,
-        (a, b) => a.localeCompare(b),
-      ),
-    )
-    .map(entity =>
-      isSingletonEntityDecl(entity)
-        ? `case ${toCamelCase(entity.name)} = "${entity.name}"`
-        : `case ${toCamelCase(entity.namePlural)} = "${entity.name}"`,
-    )
-    .join("\n"),
-)}
-}
-
-${[...schema.entities, ...schema.singletonEntities]
-  .toSorted(
-    on(
-      e => e.name,
-      (a, b) => a.localeCompare(b),
-    ),
-  )
-  .map(entity =>
-    isSingletonEntityDecl(entity)
-      ? `let ${toCamelCase(entity.name)}: ${entity.name}?`
-      : `let ${toCamelCase(entity.namePlural)}: [String: ${entity.name}]`,
-  )
-  .join("\n")}`,
-)}
-
-  func getDictionary<T>(for type: T.Type) -> [String: T] {
-    switch type {
-${indentPlain(
-  options.indentation,
-  2,
-  schema.entities
-    .toSorted(
-      on(
-        e => e.name,
-        (a, b) => a.localeCompare(b),
-      ),
-    )
-    .map(
-      entity => `case is ${entity.name}.Type:
-  return ${toCamelCase(entity.namePlural)} as? [String: T] ?? [:]`,
-    )
-    .join("\n"),
-)}
-    default:
-      return [:]
-    }
-  }
-
-  func getSingleton<T>(for type: T.Type) -> T? {
-    switch type {
-${indentPlain(
-  options.indentation,
-  2,
-  schema.singletonEntities
-    .toSorted(
-      on(
-        e => e.name,
-        (a, b) => a.localeCompare(b),
-      ),
-    )
-    .map(
-      entity => `case is ${entity.name}.Type:
-  return ${toCamelCase(entity.name)} as? T`,
-    )
-    .join("\n"),
-)}
-    default:
-      return nil
-    }
-  }
-}`
-    : ""
-
-const generateEntityProtocol = (options: SwiftRendererOptions) =>
+const generateEntityProtocol = (options: SwiftRendererOptions): AST.Declaration[] =>
   options.generateEntityProtocol
-    ? `
+    ? [
+        AST.protocol({
+          name: "Entity",
+          constraints: [AST.typeIdentifier("Identifiable")],
+          visibility: options.visibility,
+          declarations: [],
+        }),
+        AST.protocol({
+          name: "LocaleEntity",
+          constraints: [AST.typeIdentifier("Entity")],
+          visibility: options.visibility,
+          declarations: [AST.associatedtype({ name: "ID", type: AST.typeIdentifier("String") })],
+        }),
+        AST.protocol({
+          name: "GeneralEntity",
+          constraints: [AST.typeIdentifier("Entity")],
+          visibility: options.visibility,
+          declarations: [AST.associatedtype({ name: "ID", type: AST.typeIdentifier("UUID") })],
+        }),
+      ]
+    : []
 
-${renderVisibility(options)}protocol Entity: Identifiable {}
-
-${renderVisibility(options)}protocol LocaleEntity: Entity {
-  associatedtype ID = String
-}
-
-${renderVisibility(options)}protocol GeneralEntity: Entity {
-  associatedtype ID = UUID
-}`
-    : ""
-
-const generateChildEntityProtocol = (options: SwiftRendererOptions) =>
+const generateChildEntityProtocol = (options: SwiftRendererOptions): AST.Declaration[] =>
   options.generateChildEntityProtocol
-    ? `
+    ? [
+        AST.protocol({
+          visibility: options.visibility,
+          name: "ChildEntity",
+          declarations: [
+            AST.associatedtype({
+              name: "ParentID",
+              constraints: [AST.typeIdentifier("Equatable"), AST.typeIdentifier("Sendable")],
+            }),
+            AST.pmember({
+              name: "parentId",
+              type: AST.typeIdentifier("KeyPath<Self, ParentID> & Sendable"),
+              static: true,
+              keyword: "var",
+              accessor: "get",
+            }),
+          ],
+        }),
+      ]
+    : []
 
-${renderVisibility(options)}protocol ChildEntity {
-  associatedtype ParentID: Equatable & Sendable
-
-  static var parentId: KeyPath<Self, ParentID> & Sendable { get }
-}`
-    : ""
-
-const formatWhitespace = (str: string): string => {
-  const withoutTrailingWhitespace = str.replace(/ *\n/gu, EOL)
-  return withoutTrailingWhitespace.endsWith(EOL)
-    ? withoutTrailingWhitespace
-    : `${withoutTrailingWhitespace}${EOL}`
-}
+const _renderUniqueHelpers = (options: SwiftRendererOptions, schema: Schema): AST.Declaration[] => [
+  AST.importModule("Foundation"),
+  ...renderEntityMap(options, schema),
+  ...renderCompressedDatabaseRepresentationType(options, schema),
+  ...renderExplicitNestedEntityMapTypes(options),
+  ...generateEntityProtocol(options),
+  ...generateChildEntityProtocol(options),
+  ...decodableHelpers(options),
+]
 
 export const renderUniqueHelpers = (
   options: Partial<SwiftRendererOptions> = defaultOptions,
   schema: Schema,
-): string => {
-  const finalOptions = { ...defaultOptions, ...options }
-  const types = [
-    renderEntityMap(finalOptions, schema),
-    renderCompressedDatabaseRepresentationType(finalOptions, schema),
-    renderExplicitNestedEntityMapTypes(finalOptions),
-    generateEntityProtocol(finalOptions),
-    generateChildEntityProtocol(finalOptions),
-    decodableHelpers(finalOptions),
-  ]
-  return formatWhitespace(`import Foundation${types.join("")}`)
-}
+): string => AST.renderFile(_renderUniqueHelpers({ ...defaultOptions, ...options }, schema))
 
 export const render = (
   options: Partial<SwiftRendererOptions> = defaultOptions,
@@ -675,22 +892,24 @@ export const render = (
   singleFile: boolean,
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
-  return formatWhitespace(`${singleFile ? renderUniqueHelpers(finalOptions, schema) : `import Foundation\n`}
-${renderDeclarations(
-  finalOptions,
-  schema,
-  flatMapAuxiliaryDecls((parentNodes, node, existingDecls) => {
-    if (isNestedEntityMapType(node)) {
-      return existingDecls.some(exDecl => exDecl.name === node.name)
-        ? undefined
-        : TypeAliasDecl(asDecl(parentNodes[0])?.sourceUrl ?? "", {
-            name: node.name,
-            comment: node.comment,
-            type: () => node.type.value,
-          })
-    }
+  return AST.renderFile([
+    ...(singleFile ? _renderUniqueHelpers(finalOptions, schema) : [AST.importModule("Foundation")]),
+    ...renderDeclarations(
+      finalOptions,
+      schema,
+      flatMapAuxiliaryDecls((parentNodes, node, existingDecls) => {
+        if (isNestedEntityMapType(node)) {
+          return existingDecls.some(exDecl => exDecl.name === node.name)
+            ? undefined
+            : TypeAliasDecl(asDecl(parentNodes[0])?.sourceUrl ?? "", {
+                name: node.name,
+                comment: node.comment,
+                type: () => node.type.value,
+              })
+        }
 
-    return undefined
-  }, declarations),
-)}`)
+        return undefined
+      }, declarations),
+    ),
+  ])
 }
