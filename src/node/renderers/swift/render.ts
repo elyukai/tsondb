@@ -308,11 +308,15 @@ ${indentPlain(
     guard let id = explicitId ?? derivedId else {
         throw DatabaseInstanceIdDecodingError.missingIdentifierString
     }
-    guard let uuid = UUID(uuidString: id) else {
+${
+  schema.localeEntity?.name === decl.name
+    ? ""
+    : `    guard let uuid = UUID(uuidString: id) else {
         throw DatabaseInstanceIdDecodingError.invalidUUID
     }
-
-    self.id = uuid
+`
+}
+    self.id = ${schema.localeEntity?.name === decl.name ? "id" : "uuid"}
 ${indentPlain(
   options.indentation,
   2,
