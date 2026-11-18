@@ -55,6 +55,7 @@ export type SwiftRendererOptions = {
   indentation: number
   preserveFiles: boolean
   generateEntityMap: boolean
+  generateEntityProtocol: boolean
   generateChildEntityProtocol: boolean
   generateCompressedDatabaseRepresentationType: boolean
   generateIdentifierPropertyForEntities: boolean
@@ -73,6 +74,7 @@ const defaultOptions: SwiftRendererOptions = {
   indentation: 2,
   preserveFiles: false,
   generateEntityMap: false,
+  generateEntityProtocol: false,
   generateChildEntityProtocol: false,
   generateCompressedDatabaseRepresentationType: false,
   generateIdentifierPropertyForEntities: true,
@@ -263,7 +265,7 @@ const renderVisibility: (options: SwiftRendererOptions) => string = options =>
   options.visibility === "public" ? "public " : ""
 
 const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, schema, decl) =>
-  `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", options.generateIdentifierPropertyForEntities ? "Identifiable" : undefined, options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl) ? "ChildEntity" : undefined, ...(options.declareConformances[decl.name] ?? []))} {
+  `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", options.generateIdentifierPropertyForEntities ? "Identifiable" : undefined, options.generateEntityProtocol ? (schema.localeEntity?.name === decl.name ? "LocaleEntity" : "GeneralEntity") : undefined, options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl) ? "ChildEntity" : undefined, ...(options.declareConformances[decl.name] ?? []))} {
   ${
     options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl)
       ? (() => {
@@ -613,6 +615,21 @@ ${indentPlain(
 }`
     : ""
 
+const generateEntityProtocol = (options: SwiftRendererOptions) =>
+  options.generateEntityProtocol
+    ? `
+
+${renderVisibility(options)}protocol Entity: Identifiable {}
+
+${renderVisibility(options)}protocol LocaleEntity: Entity {
+  associatedtype ID = String
+}
+
+${renderVisibility(options)}protocol GeneralEntity: Entity {
+  associatedtype ID = UUID
+}`
+    : ""
+
 const generateChildEntityProtocol = (options: SwiftRendererOptions) =>
   options.generateChildEntityProtocol
     ? `
@@ -640,6 +657,7 @@ export const renderUniqueHelpers = (
     renderEntityMap(finalOptions, schema),
     renderCompressedDatabaseRepresentationType(finalOptions, schema),
     renderExplicitNestedEntityMapTypes(finalOptions),
+    generateEntityProtocol(finalOptions),
     generateChildEntityProtocol(finalOptions),
     decodableHelpers(finalOptions),
   ]
