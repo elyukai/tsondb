@@ -1,5 +1,5 @@
 import { on } from "@elyukai/utils/function"
-import { isNotNullish, mapNullable } from "@elyukai/utils/nullable"
+import { isNotNullish, mapNullable, nullableToArray } from "@elyukai/utils/nullable"
 import { toCamelCase } from "@elyukai/utils/string"
 import { assertExhaustive } from "@elyukai/utils/typeSafety"
 import { ENUM_DISCRIMINATOR_KEY } from "../../../shared/schema/declarations/EnumDecl.ts"
@@ -56,7 +56,8 @@ export type SwiftRendererOptions = {
   generateChildEntityProtocol: boolean
   generateCompressedDatabaseRepresentationType: boolean
   generateIdentifierPropertyForEntities: boolean
-  generateDecodableConformance: Boolean
+  generateDecodableConformance: boolean
+  generateStructInitializers: boolean
   declareConformances: Record<string, string[]>
   explicitNestedEntityMapTypes: {
     [entityName: string]: {
@@ -76,6 +77,7 @@ const defaultOptions: SwiftRendererOptions = {
   generateCompressedDatabaseRepresentationType: false,
   generateIdentifierPropertyForEntities: true,
   generateDecodableConformance: true,
+  generateStructInitializers: false,
   declareConformances: {},
   explicitNestedEntityMapTypes: {},
 }
@@ -355,6 +357,37 @@ const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, schema, decl) =>
               : undefined,
           ]
         : []),
+      options.generateStructInitializers
+        ? AST.constructor({
+            visibility: options.visibility,
+            parameters: [
+              ...nullableToArray(
+                options.generateIdentifierPropertyForEntities
+                  ? { first: "id", type: AST.typeIdentifier("ID") }
+                  : undefined,
+              ),
+              ...Object.entries(decl.type.value.properties)
+                .filter(([_name, config]) => !isChildEntitiesType(config.type))
+                .map(([name, config]) => ({
+                  first: makeSafeIdentifier(toCamelCase(name)),
+                  type: AST.optionalCond(
+                    renderType(options, decl, config.type),
+                    !config.isRequired,
+                  ),
+                  defaultValue: config.isRequired ? undefined : AST.raw("nil"),
+                })),
+            ],
+            body: AST.raw(
+              ...(options.generateIdentifierPropertyForEntities ? [AST.raw("self.id = id")] : []),
+              ...Object.entries(decl.type.value.properties)
+                .filter(([_name, config]) => !isChildEntitiesType(config.type))
+                .map(([name]) => {
+                  const safeName = makeSafeIdentifier(toCamelCase(name))
+                  return AST.raw(`self.${safeName} = ${safeName}`)
+                }),
+            ),
+          })
+        : undefined,
     ].filter(isNotNullish),
   })
 
@@ -370,7 +403,41 @@ const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, _
       AST.typeIdentifier("Sendable"),
       ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
     ].filter(isNotNullish),
-    declarations: [...renderObjectType(options, decl, decl.type.value)],
+    declarations: [
+      ...renderObjectType(options, decl, decl.type.value),
+      options.generateDecodableConformance
+        ? AST.enumeration({
+            visibility: "private",
+            name: "CodingKeys",
+            constraints: [AST.typeIdentifier("String"), AST.typeIdentifier("CodingKey")],
+            declarations: Object.entries(decl.type.value.properties)
+              .filter(([_name, config]) => !isChildEntitiesType(config.type))
+              .map(([name]) =>
+                AST.enumCase({ name: makeSafeIdentifier(toCamelCase(name)), rawValue: name }),
+              ),
+          })
+        : undefined,
+      options.generateStructInitializers
+        ? AST.constructor({
+            visibility: options.visibility,
+            parameters: Object.entries(decl.type.value.properties)
+              .filter(([_name, config]) => !isChildEntitiesType(config.type))
+              .map(([name, config]) => ({
+                first: makeSafeIdentifier(toCamelCase(name)),
+                type: AST.optionalCond(renderType(options, decl, config.type), !config.isRequired),
+                defaultValue: config.isRequired ? undefined : AST.raw("nil"),
+              })),
+            body: AST.raw(
+              ...Object.entries(decl.type.value.properties)
+                .filter(([_name, config]) => !isChildEntitiesType(config.type))
+                .map(([name]) => {
+                  const safeName = makeSafeIdentifier(toCamelCase(name))
+                  return AST.raw(`self.${safeName} = ${safeName}`)
+                }),
+            ),
+          })
+        : undefined,
+    ].filter(isNotNullish),
   })
 
 const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, _schema, decl) =>
@@ -484,6 +551,29 @@ const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, _schema, decl
                   ),
               })
             : undefined,
+          options.generateStructInitializers
+            ? AST.constructor({
+                visibility: options.visibility,
+                parameters: Object.entries(decl.type.value.properties)
+                  .filter(([_name, config]) => !isChildEntitiesType(config.type))
+                  .map(([name, config]) => ({
+                    first: makeSafeIdentifier(toCamelCase(name)),
+                    type: AST.optionalCond(
+                      renderType(options, decl, config.type),
+                      !config.isRequired,
+                    ),
+                    defaultValue: config.isRequired ? undefined : AST.raw("nil"),
+                  })),
+                body: AST.raw(
+                  ...Object.entries(decl.type.value.properties)
+                    .filter(([_name, config]) => !isChildEntitiesType(config.type))
+                    .map(([name]) => {
+                      const safeName = makeSafeIdentifier(toCamelCase(name))
+                      return AST.raw(`self.${safeName} = ${safeName}`)
+                    }),
+                ),
+              })
+            : undefined,
         ].filter(isNotNullish),
       })
     : isTranslationObjectType(decl.type.value)
@@ -510,7 +600,31 @@ const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, _schema, decl
             ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ??
               []),
           ].filter(isNotNullish),
-          declarations: renderTranslationObjectType(options, decl, decl.type.value),
+          declarations: [
+            ...renderTranslationObjectType(options, decl, decl.type.value),
+            options.generateStructInitializers
+              ? (() => {
+                  const type = decl.type.value as TranslationObjectType
+                  return AST.constructor({
+                    visibility: options.visibility,
+                    parameters: Object.keys(type.properties).map(name => ({
+                      first: `\`${name}\``,
+                      type: AST.optionalCond(
+                        AST.typeIdentifier("String"),
+                        !type.allKeysAreRequired,
+                      ),
+                      defaultValue: type.allKeysAreRequired ? undefined : AST.raw("nil"),
+                    })),
+                    body: AST.raw(
+                      ...Object.keys(type.properties).map(name => {
+                        const safeName = `\`${name}\``
+                        return AST.raw(`self.${safeName} = ${safeName}`)
+                      }),
+                    ),
+                  })
+                })()
+              : undefined,
+          ].filter(isNotNullish),
         })
       : AST.typealias({
           visibility: options.visibility,
