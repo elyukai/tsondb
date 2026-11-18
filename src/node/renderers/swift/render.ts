@@ -59,6 +59,7 @@ export type SwiftRendererOptions = {
   generateCompressedDatabaseRepresentationType: boolean
   generateIdentifierPropertyForEntities: boolean
   generateDecodableConformance: Boolean
+  declareConformances: Record<string, string[]>
   explicitNestedEntityMapTypes: {
     [entityName: string]: {
       comment?: string
@@ -76,6 +77,7 @@ const defaultOptions: SwiftRendererOptions = {
   generateCompressedDatabaseRepresentationType: false,
   generateIdentifierPropertyForEntities: true,
   generateDecodableConformance: true,
+  declareConformances: {},
   explicitNestedEntityMapTypes: {},
 }
 
@@ -261,7 +263,7 @@ const renderVisibility: (options: SwiftRendererOptions) => string = options =>
   options.visibility === "public" ? "public " : ""
 
 const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, schema, decl) =>
-  `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", options.generateIdentifierPropertyForEntities ? "Identifiable" : undefined, options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl) ? "ChildEntity" : undefined)} {
+  `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", options.generateIdentifierPropertyForEntities ? "Identifiable" : undefined, options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl) ? "ChildEntity" : undefined, ...(options.declareConformances[decl.name] ?? []))} {
   ${
     options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl)
       ? (() => {
@@ -334,7 +336,7 @@ ${indentPlain(
 }`
 
 const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, _schema, decl) =>
-  `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable")} ${wrapAsObject(
+  `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", ...(options.declareConformances[decl.name] ?? []))} ${wrapAsObject(
     options,
     decl,
     renderType(options, decl, decl.type.value),
@@ -343,7 +345,7 @@ const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, _
 const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, _schema, decl) =>
   `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}enum ${
     decl.name
-  }${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "enum", "Equatable", "Sendable")} {
+  }${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "enum", "Equatable", "Sendable", ...(options.declareConformances[decl.name] ?? []))} {
 ${indentPlain(options.indentation, 1, renderEnumType(options, decl, decl.type.value))}${
     options.generateDecodableConformance
       ? `
@@ -380,7 +382,7 @@ ${indentPlain(options.indentation, 1, renderEnumType(options, decl, decl.type.va
 
 const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, _schema, decl) =>
   isObjectType(decl.type.value)
-    ? `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "struct", "Equatable", "Sendable")} {
+    ? `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", ...(options.declareConformances[decl.name] ?? []))} {
 ${indentPlain(options.indentation, 1, renderType(options, decl, decl.type.value))}${
         options.generateDecodableConformance
           ? `
@@ -415,7 +417,7 @@ ${indentPlain(
       }
 }`
     : isTranslationObjectType(decl.type.value)
-      ? `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "struct", "Equatable", "Sendable")} ${wrapAsObject(options, decl, renderType(options, decl, decl.type.value))}`
+      ? `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}struct ${decl.name}${renderTypeParameters(options, decl, decl.parameters)}${renderTypeConstraints(options, "struct", "Equatable", "Sendable", ...(options.declareConformances[decl.name] ?? []))} ${wrapAsObject(options, decl, renderType(options, decl, decl.type.value))}`
       : `${renderDocumentation(decl.comment, decl.isDeprecated)}${renderVisibility(options)}typealias ${
           decl.name
         }${renderTypeParameters(options, decl, decl.parameters)} = ${renderType(options, decl, decl.type.value)}`
