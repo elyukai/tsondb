@@ -62,22 +62,22 @@ const renderTypeLiteral = (config: TypeLiteral): string => config.name
 
 export type Declaration = Struct | Protocol | Member | TypeAlias | Enum | Extension | Func | Import
 
-const renderDeclaration = (decl: Declaration): string => {
+const renderDeclaration = (decl: Declaration, indentation: Indentation): string => {
   switch (decl.tag) {
     case "Struct":
-      return renderStruct(decl)
+      return renderStruct(decl, indentation)
     case "Protocol":
-      return renderProtocol(decl)
+      return renderProtocol(decl, indentation)
     case "Member":
-      return renderMember(decl)
+      return renderMember(decl, indentation)
     case "TypeAlias":
       return renderTypeAlias(decl)
     case "Enum":
-      return renderEnum(decl)
+      return renderEnum(decl, indentation)
     case "Extension":
-      return renderExtension(decl)
+      return renderExtension(decl, indentation)
     case "Func":
-      return renderFunc(decl)
+      return renderFunc(decl, indentation)
     case "Import":
       return renderImport(decl)
     default:
@@ -97,7 +97,10 @@ const prefixLines = (
     .join(EOL)
 }
 
-const indent = (text: string): string => prefixLines("    ", text)
+type Indentation = number | "tab"
+
+const indent = (text: string, indentation: Indentation): string =>
+  prefixLines(indentation === "tab" ? "\t" : " ".repeat(indentation), text)
 
 const renderComment = (comment: string | undefined) =>
   comment === undefined ? "" : prefixLines("/// ", comment, { includeEmptyLines: true }) + EOL
@@ -209,7 +212,7 @@ export const extension = (options: Omit<Extension, "tag">): Extension => ({
   tag: "Extension",
 })
 
-const renderExtension = (config: Extension): string => {
+const renderExtension = (config: Extension, indentation: Indentation): string => {
   const { declarations, name, constraints } = config
   return `extension ${name}${renderConstraints(constraints)}${renderWhereConstraints(config.where)} {${
     declarations.length === 0
@@ -218,7 +221,12 @@ const renderExtension = (config: Extension): string => {
         EOL +
         declarations
           .map(decl =>
-            indent(decl.tag === "Constructor" ? renderConstructor(decl) : renderDeclaration(decl)),
+            indent(
+              decl.tag === "Constructor"
+                ? renderConstructor(decl, indentation)
+                : renderDeclaration(decl, indentation),
+              indentation,
+            ),
           )
           .join(EOL + EOL) +
         EOL
@@ -241,14 +249,19 @@ export const struct = (options: Omit<Struct, "tag">): Struct => ({
   tag: "Struct",
 })
 
-const renderStruct = (config: Struct): string => {
+const renderStruct = (config: Struct, indentation: Indentation): string => {
   const { declarations, name, constraints } = config
   const allMembersWithoutComments = declarations.every(
     decl => decl.tag === "Member" && decl.static !== false && decl.comment === undefined,
   )
   return `${renderDeclPrefix(config)}struct ${name}${renderTypeParameters(config.parameters)}${renderConstraints(constraints)} {${allMembersWithoutComments ? EOL : EOL + EOL}${declarations
     .map(decl =>
-      indent(decl.tag === "Constructor" ? renderConstructor(decl) : renderDeclaration(decl)),
+      indent(
+        decl.tag === "Constructor"
+          ? renderConstructor(decl, indentation)
+          : renderDeclaration(decl, indentation),
+        indentation,
+      ),
     )
     .join(allMembersWithoutComments ? EOL : EOL + EOL)}${EOL}}`
 }
@@ -281,14 +294,16 @@ export const protocol = (options: Omit<Protocol, "tag">): Protocol => ({
   tag: "Protocol",
 })
 
-const renderProtocol = (config: Protocol): string => {
+const renderProtocol = (config: Protocol, indentation: Indentation): string => {
   const { declarations, constraints } = config
   return `${renderDeclPrefix(config)}protocol ${config.name}${renderConstraints(constraints)} {${
     declarations.length === 0
       ? ""
       : EOL +
         EOL +
-        declarations.map(decl => indent(renderProtocolInnerDeclaration(decl))).join(EOL + EOL) +
+        declarations
+          .map(decl => indent(renderProtocolInnerDeclaration(decl), indentation))
+          .join(EOL + EOL) +
         EOL
   }}`
 }
@@ -310,9 +325,9 @@ export const member = (options: Omit<Member, "tag">): Member => ({
   tag: "Member",
 })
 
-const renderMember = (config: Member): string => {
+const renderMember = (config: Member, indentation: Indentation): string => {
   const { keyword, name, type, value } = config
-  return `${renderDeclPrefix(config)}${config.static ? "static " : ""}${keyword} ${name}${type === undefined ? "" : `: ${renderType(type)}`}${value !== undefined ? ` = ${renderAnyCode(value)}` : ""}`
+  return `${renderDeclPrefix(config)}${config.static ? "static " : ""}${keyword} ${name}${type === undefined ? "" : `: ${renderType(type)}`}${value !== undefined ? ` = ${renderAnyCode(value, indentation)}` : ""}`
 }
 
 export type AssociatedType = {
@@ -367,10 +382,12 @@ export const raw = (...loc: (string | AnyCode)[]): AnyCode => ({
   code: loc,
 })
 
-const renderAnyCode = (loc: AnyCode): string =>
+const renderAnyCode = (loc: AnyCode, indentation: Indentation): string =>
   loc.code
     .map(nestedCode =>
-      typeof nestedCode === "string" ? nestedCode : indent(renderAnyCode(nestedCode)),
+      typeof nestedCode === "string"
+        ? nestedCode
+        : indent(renderAnyCode(nestedCode, indentation), indentation),
     )
     .join(EOL)
 
@@ -378,18 +395,20 @@ export type Parameter = {
   first?: string
   second?: string
   type: Type
+  defaultValue?: AnyCode
 }
 
-const renderParameter = (param: Parameter): string => {
+const renderParameter = (param: Parameter, indentation: Indentation): string => {
   const { first, second, type } = param
+  const rest = `${renderType(type)}${param.defaultValue !== undefined ? ` = ${renderAnyCode(param.defaultValue, indentation)}` : ""}`
   if (first && second) {
-    return `${first} ${second}: ${renderType(type)}`
+    return `${first} ${second}: ${rest}`
   } else if (first) {
-    return `${first}: ${renderType(type)}`
+    return `${first}: ${rest}`
   } else if (second) {
-    return `_ ${second}: ${renderType(type)}`
+    return `_ ${second}: ${rest}`
   } else {
-    return `_: ${renderType(type)}`
+    return `_: ${rest}`
   }
 }
 
@@ -408,9 +427,9 @@ export const constructor = (options: Omit<Constructor, "tag">): Constructor => (
   tag: "Constructor",
 })
 
-const renderConstructor = (config: Constructor): string => {
+const renderConstructor = (config: Constructor, indentation: Indentation): string => {
   const { body } = config
-  return `${renderDeclPrefix(config)}init(${config.parameters?.map(renderParameter).join(", ") ?? ""})${config.throws ? " throws" : ""} {${EOL}${indent(renderAnyCode(body))}${EOL}}`
+  return `${renderDeclPrefix(config)}init(${config.parameters?.map(param => renderParameter(param, indentation)).join(", ") ?? ""})${config.throws ? " throws" : ""} {${EOL}${indent(renderAnyCode(body, indentation), indentation)}${EOL}}`
 }
 
 export type Func = {
@@ -432,9 +451,9 @@ export const func = (options: Omit<Func, "tag">): Func => ({
   tag: "Func",
 })
 
-const renderFunc = (config: Func): string => {
+const renderFunc = (config: Func, indentation: Indentation): string => {
   const { name, parameters, returnType, body } = config
-  return `${renderDeclPrefix(config)}${config.static === true ? "static " : ""}func ${name}${renderTypeParameters(config.typeParameters)}(${parameters?.map(renderParameter).join(", ") ?? ""})${config.throws ? " throws" : ""}${returnType ? ` -> ${renderType(returnType)}` : ""} {${EOL}${indent(renderAnyCode(body))}${EOL}}`
+  return `${renderDeclPrefix(config)}${config.static === true ? "static " : ""}func ${name}${renderTypeParameters(config.typeParameters)}(${parameters?.map(param => renderParameter(param, indentation)).join(", ") ?? ""})${config.throws ? " throws" : ""}${returnType ? ` -> ${renderType(returnType)}` : ""} {${EOL}${indent(renderAnyCode(body, indentation), indentation)}${EOL}}`
 }
 
 export type Enum = {
@@ -471,7 +490,7 @@ export const enumCase = (options: Omit<EnumCase, "tag">): EnumCase => ({
 const renderEnumCase = (config: EnumCase): string =>
   `${renderDeclPrefix(config)}${config.isIndirect === true ? "indirect " : ""}case ${config.name}${config.associatedType === undefined ? "" : `(${renderType(config.associatedType)})`}${config.rawValue !== undefined ? ` = ${JSON.stringify(config.rawValue)}` : ""}`
 
-const renderEnum = (config: Enum): string => {
+const renderEnum = (config: Enum, indentation: Indentation): string => {
   const { name, declarations } = config
   const allEnumCasesWithoutComments = declarations.every(
     decl => decl.tag === "EnumCase" && decl.comment === undefined,
@@ -484,8 +503,9 @@ const renderEnum = (config: Enum): string => {
         decl.tag === "EnumCase"
           ? renderEnumCase(decl)
           : decl.tag === "Constructor"
-            ? renderConstructor(decl)
-            : renderDeclaration(decl),
+            ? renderConstructor(decl, indentation)
+            : renderDeclaration(decl, indentation),
+        indentation,
       ),
     )
     .join(allEnumCasesWithoutComments ? EOL : EOL + EOL)}${EOL}}`
@@ -493,7 +513,7 @@ const renderEnum = (config: Enum): string => {
 
 export type File = Declaration[]
 
-export const renderFile = (file: File): string =>
+export const renderFile = (file: File, indentation: Indentation): string =>
   file
     .map(
       (decl, index) =>
@@ -501,6 +521,6 @@ export const renderFile = (file: File): string =>
           ? ""
           : decl.tag === "Import" && file[index - 1]?.tag === "Import"
             ? EOL
-            : EOL + EOL) + renderDeclaration(decl),
+            : EOL + EOL) + renderDeclaration(decl, indentation),
     )
     .join("") + EOL

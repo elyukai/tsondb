@@ -49,7 +49,7 @@ import * as AST from "./ast.ts"
 
 export type SwiftRendererOptions = {
   visibility: "public" | "internal"
-  indentation: number
+  indentation: number | "tab"
   preserveFiles: boolean
   generateEntityMap: boolean
   generateEntityProtocol: boolean
@@ -68,7 +68,7 @@ export type SwiftRendererOptions = {
 
 const defaultOptions: SwiftRendererOptions = {
   visibility: "internal",
-  indentation: 2,
+  indentation: 4,
   preserveFiles: false,
   generateEntityMap: false,
   generateEntityProtocol: false,
@@ -883,7 +883,10 @@ const _renderUniqueHelpers = (options: SwiftRendererOptions, schema: Schema): AS
 export const renderUniqueHelpers = (
   options: Partial<SwiftRendererOptions> = defaultOptions,
   schema: Schema,
-): string => AST.renderFile(_renderUniqueHelpers({ ...defaultOptions, ...options }, schema))
+): string => {
+  const finalOptions = { ...defaultOptions, ...options }
+  return AST.renderFile(_renderUniqueHelpers(finalOptions, schema), finalOptions.indentation)
+}
 
 export const render = (
   options: Partial<SwiftRendererOptions> = defaultOptions,
@@ -892,24 +895,29 @@ export const render = (
   singleFile: boolean,
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
-  return AST.renderFile([
-    ...(singleFile ? _renderUniqueHelpers(finalOptions, schema) : [AST.importModule("Foundation")]),
-    ...renderDeclarations(
-      finalOptions,
-      schema,
-      flatMapAuxiliaryDecls((parentNodes, node, existingDecls) => {
-        if (isNestedEntityMapType(node)) {
-          return existingDecls.some(exDecl => exDecl.name === node.name)
-            ? undefined
-            : TypeAliasDecl(asDecl(parentNodes[0])?.sourceUrl ?? "", {
-                name: node.name,
-                comment: node.comment,
-                type: () => node.type.value,
-              })
-        }
+  return AST.renderFile(
+    [
+      ...(singleFile
+        ? _renderUniqueHelpers(finalOptions, schema)
+        : [AST.importModule("Foundation")]),
+      ...renderDeclarations(
+        finalOptions,
+        schema,
+        flatMapAuxiliaryDecls((parentNodes, node, existingDecls) => {
+          if (isNestedEntityMapType(node)) {
+            return existingDecls.some(exDecl => exDecl.name === node.name)
+              ? undefined
+              : TypeAliasDecl(asDecl(parentNodes[0])?.sourceUrl ?? "", {
+                  name: node.name,
+                  comment: node.comment,
+                  type: () => node.type.value,
+                })
+          }
 
-        return undefined
-      }, declarations),
-    ),
-  ])
+          return undefined
+        }, declarations),
+      ),
+    ],
+    finalOptions.indentation,
+  )
 }
