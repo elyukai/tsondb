@@ -455,6 +455,10 @@ ${renderDocumentation(comment)}${renderVisibility(options)}struct ${typeName}<T$
   ${renderVisibility(options)}init(from decoder: Decoder) throws {
     let container = try decoder.singleValueContainer()
     self.map = try container.decode([${entityName}.ID: T].self)
+  }
+
+  ${renderVisibility(options)}init(_ map: [${entityName}.ID: T]) throws {
+    self.map = map
   }`
       : ""
   }
