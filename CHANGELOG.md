@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.23.12](https://github.com/elyukai/tsondb/compare/v0.23.11...v0.23.12) (2026-11-21)
+
+### Features
+
+* **swift-renderer:** add deriveConformances option ([29b9e48](https://github.com/elyukai/tsondb/commit/29b9e48a5877a69de1f2182f660a2c9f9a3c1a09))
+* **swift-renderer:** add entity name as static string property ([2def4bc](https://github.com/elyukai/tsondb/commit/2def4bca2894a1af355c5b8181f127280b9c1eda))
+* **swift-renderer:** add file pragmas ([f406ff2](https://github.com/elyukai/tsondb/commit/f406ff2ba72461a24a54a8ea0c5d1c77b0112153))
+* **swift-renderer:** add generateIdentifierGroupIterable option ([0436a8c](https://github.com/elyukai/tsondb/commit/0436a8c8fae4387d79ae21113846cec27aa67c6e))
+* **swift-renderer:** declare conformances for generated types ([1e46192](https://github.com/elyukai/tsondb/commit/1e4619292ceba107fa55dafd961d9b49d561f829))
+* **swift-renderer:** generate entity protocols ([7ca0b49](https://github.com/elyukai/tsondb/commit/7ca0b492b1e382b98228b84265a15d769bbd4f29))
+* **swift-renderer:** generate explicit nested map type initializers ([6c17afa](https://github.com/elyukai/tsondb/commit/6c17afa171fa006ef7cb072836225c163f52cecd))
+* **swift-renderer:** generate struct initializers flag ([ba30eaf](https://github.com/elyukai/tsondb/commit/ba30eafa526c2a60d1c991c6f7852ac279a86685))
+
+### Bug Fixes
+
+* **swift-renderer:** narrow entity ID type via where ([9bb15ba](https://github.com/elyukai/tsondb/commit/9bb15bacc19d41809207593e061d150e6fd98788))
+* **swift-renderer:** protocol ChildEntity must be an Entity ([c6da98c](https://github.com/elyukai/tsondb/commit/c6da98c5f4db8e86ccb0e7ef5fff7639fd648781))
+* **swift-renderer:** respect indentation setting ([12faf84](https://github.com/elyukai/tsondb/commit/12faf840e23884ef474f793e3ff9c9013be40083))
+* **swift-renderer:** struct CompressedDatabaseRepresentation must work with any entity ID type ([7b382c5](https://github.com/elyukai/tsondb/commit/7b382c554e5b550d5d0b1e997259c4202b91114e))
+
 ## [0.23.11](https://github.com/elyukai/tsondb/compare/v0.23.10...v0.23.11) (2026-11-18)
 
 ### Bug Fixes
