@@ -1050,6 +1050,7 @@ const generateChildEntityProtocol = (options: SwiftRendererOptions): AST.Declara
         AST.protocol({
           visibility: options.visibility,
           name: "ChildEntity",
+          constraints: options.generateEntityProtocol ? [AST.typeIdentifier("Entity")] : undefined,
           declarations: [
             AST.associatedtype({
               name: "ParentID",
