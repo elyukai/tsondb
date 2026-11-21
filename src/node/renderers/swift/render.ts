@@ -58,6 +58,15 @@ export type SwiftRendererOptions = {
   generateIdentifierPropertyForEntities: boolean
   generateDecodableConformance: boolean
   generateStructInitializers: boolean
+
+  /**
+   * Generates an iterable for identifier groups (enums) that contains all referenced entities.
+   *
+   * The cases may only have reference identifier types as associated values and must be named like the entity they represent.
+   *
+   * Referencing the locale entity is not supported, as it does not have a UUID identifier.
+   */
+  generateIdentifierGroupIterable: boolean
   declareConformances: Record<string, string[]>
   explicitNestedEntityMapTypes: {
     [entityName: string]: {
@@ -78,6 +87,7 @@ const defaultOptions: SwiftRendererOptions = {
   generateIdentifierPropertyForEntities: true,
   generateDecodableConformance: true,
   generateStructInitializers: false,
+  generateIdentifierGroupIterable: false,
   declareConformances: {},
   explicitNestedEntityMapTypes: {},
 }
@@ -391,7 +401,7 @@ const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, schema, decl) =>
     ].filter(isNotNullish),
   })
 
-const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, _schema, decl) =>
+const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, schema, decl) =>
   AST.struct({
     visibility: options.visibility,
     comment: decl.comment,
@@ -440,8 +450,15 @@ const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, _
     ].filter(isNotNullish),
   })
 
-const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, _schema, decl) =>
-  AST.enumeration({
+const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, schema, decl) => {
+  const isIdentifierGroup = Object.entries(decl.type.value.values).every(
+    ([name, value]) =>
+      schema.isEntityName(name) &&
+      value.type?.kind === NodeKind.ReferenceIdentifierType &&
+      value.type.entity.name === name,
+  )
+
+  return AST.enumeration({
     visibility: options.visibility,
     comment: decl.comment,
     isDeprecated: decl.isDeprecated,
@@ -462,6 +479,7 @@ const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, _schema, decl) =>
       AST.typeIdentifier("Equatable"),
       AST.typeIdentifier("Sendable"),
       ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
+      isIdentifierGroup ? AST.typeIdentifier("Hashable") : undefined,
     ].filter(isNotNullish),
     declarations: [
       ...renderEnumType(options, decl, decl.type.value),
@@ -510,8 +528,31 @@ const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, _schema, decl) =>
             }),
           ]
         : []),
+      ...nullableToArray(
+        options.generateIdentifierGroupIterable && isIdentifierGroup
+          ? AST.member({
+              visibility: options.visibility,
+              static: true,
+              comment: `An iterable of all referenced entities.`,
+              keyword: "let",
+              name: "allEntities",
+              type: AST.typeLiteral(`[(any Entity.Type, @Sendable (UUID) -> ${decl.name})]`),
+              value: AST.raw(
+                "[",
+                AST.raw(
+                  ...Object.keys(decl.type.value.values).map(
+                    name =>
+                      `(${name}.self, ${decl.name}.${makeSafeIdentifier(toCamelCase(name))}),`,
+                  ),
+                ),
+                "]",
+              ),
+            })
+          : undefined,
+      ),
     ],
   })
+}
 
 const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, _schema, decl) =>
   isObjectType(decl.type.value)
