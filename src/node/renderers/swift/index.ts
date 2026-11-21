@@ -26,9 +26,10 @@ export const SwiftOutput = (options: {
       const sourceRootPath = fileURLToPath(commonPrefix(...Object.keys(declarationsBySourceUrl)))
       debug("common source root path: %s", sourceRootPath)
       if (sourceRootPath) {
+        const uniqueHelpersFileName = "TSONDB+Helpers.swift"
         await writeFile(
-          join(options.targetPath, "TSONDB+Helpers.swift"),
-          renderUniqueHelpers(options.rendererOptions, schema),
+          join(options.targetPath, uniqueHelpersFileName),
+          renderUniqueHelpers(uniqueHelpersFileName, options.rendererOptions, schema),
           {
             encoding: "utf-8",
           },
@@ -38,11 +39,16 @@ export const SwiftOutput = (options: {
             const sourcePath = fileURLToPath(sourceUrl)
             const relativePath = dirname(relative(sourceRootPath, sourcePath))
             const newDir = join(options.targetPath, relativePath)
-            const newPath = join(newDir, basename(sourcePath, extname(sourcePath)) + extension)
+            const newFileName = basename(sourcePath, extname(sourcePath)) + extension
+            const newPath = join(newDir, newFileName)
             await mkdir(newDir, { recursive: true })
-            await writeFile(newPath, render(options.rendererOptions, decls ?? [], schema, false), {
-              encoding: "utf-8",
-            })
+            await writeFile(
+              newPath,
+              render(newFileName, options.rendererOptions, decls ?? [], schema, false),
+              {
+                encoding: "utf-8",
+              },
+            )
           }),
         )
         debug("emitted declaration files to %s", options.targetPath)
@@ -55,7 +61,7 @@ export const SwiftOutput = (options: {
       await mkdir(dirname(safePath), { recursive: true })
       await writeFile(
         safePath,
-        render(options.rendererOptions, schema.declarations, schema, true),
+        render(basename(safePath), options.rendererOptions, schema.declarations, schema, true),
         {
           encoding: "utf-8",
         },

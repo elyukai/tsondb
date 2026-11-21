@@ -995,14 +995,20 @@ const _renderUniqueHelpers = (options: SwiftRendererOptions, schema: Schema): AS
 ]
 
 export const renderUniqueHelpers = (
+  fileName: string,
   options: Partial<SwiftRendererOptions> = defaultOptions,
   schema: Schema,
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
-  return AST.renderFile(_renderUniqueHelpers(finalOptions, schema), finalOptions.indentation)
+  return AST.renderFile(
+    fileName,
+    _renderUniqueHelpers(finalOptions, schema),
+    finalOptions.indentation,
+  )
 }
 
 export const render = (
+  fileName: string,
   options: Partial<SwiftRendererOptions> = defaultOptions,
   declarations: readonly Decl[],
   schema: Schema,
@@ -1010,6 +1016,7 @@ export const render = (
 ): string => {
   const finalOptions = { ...defaultOptions, ...options }
   return AST.renderFile(
+    fileName,
     [
       ...(singleFile
         ? _renderUniqueHelpers(finalOptions, schema)
