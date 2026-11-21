@@ -579,7 +579,7 @@ const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, schema, decl) => {
   })
 }
 
-const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, _schema, decl) =>
+const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, schema, decl) =>
   isObjectType(decl.type.value)
     ? AST.struct({
         visibility: options.visibility,
@@ -939,12 +939,12 @@ const renderCompressedDatabaseRepresentationType = (
                   : AST.member({
                       keyword: "let",
                       name: toCamelCase(entity.namePlural),
-                      type: AST.typeLiteral(`[String: ${entity.name}]`),
+                      type: AST.typeLiteral(`[${entity.name}.ID: ${entity.name}]`),
                     }),
               ),
             AST.func({
               name: "getDictionary",
-              typeParameters: [AST.typeParameter("T")],
+              typeParameters: [AST.typeParameter("T", [AST.typeIdentifier("Entity")])],
               parameters: [
                 {
                   first: "for",
@@ -952,7 +952,7 @@ const renderCompressedDatabaseRepresentationType = (
                   type: AST.typeIdentifier("T.Type"),
                 },
               ],
-              returnType: AST.typeLiteral("[String: T]"),
+              returnType: AST.typeLiteral("[T.ID: T]"),
               body: AST.raw(
                 "switch type {",
                 ...schema.entities
@@ -964,7 +964,7 @@ const renderCompressedDatabaseRepresentationType = (
                   )
                   .flatMap(entity => [
                     `case is ${entity.name}.Type:`,
-                    AST.raw(`return ${toCamelCase(entity.namePlural)} as? [String: T] ?? [:]`),
+                    AST.raw(`return ${toCamelCase(entity.namePlural)} as? [T.ID: T] ?? [:]`),
                   ]),
                 "default:",
                 AST.raw("return [:]"),
