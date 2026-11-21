@@ -281,6 +281,22 @@ const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, schema, decl) =>
       ...options.deriveConformances(decl, schema).map(name => AST.typeIdentifier(name)),
     ].filter(isNotNullish),
     declarations: [
+      AST.member({
+        visibility: options.visibility,
+        static: true,
+        comment: `The name of the entity in the database schema.`,
+        keyword: "let",
+        name: "name",
+        value: AST.raw(`"${decl.name}"`),
+      }),
+      AST.member({
+        visibility: options.visibility,
+        static: true,
+        comment: `The plural name of the entity in the database schema.`,
+        keyword: "let",
+        name: "namePlural",
+        value: AST.raw(`"${decl.namePlural}"`),
+      }),
       ...(options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl)
         ? (() => {
             const parentType = decl.type.value.properties[decl.parentReferenceKey]
@@ -996,7 +1012,22 @@ const generateEntityProtocol = (options: SwiftRendererOptions): AST.Declaration[
           name: "Entity",
           constraints: [AST.typeIdentifier("Identifiable"), AST.typeIdentifier("Sendable")],
           visibility: options.visibility,
-          declarations: [],
+          declarations: [
+            AST.pmember({
+              static: true,
+              keyword: "var",
+              name: "name",
+              type: AST.typeIdentifier("String"),
+              accessor: "get",
+            }),
+            AST.pmember({
+              static: true,
+              keyword: "var",
+              name: "namePlural",
+              type: AST.typeIdentifier("String"),
+              accessor: "get",
+            }),
+          ],
         }),
         AST.protocol({
           name: "LocaleEntity",
