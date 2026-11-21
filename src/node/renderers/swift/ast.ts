@@ -162,11 +162,13 @@ const renderTypeParameters = (params: TypeParameter[] | undefined): string =>
     : `<${params.map(renderTypeParameter).join(", ")}>`
 
 const renderWhereConstraints = (
-  constraints: { name: string; constraints: TypeIdentifier[] }[] | undefined,
+  constraints:
+    | { name: string; constraints?: TypeIdentifier[]; equals?: TypeIdentifier }[]
+    | undefined,
 ): string =>
   constraints === undefined || constraints.length === 0
     ? ""
-    : ` where ${constraints.map(c => `${c.name}${renderTypeUnions(c.constraints)}`).join(", ")}`
+    : ` where ${constraints.map(c => `${c.name}${renderTypeUnions(c.constraints)}${c.equals === undefined ? "" : ` == ${renderType(c.equals)}`}`).join(", ")}`
 
 export type Import = {
   tag: "Import"
@@ -204,7 +206,7 @@ export type Extension = {
   name: string
   constraints?: TypeIdentifier[]
   declarations: (Declaration | Constructor)[]
-  where?: { name: string; constraints: TypeIdentifier[] }[]
+  where?: { name: string; constraints?: TypeIdentifier[]; equals?: TypeIdentifier }[]
 }
 
 export const extension = (options: Omit<Extension, "tag">): Extension => ({
@@ -283,10 +285,11 @@ export type Protocol = {
   tag: "Protocol"
   visibility?: Visibility
   constraints?: TypeIdentifier[]
+  where?: { name: string; constraints?: TypeIdentifier[]; equals?: TypeIdentifier }[]
   isDeprecated?: boolean
   name: string
   comment?: string
-  declarations: (AssociatedType | ProtocolMember)[]
+  declarations?: (AssociatedType | ProtocolMember)[]
 }
 
 export const protocol = (options: Omit<Protocol, "tag">): Protocol => ({
@@ -296,8 +299,8 @@ export const protocol = (options: Omit<Protocol, "tag">): Protocol => ({
 
 const renderProtocol = (config: Protocol, indentation: Indentation): string => {
   const { declarations, constraints } = config
-  return `${renderDeclPrefix(config)}protocol ${config.name}${renderConstraints(constraints)} {${
-    declarations.length === 0
+  return `${renderDeclPrefix(config)}protocol ${config.name}${renderConstraints(constraints)}${renderWhereConstraints(config.where)} {${
+    declarations === undefined || declarations.length === 0
       ? ""
       : EOL +
         EOL +

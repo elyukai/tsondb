@@ -942,21 +942,21 @@ const generateEntityProtocol = (options: SwiftRendererOptions): AST.Declaration[
     ? [
         AST.protocol({
           name: "Entity",
-          constraints: [AST.typeIdentifier("Identifiable")],
+          constraints: [AST.typeIdentifier("Identifiable"), AST.typeIdentifier("Sendable")],
           visibility: options.visibility,
           declarations: [],
         }),
         AST.protocol({
           name: "LocaleEntity",
           constraints: [AST.typeIdentifier("Entity")],
+          where: [{ name: "ID", equals: AST.typeIdentifier("String") }],
           visibility: options.visibility,
-          declarations: [AST.associatedtype({ name: "ID", type: AST.typeIdentifier("String") })],
         }),
         AST.protocol({
           name: "GeneralEntity",
           constraints: [AST.typeIdentifier("Entity")],
           visibility: options.visibility,
-          declarations: [AST.associatedtype({ name: "ID", type: AST.typeIdentifier("UUID") })],
+          where: [{ name: "ID", equals: AST.typeIdentifier("UUID") }],
         }),
       ]
     : []
