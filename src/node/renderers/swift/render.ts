@@ -68,6 +68,11 @@ export type SwiftRendererOptions = {
    */
   generateIdentifierGroupIterable: boolean
   declareConformances: Record<string, string[]>
+
+  /**
+   * The function is not called on types that result in `typealias` declarations as they cannot declare conformances.
+   */
+  deriveConformances: (decl: Decl, schema: Schema) => string[]
   explicitNestedEntityMapTypes: {
     [entityName: string]: {
       comment?: string
@@ -88,6 +93,7 @@ const defaultOptions: SwiftRendererOptions = {
   generateDecodableConformance: true,
   generateStructInitializers: false,
   generateIdentifierGroupIterable: false,
+  deriveConformances: () => [],
   declareConformances: {},
   explicitNestedEntityMapTypes: {},
 }
@@ -272,6 +278,7 @@ const renderEntityDecl: DeclRenderFn<EntityDecl> = (options, schema, decl) =>
         ? AST.typeIdentifier("ChildEntity")
         : undefined,
       ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
+      ...options.deriveConformances(decl, schema).map(name => AST.typeIdentifier(name)),
     ].filter(isNotNullish),
     declarations: [
       ...(options.generateChildEntityProtocol && isEntityDeclWithParentReference(decl)
@@ -412,6 +419,7 @@ const renderSingletonEntityDecl: DeclRenderFn<SingletonEntityDecl> = (options, s
       AST.typeIdentifier("Equatable"),
       AST.typeIdentifier("Sendable"),
       ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
+      ...options.deriveConformances(decl, schema).map(name => AST.typeIdentifier(name)),
     ].filter(isNotNullish),
     declarations: [
       ...renderObjectType(options, decl, decl.type.value),
@@ -479,6 +487,7 @@ const renderEnumDecl: DeclRenderFn<EnumDecl> = (options, schema, decl) => {
       AST.typeIdentifier("Equatable"),
       AST.typeIdentifier("Sendable"),
       ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
+      ...options.deriveConformances(decl, schema).map(name => AST.typeIdentifier(name)),
       isIdentifierGroup ? AST.typeIdentifier("Hashable") : undefined,
     ].filter(isNotNullish),
     declarations: [
@@ -577,6 +586,7 @@ const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, _schema, decl
           AST.typeIdentifier("Equatable"),
           AST.typeIdentifier("Sendable"),
           ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ?? []),
+          ...options.deriveConformances(decl, schema).map(name => AST.typeIdentifier(name)),
         ].filter(isNotNullish),
         declarations: [
           ...renderObjectType(options, decl, decl.type.value),
@@ -640,6 +650,7 @@ const renderTypeAliasDecl: DeclRenderFn<TypeAliasDecl> = (options, _schema, decl
             AST.typeIdentifier("Sendable"),
             ...(options.declareConformances[decl.name]?.map(name => AST.typeIdentifier(name)) ??
               []),
+            ...options.deriveConformances(decl, schema).map(name => AST.typeIdentifier(name)),
           ].filter(isNotNullish),
           declarations: [
             ...renderTranslationObjectType(options, decl, decl.type.value),
